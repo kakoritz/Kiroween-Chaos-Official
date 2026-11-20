@@ -17,7 +17,7 @@ export interface WorkerLike {
 /** Messages a bot worker sends to the page. */
 export type WorkerToPage =
   | { k: 'journal_append'; id: number; rec: JournalRecord }
-  | { k: 'effect'; id: number; req: Omit<PageEffectRequest, 'lane'> }
+  | { k: 'effect'; id: number; req: Omit<PageEffectRequest, 'lane'> & { recovery?: boolean } }
   | { k: 'lookup'; id: number; kind: PageEffectRequest['kind']; key: string }
   | { k: 'hook'; id: number; point: string; order?: string; stage?: string }
   | { k: 'event'; msg: Record<string, unknown> };
@@ -106,8 +106,14 @@ export class WorkerProcess {
         }
         return;
       case 'effect': {
+        const fault = this.o.ledger.matchFault(this.o.lane, m.req.kind, m.req.recovery === true);
+        if (fault && fault.mode !== 'latency') {
+          // status/drop: the call fails before anything is written, like the node provider.
+          this.reply(w, { id: m.id, ok: true, body: { fault } });
+          return;
+        }
         const { row, replayed } = this.o.ledger.apply({ ...m.req, lane: this.o.lane });
-        this.reply(w, { id: m.id, ok: true, body: { row, replayed } });
+        this.reply(w, { id: m.id, ok: true, body: { row, replayed, ...(fault ? { fault } : {}) } });
         return;
       }
       case 'lookup': {

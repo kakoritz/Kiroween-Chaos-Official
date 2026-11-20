@@ -97,9 +97,12 @@ const KINDS: readonly LedgerKind[] = ['account', 'charge', 'email', 'dispatch', 
 
 /** Provider adapter: effects and reconcile lookups go to the in-page ledger instead of HTTP. */
 export class PageTransport implements Transport {
-  constructor(private readonly ch: PageChannel) {}
+  constructor(
+    private readonly ch: PageChannel,
+    private readonly sleep: (ms: number) => Promise<void> = (ms) => new Promise((r) => setTimeout(r, ms)),
+  ) {}
 
-  async post(kind: string, body: Record<string, unknown>, o: { key: string | null }): Promise<TransportResponse> {
+  async post(kind: string, body: Record<string, unknown>, o: { key: string | null; recovery?: boolean }): Promise<TransportResponse> {
     if (!KINDS.includes(kind as LedgerKind)) throw new Error(`unknown effect kind ${kind}`);
     const r = await this.ch.call({
       k: 'effect',
@@ -109,9 +112,19 @@ export class PageTransport implements Transport {
         key: o.key,
         index: typeof body.index === 'number' ? body.index : null,
         amount: typeof body.amount === 'number' ? body.amount : null,
+        recovery: o.recovery === true,
       },
     });
-    const row = (r.body as { row: { id: string; amount: number | null; index: number | null } }).row;
+    const rb = r.body as {
+      row?: { id: string; amount: number | null; index: number | null };
+      fault?: { mode: string; value: number; headers: Record<string, string> };
+    };
+    const fault = rb.fault;
+    if (fault?.mode === 'drop') throw new Error('connection dropped');
+    if (fault?.mode === 'status') return { status: fault.value, body: { error: 'fault ' + fault.value }, headers: fault.headers };
+    // latency: the effect is already recorded; the reply arrives late (a client timeout still leaves the row).
+    if (fault?.mode === 'latency') await this.sleep(fault.value);
+    const row = rb.row!;
     const out: Record<string, unknown> = { id: row.id };
     if (row.amount !== null) out.amount = row.amount;
     if (row.index !== null) out.index = row.index;
@@ -154,7 +167,7 @@ export function connectWorkerBot(scope: WorkerScopeLike, def: WorkerBotDef, cloc
       lane: m.lane,
       use: def.use,
       host,
-      transport: new PageTransport(ch),
+      transport: new PageTransport(ch, clock.sleep),
       journalStore: new PageJournalStore(ch),
       initialRecords: m.replay,
       pid: m.generation,
