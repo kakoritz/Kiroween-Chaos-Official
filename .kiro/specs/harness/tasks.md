@@ -19,7 +19,7 @@ Branch prefix `core/`. Each task is one PR. Tags: [C] touches `contract/`.
 
 ## H2. Creatures as plugins
 - [x] H2.1 Plugin interface and loader.
-- [ ] H2.2 Six core creatures: crash, timeout, 404, missing file, duplicate, power outage.
+- [x] H2.2 Six core creatures: crash, timeout, 404, missing file, duplicate, power outage.
 - [ ] H2.3 Remaining creatures and the three bosses.
 
 ## H3. Harness product
