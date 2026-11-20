@@ -23,7 +23,7 @@ Effect kinds added: `ticket`. (`email` already exists.)
 
 ## Components
 
-- `apps/haunted-inbox/bot/` Python 3.12, standard library only. `haunt_py.py` is a ~150 line mini-SDK with the same behavior as the TypeScript SDK: `step()`, `effect()`, JSONL journal, resume, reconcile, retry, backoff and breaker, and the same parts reporting. Same journal record format, same part ids.
+- `apps/haunted-inbox/bot/` Python 3.12, standard library only. `haunt_py.py` is a mini-SDK (about 400 lines) with the same behavior as the TypeScript SDK: `step()`, `effect()`, JSONL journal, resume, reconcile, retry, backoff and breaker, and the same parts reporting. Same journal record format, same part ids.
 - `apps/haunted-inbox/helpdesk/` mock service (Node, part of the harness) on `127.0.0.1:7072`: `POST /tickets`, `POST /replies`, `GET` lookup by key, `GET /ledger`. Same idempotency semantics as the order provider.
 - `apps/haunted-inbox/haunt.yaml`: the process definition (stages, effects, start command, truth endpoint, targets).
 
@@ -31,14 +31,14 @@ Effect kinds added: `ticket`. (`email` already exists.)
 
 | Adapter | Use |
 |---|---|
-| Process | Start `python bot/run.py --tier <t> --lane <n>`, kill with SIGKILL, restart, and move input files for missing-file and malformed faults. |
-| Proxy | The bot calls the helpdesk through `127.0.0.1:7073+lane`. The Haunt proxy injects latency, 404, 429, 500, drops, outages. Faults are the same catalog. |
+| Process | Start `python bot/run.py` with the standard `HAUNT_*` environment variables (`.kiro/specs/engine/runtime.md` section 1), kill with SIGKILL, restart, and move input files for missing-file and malformed faults. |
+| Proxy | The bot calls the helpdesk through the proxy at port `7073 + lane` (lane 1 uses 7074). The Haunt proxy injects latency, 404, 429, 500, drops, outages. Faults are the same catalog. |
 
-Crash points inside the Python bot are driven by an environment variable `HAUNT_CRASH=<point>` read by `haunt_py` at the same hook points (`before_effect`, `after_effect_before_journal`, `after_journal`, `mid_stage`). The runner sets it, the bot kills itself with `os._exit(137)` at the hook. (External SIGKILL is still used for `power_outage` and the user "Crash" button.)
+Crash points use the same **kill rendezvous** as App 1 (`runtime.md` section 3): `haunt_py` sends `at_point` on stdout and blocks on stdin, and the runner SIGKILLs the process. Same JSON-lines channel, same hooks.
 
 ## Tiers
 
-Same five tiers and parts as App 1. The Python bot reads `--parts retry,journal,...` and enables the matching features. Lanes 1 to 5 run the same file with different parts. For the video and the arena, the Inbox can run with **2 lanes** (Rookie and Phoenix). `lanes` is configurable in `POST /api/wave/start {lanes: 2..5}` and in `/api/state`.
+Same five tiers and parts as App 1. The Python bot reads `HAUNT_TIER` and enables the matching parts (the same table as App 1). Lanes 1 to 5 run the same file with different parts. For the video and the arena, the Inbox can run with **2 lanes** (Rookie and Phoenix). `lanes` is configurable in `POST /api/wave/start {lanes: 2..5}` and in `/api/state`.
 
 ## Data
 

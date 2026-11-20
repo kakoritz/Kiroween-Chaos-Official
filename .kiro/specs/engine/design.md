@@ -1,3 +1,5 @@
+> **See `runtime.md` in this folder.** It closes the gaps in this file (bot runtime, chaos arming, provider API, journal and input rules, schemas, CLI). Where they differ, `runtime.md` wins.
+
 # Engine design (Lane A): the exact rules
 
 This is the **authoritative** definition of how the pipeline, provider, journal, tiers, faults, scoring and grading behave. Where it disagrees with `haunted-house/` it wins. The UI lane does not implement any of this, but the numbers here appear in events.
@@ -60,7 +62,7 @@ Record types:
 ```
 A torn last line (kill mid-write) is ignored on replay.
 
-### Resume algorithm (`journal` part)
+### Resume algorithm (`journal` part), superseded by `runtime.md` section 6
 
 On bot start, replay the journal into `state[order][stage] = {done, intent?, result?}`.
 ```
@@ -84,10 +86,10 @@ Parts: `retry`, `journal`, `idempotency`, `breaker`, `offline_queue`.
 
 | Part | Behavior |
 |---|---|
-| `retry` | On a retryable error, retry up to **3 attempts**, fixed **500 ms** delay. Retryable: timeout, 5xx, 429, drop. Not retryable: malformed payload, 404 on input file. |
+| `retry` | On a retryable error, retry up to **3 attempts**, fixed **500 ms** delay. Retryable and not retryable errors, attempt counts and the breaker are defined exactly in `runtime.md` section 7. |
 | `journal` | As section 3. Also retries a failed journal write once (covers `disk_full`). |
 | `idempotency` | Keys on every effect, and reconcile as in section 3. |
-| `breaker` | Up to **5 attempts** with exponential backoff (500, 1000, 2000, 4000 ms) that honors `Retry-After`, plus a circuit breaker: after 3 consecutive failures to a service, open for 5 s, half-open probe, close on success. While open, do not call. |
+| `breaker` | Up to **5 attempts** with exponential backoff (500, 1000, 2000, 4000 ms) that honors `Retry-After`, plus a circuit breaker: after 4 consecutive failures to a service, open for 5 s, half-open probe, close on success. While open, do not call. |
 | `offline_queue` | An order that cannot proceed (breaker open, input file missing, poison input) is **parked** with the reason, the lane moves on to the next order, and parked orders are retried when the cause clears (breaker closed, file present). Poison input (malformed payload) is **quarantined**, never retried, and reported. |
 
 | Tier id | Lane | Label | Parts |
@@ -117,7 +119,7 @@ Parts: `retry`, `journal`, `idempotency`, `breaker`, `offline_queue`.
 | `internet_outage` | banshee | Provider returns `drop` (connection closed) for the lane | account, payment, confirmation, dispatch, updates, tracking | 8000 ms |
 | `endpoint_down` | gargoyle | Provider returns 503 for one service | effect stages | 10000 ms |
 | `timeout` / `comm_timeout` | zombie | Latency of 3000 ms (over the 1500 ms client timeout); request is still processed | payment, confirmation, dispatch, account | next 1 call |
-| `slow_link` | zombie | Latency of +1000 ms (under timeout), progress bar slows | all external | 6000 ms |
+| `slow_link` | zombie | Latency of +600 ms (under every client timeout), progress bar slows | all external | 6000 ms |
 | `http_404` | ghost | Provider returns 404 for the next call | account, payment, confirmation, dispatch | next 2 calls |
 | `http_429` | goblin | Returns 429 with `Retry-After: 2` | payment, confirmation, dispatch | next 3 calls |
 | `http_500` | imp | Returns 500 | effect stages | next 2 calls |
@@ -126,7 +128,7 @@ Parts: `retry`, `journal`, `idempotency`, `breaker`, `offline_queue`.
 | `malformed_payload` | witch | Truncate the next input file to invalid JSON (restores a clean copy to `orders/.quarantine/`) | intake | once |
 | `disk_full` | mummy | Next journal write throws `ENOSPC` | any | once |
 | `hazard_event` | werewolf | Tracking feed stalls (no response) | tracking | 5000 ms, then returns a reroute |
-| `driver_unreachable` | will_o_wisp | Tracking feed returns `{status:"no_driver"}` | tracking | 4000 ms |
+| `driver_unreachable` | will_o_wisp | Tracking feed returns `{status:"no_driver"}` | tracking | 3000 ms |
 | `boss_power_outage` | lich | `power_outage` on **all lanes at once** | all | once |
 | `boss_internet_outage` | banshee_queen | `internet_outage` on all lanes, 12000 ms | all | once |
 | `boss_hazard_storm` | headless_horseman | `hazard_event` + `http_429` on all lanes | tracking, dispatch | 6000 ms |
@@ -181,7 +183,7 @@ All points are computed by the **server** and sent in `score` events. The UI onl
 | Order `quarantined` (handled poison input) | +30 |
 | Order `parked` then `resumed` and completed clean | +100 and +40 resilience bonus |
 | Lane `halted` | -200 (once) |
-| Survived attack: order completes clean after chaos depth d | +25 x d per attack, counted when the order completes |
+| Survived attack: order completes clean after chaos | +25 x the depth of **each** attack (depths 1, 2, 3 add 25, 50, 75), paid when the order completes |
 | Speed bonus: order done within 1.25x of its baseline stage time sum | +20 |
 | Boss survived (lane's current order completes clean) | +100 |
 
@@ -192,10 +194,10 @@ A repeat deducts immediately, at the moment the `repeat` event fires (reason `"d
 Computed by `haunt` for a run (sweep, stack, ramp, soak, boss, compare). The wave score is the arena's number. The **grade** is the report's number. They are different on purpose.
 
 **Reliability score (0-100):**
-`100 x (clean completions + 0.5 x parked-then-completed + 0.5 x quarantined) / orders`, then `-15` per repeated side effect, floor 0.
+`100 x (clean completions + 0.5 x parked-then-completed + 0.5 x quarantined) / orders`, then `-15` per extra ledger row, floor 0.
 
 **Grade:** A >= 90, B >= 80, C >= 65, D >= 50, F < 50.
-**Caps:** any repeated `charge` caps at **C**. Any halted lane or lost order (not completed, not parked, not quarantined) caps at **D**.
+**Caps:** any repeated `charge` caps at **C**. Any halted lane or **lost order** (paid but not fulfilled, or abandoned; see `runtime.md` section 8) caps at **D**.
 
 **Coverage matrix:** for each (stage, fault) pair that applies, one cell: `pass` (completed clean), `repeat` (completed, repeated side effect), `recovered_late` (completed clean but recovery over target), `fail`, `halt`, `n/a`.
 
@@ -214,7 +216,7 @@ Computed by `haunt` for a run (sweep, stack, ramp, soak, boss, compare). The wav
 
 ## 9. Modes (how `haunt` drives them)
 
-- **sweep:** for each (stage, applicable fault), one order, one fault at its first applicable crash point or condition, fixed seed. Sequential and clock-independent (the harness waits for the order outcome). Deterministic.
+- **sweep:** for each (stage, applicable fault), one order, fixed seed. Crash-family faults get **one cell per crash point** (4 for effect stages, 1 for others). Sequential and clock-independent (the harness waits for the order outcome). Deterministic.
 - **stack:** like sweep but nested depth 1..5.
 - **ramp:** as in section 8. No chaos.
 - **soak:** as in section 8, real clock.

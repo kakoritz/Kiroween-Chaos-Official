@@ -11,7 +11,7 @@ Build the engine and the Haunt harness: pipeline, provider, journal, SDK, tiers,
 1. `docs/WINNING.md` (why, rules, deadline)
 2. `docs/SWIMLANES.md` (what you may touch) and `AGENTS.md`
 3. `contract/CONTRACT.md`, `contract/PROTOCOL.md`, `contract/STORYBOARDS.md`
-4. `.kiro/specs/engine/design.md` (the rules) and `.kiro/specs/engine/acceptance.md` (the answer key)
+4. `.kiro/specs/engine/design.md` (the rules), **`.kiro/specs/engine/runtime.md`** (how it actually runs: bot runtime, chaos arming, provider API, schemas, CLI) and `.kiro/specs/engine/acceptance.md` (the answer key)
 5. `.kiro/specs/harness/requirements.md` and `tasks.md` (your task list)
 6. `.kiro/specs/inbox-app/design.md`
 7. `docs/DEV-SETUP.md`
@@ -20,7 +20,7 @@ Build the engine and the Haunt harness: pipeline, provider, journal, SDK, tiers,
 
 ## Order of work
 
-1. **H0 first, within 1 day.** Contract schema, fixtures generated from the storyboards, mock server with the acceptance-table simulator, `npm run mock`. Lane B is blocked until this lands. Tell Lane B when it merges (PR comment or issue labelled `lane-question`).
+1. **H0 first, within 1 day, in the order given under "Authoritative H0 order" in `.kiro/specs/harness/tasks.md`.** Contract schema, fixtures generated from the storyboards, mock server with the acceptance-table simulator, `npm run mock`. Lane B is blocked until this lands. Tell Lane B when it merges (PR comment or issue labelled `lane-question`).
 2. H1: provider, journal, SDK, five bot files, chaos director, runner, scoring, live server. Hero crash passing (A2).
 3. H2: creature plugins, then the three bosses.
 4. H3: `haunt.yaml`, sweep, stack, ramp, then the rest.

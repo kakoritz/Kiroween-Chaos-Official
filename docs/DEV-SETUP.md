@@ -20,6 +20,7 @@ git clone https://github.com/kakoritz/Kiroween-Chaos.git C:\dev\Kiroween-Chaos-u
 | Package manager | npm workspaces |
 | Tests | Vitest, `fast-check` for properties |
 | Server | Node `http` plus a tiny router. No heavy framework. |
+| Bundler | esbuild (bots and the browser worker bundle). `ajv` allowed as a dev dependency for schema validation. |
 | Storage | JSONL files. **No SQLite, no native dependencies.** |
 | UI build | Vite, vanilla TypeScript, Canvas 2D. A UI framework is allowed if Lane B wants one, but the bundle must be static and offline. |
 | Python (App 2) | 3.12, standard library only |
@@ -38,7 +39,7 @@ git clone https://github.com/kakoritz/Kiroween-Chaos.git C:\dev\Kiroween-Chaos-u
     core/                      HTTP server, mock server, provider, in-page transport
     arena-ui/                  the arena (Lane B)
   apps/
-    haunted-orders/            App 1 (Node): bots/<tier>.ts, haunt.yaml, orders/
+    haunted-orders/            App 1 (Node): src/bots/<tier>.ts, haunt.yaml (input orders are generated into the run folder)
     haunted-inbox/             App 2 (Python): bot/, helpdesk/, haunt.yaml, inbox/
   tools/                       make-fixtures.ts, validate-events.ts, fresh-clone-test
   package.json                 workspaces
@@ -52,12 +53,13 @@ git clone https://github.com/kakoritz/Kiroween-Chaos.git C:\dev\Kiroween-Chaos-u
 | `npm run live` | Live server on 7070 (real engine) |
 | `npm run ui:dev` | Vite dev server on 5173, API at 7070 |
 | `npm run ui:build` | Builds `packages/arena-ui/dist` |
-| `npm run demo` | Starts the server (live if available, else mock) and opens the arena in demo mode |
+| `npm run build:bots` | esbuild bundles `dist/bots/<tier>.js` |
+| `npm run demo` | Builds if needed, starts the server (live if available, else mock) and opens the arena in demo mode. `npm run demo -- --check` starts, verifies and exits (used by fresh-clone) |
 | `npm test` | All unit and property tests |
 | `npm run test:contract` | Contract suite against the running server (mock and live) |
 | `npm run validate:events` | Fixtures against `events.schema.json` and the ordering rules |
 | `npm run haunt -- <cmd>` | The CLI (`sweep`, `ramp`, `report`, ...) |
-| `npm run fresh-clone` | Clones to a temp folder, installs, runs `npm run demo --check`, must pass in under 3 min |
+| `npm run fresh-clone` | Runs `tools/fresh-clone-test`: clones to a temp folder, installs, runs `npm run demo -- --check`, must pass in under 3 min |
 
 ## Branches, PRs, merging
 
@@ -82,3 +84,7 @@ No secrets exist. No real payment, no real keys. All servers bind `127.0.0.1`. T
 ## Kiro artifacts that must exist by Dec 2
 
 `.kiro/specs/` (all lanes), `.kiro/steering/` (product, tech, contract rules), `.kiro/hooks/` (3 hooks), `.kiro/agents/` (`chaos-director`, `reviewer`), `docs/KIRO-LOG.md`. See `docs/WINNING.md` for what each must show.
+
+## Runtime folders
+
+`./.haunt/runs/<run-id>/` holds events, reports and hardening specs (git-ignored). Journals and per-lane scratch live in `os.tmpdir()/haunt/<run-id>/`. See `.kiro/specs/engine/runtime.md` section 10.

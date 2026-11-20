@@ -11,7 +11,7 @@ Build the **arena**: the video-game view of five skeleton workers racing through
 1. `docs/WINNING.md` (the judging rubric: Design and Presentation are 40% of the score)
 2. `docs/SWIMLANES.md` and `AGENTS.md`
 3. `contract/CONTRACT.md`, **`contract/PROTOCOL.md`**, `contract/STORYBOARDS.md`
-4. `.kiro/specs/arena/requirements.md`, `design.md` (the visuals and the creature table), `tasks.md` (your task list, including the Skeleton Crew theme and W-tasks)
+4. **`.kiro/specs/arena/ui-spec.md` (the visual spec: layout, palette, creature choreography, event to visual table, controls, sound, accessibility)**, then `requirements.md`, `design.md`, `tasks.md` (your task list, including the Skeleton Crew theme and W-tasks)
 5. `.kiro/specs/engine/acceptance.md` section A: it tells you what outcomes to expect and draw per tier and fault
 6. `docs/DEMO-SCRIPT.md`: the 3-minute video you are building toward
 7. `docs/DEV-SETUP.md`

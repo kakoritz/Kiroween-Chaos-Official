@@ -4,7 +4,7 @@ Branch prefix `core/`. Each task is one PR. Tags: [C] touches `contract/`.
 
 ## H0. Unblock the visuals lane (do first)
 - [ ] H0.1 [C] Write `contract/events.schema.json` from CONTRACT.md and a validator script.
-- [ ] H0.2 [C] Hand-author the five fixtures and validate them.
+- [ ] H0.2 [C] Generate the fixtures (see H0.5) and validate them. Do not hand-type events.
 - [ ] H0.3 Mock server: all REST calls and SSE, replay fixtures, accept chaos commands and answer with scripted events.
 - [ ] H0.4 `npm run mock` and a README section for Lane B.
 
@@ -14,7 +14,7 @@ Branch prefix `core/`. Each task is one PR. Tags: [C] touches `contract/`.
 - [ ] H1.3 Pipeline of eight stages and five policy tiers.
 - [ ] H1.4 Chaos director, hook points, nested fault stack, real SIGKILL.
 - [ ] H1.5 Runner, wave manager, event log (JSONL), score engine.
-- [ ] H1.6 Live server implementing the contract. Fixtures regenerated from real runs.
+- [ ] H1.6 Live server implementing the contract. Fixtures stay generated from storyboards (they are not regenerated from live runs).
 - [ ] H1.7 Hero crash test: Rookie 2 charges, Phoenix 1.
 
 ## H2. Creatures as plugins
@@ -76,7 +76,7 @@ H0 is complete only when all of these are done:
 - [ ] H0.5 `tools/make-fixtures.ts` generates the five fixtures from `contract/STORYBOARDS.md`.
 - [ ] H0.6 `tools/validate-events.ts` checks the schema and every ordering rule in `contract/PROTOCOL.md`. Wired to `npm run validate:events` and CI.
 - [ ] H0.7 Mock simulator implements `engine/acceptance.md` table A for every tier and fault.
-- [ ] H0.8 `npm run test:contract` suite that runs against both mock and live.
+- [ ] H0.8 `npm run test:contract` suite. Runs against the mock in H0 and also against live once H1.6 exists.
 - [ ] H0.9 Repo scaffolding per `docs/DEV-SETUP.md`: workspaces, TypeScript, Vitest, CI, `npm run demo`.
 
 Engine detail tasks (map to engine/design.md sections):
@@ -95,3 +95,17 @@ Engine detail tasks (map to engine/design.md sections):
 - [ ] E13 Demo scripts `hero` and `full` run on the real engine (PROTOCOL demo mode).
 - [ ] E14 Inbox app per `.kiro/specs/inbox-app/design.md`.
 - [ ] E15 `docs/DEVPOST-DRAFT.md`, blog post draft, social post draft.
+
+## Authoritative H0 order and scope (supersedes the earlier H0 list)
+
+Do in this order. Tell Lane B when step 6 merges.
+1. **H0.9 Scaffolding:** workspaces, TypeScript, Vitest, esbuild, CI, `.gitignore`, `npm run demo`. Also create `packages/arena-ui/package.json` and a placeholder `dist/index.html` (the only time Lane A touches that folder; Lane B owns it afterwards).
+2. **H0.1** `contract/events.schema.json` from `PROTOCOL.md` and `runtime.md` section 9.
+3. **H0.6** `tools/validate-events.ts` (schema plus every ordering rule).
+4. **H0.5** `tools/make-fixtures.ts` generating all fixtures in `STORYBOARDS.md` (including `full`, `loop` and the extra fixtures).
+5. **H0.7** Mock server with the **outcome-template table** (`runtime.md` section 15), not an engine. This is the long pole. Ship calm, hero and the REST surface first, then the rest.
+6. **H0.3, H0.4** Mock server REST and SSE complete, `npm run mock`, README for Lane B, `window.__haunt` stub, `/_mock/fault`.
+7. **H0.8** Contract test suite against the mock.
+H1 starts after step 6. Aim for steps 1 to 6 within one day, even if some extra fixtures follow.
+
+Task numbering note: E1 to E15 are the detailed tasks inside H1 to H4. E1-E8 belong to H1, E6-E7 to H2, E9 to H3/H4, E10 to H4, E11 across all, E12 to H6.3, E13 to H5, E14 to H6.2, E15 to H5.

@@ -1,6 +1,6 @@
 # Requirements: The Arena (game layer)
 
-Builds on [haunted-house](../haunted-house/requirements.md). The five rooms become **spooky chaos creatures**, and the five bots are **skeleton workers**. The floor plan becomes a **race arena** with five lanes.
+Builds on [haunted-house](../haunted-house/requirements.md). The old "rooms" are now **spooky chaos creatures**, and the five bots are **skeleton workers**. The floor plan becomes a **race arena** with five lanes.
 
 ## Concept
 

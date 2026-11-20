@@ -17,7 +17,7 @@ Counts shown are the ledger rows for the faulted order, in the format `kind x co
 | A5 | crash at intake (`mid_stage`) | OK | OK | OK | OK | OK |
 | A6 | crash at tracking (`mid_stage`) | REPEAT all 5 effect kinds x2 | REPEAT all x2 | OK | OK | OK |
 | A7 | power_outage during payment (`after_effect_before_journal`) | as A2 | as A2 | as A2 | as A2 | as A2 |
-| A8 | nested crash: A2, then a crash during recovery | REPEAT | REPEAT | REPEAT charge x2 | OK | OK |
+| A8 | nested crash: A2, then a crash during recovery (inner crash fires at the recovery hook; for bots with no recovery code that is `startup`) | REPEAT account x2, charge x2 | REPEAT account x2, charge x2 | REPEAT charge x2 | OK | OK |
 | A9 | timeout at payment (latency 3000, processed) | FAILED charge x1 | REPEAT charge x2 | REPEAT charge x2 | OK | OK |
 | A10 | http_404 at payment (2 calls) | FAILED | OK | OK | OK | OK |
 | A11 | http_500 at payment (2 calls) | FAILED | OK | OK | OK | OK |
@@ -29,13 +29,17 @@ Counts shown are the ledger rows for the faulted order, in the format `kind x co
 | A17 | duplicate_request at intake | REPEAT all x2 | REPEAT all x2 | OK | OK | OK |
 | A18 | disk_full (one journal write) | OK | OK | OK | OK | OK |
 | A19 | hazard_event at tracking (5000 ms stall) | FAILED | FAILED | FAILED | FAILED | OK |
-| A20 | driver_unreachable at tracking (4000 ms) | FAILED | FAILED | FAILED | FAILED | OK |
-| A21 | slow_link (+1000 ms, 6000 ms) | OK | OK | OK | OK | OK |
+| A20 | driver_unreachable at tracking (3000 ms) | FAILED | FAILED | FAILED | FAILED | OK |
+| A21 | slow_link (+600 ms, 6000 ms) | OK | OK | OK | OK | OK |
 
 Notes:
-- A6 and A17: "all 5 effect kinds x2" means account_create, charge, email, dispatch, and notify (both notifications) are each duplicated.
+- A6 and A17: "all 5 effect kinds x2" means account_create, charge, email, dispatch, and notify (both notifications) are each duplicated: 6 extra ledger rows.
+- A12 Phoenix: 3 failures then success on attempt 4 (waits of 2 s each from Retry-After). The breaker needs 4 failures, so it stays closed. Cell result `recovered_late`.
+- A13 and A14 Phoenix: the breaker opens after 4 failures, the order is parked, and the probe after 5 s resumes it. A14 needs two probes.
+- A19 Phoenix: 3 poll failures, success on attempt 4. A20 Phoenix: the same with no_driver.
+- All timings here assume the exact rules in `runtime.md` sections 4 and 7.
 - FAILED orders keep their effects done so far (for example A13 Rookie: account x1, charge x0). The score engine charges -50 for the failure.
-- A9 Rookie: the charge happened, the order failed. Reports call this **paid, not fulfilled**. Counts as a lost order for grade caps.
+- A9 Rookie: the charge happened and no dispatch did, so the order is **paid, not fulfilled**. That is a lost order (grade cap D). A plain FAILED order with no such state is not lost.
 - Tracking faults (A19, A20) leave dispatch done and the order FAILED at stage 7.
 
 ## B. Property tests (fast-check)
@@ -69,8 +73,8 @@ Run with at least 200 cases per property in CI and 1000 in a nightly run. A shru
 |---|---|
 | Clean order, 1.0x time | +100 +20 (speed) = 120 |
 | Clean order after 1 attack at depth 1 | 120 + 25 = 145 |
-| Clean after depth 3 | 120 + 75 = 195 |
-| Completed with 2 repeats | 40 - 300 = -260 |
+| Clean after three stacked attacks (depths 1, 2, 3) | 120 + 25 + 50 + 75 = 270 |
+| Completed with 2 extra ledger rows | 40 - 300 = -260 |
 | Failed | -50 |
 | Parked then resumed clean | 100 + 40 = 140 |
 | Quarantined | +30 |
@@ -105,3 +109,13 @@ Run with at least 200 cases per property in CI and 1000 in a nightly run. A shru
 | Report generation | under 10 seconds for a sweep |
 | Browser support | latest Chrome and Edge (video captured in Chrome); Firefox and Safari best effort |
 | Security | all servers bind to 127.0.0.1, no outbound network, no secrets in repo |
+
+## H. Added checks
+
+| ID | Check |
+|---|---|
+| H1 | A3 (crash `after_journal`): Journaler treats a stage with `result` and no `stage_done` as done and does not repeat the charge. |
+| H2 | The kill rendezvous kills the real pid and leaves the journal readable (torn last line ignored). |
+| H3 | Every table A row is also run in in-process mode with the fake Clock and gives the same outcome. |
+| H4 | Provider: 404, 429, 500, 503 and drops write no ledger row. A latency fault over the client timeout writes a row. |
+| H5 | Hardening loop proof: after the recorded fix to `bots/rookie.ts`, the Rookie sweep grade improves and the SDK reports the new parts. |

@@ -1,3 +1,5 @@
+> **Visual details live in `ui-spec.md`, which wins over this file** (layout, palette, creature choreography, event to visual table, controls, sound, accessibility). This file keeps the architecture and the first creature list. Where it says "grey ghost" for a dead worker, read "pile of bones".
+
 # Design: The Arena
 
 ## Visuals
