@@ -16,12 +16,12 @@ export interface CoreContext extends CreatureContext {
   input?: { removeFile(): void | Promise<void>; duplicateFile(): void | Promise<void> };
 }
 
-function need<T>(v: T | undefined, what: string, fault: string): T {
+export function need<T>(v: T | undefined, what: string, fault: string): T {
   if (v === undefined) throw new Error(`creature context is missing ${what} for fault "${fault}"`);
   return v;
 }
 
-function providerCreature(id: string, label: string, family: 'network' | 'http', faults: string[]): CreaturePlugin {
+export function providerCreature(id: string, label: string, family: 'network' | 'http' | 'world', faults: string[]): CreaturePlugin {
   return {
     id, label, family, faults,
     async inject(ctx, fault, params) {
