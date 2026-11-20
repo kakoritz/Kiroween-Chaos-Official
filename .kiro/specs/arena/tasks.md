@@ -48,3 +48,11 @@ Lane B owns: A3, the rank board and ledger panel views, B3, the B4 slider UI, th
 - [ ] W6. Polish pass: consistent palette, sound with a mute button, motion that follows reduced-motion, readable at 1080p video capture.
 - [ ] W7. Accessibility: keyboard Chaos, color-blind safe states (icons plus color).
 - [ ] W8. Video capture helper: a "present mode" that hides cursor chrome and shows a clean frame.
+
+## Frankenstein theme (category change, see docs/WINNING.md)
+- [ ] F1. Lab look: dark lab, lightning, sparks, tesla coils, stitched-thread borders. Characters are creatures, not ghosts.
+- [ ] F2. Each creature shows its parts as visible limbs: Journal, Idempotency Keys, Retry, Circuit Breaker, Offline Queue. Missing parts are bare bones with loose stitches. The part list comes from `/api/state`.
+- [ ] F3. "Stitch" animation: when a part is added (event `part_stitched`), a needle sews it on with a lightning flash, score ticks up.
+- [ ] F4. Resume plays an "It's alive!" moment. Death plays a flat-line.
+- [ ] F5. Monkeys styled as lab accidents and an angry mob. Bosses are storms.
+- [ ] F6. Lab sound set generated in code: crackle, thunder, zap, sting.

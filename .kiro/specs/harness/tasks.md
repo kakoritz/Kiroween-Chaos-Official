@@ -62,3 +62,8 @@ Ship H0, H1, H2.2, H3.1, H3.2, H3.4, H4.1, H4.2. That gives a graded sweep and a
 
 ## Cut line update
 Never cut: H0, H1, H2.2, H3.1, H3.2, H4.1, H4.2, H6.3, H6.4, H6.10, H6.11. Cut first: H3.5, H3.6, H6.8.
+
+## Frankenstein theme for Lane A
+- [ ] F-A1. Express the five tiers as sets of resilience parts. Policy objects become `parts[]`. Adding a part changes behavior.
+- [ ] F-A2. Emit `part_stitched` when a hardening spec lands and the policy gains a part.
+- [ ] F-A3. Write the write-up section "What we stitched together and why it is unexpectedly powerful" in KIRO-LOG and the Devpost text.

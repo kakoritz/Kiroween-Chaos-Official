@@ -92,3 +92,9 @@ Fixtures are real event streams the mock server replays. Lane A generates them. 
 - `GET /api/state` includes `app` and `stages`: an ordered list of `{id, label, icon, workAnimation}`. The UI reads stage names from here so a second app (Haunted Inbox) needs no UI change. The eight order stages are the default for `app: "orders"`.
 - `GET /api/apps` lists available apps. `POST /api/app` `{app}` switches.
 - `GET /api/waves/:n/compare/:m` returns a before and after comparison of two waves (scores, grade, repeats).
+
+## Frankenstein additions (additive)
+
+- `GET /api/state` lane objects include `parts`: array of `{id, label, installed: bool}` for `journal`, `idempotency`, `retry`, `breaker`, `offline_queue`.
+- New event `part_stitched`: `{part, source: "hardening_spec"|"manual", spec?: "hardening-wave-1"}`. Emitted when a tier gains a part, for example after the reviewer's spec is applied.
+- The tier-to-parts mapping is data, not UI code.

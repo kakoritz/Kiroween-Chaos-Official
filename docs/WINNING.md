@@ -16,13 +16,34 @@ Source: the official rules and Devpost page, read 2026-11-20. Re-read before sub
 - **Overall prizes (1st, 2nd, 3rd) go to the top scores across all categories.** Category only decides the category prize.
 - **Judges may not run the app.** They may judge from the text, images and video alone. So the video and a no-install live URL carry the score.
 
-## Category: Skeleton Crew
+## Category: Frankenstein (the owner's choice)
 
-> "Build a skeleton code template lean enough to be clear but flexible enough to support various use cases. Show us its versatility with two distinct applications from your foundation." The repo must contain **2 separate repo folders for the 2 applications**.
+> "Stitch together a chimera of technologies into one app. Bring together seemingly incompatible elements to build something unexpectedly powerful."
 
-Haunt is exactly this: a lean skeleton (the chaos harness) and two different apps built on it. It also scores on Innovation and Impact because it is reusable by anyone.
+Judges must see **stitching**, so the chimera is the pitch and the visual theme, not a side note.
 
-Why not the others: Resurrection and Frankenstein are crowded and our story is not "old tech". Costume Contest rewards the UI only. The arena UI still counts under Design in Skeleton Crew, and the overall prize ignores category.
+**The parts we stitch (each looks incompatible with the others):**
+
+| Part | From | Why it looks wrong together |
+|---|---|---|
+| Chaos monkeys | Chaos engineering (infrastructure testing) | Built for servers, not for arcade games |
+| Race arena with progress bars and cheering sprites | Cooking-game style video games | Games are for fun, ops tools are boring |
+| Journal, idempotency keys, reconcile | Durable execution (workflow engines) | Heavy back-end theory in a toy |
+| Real process kills and Web Worker kills | OS processes and browsers | Two runtimes, one contract |
+| Node engine plus Python AI agent | Two languages | Different worlds, one harness |
+| A reviewer that writes specs, and Kiro that applies them | AI code generation | Tests that fix themselves |
+| MCP server, Kiro Power, Kiro Crew app | Kiro platform pieces | Three packagings of one tool |
+
+**Make the Frankenstein theme literal in the product:**
+- Each bot is a **creature stitched from resilience parts**: Journal, Idempotency Keys, Retry, Circuit Breaker, Offline Queue.
+- The Rookie is a bare skeleton with exposed stitches. Phoenix is fully assembled.
+- When Kiro applies a hardening spec, the UI **stitches a new limb onto the creature** with a lightning flash. The score climbs. This is the loop-proof moment, drawn as a mad-scientist lab.
+- Sound: crackle, thunder, a "It's alive!" sting on resume. All generated in code.
+- Monkeys are the mob with torches, or the lab accident. Bosses are storms.
+
+**Why it can win overall, not just the category:** the 1st, 2nd and 3rd places go to the top scores across all categories. Frankenstein gives us a clear Innovation story and a strong Design story at once.
+
+Skeleton Crew is dropped. Its "two apps in two folders" rule no longer applies. We still keep Haunted Inbox (Python) because a second app proves the chimera is reusable.
 
 ## Bonus prizes to collect (all are separate and stackable)
 
@@ -35,7 +56,7 @@ Why not the others: Resurrection and Frankenstein are crowded and our story is n
 | **Best Ghost of Kiroween Past** | Only if the owner registered for Kiroween 2025. Ask him. | the owner |
 | Best Startup Project | Only if the owner is a founder and wants to enter a startup. Skip unless he says so. | the owner |
 
-## The two applications (Skeleton Crew)
+## The two applications (proof the chimera is reusable)
 
 | | App 1: Haunted Orders | App 2: Haunted Inbox |
 |---|---|---|
@@ -45,7 +66,7 @@ Why not the others: Resurrection and Frankenstein are crowded and our story is n
 | Side effects | charge, email, dispatch | ticket created, reply sent |
 | Why it matters | The classic double-charge | The 2026 problem: AI agents repeat actions after a crash |
 
-Both run in the same arena, with the same monkeys, the same report. Showing two unrelated apps through one harness **is** the Skeleton Crew proof.
+Both run in the same arena, with the same monkeys, the same report. Two unrelated apps through one harness, in two languages, is the chimera proof.
 
 ## What makes a judge say "this is amazing"
 
@@ -85,11 +106,11 @@ This costs extra work in Lane A (adapter swap) and none in Lane B.
 
 - [ ] Kiro credit request filed (by Dec 1, noon PT)
 - [ ] Repo public, MIT license visible, `.kiro/` committed, not ignored
-- [ ] Two app folders: `apps/haunted-orders`, `apps/haunted-inbox`
+- [ ] App folders: `apps/haunted-orders`, `apps/haunted-inbox` (not required for Frankenstein, but proves reuse)
 - [ ] Hosted demo URL works with no login
 - [ ] Video under 3:00, public on YouTube, own music or none, no trademarks
 - [ ] Write-up covers every Kiro item in the table above
-- [ ] Category set to Skeleton Crew, plus Best Kiro Crew App
+- [ ] Category set to **Frankenstein**, plus Best Kiro Crew App
 - [ ] Blog post published, link added
 - [ ] Social post with `#KiroweenHackathon26` first, link added
 - [ ] Fresh-clone test: clone, install, `npm run demo` in under 3 minutes

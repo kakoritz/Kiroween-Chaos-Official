@@ -4,7 +4,7 @@
 
 **Hero moment:** a bot is killed right after charging a customer. The naive bot charges again. The protected bot finds its own charge and finishes. Same crash, side by side.
 
-Kiroween 2026. Category: **Skeleton Crew** (one reusable skeleton, two apps). Also entering Best Kiro Crew App.
+Kiroween 2026. Category: **Frankenstein**, a chimera of chaos engineering, durable execution, arcade games and AI that fixes code. Also entering Best Kiro Crew App.
 
 ## Read first
 
