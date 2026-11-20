@@ -23,7 +23,7 @@ Branch prefix `core/`. Each task is one PR. Tags: [C] touches `contract/`.
 - [ ] H2.3 Remaining creatures and the three bosses.
 
 ## H3. Harness product
-- [ ] H3.1 `haunt.yaml` loader and validator.
+- [x] H3.1 `haunt.yaml` loader and validator.
 - [ ] H3.2 Sweep mode and coverage matrix.
 - [ ] H3.3 Stack mode and depth curve.
 - [ ] H3.4 Ramp mode, knee and break detection.
