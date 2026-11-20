@@ -1,0 +1,12 @@
+{
+  "name": "hero",
+  "seed": 7,
+  "pace": "show",
+  "orders": 5,
+  "lanes": 5,
+  "tiers": "race",
+  "presses": [
+    { "atMs": 9600, "lane": 1, "fault": "crash", "creature": "reaper", "point": "after_effect_before_journal" },
+    { "atMs": 9700, "lane": 5, "fault": "crash", "creature": "reaper", "point": "after_effect_before_journal" }
+  ]
+}
