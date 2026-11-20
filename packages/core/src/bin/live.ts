@@ -16,6 +16,7 @@ const botCommand = makeBotCommand({
   bundleFor: (lane, wave, tier) => (loop && lane === '1' && tier === 'rookie' && wave >= 2 ? 'rookie.hardened' : undefined),
 });
 const rt = createLiveRuntime({ botCommand, ledgerRows: (lane) => provider.provider.ledger(lane) });
+provider.provider.onRow = rt.ledgerRow;
 const server = new LiveServer({
   log: new EventLog(join(runDir, 'events.jsonl')),
   engine: rt.live,

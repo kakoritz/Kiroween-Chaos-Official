@@ -1,5 +1,6 @@
 // Demo scripts: data files under packages/core/demo/ listing timed chaos presses. Spec: runtime.md section 16.
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { BOSSES, faultById } from '../../../haunt/src/chaos/catalog';
 import type { TierMode } from '../../../haunt/src/runner/lanes';
@@ -43,6 +44,8 @@ export function validateDemo(raw: unknown): DemoScript {
 
 export function loadDemo(name: string): DemoScript {
   if (!(DEMO_NAMES as readonly string[]).includes(name)) throw new Error(`unknown demo script: ${name}`);
-  const path = fileURLToPath(new URL(`../../demo/${name}.json`, import.meta.url));
+  // Bundled runs (tools/run-ts.mjs writes to .tmp/run/) move import.meta.url, so fall back to the repo path from cwd.
+  const near = fileURLToPath(new URL(`../../demo/${name}.json`, import.meta.url));
+  const path = existsSync(near) ? near : join(process.cwd(), 'packages', 'core', 'demo', `${name}.json`);
   return validateDemo(JSON.parse(readFileSync(path, 'utf8')));
 }

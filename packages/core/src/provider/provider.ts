@@ -106,6 +106,8 @@ export class Provider {
   private calls = new Map<string, number>();
   private inflight = new Map<string, number>();
   private faults: ActiveFault[] = [];
+  /** Called once per new ledger row (not for idempotent replays). The live runtime turns rows into `repeat` events. */
+  onRow?: (row: LedgerRow) => void;
 
   constructor(opts: ProviderOptions = {}) {
     this.seed = opts.seed ?? 'haunt';
@@ -196,6 +198,7 @@ export class Provider {
         const row: LedgerRow = { id, lane, kind, order, key, amount, index, ts: this.clock.now() };
         this.rows.push(row);
         this.persist(row);
+        this.onRow?.({ ...row });
         if (key !== null) this.responses.set(`${lane}|${kind}|${key}`, payload);
         res = json(201, payload);
       }

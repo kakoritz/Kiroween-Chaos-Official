@@ -56,7 +56,7 @@ Ship H0, H1, H2.2, H3.1, H3.2, H3.4, H4.1, H4.2. That gives a graded sweep and a
 - [x] H6.7 Hooks in `.kiro/hooks/`: PBT on SDK save, fixture validation on contract save, reviewer on wave end. (Note: the fixture hook runs `npm run validate:events`, which becomes real when H0.6 lands.)
 - [ ] H6.8 Kiro Power packaging of Haunt.
 - [ ] H6.9 Kiro Crew app packaging: manifest, MCP tools, reviewer agent, skill `stress-test-my-workflow`, and a page that hosts the arena UI. Read the Kiro Crew apps doc first.
-- [ ] H6.10 The loop proof: run wave 1 (Rookie F), reviewer writes the hardening spec, Kiro implements it, run wave 2 (grade A). Save both reports in `docs/proof/`. (Partial: compareWaves and renderProofMarkdown exist in packages/haunt/src/report/proof.ts. Blocked: no bot files exist (E5 apps/haunted-orders/src/bots/<tier>.ts is unticked, no apps/ dir), `npm run live` now spawns lanes but only for tiers whose dist/bots/<tier>.js is built, so no real wave 1 or wave 2 can run. Remaining: E5 bots, run both waves, reviewer hardening spec, save reports in docs/proof/.)
+- [x] H6.10 The loop proof: run wave 1 (Rookie F), reviewer writes the hardening spec, Kiro implements it, run wave 2 (grade A). Save both reports in `docs/proof/`. (Done 2026-11-20: wave 1 Rookie F with 5 repeats, reviewer spec `.kiro/specs/hardening-loop-w1/`, wave 2 hardened Rookie A with 0 repeats; reports, postmortems and `loop-proof.md` in docs/proof/. Reviewer findings still print `stage ?` because repeat events carry no stage.)
 - [x] H6.11 `docs/KIRO-LOG.md`: dated notes as we build. `docs/JUDGES.md`: a 60-second tour.
 - [ ] H6.12 Fresh-clone test script and a CI job for it.
 

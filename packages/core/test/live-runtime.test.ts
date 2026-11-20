@@ -226,3 +226,27 @@ describe('bot command wiring', () => {
     expect(stop.status).toBe(200);
   });
 });
+
+describe('makeBotCommand wave reset', () => {
+  it('clears a stale wave folder on the first spawn of a wave, not on a restart', () => {
+    const root = mkdtempSync(join(tmpdir(), 'haunt-reset-'));
+    dirs.push(root);
+    const botsDir = join(root, 'bots');
+    mkdirSync(botsDir, { recursive: true });
+    for (const t of ['rookie', 'retrier', 'journaler', 'reconciler', 'phoenix']) writeFileSync(join(botsDir, `${t}.js`), '');
+    const runDir = join(root, 'run');
+    const stale = join(runDir, 'wave-2', 'lane-1', 'journal.jsonl');
+    mkdirSync(join(runDir, 'wave-2', 'lane-1'), { recursive: true });
+    writeFileSync(stale, '{"stale":true}\n');
+    const cmd = makeBotCommand({ root, runDir, providerUrl: 'http://127.0.0.1:1', botsDir });
+    const s = { ...settings, lanes: 1 };
+    const first = cmd('1', 2, s);
+    expect(first?.env?.HAUNT_ATTEMPT).toBe('1');
+    expect(existsSync(stale)).toBe(false);
+    writeFileSync(stale, '{"live":true}\n');
+    const restart = cmd('1', 2, s);
+    expect(restart?.env?.HAUNT_ATTEMPT).toBe('2');
+    expect(existsSync(stale)).toBe(true);
+    expect(cmd('1', 3, s)?.env?.HAUNT_ATTEMPT).toBe('1');
+  });
+});

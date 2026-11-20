@@ -1,6 +1,6 @@
 // Live runtime: ties the runner pieces to the live server. Per-lane bot spawning, demo script playback, the wave
 // clock, the ledger endpoint payload and the hardening spec reader. Spec: runtime.md sections 4, 16, 19; PROTOCOL.md.
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import type { HauntEvent } from '../../../haunt/src/score/score';
 import { RunnerEngine, type EngineWaveSettings, type RunnerEngineOptions } from '../../../haunt/src/runner/engine';
@@ -96,7 +96,13 @@ export function makeBotCommand(o: BotCommandOptions): SpawnerOptions['botCommand
   const attempts = new Map<string, number>();
   let lastWave = 0;
   return (lane, wave, settings) => {
-    if (wave !== lastWave) { lastWave = wave; o.onWave?.(wave); }
+    if (wave !== lastWave) {
+      // A wave starts clean: a journal or done/ left by an earlier server run would make a journaled bot skip every order.
+      lastWave = wave;
+      attempts.clear();
+      rmSync(waveDir(o.runDir, wave), { recursive: true, force: true });
+      o.onWave?.(wave);
+    }
     const tier = tiersForLanes(settings.lanes, settings.tiers)[Number(lane) - 1];
     if (!tier) return undefined;
     const bundle = o.bundleFor?.(lane, wave, tier.id) ?? tier.id;
@@ -236,10 +242,17 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
   let clock: WaveClock | undefined;
   let demo: DemoPlayer | undefined;
   let spawner: LaneSpawner | undefined;
+  // Ledger rows become `repeat` events for the running wave (design.md section 8: repeats feed the wave grade).
+  const repeats = new RepeatDetector();
+  const ledgerRow = (row: LedgerRow): void => {
+    const r = repeats.add(row);
+    if (r && record) record({ type: 'repeat', lane: row.lane, order: row.order, detail: { kind: r.kind, key: r.key, count: r.count } } as HauntEvent);
+  };
   const engine: RunnerEngine = new RunnerEngine({
     post: opts.post,
     sendArm: (lane, arm) => spawner?.send(lane, arm),
     onWaveStart: (wave, settings, lanes) => {
+      repeats.reset();
       if (opts.clock !== false && record) {
         clock = new WaveClock({
           engine, record, wave, orders: settings.orders, seed: settings.seed,
@@ -275,5 +288,5 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
     stopDemo() { demo?.stop(); demo = undefined; },
   };
   const ledger = () => buildLedger(engine.lanes, opts.ledgerRows ?? (() => []));
-  return { engine, live, ledger, get spawner() { return spawner; } };
+  return { engine, live, ledger, ledgerRow, get spawner() { return spawner; } };
 }
