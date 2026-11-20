@@ -1,0 +1,8 @@
+{
+  "name": "@haunt/haunted-orders",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "App 1: the order pipeline target (Node). Five tier bots, one haunt.yaml.",
+  "license": "MIT"
+}

@@ -13,7 +13,7 @@
     "ui:dev": "npm run dev -w @haunt/arena-ui",
     "ui:build": "npm run build -w @haunt/arena-ui",
     "build": "node tools/build.mjs",
-    "build:bots": "node tools/todo.mjs build:bots H1",
+    "build:bots": "node tools/build-bots.mjs",
     "demo": "node tools/demo.mjs",
     "test": "vitest run",
     "test:contract": "vitest run --config vitest.contract.config.ts",

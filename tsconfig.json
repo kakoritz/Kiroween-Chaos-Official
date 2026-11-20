@@ -14,7 +14,7 @@
     "noEmit": true,
     "types": ["node"],
     "baseUrl": ".",
-    "paths": { "@haunt/shared": ["packages/haunt/src/shared/index.ts"], "@haunt/sdk": ["packages/haunt/src/sdk/index.ts"] }
+    "paths": { "@haunt/shared": ["packages/haunt/src/shared/index.ts"], "@haunt/sdk": ["packages/haunt/src/sdk/index.ts"], "@haunt/bot": ["packages/haunt/src/bot/index.ts"] }
   },
-  "include": ["packages/*/src", "packages/*/test", "tools/*.ts", "vitest*.config.ts"]
+  "include": ["packages/*/src", "packages/*/test", "apps/*/src", "apps/*/test", "tools/*.ts", "vitest*.config.ts"]
 }

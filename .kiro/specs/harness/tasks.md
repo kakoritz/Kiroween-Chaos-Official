@@ -47,7 +47,7 @@ Branch prefix `core/`. Each task is one PR. Tags: [C] touches `contract/`.
 Ship H0, H1, H2.2, H3.1, H3.2, H3.4, H4.1, H4.2. That gives a graded sweep and a ramp report on the demo bot. Everything else is polish.
 
 ## H6. Win-the-hackathon items (see docs/WINNING.md)
-- [ ] H6.1 Repo layout for Skeleton Crew: `packages/haunt` is the skeleton, `apps/haunted-orders` and `apps/haunted-inbox` are the two apps, each in its own folder.
+- [ ] H6.1 Repo layout for Skeleton Crew: `packages/haunt` is the skeleton, `apps/haunted-orders` and `apps/haunted-inbox` are the two apps, each in its own folder. (Partial: packages/haunt and apps/haunted-orders exist (haunt.yaml, five bots, build:bots). Remaining: apps/haunted-inbox.)
 - [ ] H6.2 App 2: Haunted Inbox in **Python** (email triage, ticket, reply), tested through the Proxy and Process adapters.
 - [ ] H6.3 Browser target: engine runs in Web Workers, crash is `worker.terminate()`, journal and ledger in the page. Contract mode `browser`. Hosted on GitHub Pages. (Partial: browser journal, in-page ledger (PageLedger with key dedupe), and WorkerProcess host (spawn, worker.terminate() kill, restart with journal replay, hook-armed kill, tested with a real thread) done; pending: bot SDK running inside a worker with browser Clock/Provider adapters, window.__haunt in-page transport, contract mode `browser`, GitHub Pages hosting.)
 - [x] H6.4 Property-based tests with `fast-check` for crash point by step: side-effect count is 1 for Phoenix. Record any bug it finds in KIRO-LOG.
@@ -56,7 +56,7 @@ Ship H0, H1, H2.2, H3.1, H3.2, H3.4, H4.1, H4.2. That gives a graded sweep and a
 - [x] H6.7 Hooks in `.kiro/hooks/`: PBT on SDK save, fixture validation on contract save, reviewer on wave end. (Note: the fixture hook runs `npm run validate:events`, which becomes real when H0.6 lands.)
 - [ ] H6.8 Kiro Power packaging of Haunt.
 - [ ] H6.9 Kiro Crew app packaging: manifest, MCP tools, reviewer agent, skill `stress-test-my-workflow`, and a page that hosts the arena UI. Read the Kiro Crew apps doc first.
-- [ ] H6.10 The loop proof: run wave 1 (Rookie F), reviewer writes the hardening spec, Kiro implements it, run wave 2 (grade A). Save both reports in `docs/proof/`. (Partial: compareWaves and renderProofMarkdown exist in packages/haunt/src/report/proof.ts. Blocked: no bot files exist (E5 apps/haunted-orders/src/bots/<tier>.ts is unticked, no apps/ dir), `npm run live` starts no lanes without a bot command, so no real wave 1 or wave 2 can run. Remaining: E5 bots, wire bot command into live.ts, run both waves, reviewer hardening spec, save reports in docs/proof/.)
+- [ ] H6.10 The loop proof: run wave 1 (Rookie F), reviewer writes the hardening spec, Kiro implements it, run wave 2 (grade A). Save both reports in `docs/proof/`. (Partial: compareWaves and renderProofMarkdown exist in packages/haunt/src/report/proof.ts. E5 bots now exist (apps/haunted-orders, `npm run build:bots` writes dist/bots/<tier>.js). Blocked: `npm run live` starts no lanes without a bot command, so no real wave 1 or wave 2 can run, and rookie.hardened.ts is not written. Remaining: wire bot command into live.ts, run both waves, reviewer hardening spec, save reports in docs/proof/.)
 - [x] H6.11 `docs/KIRO-LOG.md`: dated notes as we build. `docs/JUDGES.md`: a 60-second tour.
 - [ ] H6.12 Fresh-clone test script and a CI job for it.
 
@@ -84,7 +84,7 @@ Engine detail tasks (map to engine/design.md sections):
 - [ ] E2 Provider with key semantics, ledger JSONL, `_fault` admin (2).
 - [ ] E3 Journal JSONL with fsync, torn-line tolerance, replay (3).
 - [ ] E4 SDK `step()` and `effect()` with the four crash points and parts instrumentation (3, 4).
-- [ ] E5 Five bot files `apps/haunted-orders/src/bots/<tier>.ts` (4).
+- [x] E5 Five bot files `apps/haunted-orders/src/bots/<tier>.ts` (4).
 - [ ] E6 Fault catalog with deferral, nesting stack, restart delays (5).
 - [ ] E7 Random mode and boss schedule (5).
 - [ ] E8 Scoring engine as a pure function of events (7).

@@ -1,0 +1,53 @@
+name: haunted-orders
+start: node dist/bots/phoenix.js
+adapter: sdk
+inputs: ./orders/
+truth: http://127.0.0.1:7071
+targets:
+  recoverMs: 20000
+  repeats: 0
+  concurrency: 8
+stages:
+  - id: intake
+    label: Order intake
+    role: input
+    duration: [400, 900]
+  - id: account
+    label: Account creation
+    role: effect
+    effects:
+      - { kind: account, key: account, idempotent: required }
+    duration: [500, 1000]
+  - id: payment
+    label: Payment processing
+    role: effect
+    effects:
+      - { kind: charge, key: charge, idempotent: required }
+    duration: [800, 1500]
+  - id: confirmation
+    label: Confirmation
+    role: effect
+    effects:
+      - { kind: email, key: email, idempotent: preferred }
+    duration: [400, 800]
+  - id: dispatch
+    label: Dispatch to delivery
+    role: effect
+    effects:
+      - { kind: dispatch, key: dispatch, idempotent: required }
+    duration: [600, 1200]
+  - id: updates
+    label: Order updates
+    role: effect
+    effects:
+      - { kind: notify, key: "notify:1", idempotent: preferred }
+      - { kind: notify, key: "notify:2", idempotent: preferred }
+    duration: [400, 800]
+  - id: tracking
+    label: Delivery tracking
+    role: poll
+    duration: [1500, 3000]
+  - id: handoff
+    label: Handoff
+    role: final
+    duration: [300, 600]
