@@ -30,3 +30,11 @@ Do after Phase 1 of [haunted-house tasks](../haunted-house/tasks.md) (hero crash
 
 ## Cut line
 If time is short, ship A, B1 to B5, C1, C2, D1. Everything else is polish.
+
+## Lane split (see docs/SWIMLANES.md)
+
+This spec is **Lane B, Visuals** (`packages/arena-ui/`), built against `contract/CONTRACT.md` and the mock server.
+
+Backend items in this file belong to **Lane A** and are tracked in `.kiro/specs/harness/tasks.md`: A1 (pipeline and tiers), A2 (wave manager, event log), A4 score engine, B1 (chaos director), B2 and B6 (monkey behavior), B4 (random mode engine), B5 (boss schedule), C2 and C4 (reviewer).
+
+Lane B owns: A3, the rank board and ledger panel views, B3, the B4 slider UI, the B5 banner, C1, C3 views, D1, D2, D3, D4, plus a report viewer for the harness HTML report.
