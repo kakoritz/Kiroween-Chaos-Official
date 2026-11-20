@@ -1,3 +1,5 @@
+> **First draft, partly superseded.** The rules in `.kiro/specs/engine/` and the files in `contract/` win. Rooms became the creature and fault catalog, SQLite became JSONL, and the task list is replaced by `.kiro/specs/harness/tasks.md`. See `docs/SPEC-MAP.md`.
+
 # Requirements: Haunted House for Automation Workflows
 
 **Category:** Resurrection (primary). Costume Contest (secondary, for the UI).

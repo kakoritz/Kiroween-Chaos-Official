@@ -1,3 +1,5 @@
+> **Read `PROTOCOL.md` and `STORYBOARDS.md` too.** `PROTOCOL.md` is the complete protocol and wins where it differs. Where this file says `monkey`, read `creature`; the `chaos` event detail is `{creature, fault, scope, depth, injectedAt, source}`. Effect kinds are `account_create`, `charge`, `email`, `dispatch`, `notify`, `ticket`. Event files live in `contract/fixtures/`.
+
 # Contract v1
 
 The only thing both lanes depend on. `contractVersion: 1`.

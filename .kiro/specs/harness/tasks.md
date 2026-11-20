@@ -68,3 +68,30 @@ Never cut: H0, H1, H2.2, H3.1, H3.2, H4.1, H4.2, H6.3, H6.4, H6.10, H6.11. Cut f
 - [ ] S-A1. Express the five tiers as sets of resilience parts (`journal`, `idempotency`, `retry`, `breaker`, `offline_queue`). Adding a part changes behavior.
 - [ ] S-A2. Emit `part_added` when a hardening spec lands and a policy gains a part.
 - [ ] S-A3. Keep the creature display names (Reaper, Zombie, ...) in the creature catalog data, served by `/api/creatures`.
+
+
+## Additions from the full spec pass (authoritative detail in `.kiro/specs/engine/`)
+
+H0 is complete only when all of these are done:
+- [ ] H0.5 `tools/make-fixtures.ts` generates the five fixtures from `contract/STORYBOARDS.md`.
+- [ ] H0.6 `tools/validate-events.ts` checks the schema and every ordering rule in `contract/PROTOCOL.md`. Wired to `npm run validate:events` and CI.
+- [ ] H0.7 Mock simulator implements `engine/acceptance.md` table A for every tier and fault.
+- [ ] H0.8 `npm run test:contract` suite that runs against both mock and live.
+- [ ] H0.9 Repo scaffolding per `docs/DEV-SETUP.md`: workspaces, TypeScript, Vitest, CI, `npm run demo`.
+
+Engine detail tasks (map to engine/design.md sections):
+- [ ] E1 Order generator and per-lane provider namespace (1, 2).
+- [ ] E2 Provider with key semantics, ledger JSONL, `_fault` admin (2).
+- [ ] E3 Journal JSONL with fsync, torn-line tolerance, replay (3).
+- [ ] E4 SDK `step()` and `effect()` with the four crash points and parts instrumentation (3, 4).
+- [ ] E5 Five bot files `apps/haunted-orders/src/bots/<tier>.ts` (4).
+- [ ] E6 Fault catalog with deferral, nesting stack, restart delays (5).
+- [ ] E7 Random mode and boss schedule (5).
+- [ ] E8 Scoring engine as a pure function of events (7).
+- [ ] E9 Grading, caps, coverage matrix, recovery stats, ramp knee detection (8).
+- [ ] E10 Reviewer rules R1 to R8, postmortem, hardening spec writer (11).
+- [ ] E11 All property tests P1 to P8 and acceptance table A as tests (acceptance.md).
+- [ ] E12 Browser target interfaces: Journal, Provider, Clock, Process, and `window.__haunt` (13).
+- [ ] E13 Demo scripts `hero` and `full` run on the real engine (PROTOCOL demo mode).
+- [ ] E14 Inbox app per `.kiro/specs/inbox-app/design.md`.
+- [ ] E15 `docs/DEVPOST-DRAFT.md`, blog post draft, social post draft.

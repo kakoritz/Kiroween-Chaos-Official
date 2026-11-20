@@ -8,6 +8,11 @@ Kiroween 2026. Category: **Skeleton Crew**: one lean skeleton (the Haunt harness
 
 ## Read first
 
+- Handing off? [docs/HANDOFF-CORE.md](docs/HANDOFF-CORE.md) and [docs/HANDOFF-VISUALS.md](docs/HANDOFF-VISUALS.md)
+- [docs/SPEC-MAP.md](docs/SPEC-MAP.md): which document wins
+- [docs/OPEN-ITEMS.md](docs/OPEN-ITEMS.md): decisions and what needs a human
+- [docs/DEV-SETUP.md](docs/DEV-SETUP.md)
+
 - [docs/WINNING.md](docs/WINNING.md): rules, rubric, checklist, timeline
 - [docs/SWIMLANES.md](docs/SWIMLANES.md) and [AGENTS.md](AGENTS.md): who builds what
 - [contract/CONTRACT.md](contract/CONTRACT.md): the seam between lanes
@@ -17,7 +22,7 @@ Kiroween 2026. Category: **Skeleton Crew**: one lean skeleton (the Haunt harness
 
 | Lane | Spec |
 |---|---|
-| A Core | [haunted-house](.kiro/specs/haunted-house/), [harness](.kiro/specs/harness/) |
+| A Core | [engine](.kiro/specs/engine/), [harness](.kiro/specs/harness/), [inbox-app](.kiro/specs/inbox-app/), [haunted-house](.kiro/specs/haunted-house/) (first draft) |
 | B Visuals | [arena](.kiro/specs/arena/) |
 
 ## Layout (target)

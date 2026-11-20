@@ -58,3 +58,10 @@ Lane B owns: A3, the rank board and ledger panel views, B3, the B4 slider UI, th
 - [ ] S5. Creature sprites and animations from the table in design.md. Start with Reaper, Zombie, Ghost, Wraith, Poltergeist, Doppelganger, plus the Lich boss.
 - [ ] S6. Orders as parchment scrolls on a conveyor into the crypt.
 - [ ] S7. Sound set generated in code: bone rattle, creak, wail, thud, sting.
+
+
+## Where to start (see docs/HANDOFF-VISUALS.md)
+1. Read order in the handoff doc.
+2. Build against fake events using the types in `contract/PROTOCOL.md` until Lane A merges H0.
+3. Every outcome you must draw is listed in `.kiro/specs/engine/acceptance.md` table A.
+4. Sprites for creatures: see the creature table in `design.md`. Start with Reaper, Zombie, Ghost, Wraith, Poltergeist, Doppelganger, Lich.

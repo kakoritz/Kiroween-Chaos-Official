@@ -39,3 +39,11 @@ Rules:
 ## Ownership of files at the root
 
 README, `docs/`, CI and `contract/` are shared. Edit through a PR the other lane can see.
+
+## Working copies and merging (see docs/DEV-SETUP.md)
+
+- Each session works in its **own local clone** (not the NAS) and pushes to GitHub.
+- Non-contract PRs: the author merges after tests are green.
+- Contract PRs (anything in `contract/`): label `contract`, and the other lane approves in a PR comment before merge.
+- If a lane is blocked on the other, open an issue labelled `lane-question`, state exactly what is missing, and keep working on something else.
+- Handoff guides: `docs/HANDOFF-CORE.md` and `docs/HANDOFF-VISUALS.md`.
