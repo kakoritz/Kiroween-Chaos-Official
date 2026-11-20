@@ -13,6 +13,7 @@
     "ui:dev": "npm run dev -w @haunt/arena-ui",
     "ui:build": "npm run build -w @haunt/arena-ui",
     "build": "node tools/build.mjs",
+    "build:browser": "node tools/build-browser.mjs",
     "build:bots": "node tools/build-bots.mjs",
     "demo": "node tools/demo.mjs",
     "test": "vitest run",

@@ -18,6 +18,7 @@ export interface WorkerLike {
 export type WorkerToPage =
   | { k: 'journal_append'; id: number; rec: JournalRecord }
   | { k: 'effect'; id: number; req: Omit<PageEffectRequest, 'lane'> }
+  | { k: 'lookup'; id: number; kind: PageEffectRequest['kind']; key: string }
   | { k: 'hook'; id: number; point: string; order?: string; stage?: string }
   | { k: 'event'; msg: Record<string, unknown> };
 
@@ -107,6 +108,11 @@ export class WorkerProcess {
       case 'effect': {
         const { row, replayed } = this.o.ledger.apply({ ...m.req, lane: this.o.lane });
         this.reply(w, { id: m.id, ok: true, body: { row, replayed } });
+        return;
+      }
+      case 'lookup': {
+        const row = this.o.ledger.find(this.o.lane, m.kind, m.key);
+        this.reply(w, { id: m.id, ok: true, body: row ? { found: true, row } : { found: false } });
         return;
       }
       case 'hook': {

@@ -64,6 +64,19 @@ export interface SdkOptions {
   transport: Transport;
   /** Required with the `journal` part. */
   journalPath?: string;
+  /** Browser target: an injected store replaces the node file journal. */
+  journalStore?: JournalStore;
+  /** Records folded into state at start (the browser target replays the page-owned journal). */
+  initialRecords?: readonly JournalRecord[];
+  /** Process id for the hello message. Defaults to process.pid when available. */
+  pid?: number;
+}
+
+/** Append-only record sink. The node Journal and the browser worker store both fit. */
+export interface JournalStore {
+  append(rec: JournalRecord): void;
+  failNextWrite(): void;
+  close?(): void;
 }
 
 export interface EffectOptions {
@@ -80,7 +93,7 @@ interface BreakerState { fails: number; openUntil: number | null }
 
 export class Sdk {
   private readonly use: ReadonlySet<Part>;
-  private readonly journal: Journal | null;
+  private readonly journal: JournalStore | null;
   private state: JournalState = new Map();
   private readonly breakers = new Map<string, BreakerState>();
   private readonly slept = new Set<string>();
@@ -92,8 +105,9 @@ export class Sdk {
   constructor(private readonly o: SdkOptions) {
     this.use = new Set(o.use);
     if (this.use.has('journal')) {
-      if (!o.journalPath) throw new Error('the journal part needs journalPath');
-      this.journal = new Journal(o.journalPath);
+      if (o.journalStore) this.journal = o.journalStore;
+      else if (o.journalPath) this.journal = new Journal(o.journalPath);
+      else throw new Error('the journal part needs journalPath');
     } else {
       this.journal = null;
     }
@@ -109,8 +123,9 @@ export class Sdk {
   /** `startup` hook, journal load, `hello`. Call once per process before the first order. */
   async start(): Promise<void> {
     await this.o.host.hook('startup', {});
-    if (this.journal) this.state = replay(readJournal(this.journal.path));
-    this.o.host.emit({ k: 'hello', tier: this.o.tier, parts: this.parts(), pid: process.pid });
+    if (this.journal) this.state = replay(this.o.initialRecords ?? readJournal(this.o.journalPath ?? ''));
+    const pid = this.o.pid ?? (typeof process !== 'undefined' ? process.pid : 0);
+    this.o.host.emit({ k: 'hello', tier: this.o.tier, parts: this.parts(), pid });
   }
 
   /** `disk_full`: the journal's next write throws ENOSPC once. A bot without `journal` ignores it. */
@@ -126,7 +141,7 @@ export class Sdk {
   }
 
   close(): void {
-    this.journal?.close();
+    this.journal?.close?.();
   }
 
   async order(id: string, fn: (sdk: Sdk) => Promise<void>): Promise<OrderResult> {

@@ -9,6 +9,7 @@ export interface PageLedgerRow {
   order: string;
   key: string | null;
   index: number | null;
+  amount: number | null;
   ts: number;
 }
 
@@ -18,6 +19,7 @@ export interface PageEffectRequest {
   order: string;
   key?: string | null;
   index?: number | null;
+  amount?: number | null;
 }
 
 const PREFIX: Record<LedgerKind, string> = {
@@ -46,11 +48,17 @@ export class PageLedger {
       order: req.order,
       key,
       index: req.index ?? null,
+      amount: req.amount ?? null,
       ts: this.now(),
     };
     this.rows.push(row);
     if (dedupe !== null) this.byKey.set(dedupe, row);
     return { row, replayed: false };
+  }
+
+  /** Reconcile lookup: the row an idempotency key already produced, if any. */
+  find(lane: string, kind: LedgerKind, key: string): PageLedgerRow | null {
+    return this.byKey.get(`${lane}|${kind}|${key}`) ?? null;
   }
 
   /** Rows for a lane (or all lanes), in write order. */
