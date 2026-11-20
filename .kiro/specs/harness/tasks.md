@@ -13,7 +13,7 @@ Branch prefix `core/`. Each task is one PR. Tags: [C] touches `contract/`.
 - [x] H1.2 SDK: journal, `step()`, `effect()`, replay, reconcile.
 - [x] H1.3 Pipeline of eight stages and five policy tiers.
 - [x] H1.4 Chaos director, hook points, nested fault stack, real SIGKILL.
-- [ ] H1.5 Runner, wave manager, event log (JSONL), score engine. (Partial: event log, score engine, grading and wave manager done; runner pending.)
+- [ ] H1.5 Runner, wave manager, event log (JSONL), score engine. (Partial: event log, score engine, grading and wave manager done; lane tiers and input layout done; runner process loop, random chaos tick, boss schedule, provider /_fault posting and ledger repeat detection pending.)
 - [ ] H1.6 Live server implementing the contract. Fixtures stay generated from storyboards (they are not regenerated from live runs).
 - [ ] H1.7 Hero crash test: Rookie 2 charges, Phoenix 1.
 
