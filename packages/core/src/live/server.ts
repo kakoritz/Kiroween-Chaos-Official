@@ -28,7 +28,7 @@ export interface WaveSettings { orders: number; seed: number; tiers: TierMode; l
 
 /** What the runner provides. Every hook is optional so the server is usable (read-only) before the runner exists. */
 export interface LiveEngine {
-  startWave?(wave: number, settings: WaveSettings, record: (ev: HauntEvent) => void): void;
+  startWave?(wave: number, settings: WaveSettings, record: (ev: HauntEvent) => void, end?: () => void): void;
   stopWave?(): void;
   setSpeed?(speed: number): void;
   chaos?(req: ChaosRequest): ChaosResult;
@@ -265,7 +265,7 @@ export class LiveServer {
     const n = this.waves.start({ lanes: perLane, info: { orders, seed, tiers, lanes, speed, app, pace } });
     this.settings = { ...settings, startedAt: this.waves.waves.at(-1)!.startedAt };
     defs.forEach((t, i) => this.waves.record({ type: 'lane_ready', lane: String(i + 1), detail: { tier: t.id, label: t.label, parts: [...t.use] } }));
-    this.engine.startWave?.(n, settings, (ev) => { if (this.waves.active) this.waves.record(ev); });
+    this.engine.startWave?.(n, settings, (ev) => { if (this.waves.active) this.waves.record(ev); }, () => { if (this.waves.active && this.waves.n === n) this.waves.end(); });
     return { wave: n };
   }
 

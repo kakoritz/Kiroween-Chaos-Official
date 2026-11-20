@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { LiveServer, buildLedger, createLiveRuntime, DemoPlayer, LaneSpawner, loadDemo, readHardening } from '../src/live';
+import { LiveServer, buildLedger, createLiveRuntime, makeBotCommand, DemoPlayer, LaneSpawner, loadDemo, readHardening } from '../src/live';
 import { RunnerEngine } from '../../haunt/src/runner/engine';
 import type { HauntEvent } from '../../haunt/src/score/score';
 import type { LedgerRow } from '../src/provider';
@@ -147,5 +147,48 @@ describe('runtime behind the live server', () => {
     expect(r.status).toBe(200);
     expect(r.body.spec).toBe('hardening-run1');
     expect((await call('/api/waves/9/hardening')).status).toBe(404);
+  });
+});
+
+describe('bot command wiring', () => {
+  const fakeBot = [
+    "const rl = require('node:readline').createInterface({ input: process.stdin });",
+    "process.stdout.write(JSON.stringify({ k: 'ready' }) + '\\n');",
+    "rl.on('line', (l) => { if (JSON.parse(l).k === 'go') { require('node:fs').appendFileSync(require('node:path').join(process.env.HAUNT_RUN_DIR, 'ran-' + process.env.HAUNT_TIER + '-' + process.env.HAUNT_LANE), process.env.HAUNT_ORDERS_DIR); process.exit(0); } });",
+  ].join('\n');
+
+  it('spawns one real process per lane and ends the wave when all lanes exit', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'haunt-bots-'));
+    dirs.push(root);
+    const botsDir = join(root, 'dist', 'bots');
+    mkdirSync(botsDir, { recursive: true });
+    for (const t of ['rookie', 'phoenix']) writeFileSync(join(botsDir, `${t}.js`), fakeBot);
+    const runDir = join(root, '.haunt');
+    mkdirSync(runDir, { recursive: true });
+    const rt = createLiveRuntime({ clock: false, botCommand: makeBotCommand({ root, runDir, providerUrl: 'http://127.0.0.1:1' }) });
+    srv = new LiveServer({ engine: rt.live });
+    const { url } = await srv.listen(0);
+    const r = await fetch(`${url}/api/wave/start`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ lanes: 2, orders: 2 }) });
+    expect(r.status).toBe(200);
+    await rt.spawner!.done;
+    const waves = (await (await fetch(`${url}/api/waves`)).json()) as any;
+    const list = Array.isArray(waves) ? waves : waves.waves;
+    expect(list.at(-1).endedAt).toBeTypeOf('number');
+    const again = await fetch(`${url}/api/wave/stop`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+    expect(again.status).toBe(409);
+    expect(existsSync(join(runDir, 'ran-rookie-1'))).toBe(true);
+    expect(existsSync(join(runDir, 'ran-phoenix-2'))).toBe(true);
+  });
+
+  it('leaves lanes unspawned and the wave running when no bot is built', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'haunt-nobots-'));
+    dirs.push(root);
+    const rt = createLiveRuntime({ clock: false, botCommand: makeBotCommand({ root, runDir: join(root, '.haunt'), providerUrl: 'http://127.0.0.1:1' }) });
+    srv = new LiveServer({ engine: rt.live });
+    const { url } = await srv.listen(0);
+    await fetch(`${url}/api/wave/start`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ lanes: 1, orders: 1 }) });
+    await rt.spawner!.done;
+    const stop = await fetch(`${url}/api/wave/stop`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+    expect(stop.status).toBe(200);
   });
 });

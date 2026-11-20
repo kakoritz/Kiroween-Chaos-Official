@@ -4,6 +4,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { HauntEvent } from '../../../haunt/src/score/score';
 import { RunnerEngine, type EngineWaveSettings, type RunnerEngineOptions } from '../../../haunt/src/runner/engine';
+import { prepareLane, tiersForLanes } from '../../../haunt/src/runner/lanes';
 import { runLane, type LaneLoopOptions, type LaneLoopResult } from '../../../haunt/src/runner/loop';
 import { BOSS_DURATION_MS, WaveClock } from '../../../haunt/src/runner/live';
 import { RepeatDetector } from '../../../haunt/src/runner/provider';
@@ -24,6 +25,8 @@ export interface SpawnerOptions {
   run?: (o: LaneLoopOptions) => Promise<LaneLoopResult>;
   onLaneExit?: (lane: string, result: LaneLoopResult) => void;
   onLaneError?: (lane: string, err: unknown) => void;
+  /** Called once when every spawned lane loop has ended on its own. Not called after `stop` or when no lane was spawned. */
+  onWaveDone?: (wave: number) => void;
 }
 
 /** Starts `runLane` for every lane of a wave and aborts them all on stop. */
@@ -40,21 +43,52 @@ export class LaneSpawner {
     this.ctl = ctl;
     const run = this.o.run ?? runLane;
     const loops: Promise<void>[] = [];
+    const failed = (lane: string, e: unknown) => { this.o.onLaneError?.(lane, e); };
     for (const lane of lanes) {
       const cmd = this.o.botCommand(lane, wave, settings);
       if (!cmd) continue;
       loops.push(
         run({ lane, director: this.o.engine.director, command: cmd.command, args: cmd.args, env: cmd.env, signal: ctl.signal })
           .then((r) => this.o.onLaneExit?.(lane, r))
-          .catch((e) => this.o.onLaneError?.(lane, e)),
+          .catch((e) => failed(lane, e)),
       );
     }
-    this.done = Promise.all(loops).then(() => undefined);
+    this.done = Promise.all(loops).then(() => {
+      if (loops.length > 0 && !ctl.signal.aborted) {
+        this.ctl = undefined;
+        this.o.onWaveDone?.(wave);
+      }
+    });
   };
 
   stop = (): void => {
     this.ctl?.abort();
     this.ctl = undefined;
+  };
+}
+
+/** Bot command for a lane: process.execPath <botsDir>/<tier>.js with the runtime.md section 2 env. Undefined when that bot is not built. */
+export interface BotCommandOptions { root: string; runDir: string; providerUrl: string; botsDir?: string }
+export function makeBotCommand(o: BotCommandOptions): SpawnerOptions['botCommand'] {
+  const botsDir = o.botsDir ?? join(o.root, 'dist', 'bots');
+  const attempts = new Map<string, number>();
+  return (lane, _wave, settings) => {
+    const tier = tiersForLanes(settings.lanes, settings.tiers)[Number(lane) - 1];
+    if (!tier) return undefined;
+    const file = join(botsDir, `${tier.id}.js`);
+    if (!existsSync(file)) return undefined;
+    const { paths } = prepareLane(o.runDir, Number(lane), settings.seed, settings.orders);
+    const attempt = (attempts.get(lane) ?? 0) + 1;
+    attempts.set(lane, attempt);
+    return {
+      command: process.execPath,
+      args: [file],
+      env: {
+        HAUNT_RUN_DIR: o.runDir, HAUNT_LANE: lane, HAUNT_TIER: tier.id, HAUNT_SEED: String(settings.seed),
+        HAUNT_PROVIDER: o.providerUrl, HAUNT_ORDERS_DIR: paths.orders, HAUNT_SPEED: String(settings.speed),
+        HAUNT_ATTEMPT: String(attempt), HAUNT_APP: settings.app,
+      },
+    };
   };
 }
 
@@ -172,6 +206,7 @@ export interface LiveRuntimeOptions {
 /** The `LiveEngine` for `LiveServer`, plus the ledger payload function. */
 export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
   let record: ((ev: HauntEvent) => void) | undefined;
+  let endWave: (() => void) | undefined;
   let clock: WaveClock | undefined;
   let demo: DemoPlayer | undefined;
   let spawner: LaneSpawner | undefined;
@@ -190,10 +225,15 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
     },
     onWaveStop: () => { clock?.stop(); clock = undefined; demo?.stop(); demo = undefined; spawner?.stop(); },
   });
-  if (opts.botCommand) spawner = new LaneSpawner({ engine, botCommand: opts.botCommand, run: opts.run });
+  if (opts.botCommand) {
+    spawner = new LaneSpawner({
+      engine, botCommand: opts.botCommand, run: opts.run,
+      onWaveDone: () => { clock?.stop(); clock = undefined; demo?.stop(); demo = undefined; endWave?.(); },
+    });
+  }
 
   const live: LiveEngine = {
-    startWave(wave, settings, rec) { record = rec; engine.startWave(wave, settings, rec); },
+    startWave(wave, settings, rec, end) { record = rec; endWave = end; engine.startWave(wave, settings, rec); },
     stopWave: () => engine.stopWave(),
     setSpeed: (s) => engine.setSpeed(s),
     chaos: (req) => engine.chaos(req),
