@@ -233,6 +233,8 @@ export interface LiveRuntimeOptions {
   /** Run random chaos and the boss schedule from the wave clock. Defaults to true. */
   clock?: boolean;
   post?: RunnerEngineOptions['post'];
+  /** Events about the finished wave, emitted before the next `wave_start`. */
+  betweenWaves?: LiveEngine['betweenWaves'];
 }
 
 /** The `LiveEngine` for `LiveServer`, plus the ledger payload function. */
@@ -275,6 +277,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
 
   const live: LiveEngine = {
     startWave(wave, settings, rec, end) { record = rec; endWave = end; engine.startWave(wave, settings, rec); },
+    betweenWaves: opts.betweenWaves,
     stopWave: () => engine.stopWave(),
     setSpeed: (s) => engine.setSpeed(s),
     chaos: (req) => engine.chaos(req),

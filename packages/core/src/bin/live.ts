@@ -1,7 +1,7 @@
 // `npm run live`: starts the live server on 127.0.0.1:7070 and the provider on 127.0.0.1:7071. Optional first argument: port.
 import { join } from 'node:path';
 import { EventLog } from '../../../haunt/src/events/eventlog';
-import { LIVE_PORT, LiveServer, createLiveRuntime, makeBotCommand, readHardening } from '../live';
+import { LIVE_PORT, LiveServer, createLiveRuntime, loopFixEvents, makeBotCommand, readHardening } from '../live';
 import { startProvider } from '../provider/server';
 
 const port = Number(process.argv.find((a, i) => i >= 2 && /^\d+$/.test(a)) ?? process.env.HAUNT_PORT ?? LIVE_PORT);
@@ -15,13 +15,28 @@ const botCommand = makeBotCommand({
   onWave: () => provider.provider.reset(),
   bundleFor: (lane, wave, tier) => (loop && lane === '1' && tier === 'rookie' && wave >= 2 ? 'rookie.hardened' : undefined),
 });
-const rt = createLiveRuntime({ botCommand, ledgerRows: (lane) => provider.provider.ledger(lane) });
+const specsDir = join(process.cwd(), '.kiro', 'specs');
+const rt = createLiveRuntime({
+  botCommand,
+  ledgerRows: (lane) => provider.provider.ledger(lane),
+  // Loop: when lane 1 swaps to the hardened bundle, emit the reviewer spec, the recorded fix and the new parts before wave_start (runtime.md section 32).
+  betweenWaves: loop
+    ? (prev, next) => (next >= 2 && prev < 2
+      ? loopFixEvents({
+        lane: '1', root: process.cwd(),
+        beforeSrc: 'apps/haunted-orders/src/bots/rookie.ts', afterSrc: 'apps/haunted-orders/src/bots/rookie.hardened.ts',
+        beforeBundle: join(process.cwd(), 'dist', 'bots', 'rookie.js'), afterBundle: join(process.cwd(), 'dist', 'bots', 'rookie.hardened.js'),
+        hardening: () => readHardening(specsDir),
+      })
+      : [])
+    : undefined,
+});
 provider.provider.onRow = rt.ledgerRow;
 const server = new LiveServer({
   log: new EventLog(join(runDir, 'events.jsonl')),
   engine: rt.live,
   ledger: rt.ledger,
-  hardening: () => readHardening(join(process.cwd(), '.kiro', 'specs')),
+  hardening: () => readHardening(specsDir),
 });
 const { url } = await server.listen(port);
 console.log(`live server on ${url}, provider on ${provider.url}`);
