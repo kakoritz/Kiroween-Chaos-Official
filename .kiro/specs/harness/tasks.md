@@ -37,7 +37,7 @@ Branch prefix `core/`. Each task is one PR. Tags: [C] touches `contract/`.
 - [x] H4.2 Report builder: JSON, Markdown, offline HTML.
 - [x] H4.3 Reviewer: postmortem and hardening spec writer.
 - [ ] H4.4 CI exit codes and a GitHub Actions example.
-- [ ] H4.5 Determinism tests.
+- [x] H4.5 Determinism tests. (packages/haunt/test/determinism.test.ts: rng, random chaos plan, boss plan, sweep byte-identical JSON (P8, in-process runner), ramp, stable report. Live-process byte identity is tracked under H3.2.)
 
 ## H5. Ship
 - [ ] H5.1 README, quick start, "How Kiro built this".
