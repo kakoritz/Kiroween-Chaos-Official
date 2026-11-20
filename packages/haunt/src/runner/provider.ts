@@ -1,0 +1,94 @@
+// Provider side of the runner: translate a ProviderArm into a `POST /_fault` body and detect
+// repeated effects in the ledger. Spec: runtime.md sections 4, 18, 22 and PROTOCOL `repeat`.
+import type { FaultSpec, LedgerRow } from '../../../core/src/provider';
+import type { ProviderArm } from '../chaos/director';
+
+type Service = FaultSpec['service'];
+
+const STAGE_SERVICE: Record<string, Service> = {
+  account: 'account',
+  payment: 'charge',
+  confirmation: 'email',
+  dispatch: 'dispatch',
+  updates: 'notify',
+  tracking: 'tracking',
+};
+
+/** Fault ids that act on every service of the lane, whatever the stage. */
+const ALL_SERVICES = new Set(['internet_outage', 'endpoint_down']);
+
+/** Convert an arm to a /_fault body. Returns null for faults the provider does not apply. */
+export function faultBody(lane: string, stage: string | null, arm: ProviderArm): FaultSpec | null {
+  const service: Service = ALL_SERVICES.has(arm.fault) ? '*' : ((stage && STAGE_SERVICE[stage]) || '*');
+  let base: Omit<FaultSpec, 'lane' | 'service'>;
+  switch (arm.fault) {
+    case 'internet_outage': base = { mode: 'drop' }; break;
+    case 'endpoint_down': base = { mode: 'status', value: 503 }; break;
+    case 'timeout':
+    case 'comm_timeout': base = { mode: 'latency', value: 3000, count: 1 }; break;
+    case 'slow_link': base = { mode: 'latency', value: 600 }; break;
+    case 'http_404': base = { mode: 'status', value: 404, count: 2 }; break;
+    case 'http_429': base = { mode: 'status', value: 429, count: 3, headers: { 'Retry-After': '2' } }; break;
+    case 'http_500': base = { mode: 'status', value: 500, count: 2 }; break;
+    case 'hazard_event': base = { mode: 'stall', value: 5000, forMs: 5000 }; break;
+    case 'driver_unreachable': base = { mode: 'no_driver', forMs: 3000 }; break;
+    default: return null;
+  }
+  const body: FaultSpec = { lane, service: arm.fault === 'hazard_event' || arm.fault === 'driver_unreachable' ? 'tracking' : service, ...base };
+  // The arm carries the (possibly speed-scaled) window or count and wins over the defaults.
+  if (arm.forMs !== undefined) { body.forMs = arm.forMs; delete body.count; }
+  else if (arm.count !== undefined) { body.count = arm.count; delete body.forMs; }
+  if (arm.nextCaller) body.nextCaller = arm.nextCaller;
+  return body;
+}
+
+export type PostFault = (body: FaultSpec) => Promise<void>;
+
+/** Post an arm to the provider. Returns the body sent, or null if the fault is not a provider fault. */
+export async function postProviderArm(post: PostFault, lane: string, stage: string | null, arm: ProviderArm): Promise<FaultSpec | null> {
+  const body = faultBody(lane, stage, arm);
+  if (body) await post(body);
+  return body;
+}
+
+export interface RepeatEvent {
+  kind: string;
+  key: string;
+  count: number;
+}
+
+/** Tracks ledger rows per (kind, order, index) and reports a repeat each time the row count grows past 1. */
+export class RepeatDetector {
+  private readonly counts = new Map<string, number>();
+
+  /** Feed every new ledger row, in write order. Returns a repeat event when this row is an extra one. */
+  add(row: Pick<LedgerRow, 'kind' | 'order' | 'index' | 'lane'>): RepeatEvent | null {
+    const key = row.index === null || row.index === undefined ? `${row.order}:${row.kind}` : `${row.order}:${row.kind}:${row.index}`;
+    const id = `${row.lane}|${row.kind}|${key}`;
+    const n = (this.counts.get(id) ?? 0) + 1;
+    this.counts.set(id, n);
+    return n > 1 ? { kind: row.kind, key, count: n } : null;
+  }
+
+  /** Extra rows seen for a lane (rows minus 1 per group). */
+  extraRows(lane: string): number {
+    let extra = 0;
+    for (const [id, n] of this.counts) if (id.startsWith(`${lane}|`) && n > 1) extra += n - 1;
+    return extra;
+  }
+
+  reset(): void {
+    this.counts.clear();
+  }
+}
+
+/** One-shot scan of a ledger snapshot. */
+export function scanRepeats(rows: readonly LedgerRow[]): RepeatEvent[] {
+  const d = new RepeatDetector();
+  const out: RepeatEvent[] = [];
+  for (const r of rows) {
+    const e = d.add(r);
+    if (e) out.push(e);
+  }
+  return out;
+}
