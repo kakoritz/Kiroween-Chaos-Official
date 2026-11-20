@@ -20,7 +20,7 @@
     "validate:events": "node tools/todo.mjs validate:events H0.6",
     "make:fixtures": "node tools/run-ts.mjs tools/make-fixtures.ts",
     "typecheck": "tsc --noEmit",
-    "haunt": "node tools/todo.mjs haunt H3",
+    "haunt": "node tools/run-ts.mjs packages/core/src/bin/haunt.ts",
     "fresh-clone": "node tools/todo.mjs fresh-clone H6.12"
   },
   "devDependencies": {

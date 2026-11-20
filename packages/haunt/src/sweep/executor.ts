@@ -49,6 +49,11 @@ export function gradeSweep(matrix: CoverageMatrix, cells: SweepCellResult[] = []
   });
 }
 
+/** Deterministic JSON for a sweep report (no timestamps), for files and the byte-identical check. */
+export function sweepReportJson(r: SweepReport): string {
+  return JSON.stringify(r, null, 2) + '\n';
+}
+
 export async function runSweep(plan: SweepPlan, runCell: RunCell, seed = 1): Promise<SweepReport> {
   const cells: SweepCellResult[] = [];
   const outcomes: Record<string, CellOutcome> = {};

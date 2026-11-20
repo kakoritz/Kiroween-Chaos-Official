@@ -1,6 +1,7 @@
 // Sweep plan and stage-by-creature coverage matrix. Spec: harness requirements (Sweep), tasks.md H3.2.
 import type { HauntConfig, StageDef } from '../config/haunt-config';
 import type { CreaturePlugin } from '../creatures/plugin';
+import { faultById } from '../chaos/catalog';
 
 export type CellStatus = 'pass' | 'repeat' | 'recovered_late' | 'fail' | 'halt' | 'n/a' | 'pending';
 export type CellOutcome = Exclude<CellStatus, 'n/a' | 'pending'>;
@@ -14,20 +15,31 @@ export interface SweepPlan {
   cells: SweepCell[];
 }
 
-export function appliesToStage(c: CreaturePlugin, s: StageDef): boolean {
+export function appliesToStage(c: CreaturePlugin, s: StageDef, catalogStages = false): boolean {
   const a = c.appliesTo;
-  if (!a) return true;
-  if (a.roles && !a.roles.includes(s.role)) return false;
-  if (a.stages && !a.stages.includes(s.id)) return false;
+  if (a) {
+    if (a.roles && !a.roles.includes(s.role)) return false;
+    if (a.stages && !a.stages.includes(s.id)) return false;
+  }
+  // Opt-in for the reference app: a catalog fault only lands on the stages the catalog lists (design.md section 5).
+  if (catalogStages) {
+    const def = faultById(c.faults[0]);
+    if (def && !def.stages.includes(s.id)) return false;
+  }
   return true;
 }
 
-export function planSweep(config: HauntConfig, creatures: CreaturePlugin[]): SweepPlan {
+export interface PlanOptions {
+  /** Drop cells whose catalog fault never lands on that stage id (stage ids of the reference app). */
+  catalogStages?: boolean;
+}
+
+export function planSweep(config: HauntConfig, creatures: CreaturePlugin[], opts: PlanOptions = {}): SweepPlan {
   const sorted = [...creatures].sort((a, b) => a.id.localeCompare(b.id));
   const cells: SweepCell[] = [];
   for (const s of config.stages) {
     for (const c of sorted) {
-      if (appliesToStage(c, s)) cells.push({ stage: s.id, creature: c.id, fault: c.faults[0] });
+      if (appliesToStage(c, s, opts.catalogStages)) cells.push({ stage: s.id, creature: c.id, fault: c.faults[0] });
     }
   }
   return { stages: config.stages.map((s) => s.id), creatures: sorted.map((c) => c.id), cells };
