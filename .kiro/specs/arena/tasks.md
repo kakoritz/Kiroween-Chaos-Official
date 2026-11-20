@@ -38,3 +38,13 @@ This spec is **Lane B, Visuals** (`packages/arena-ui/`), built against `contract
 Backend items in this file belong to **Lane A** and are tracked in `.kiro/specs/harness/tasks.md`: A1 (pipeline and tiers), A2 (wave manager, event log), A4 score engine, B1 (chaos director), B2 and B6 (monkey behavior), B4 (random mode engine), B5 (boss schedule), C2 and C4 (reviewer).
 
 Lane B owns: A3, the rank board and ledger panel views, B3, the B4 slider UI, the B5 banner, C1, C3 views, D1, D2, D3, D4, plus a report viewer for the harness HTML report.
+
+## Win-the-hackathon items for Lane B (see docs/WINNING.md)
+- [ ] W1. UI works in all three contract modes: `mock`, `live`, `browser`. No mode-specific code.
+- [ ] W2. A mode badge and an "Open in demo mode" button so judges land on a running show in under 5 seconds.
+- [ ] W3. App switcher: Haunted Orders and Haunted Inbox, same arena, different stage names and sprites. Stage names come from `/api/state`, not hard-coded.
+- [ ] W4. Report viewer with the before and after (wave 1 vs wave 2) side by side.
+- [ ] W5. Kiro Crew app page that hosts the arena (see harness H6.9).
+- [ ] W6. Polish pass: consistent palette, sound with a mute button, motion that follows reduced-motion, readable at 1080p video capture.
+- [ ] W7. Accessibility: keyboard Chaos, color-blind safe states (icons plus color).
+- [ ] W8. Video capture helper: a "present mode" that hides cursor chrome and shows a clean frame.

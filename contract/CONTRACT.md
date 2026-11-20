@@ -27,7 +27,7 @@ Server: `http://127.0.0.1:7070`. The UI folder is served at `/`. No auth, localh
 | `GET /api/waves/:n/report` | Wave report JSON |
 | `GET /api/waves/:n/postmortem` | Reviewer output (markdown) |
 | `GET /api/monkeys` | Monkey catalog with family, label, description |
-| `GET /api/health` | `{ok, contractVersion, mode: "mock"\|"live"}` |
+| `GET /api/health` | `{ok, contractVersion, mode: "mock"|"live"|"browser", app: "orders"|"inbox"}` |\|"live"}` |
 
 Errors: `{error: {code, message}}` with a normal HTTP status.
 
@@ -85,3 +85,10 @@ Fixtures are real event streams the mock server replays. Lane A generates them. 
 - `contractVersion` is in `/api/health` and the first SSE message.
 - Add fields freely. The UI ignores unknown fields.
 - Rename, remove or change meaning: bump the version, both lanes sign off.
+
+## Additions (v1, additive)
+
+- `mode: "browser"`: the engine runs inside the page (Web Workers). The UI must behave the same in `mock`, `live` and `browser`.
+- `GET /api/state` includes `app` and `stages`: an ordered list of `{id, label, icon, workAnimation}`. The UI reads stage names from here so a second app (Haunted Inbox) needs no UI change. The eight order stages are the default for `app: "orders"`.
+- `GET /api/apps` lists available apps. `POST /api/app` `{app}` switches.
+- `GET /api/waves/:n/compare/:m` returns a before and after comparison of two waves (scores, grade, repeats).

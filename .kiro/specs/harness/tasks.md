@@ -45,3 +45,20 @@ Branch prefix `core/`. Each task is one PR. Tags: [C] touches `contract/`.
 
 ## Cut line
 Ship H0, H1, H2.2, H3.1, H3.2, H3.4, H4.1, H4.2. That gives a graded sweep and a ramp report on the demo bot. Everything else is polish.
+
+## H6. Win-the-hackathon items (see docs/WINNING.md)
+- [ ] H6.1 Repo layout for Skeleton Crew: `packages/haunt` is the skeleton, `apps/haunted-orders` and `apps/haunted-inbox` are the two apps, each in its own folder.
+- [ ] H6.2 App 2: Haunted Inbox in **Python** (email triage, ticket, reply), tested through the Proxy and Process adapters.
+- [ ] H6.3 Browser target: engine runs in Web Workers, crash is `worker.terminate()`, journal and ledger in the page. Contract mode `browser`. Hosted on GitHub Pages.
+- [ ] H6.4 Property-based tests with `fast-check` for crash point by step: side-effect count is 1 for Phoenix. Record any bug it finds in KIRO-LOG.
+- [ ] H6.5 `haunt-mcp` server: `haunt_define`, `haunt_sweep`, `haunt_ramp`, `haunt_report`.
+- [ ] H6.6 Custom agents `chaos-director` and `reviewer` in `.kiro/agents/`.
+- [ ] H6.7 Hooks in `.kiro/hooks/`: PBT on SDK save, fixture validation on contract save, reviewer on wave end.
+- [ ] H6.8 Kiro Power packaging of Haunt.
+- [ ] H6.9 Kiro Crew app packaging: manifest, MCP tools, reviewer agent, skill `stress-test-my-workflow`, and a page that hosts the arena UI. Read the Kiro Crew apps doc first.
+- [ ] H6.10 The loop proof: run wave 1 (Rookie F), reviewer writes the hardening spec, Kiro implements it, run wave 2 (grade A). Save both reports in `docs/proof/`.
+- [ ] H6.11 `docs/KIRO-LOG.md`: dated notes as we build. `docs/JUDGES.md`: a 60-second tour.
+- [ ] H6.12 Fresh-clone test script and a CI job for it.
+
+## Cut line update
+Never cut: H0, H1, H2.2, H3.1, H3.2, H4.1, H4.2, H6.3, H6.4, H6.10, H6.11. Cut first: H3.5, H3.6, H6.8.
