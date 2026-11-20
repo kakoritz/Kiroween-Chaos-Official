@@ -11,6 +11,7 @@ Hackathon: Kiroween. Category: Resurrection.
 - [Requirements](.kiro/specs/haunted-house/requirements.md)
 - [Design](.kiro/specs/haunted-house/design.md)
 - [Tasks](.kiro/specs/haunted-house/tasks.md)
+- [Arena requirements](.kiro/specs/arena/requirements.md), [design](.kiro/specs/arena/design.md), [tasks](.kiro/specs/arena/tasks.md)
 - [Steering](.kiro/steering/product.md)
 
 ## Status
