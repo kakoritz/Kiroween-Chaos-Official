@@ -24,7 +24,7 @@ Haunt is exactly this: a lean skeleton (the harness) and two different apps buil
 
 **Theme: the Skeleton Crew vs the Haunting**
 - The five lane bots are **skeleton workers** processing orders. Orders arrive as parchment scrolls.
-- Chaos is done by **spooky creatures**, not creatures (see the creature table in the contract). A Reaper kills the process, a Zombie slows the link, a Ghost makes a record vanish, a Goblin hoards your rate limit, a Witch hexes the data.
+- Chaos is done by **spooky creatures**, not animals (see the creature table in the contract). A Reaper kills the process, a Zombie slows the link, a Ghost makes a record vanish, a Goblin hoards your rate limit, a Witch hexes the data.
 - Bosses: the Lich (power outage), the Banshee Queen (internet outage), the Headless Horseman (hazard storm).
 - A crash makes the skeleton **collapse into a pile of bones**. A successful resume makes it **reassemble** and rattle on. This is the hero moment.
 - Each skeleton wears **gear** for its resilience: Spellbook (Journal), Seal (Idempotency Keys), Lantern (Retry), Shield (Circuit Breaker), Coffin Stash (Offline Queue). The Rookie is a bare skeleton. Phoenix is fully geared. When Kiro applies a hardening spec, a new piece of gear is equipped on screen.
