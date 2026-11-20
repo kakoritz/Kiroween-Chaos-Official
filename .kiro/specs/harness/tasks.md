@@ -11,7 +11,7 @@ Branch prefix `core/`. Each task is one PR. Tags: [C] touches `contract/`.
 ## H1. Engine (haunted-house tasks 1 to 8)
 - [x] H1.1 Provider with idempotency keys and ledger.
 - [x] H1.2 SDK: journal, `step()`, `effect()`, replay, reconcile.
-- [ ] H1.3 Pipeline of eight stages and five policy tiers.
+- [x] H1.3 Pipeline of eight stages and five policy tiers.
 - [ ] H1.4 Chaos director, hook points, nested fault stack, real SIGKILL.
 - [ ] H1.5 Runner, wave manager, event log (JSONL), score engine.
 - [ ] H1.6 Live server implementing the contract. Fixtures stay generated from storyboards (they are not regenerated from live runs).
