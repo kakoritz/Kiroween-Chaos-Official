@@ -85,6 +85,8 @@ interface ActiveFault {
   spec: FaultSpec;
   remaining: number | null;
   until: number | null;
+  /** Window length; the window opens at the first matching call (runtime.md section 18). */
+  windowMs: number | null;
 }
 
 export const CAPACITY_BASE = 8;
@@ -136,7 +138,8 @@ export class Provider {
     this.faults.push({
       spec,
       remaining: hasCount ? spec.count! : null,
-      until: !hasCount && spec.forMs !== undefined ? this.clock.now() + spec.forMs : null,
+      until: null,
+      windowMs: !hasCount && spec.forMs !== undefined ? spec.forMs : null,
     });
   }
 
@@ -266,6 +269,7 @@ export class Provider {
       if (s.lane !== lane) continue;
       if (s.service !== '*' && s.service !== service) continue;
       if (s.nextCaller === 'recovery' && !recovery) continue;
+      if (f.windowMs !== null && f.until === null) f.until = now + f.windowMs;
       if (f.remaining !== null) f.remaining -= 1;
       return s;
     }
