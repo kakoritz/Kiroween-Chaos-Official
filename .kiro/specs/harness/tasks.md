@@ -18,7 +18,7 @@ Branch prefix `core/`. Each task is one PR. Tags: [C] touches `contract/`.
 - [x] H1.7 Hero crash test: Rookie 2 charges, Phoenix 1.
 
 ## H2. Creatures as plugins
-- [ ] H2.1 Plugin interface and loader.
+- [x] H2.1 Plugin interface and loader.
 - [ ] H2.2 Six core creatures: crash, timeout, 404, missing file, duplicate, power outage.
 - [ ] H2.3 Remaining creatures and the three bosses.
 
