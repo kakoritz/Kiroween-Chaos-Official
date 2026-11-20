@@ -35,7 +35,7 @@ Branch prefix `core/`. Each task is one PR. Tags: [C] touches `contract/`.
 ## H4. Report and loop
 - [x] H4.1 Grading rules and target checks.
 - [x] H4.2 Report builder: JSON, Markdown, offline HTML.
-- [ ] H4.3 Reviewer: postmortem and hardening spec writer.
+- [x] H4.3 Reviewer: postmortem and hardening spec writer.
 - [ ] H4.4 CI exit codes and a GitHub Actions example.
 - [ ] H4.5 Determinism tests.
 
