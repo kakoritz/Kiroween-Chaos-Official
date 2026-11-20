@@ -4,11 +4,18 @@ import { EventLog } from '../../../haunt/src/events/eventlog';
 import { LIVE_PORT, LiveServer, createLiveRuntime, makeBotCommand, readHardening } from '../live';
 import { startProvider } from '../provider/server';
 
-const port = Number(process.argv[2] ?? process.env.HAUNT_PORT ?? LIVE_PORT);
+const port = Number(process.argv.find((a, i) => i >= 2 && /^\d+$/.test(a)) ?? process.env.HAUNT_PORT ?? LIVE_PORT);
 const runDir = join(process.cwd(), '.haunt');
 const provider = await startProvider();
+// `--loop`: lane 1 (Rookie) runs the recorded hardened bundle from wave 2 on (runtime.md section 32).
+const loop = process.argv.includes('--loop');
 // Lanes spawn dist/bots/<tier>.js per lane (npm run build:bots). A tier with no built bot is left unspawned; demos and chaos still arm the director.
-const rt = createLiveRuntime({ botCommand: makeBotCommand({ root: process.cwd(), runDir, providerUrl: provider.url }), ledgerRows: (lane) => provider.provider.ledger(lane) });
+const botCommand = makeBotCommand({
+  root: process.cwd(), runDir, providerUrl: provider.url,
+  onWave: () => provider.provider.reset(),
+  bundleFor: (lane, wave, tier) => (loop && lane === '1' && tier === 'rookie' && wave >= 2 ? 'rookie.hardened' : undefined),
+});
+const rt = createLiveRuntime({ botCommand, ledgerRows: (lane) => provider.provider.ledger(lane) });
 const server = new LiveServer({
   log: new EventLog(join(runDir, 'events.jsonl')),
   engine: rt.live,

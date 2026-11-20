@@ -80,23 +80,37 @@ export class LaneSpawner {
 }
 
 /** Bot command for a lane: process.execPath <botsDir>/<tier>.js with the runtime.md section 2 env. Undefined when that bot is not built. */
-export interface BotCommandOptions { root: string; runDir: string; providerUrl: string; botsDir?: string }
+export interface BotCommandOptions {
+  root: string; runDir: string; providerUrl: string; botsDir?: string;
+  /** Called once per wave before its first lane spawns (runtime.md section 31: reset the provider). */
+  onWave?: (wave: number) => void;
+  /** Bundle name to run instead of `<tier>` (for example `rookie.hardened` for the `loop` wave 2, runtime.md section 32). */
+  bundleFor?: (lane: string, wave: number, tier: string) => string | undefined;
+}
+
+/** Folder of one wave inside the run folder. Waves are isolated (runtime.md section 31). */
+export const waveDir = (runDir: string, wave: number): string => join(runDir, `wave-${wave}`);
+
 export function makeBotCommand(o: BotCommandOptions): SpawnerOptions['botCommand'] {
   const botsDir = o.botsDir ?? join(o.root, 'dist', 'bots');
   const attempts = new Map<string, number>();
-  return (lane, _wave, settings) => {
+  let lastWave = 0;
+  return (lane, wave, settings) => {
+    if (wave !== lastWave) { lastWave = wave; o.onWave?.(wave); }
     const tier = tiersForLanes(settings.lanes, settings.tiers)[Number(lane) - 1];
     if (!tier) return undefined;
-    const file = join(botsDir, `${tier.id}.js`);
+    const bundle = o.bundleFor?.(lane, wave, tier.id) ?? tier.id;
+    const file = join(botsDir, `${bundle}.js`);
     if (!existsSync(file)) return undefined;
-    const { paths } = prepareLane(o.runDir, Number(lane), settings.seed, settings.orders);
+    const dir = waveDir(o.runDir, wave);
+    const { paths } = prepareLane(dir, Number(lane), settings.seed, settings.orders);
     const attempt = (attempts.get(lane) ?? 0) + 1;
     attempts.set(lane, attempt);
     return {
       command: process.execPath,
       args: [file],
       env: {
-        HAUNT_RUN_DIR: o.runDir, HAUNT_LANE: lane, HAUNT_TIER: tier.id, HAUNT_SEED: String(settings.seed),
+        HAUNT_RUN_DIR: dir, HAUNT_LANE: lane, HAUNT_TIER: tier.id, HAUNT_SEED: String(settings.seed),
         HAUNT_PROVIDER: o.providerUrl, HAUNT_ORDERS_DIR: paths.orders, HAUNT_SPEED: String(settings.speed),
         HAUNT_ATTEMPT: String(attempt), HAUNT_APP: settings.app,
       },

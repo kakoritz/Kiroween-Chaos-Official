@@ -176,8 +176,42 @@ describe('bot command wiring', () => {
     expect(list.at(-1).endedAt).toBeTypeOf('number');
     const again = await fetch(`${url}/api/wave/stop`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
     expect(again.status).toBe(409);
-    expect(existsSync(join(runDir, 'ran-rookie-1'))).toBe(true);
-    expect(existsSync(join(runDir, 'ran-phoenix-2'))).toBe(true);
+    expect(existsSync(join(runDir, 'wave-1', 'ran-rookie-1'))).toBe(true);
+    expect(existsSync(join(runDir, 'wave-1', 'ran-phoenix-2'))).toBe(true);
+  });
+
+  it('isolates waves, resets once per wave and runs the hardened bundle from wave 2', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'haunt-loop-'));
+    dirs.push(root);
+    const botsDir = join(root, 'dist', 'bots');
+    mkdirSync(botsDir, { recursive: true });
+    for (const t of ['rookie', 'phoenix', 'rookie.hardened']) writeFileSync(join(botsDir, `${t}.js`), fakeBot);
+    const runDir = join(root, '.haunt');
+    const resets: number[] = [];
+    const bundles: string[] = [];
+    const cmd = makeBotCommand({
+      root, runDir, providerUrl: 'http://127.0.0.1:1',
+      onWave: (w) => resets.push(w),
+      bundleFor: (lane, wave, tier) => (lane === '1' && tier === 'rookie' && wave >= 2 ? 'rookie.hardened' : undefined),
+    });
+    const rt = createLiveRuntime({ clock: false, botCommand: (l, w, s) => { const c = cmd(l, w, s); if (c) bundles.push(`${w}:${c.args[0]!.split(/[\\/]/).pop()}`); return c; } });
+    srv = new LiveServer({ engine: rt.live });
+    const { url } = await srv.listen(0);
+    for (let w = 1; w <= 2; w++) {
+      const r = await fetch(`${url}/api/wave/start`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ lanes: 2, orders: 2 }) });
+      expect(r.status).toBe(200);
+      await rt.spawner!.done;
+    }
+    const body = (await (await fetch(`${url}/api/waves`)).json()) as any;
+    const list = (Array.isArray(body) ? body : body.waves) as any[];
+    expect(list.map((w) => w.n)).toEqual([1, 2]);
+    expect(list.every((w) => typeof w.endedAt === 'number')).toBe(true);
+    expect(resets).toEqual([1, 2]);
+    expect(bundles).toEqual(['1:rookie.js', '1:phoenix.js', '2:rookie.hardened.js', '2:phoenix.js']);
+    for (const w of [1, 2]) {
+      expect(existsSync(join(runDir, `wave-${w}`, 'ran-rookie-1'))).toBe(true);
+      expect(existsSync(join(runDir, `wave-${w}`, 'ran-phoenix-2'))).toBe(true);
+    }
   });
 
   it('leaves lanes unspawned and the wave running when no bot is built', async () => {

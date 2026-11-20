@@ -33,7 +33,10 @@ describe('haunt.yaml', () => {
 describe('bot bundles', () => {
   it('builds one bundle per tier', () => {
     for (const t of TIERS) expect(existsSync(bundle(t.id))).toBe(true);
-    expect(readdirSync(join(root, 'apps/haunted-orders/src/bots')).filter((f) => f.endsWith('.ts')).length).toBe(5);
+    const files = readdirSync(join(root, 'apps/haunted-orders/src/bots')).filter((f) => f.endsWith('.ts'));
+    expect(files.filter((f) => !f.endsWith('.hardened.ts')).length).toBe(5);
+    expect(files.filter((f) => f.endsWith('.hardened.ts'))).toEqual(['rookie.hardened.ts']);
+    expect(existsSync(bundle('rookie.hardened'))).toBe(true);
   });
 
   it('--parts reports the parts each bot really declares', () => {

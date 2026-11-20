@@ -417,7 +417,7 @@ export class LiveServer {
       return;
     }
     res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache', connection: 'keep-alive' });
-    res.write(`data: ${JSON.stringify({ type: 'hello', contractVersion: CONTRACT_VERSION, mode: 'live', seq: this.seq, app: this.app })}\n\n`);
+    res.write(`data: ${JSON.stringify({ type: 'hello', contractVersion: CONTRACT_VERSION, mode: 'live', seq: this.seq, ts: Date.now(), app: this.app })}\n\n`);
     if (since !== undefined) for (const e of retained) if (e.seq > since) res.write(`data: ${JSON.stringify(toWire(e))}\n\n`);
     this.clients.add(res);
     const timer = setInterval(() => res.write(': ping\n\n'), this.pingMs);
