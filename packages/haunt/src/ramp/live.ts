@@ -36,14 +36,22 @@ export function createLiveRampRunner(o: LiveRampRunnerOptions): RunRampStep {
       director.addLane(`L${i + 1}`, []);
       await runLane({
         lane: `L${i + 1}`, director, command: o.command, args: o.args, maxStarts: 1,
-        env: { ...o.env, HAUNT_DIR: p.paths.root, HAUNT_LANE: `L${i + 1}` },
+        env: {
+          HAUNT_ATTEMPT: '1', ...o.env,
+          HAUNT_DIR: p.paths.root, HAUNT_RUN_DIR: p.paths.root, HAUNT_ORDERS_DIR: p.paths.orders,
+          HAUNT_LANE: `L${i + 1}`, HAUNT_SEED: `-${i}`,
+        },
       });
     }));
     const durationMs = now() - t0;
     const latenciesMs: number[] = [];
     for (let i = 0; i < lanes; i++) {
       const done = lanePaths(dir, i + 1).done;
-      for (const f of readdirSync(done)) latenciesMs.push(Math.max(0, statSync(join(done, f)).mtimeMs - t0));
+      // A rename keeps mtime; ctime moves with it, so take the later of the two.
+      for (const f of readdirSync(done)) {
+        const st = statSync(join(done, f));
+        latenciesMs.push(Math.max(0, Math.max(st.mtimeMs, st.ctimeMs) - t0));
+      }
     }
     return { latenciesMs, failed: Math.max(0, orders - latenciesMs.length), durationMs };
   };
