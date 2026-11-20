@@ -14,8 +14,9 @@ Build the **arena**: the video-game view of five skeleton workers racing through
 4. **`.kiro/specs/arena/ui-spec.md` (the visual spec: layout, palette, creature choreography, event to visual table, controls, sound, accessibility)**, then `requirements.md`, `design.md`, `tasks.md` (your task list, including the Skeleton Crew theme and W-tasks)
 5. `.kiro/specs/engine/acceptance.md` section A: it tells you what outcomes to expect and draw per tier and fault
 6. `docs/DEMO-SCRIPT.md`: the 3-minute video you are building toward
-7. `docs/DEV-SETUP.md`
-8. `.kiro/specs/engine/runtime.md` section 9 only (the report JSON shape for the report viewer)
+7. **`docs/ART-DIRECTION.md` (style guide, skeleton rig, sprite lab quality gate)**
+8. `docs/DEV-SETUP.md`
+9. `.kiro/specs/engine/runtime.md` section 9 only (the report JSON shape for the report viewer)
 
 ## Order of work
 
