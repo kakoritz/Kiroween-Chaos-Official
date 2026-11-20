@@ -47,3 +47,7 @@ If a format cannot be confirmed by Nov 25, ship the item as documentation plus a
 - Browser target and `worker.terminate()`: the journal must live in the main thread. Test early (H6.3).
 - Fixtures drift from the live engine. `npm run test:contract` runs both against the same suite.
 - Two sessions on one machine: keep clones apart and avoid running heavy test suites at the same time.
+
+## Lane A: fix after H0 merges
+
+- Event validator violations. A read-only run of the H0 validator against live output (npm run live) reported more than 500 event violations. The real validator lives in the unmerged H0 contract PRs (#2 to #7), so validate:events on main is still a stub. After H0 merges, Lane A runs the real validator against live output and fixes the engine and runtime emitters until it reports 0 violations.
