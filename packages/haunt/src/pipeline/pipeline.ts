@@ -181,10 +181,12 @@ export class Pipeline {
       await s.work(this.work(def('account'), id));
       account = await s.effect('account', { key: this.key(s, 'account'), body: { email: o.email } });
     });
+    account ??= sdk.recorded('account', 'account');
     await sdk.stage('payment', async (s) => {
       await s.work(this.work(def('payment'), id));
       charge = await s.effect('charge', { key: this.key(s, 'charge'), body: { amount: o.total, account: idOf(account) } });
     });
+    charge ??= sdk.recorded('payment', 'charge');
     await sdk.stage('confirmation', async (s) => {
       await s.work(this.work(def('confirmation'), id));
       await s.effect('email', { key: this.key(s, 'email'), body: { charge: idOf(charge) } });
@@ -193,6 +195,7 @@ export class Pipeline {
       await s.work(this.work(def('dispatch'), id));
       shipment = idOf(await s.effect('dispatch', { key: this.key(s, 'dispatch') }));
     });
+    shipment ||= idOf(sdk.recorded('dispatch', 'dispatch'));
     await sdk.stage('updates', async (s) => {
       await s.work(this.work(def('updates'), id));
       // Non-critical: a failure after retries is degraded and the pipeline continues (runtime.md section 21).

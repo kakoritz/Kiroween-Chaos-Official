@@ -181,6 +181,13 @@ export class Sdk {
     return result;
   }
 
+  /** Payload journaled for an effect of the current order (what a replay-skipped stage would have returned). */
+  recorded(stage: string, kind: string): unknown {
+    if (!this.journal) return undefined;
+    const e = this.state.get(this.need())?.stages.get(stage)?.effects.get(kind);
+    return e?.result ? e.payload : undefined;
+  }
+
   async stage(name: string, fn: (s: StageCtx) => Promise<void>): Promise<void> {
     const order = this.need();
     if (this.journal && this.state.get(order)?.stages.get(name)?.done) {

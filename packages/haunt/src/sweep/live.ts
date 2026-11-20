@@ -111,7 +111,10 @@ export function createLiveCellRunner(o: LiveCellOptions): RunCell {
     };
     const pending: Promise<unknown>[] = [];
     const t0 = now();
-    if (pre.has(cell.stage)) pending.push(inject());
+    // missing_file acts at the bot's input_read hook on the head file it is about to read (runtime.md section 20),
+    // so a lane with one order is not left empty before it starts.
+    const atInputRead = cell.fault === 'missing_file' && cell.stage === 'intake';
+    if (pre.has(cell.stage) && !atInputRead) pending.push(inject());
 
     const ac = new AbortController();
     const guard = setTimeout(() => ac.abort(), o.cellTimeoutMs ?? 60000);
@@ -126,6 +129,7 @@ export function createLiveCellRunner(o: LiveCellOptions): RunCell {
         HAUNT_ATTEMPT: '1', HAUNT_APP: 'haunted-orders',
       },
       onProcess: (s) => { send = s; },
+      onAtPoint: (point) => { if (atInputRead && point === 'input_read' && !fired) pending.push(inject()); },
       onEvent: (ev) => {
         if (ev.type !== 'stage_start' || typeof ev.stage !== 'string') return;
         stage = ev.stage;

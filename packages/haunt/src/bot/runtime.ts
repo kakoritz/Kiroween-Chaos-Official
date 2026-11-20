@@ -286,6 +286,7 @@ export async function runBot(def: BotDef): Promise<void> {
     }
     currentFile = file;
     curOrder = orderIdOf(file);
+    parked.delete(curOrder); // restored straight into orders/ (missing_file): it runs again, so it is no longer waiting
     let result;
     try {
       result = await pipeline.run(curOrder);

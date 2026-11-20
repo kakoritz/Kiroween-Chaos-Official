@@ -174,6 +174,23 @@ describe('acceptance table A through the pipeline', () => {
     expect(await crashAndRestart('journaler', at)).toEqual(CLEAN);
   });
 
+  it('resumes tracking with the journaled shipment after a restart (replay-skipped dispatch)', async () => {
+    for (const tier of ['journaler', 'reconciler', 'phoenix']) {
+      const w = new World();
+      const polled: string[] = [];
+      const t = tierById(tier);
+      w.killAt = { point: 'mid_stage', stage: 'tracking' };
+      await expect((await w.start(t)).run(ID)).rejects.toBeInstanceOf(ProcessKilled);
+      const p = await w.start(t);
+      const inner = (p as unknown as { d: { pollTracking(s: string): Promise<boolean> } }).d;
+      const poll = inner.pollTracking;
+      inner.pollTracking = async (s) => { polled.push(s); return poll(s); };
+      expect(await p.run(ID)).toBe('done');
+      expect(polled.length).toBeGreaterThan(0);
+      expect(polled.every((s) => s === 'sh_1')).toBe(true);
+      expect(w.rows()).toEqual(CLEAN);
+    }
+  });
   it('A10 http_404 at payment (2 calls): Rookie fails, Retrier recovers', async () => {
     const rookie = new World();
     rookie.fault({ service: 'charge', value: 404, count: 2 });

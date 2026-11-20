@@ -20,6 +20,8 @@ export interface LaneLoopOptions {
   onEvent?: (ev: Record<string, unknown>) => void;
   /** Called with a sender for each new bot process, so the caller can push control lines (arm) mid-run. */
   onProcess?: (send: (m: Record<string, unknown>) => void) => void;
+  /** The bot reached a hook (`at_point`). Runs before the rendezvous replies, so a file fault lands before the bot's next read. */
+  onAtPoint?: (point: string, ctx: Record<string, unknown>) => void;
 }
 
 export interface LaneLoopResult {
@@ -44,6 +46,7 @@ export async function runLane(o: LaneLoopOptions): Promise<LaneLoopResult> {
     o.signal?.addEventListener('abort', onAbort, { once: true });
     o.onStart?.(n, proc.pid);
     let killed: Killed | null = null;
+    if (o.onAtPoint) proc.onMessage((m) => { const msg = m as Record<string, unknown>; if (msg.k === 'at_point') o.onAtPoint!(String(msg.point), msg); });
     serveRendezvous(proc, o.director, o.lane, (k) => { killed = k; });
     proc.onMessage((m) => {
       const msg = m as Record<string, unknown>;
