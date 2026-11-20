@@ -9,7 +9,7 @@ Branch prefix `core/`. Each task is one PR. Tags: [C] touches `contract/`.
 - [ ] H0.4 `npm run mock` and a README section for Lane B.
 
 ## H1. Engine (haunted-house tasks 1 to 8)
-- [ ] H1.1 Provider with idempotency keys and ledger.
+- [x] H1.1 Provider with idempotency keys and ledger.
 - [ ] H1.2 SDK: journal, `step()`, `effect()`, replay, reconcile.
 - [ ] H1.3 Pipeline of eight stages and five policy tiers.
 - [ ] H1.4 Chaos director, hook points, nested fault stack, real SIGKILL.
