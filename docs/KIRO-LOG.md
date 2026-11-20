@@ -38,3 +38,5 @@ pm run live). SSE with hello, since replay (exclusive), 410 gone beyond 5000 eve
 
 - 2026-11-20 H2.3: Lich, Banshee Queen and Headless Horseman as plugins (packages/haunt/src/creatures/bosses.ts) on top of the eight extra creatures; each boss presses its arms on every lane through the director's bossArms and an engine press helper. Tests in boss-creatures.test.ts (17 creatures, boss ids covered once). H2.3 ticked. validate:events is still a stub on main (H0.6 PR open).
 - 2026-11-20 H3.2 (partial): sweep executor (runSweep with injected per-cell runner, per-cell seeds, sweep grade, deterministic report JSON, P8 test) in packages/haunt/src/sweep/executor.ts. Remaining: runner adapter arming each cell on a live lane, 'haunt sweep' CLI. H3.2 stays unticked.
+
+- 2026-11-20 H3.4 (partial): ramp executor (runRamp with injected per-step runner, step seeds, nearest-rank p50 and p95, error rate, throughput, knee, break point, scalability grade, deterministic report) in packages/haunt/src/ramp/executor.ts. Tests in ramp-executor.test.ts. Remaining: runner adapter driving concurrent orders on a live lane, 'haunt ramp' CLI. H3.4 stays unticked.
