@@ -10,6 +10,7 @@ import { BOSS_DURATION_MS, WaveClock } from '../../../haunt/src/runner/live';
 import { RepeatDetector } from '../../../haunt/src/runner/provider';
 import type { BossId } from '../../../haunt/src/chaos/catalog';
 import type { LedgerRow } from '../provider';
+import { DetailNormalizer } from './normalize';
 import { loadDemo, type DemoScript } from './demo';
 import type { LiveEngine } from './server';
 
@@ -244,6 +245,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
   let clock: WaveClock | undefined;
   let demo: DemoPlayer | undefined;
   let spawner: LaneSpawner | undefined;
+  const norm = new DetailNormalizer();
   // Ledger rows become `repeat` events for the running wave (design.md section 8: repeats feed the wave grade).
   const repeats = new RepeatDetector();
   const ledgerRow = (row: LedgerRow): void => {
@@ -270,13 +272,13 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
   if (opts.botCommand) {
     spawner = new LaneSpawner({
       engine, botCommand: opts.botCommand, run: opts.run,
-      onEvent: (lane, ev) => { record?.({ detail: {}, ...ev, lane } as unknown as HauntEvent); },
+      onEvent: (lane, ev) => { record?.({ ...norm.fix(lane, { detail: {}, ...ev, lane }), lane } as unknown as HauntEvent); },
       onWaveDone: () => { clock?.stop(); clock = undefined; demo?.stop(); demo = undefined; endWave?.(); },
     });
   }
 
   const live: LiveEngine = {
-    startWave(wave, settings, rec, end) { record = rec; endWave = end; engine.startWave(wave, settings, rec); },
+    startWave(wave, settings, rec, end) { norm.begin(settings.orders); record = rec; endWave = end; engine.startWave(wave, settings, rec); },
     betweenWaves: opts.betweenWaves,
     stopWave: () => engine.stopWave(),
     setSpeed: (s) => engine.setSpeed(s),

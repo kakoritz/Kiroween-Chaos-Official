@@ -97,7 +97,7 @@ export class LiveServer {
       const line = `data: ${JSON.stringify(toWire(ev))}\n\n`;
       for (const c of this.clients) c.write(line);
     });
-    this.log.emit({ type: 'reset' });
+    this.log.emit({ type: 'reset', detail: {} });
   }
 
   // ---- lifecycle ----
@@ -277,7 +277,7 @@ export class LiveServer {
     if (this.waves.active) fail(409, 'wave_running', 'a wave is running');
     this.app = app;
     this.lanes.clear();
-    this.log.emit({ type: 'reset' });
+    this.log.emit({ type: 'reset', detail: {} });
   }
 
   private chaos(body: Record<string, any>): ChaosResult {
@@ -421,8 +421,11 @@ export class LiveServer {
       return;
     }
     res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache', connection: 'keep-alive' });
-    res.write(`data: ${JSON.stringify({ type: 'hello', contractVersion: CONTRACT_VERSION, mode: 'live', seq: this.seq, ts: Date.now(), app: this.app })}\n\n`);
-    if (since !== undefined) for (const e of retained) if (e.seq > since) res.write(`data: ${JSON.stringify(toWire(e))}\n\n`);
+    const replay = since === undefined ? [] : retained.filter((e) => e.seq > since);
+    // On a replay the hello carries the cursor, not the head, so seq and ts stay monotonic across hello and the replayed events.
+    const hello = replay.length > 0 ? { seq: since!, ts: replay[0]!.ts } : { seq: this.seq, ts: Date.now() };
+    res.write(`data: ${JSON.stringify({ type: 'hello', contractVersion: CONTRACT_VERSION, mode: 'live', ...hello, app: this.app })}\n\n`);
+    for (const e of replay) res.write(`data: ${JSON.stringify(toWire(e))}\n\n`);
     this.clients.add(res);
     const timer = setInterval(() => res.write(': ping\n\n'), this.pingMs);
     req.on('close', () => { clearInterval(timer); this.clients.delete(res); });
