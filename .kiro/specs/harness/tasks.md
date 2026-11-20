@@ -13,7 +13,7 @@ Branch prefix `core/`. Each task is one PR. Tags: [C] touches `contract/`.
 - [x] H1.2 SDK: journal, `step()`, `effect()`, replay, reconcile.
 - [x] H1.3 Pipeline of eight stages and five policy tiers.
 - [x] H1.4 Chaos director, hook points, nested fault stack, real SIGKILL.
-- [ ] H1.5 Runner, wave manager, event log (JSONL), score engine. (Partial: event log, score engine, grading and wave manager done; lane tiers, input layout and per-lane process start/kill/restart loop done; random chaos tick and boss schedule planner done; provider /_fault body mapping and ledger repeat detection done; wiring to a live wave clock and the live ledger callback pending.)
+- [x] H1.5 Runner, wave manager, event log (JSONL), score engine. (WaveClock in runner/live.ts drives random chaos and the boss schedule from a live clock; ledgerCallback turns repeated provider rows into repeat events. Attaching both to the live server's onWaveStart and ledger endpoint is tracked under H1.6.)
 - [ ] H1.6 Live server implementing the contract. Fixtures stay generated from storyboards (they are not regenerated from live runs). (Partial: REST and SSE surface, event ring buffer, lane views, validation and engine hook interface done; engine adapter RunnerEngine for chaos, speed and mode done; demo script data files hero and full plus validating loader done; per-lane runLane spawning from startWave, demo script playback and loop script, ledger endpoint wiring and hardening pending; wave report JSON and postmortem markdown endpoints done.)
 - [x] H1.7 Hero crash test: Rookie 2 charges, Phoenix 1.
 

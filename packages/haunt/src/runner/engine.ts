@@ -6,7 +6,7 @@ import type { HauntEvent } from '../score/score';
 import { tiersForLanes, type TierMode } from './lanes';
 import { postProviderArm, type PostFault } from './provider';
 
-export interface EngineChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string }
+export interface EngineChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string; forMs?: number; source?: 'manual' | 'random' | 'boss' }
 export interface EngineChaosResult { chaosId: string; creature: string; fault: string; depth: number; deferred: boolean }
 export interface EngineWaveSettings { orders: number; seed: number; tiers: TierMode; lanes: number; speed: number; pace: 'normal' | 'show'; app: string }
 export interface EngineChaosMode { mode: 'off' | 'manual' | 'random'; frequency: number; seed: number }
@@ -59,10 +59,10 @@ export class RunnerEngine {
     const lane = String(req.lane ?? this.lanes[0] ?? '1');
     if (!this.lanes.includes(lane)) throw new Error(`lane ${lane} is not in the current wave`);
     const info = this.opts.laneInfo?.(lane) ?? { state: 'working' as const, stage: null };
-    const r = this.director.arm(lane, { fault: req.fault, scope: req.scope, point: req.point as never }, info);
+    const r = this.director.arm(lane, { fault: req.fault, scope: req.scope, point: req.point as never, forMs: req.forMs }, info);
     if (!r.ok) throw new Error(r.error);
     const chaosId = `c${this.wave}-${++this.seq}`;
-    this.record?.({ type: 'chaos', lane, detail: { id: chaosId, creature: req.creature, ...r.detail } });
+    this.record?.({ type: 'chaos', lane, detail: { id: chaosId, creature: req.creature, ...(req.source ? { source: req.source } : {}), ...r.detail } });
     if (r.provider && this.opts.post) void postProviderArm(this.opts.post, lane, info.stage, r.provider as ProviderArm);
     return { chaosId, creature: req.creature ?? '', fault: r.detail.fault, depth: r.detail.depth, deferred: r.detail.deferred === true };
   };
