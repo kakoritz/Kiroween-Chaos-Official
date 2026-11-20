@@ -8,10 +8,15 @@ import { CORE_CREATURES, EXTRA_CREATURES } from '../../../haunt/src/creatures';
 import { planSweep, renderMatrix, runSweep, sweepReportJson, createLiveCellRunner, type RunCell } from '../../../haunt/src/sweep';
 import { createLiveRampRunner, runRamp } from '../../../haunt/src/ramp';
 import { createLiveStackRunner, planStack, renderStackCurve, runStack, stackReportJson } from '../../../haunt/src/stack';
+import { ciExitCode, rampTargets, renderTargetLines, stackTargets, sweepTargets } from '../../../haunt/src/report/ci';
 import { startProvider } from '../provider/server';
 
 const argv = process.argv.slice(2);
 const cmd = argv[0];
+const gate = (results: Parameters<typeof ciExitCode>[0]): number => {
+  console.log(renderTargetLines(results));
+  return argv.includes('--no-gate') ? 0 : ciExitCode(results);
+};
 const opt = (name: string, def?: string): string | undefined => {
   const i = argv.indexOf(`--${name}`);
   return i >= 0 && argv[i + 1] !== undefined ? argv[i + 1] : def;
@@ -58,7 +63,7 @@ async function sweep(): Promise<number> {
     const file = join(outDir, `sweep-${tier}-seed${seed}.json`);
     writeFileSync(file, sweepReportJson(report));
     console.log(`report ${file}`);
-    return 0;
+    return gate(sweepTargets(loaded.config.targets, report));
   } finally {
     await prov.close();
     rmSync(runDir, { recursive: true, force: true });
@@ -99,7 +104,7 @@ async function ramp(): Promise<number> {
     const file = join(outDir, `ramp-${tier}-seed${seed}.json`);
     writeFileSync(file, `${JSON.stringify(report, null, 2)}\n`);
     console.log(`report ${file}`);
-    return 0;
+    return gate(rampTargets(loaded.config.targets, report));
   } finally {
     await prov.close();
     rmSync(runDir, { recursive: true, force: true });
@@ -148,7 +153,7 @@ async function stack(): Promise<number> {
     const file = join(outDir, `stack-${tier}-seed${seed}.json`);
     writeFileSync(file, stackReportJson(report));
     console.log(`report ${file}`);
-    return 0;
+    return gate(stackTargets(loaded.config.targets, report));
   } finally {
     await prov.close();
     rmSync(runDir, { recursive: true, force: true });
@@ -162,6 +167,6 @@ if (cmd === 'sweep') {
 } else if (cmd === 'ramp') {
   process.exitCode = await ramp();
 } else {
-  console.log(`usage: npm run haunt -- ramp|sweep|stack [--tier rookie|retrier|journaler|reconciler|phoenix] [--seed N] [--orders N] [--speed N] [--config path] [--bot path] [--out dir]`);
+  console.log(`usage: npm run haunt -- ramp|sweep|stack [--tier rookie|retrier|journaler|reconciler|phoenix] [--seed N] [--orders N] [--speed N] [--config path] [--bot path] [--out dir] [--no-gate]`);
   process.exitCode = cmd ? 2 : 0;
 }

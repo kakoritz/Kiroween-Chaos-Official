@@ -36,7 +36,7 @@ Branch prefix `core/`. Each task is one PR. Tags: [C] touches `contract/`.
 - [x] H4.1 Grading rules and target checks.
 - [x] H4.2 Report builder: JSON, Markdown, offline HTML.
 - [x] H4.3 Reviewer: postmortem and hardening spec writer.
-- [ ] H4.4 CI exit codes and a GitHub Actions example.
+- [x] H4.4 CI exit codes and a GitHub Actions example. (sweep, stack and ramp exit 0 on pass, 1 on a failed target, 2 on usage or config error; `--no-gate` forces 0; packages/haunt/src/report/ci.ts; example in docs/examples/haunt-ci.yml.)
 - [x] H4.5 Determinism tests. (packages/haunt/test/determinism.test.ts: rng, random chaos plan, boss plan, sweep byte-identical JSON (P8, in-process runner), ramp, stable report. Live-process byte identity is tracked under H3.2.)
 
 ## H5. Ship

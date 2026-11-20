@@ -1,0 +1,29 @@
+# Example: use Haunt as a CI gate for your own app. Copy to .github/workflows/ in your repo and adjust.
+# Haunt exits 0 when every target in haunt.yaml passes, 1 when a target fails, 2 on a usage or config error.
+# This runs chaos against your built app. It does not run your unit tests.
+name: haunt
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  haunt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run build:bots
+      - name: Sweep (fails the job when a target fails)
+        run: npm run haunt -- sweep --tier phoenix --seed 1 --orders 1 --speed 8 --out haunt-out
+      - name: Stack
+        run: npm run haunt -- stack --tier phoenix --seed 1 --speed 8 --out haunt-out
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: haunt-reports
+          path: haunt-out
