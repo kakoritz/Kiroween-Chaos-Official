@@ -11,7 +11,7 @@ export interface DemoScript {
   presses: DemoPress[]; boss?: DemoBoss;
 }
 
-export const DEMO_NAMES = ['hero', 'full'] as const;
+export const DEMO_NAMES = ['hero', 'full', 'loop'] as const;
 
 /** Throws with a readable message if the script is malformed. Returns it typed otherwise. */
 export function validateDemo(raw: unknown): DemoScript {

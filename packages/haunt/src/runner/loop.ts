@@ -11,6 +11,8 @@ export interface LaneLoopOptions {
   sleep?: (ms: number) => Promise<void>;
   /** Hard stop on restarts so a bot that always dies cannot loop forever. */
   maxStarts?: number;
+  /** Aborting kills the current bot and ends the loop without a restart. */
+  signal?: AbortSignal;
   onStart?: (n: number, pid: number) => void;
   onKilled?: (k: Killed) => void;
   onRestart?: (n: number, delayMs: number) => void;
@@ -32,13 +34,18 @@ export async function runLane(o: LaneLoopOptions): Promise<LaneLoopResult> {
   const max = o.maxStarts ?? 10;
   const kills: Killed[] = [];
   for (let n = 1; ; n++) {
+    if (o.signal?.aborted) return { starts: n - 1, kills, exit: { code: null, signal: null }, clean: false };
     const proc = new BotProcess(o.command, o.args, o.env);
+    const onAbort = () => proc.kill();
+    o.signal?.addEventListener('abort', onAbort, { once: true });
     o.onStart?.(n, proc.pid);
     let killed: Killed | null = null;
     serveRendezvous(proc, o.director, o.lane, (k) => { killed = k; });
     await proc.waitFor('ready');
     proc.send({ k: 'go', arms: o.director.pendingArms(o.lane) });
     const exit = await proc.exited;
+    o.signal?.removeEventListener('abort', onAbort);
+    if (o.signal?.aborted) return { starts: n, kills, exit, clean: false };
     // The kill callback runs on the same exit promise; give it a turn to land.
     await Promise.resolve();
     const k = killed as Killed | null;

@@ -12,6 +12,8 @@ import { MAX_DEPTH } from '../../../haunt/src/chaos/catalog';
 import { fnv1a32, mulberry32 } from '../../../haunt/src/shared/rng';
 import { APPS, APP_STAGES, CONTRACT_VERSION, CREATURES, DEMO_SCRIPTS, FAULT_IDS, type AppId } from './catalog';
 import { buildPostmortem, buildReport, waveEvents } from './report';
+import { loadDemo } from './demo';
+import type { HardeningBody } from './runtime';
 import { applyEvent, logLine, newLane, toWire, type LaneView } from './lanes';
 
 export const LIVE_HOST = '127.0.0.1';
@@ -44,6 +46,8 @@ export interface LiveOptions {
   /** Directory of built UI files served at `/`. Defaults to `packages/arena-ui/dist` when present. */
   staticDir?: string;
   ledger?: () => { lanes: unknown[] };
+  /** Hardening spec the reviewer wrote after a wave. Undefined means not ready (404). */
+  hardening?: (wave: number) => HardeningBody | undefined;
   pingMs?: number;
 }
 
@@ -71,6 +75,7 @@ export class LiveServer {
   private readonly staticDir?: string;
   private readonly ledger: () => { lanes: unknown[] };
   private readonly pingMs: number;
+  private readonly hardening: (wave: number) => HardeningBody | undefined;
   private readonly clients = new Set<ServerResponse>();
   private http?: Server;
 
@@ -81,6 +86,7 @@ export class LiveServer {
     this.app = opts.app ?? 'orders';
     this.ledger = opts.ledger ?? (() => ({ lanes: [] }));
     this.pingMs = opts.pingMs ?? PING_MS;
+    this.hardening = opts.hardening ?? (() => undefined);
     const dist = opts.staticDir ?? resolve(process.cwd(), 'packages', 'arena-ui', 'dist');
     this.staticDir = existsSync(dist) ? dist : undefined;
     this.log.subscribe((ev) => {
@@ -337,7 +343,11 @@ export class LiveServer {
           const report = buildReport(w, waveEvents(this.log.events, w.n), info);
           return seg[3] === 'report' ? { json: report } : { text: buildPostmortem(w, report) };
         }
-        if (seg[3] === 'hardening') return fail(404, 'not_ready', 'hardening is not available yet');
+        if (seg[3] === 'hardening') {
+          const w = this.waveRecord(seg[2]);
+          const h = w.endedAt ? this.hardening(w.n) : undefined;
+          return h ? { json: h } : fail(404, 'not_ready', `no hardening spec for wave ${w.n}`);
+        }
       }
       if (seg[0] === 'api' && seg[1] === 'lane' && seg.length >= 4 && seg[3] === 'orders') return { json: this.laneOrders(this.laneOf(seg[2])) };
       if (seg[0] === 'api' && seg[1] === 'lane' && seg[3] === 'log' && seg.length === 4) return { json: this.laneLog(this.laneOf(seg[2]), q) };
@@ -363,8 +373,14 @@ export class LiveServer {
       case '/api/demo/start':
         if (!(DEMO_SCRIPTS as readonly string[]).includes(body.script)) fail(400, 'bad_request', 'bad script');
         if (!this.engine.startDemo) fail(409, 'not_applicable', 'demo needs the engine');
-        this.engine.startDemo!(body.script, body.speed);
-        this.demoRunning = body.script;
+        if (body.speed !== undefined && !SPEEDS.includes(body.speed)) fail(400, 'bad_request', 'bad speed');
+        {
+          const d = loadDemo(body.script);
+          const speed = body.speed ?? 1;
+          this.startWave({ orders: d.orders, seed: d.seed, lanes: d.lanes, tiers: d.tiers, pace: d.pace, speed });
+          this.demoRunning = body.script;
+          this.engine.startDemo!(body.script, speed);
+        }
         return { json: {} };
       case '/api/demo/stop':
         this.engine.stopDemo?.();
