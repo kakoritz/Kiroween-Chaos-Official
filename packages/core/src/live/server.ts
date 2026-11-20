@@ -11,6 +11,7 @@ import { tiersForLanes, type TierMode } from '../../../haunt/src/runner/lanes';
 import { MAX_DEPTH } from '../../../haunt/src/chaos/catalog';
 import { fnv1a32, mulberry32 } from '../../../haunt/src/shared/rng';
 import { APPS, APP_STAGES, CONTRACT_VERSION, CREATURES, DEMO_SCRIPTS, FAULT_IDS, type AppId } from './catalog';
+import { buildPostmortem, buildReport, waveEvents } from './report';
 import { applyEvent, logLine, newLane, toWire, type LaneView } from './lanes';
 
 export const LIVE_HOST = '127.0.0.1';
@@ -328,9 +329,15 @@ export class LiveServer {
       if (seg[0] === 'api' && seg[1] === 'waves' && seg.length >= 4) {
         this.waveRecord(seg[2]);
         if (seg[3] === 'compare' && seg[4]) return { json: this.compare(seg[2], seg[4]) };
-        if (seg[3] === 'report' || seg[3] === 'postmortem' || seg[3] === 'hardening') {
-          return fail(404, 'not_ready', `${seg[3]} is not available yet`);
+        if (seg[3] === 'report' || seg[3] === 'postmortem') {
+          const w = this.waveRecord(seg[2]);
+          if (!w.endedAt) return fail(404, 'not_ready', `wave ${w.n} has not ended`);
+          const start = this.log.events.find((e) => e.type === 'wave_start' && e.wave === w.n);
+          const info = { app: String((start?.detail as any)?.app ?? this.app), seed: Number((start?.detail as any)?.seed ?? 0) };
+          const report = buildReport(w, waveEvents(this.log.events, w.n), info);
+          return seg[3] === 'report' ? { json: report } : { text: buildPostmortem(w, report) };
         }
+        if (seg[3] === 'hardening') return fail(404, 'not_ready', 'hardening is not available yet');
       }
       if (seg[0] === 'api' && seg[1] === 'lane' && seg.length >= 4 && seg[3] === 'orders') return { json: this.laneOrders(this.laneOf(seg[2])) };
       if (seg[0] === 'api' && seg[1] === 'lane' && seg[3] === 'log' && seg.length === 4) return { json: this.laneLog(this.laneOf(seg[2]), q) };
@@ -439,6 +446,7 @@ export class LiveServer {
         return;
       }
       const out = this.route(method, url, body);
+      if (out?.text !== undefined) { res.writeHead(200, { 'content-type': 'text/markdown; charset=utf-8' }).end(out.text); return; }
       if (out) { this.sendJson(res, out.status ?? 200, out.json); return; }
       if (method === 'GET' && !url.pathname.startsWith('/api/') && this.serveStatic(url, res)) return;
       this.sendJson(res, 404, { error: { code: 'bad_request', message: `no route ${method} ${url.pathname}` } });
