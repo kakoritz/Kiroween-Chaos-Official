@@ -1,4 +1,4 @@
-﻿# Tasks: Core lane (Lane A)
+# Tasks: Core lane (Lane A)
 
 Branch prefix `core/`. Each task is one PR. Tags: [C] touches `contract/`.
 
@@ -53,7 +53,7 @@ Ship H0, H1, H2.2, H3.1, H3.2, H3.4, H4.1, H4.2. That gives a graded sweep and a
 - [x] H6.4 Property-based tests with `fast-check` for crash point by step: side-effect count is 1 for Phoenix. Record any bug it finds in KIRO-LOG.
 - [ ] H6.5 `haunt-mcp` server: `haunt_define`, `haunt_sweep`, `haunt_ramp`, `haunt_report`.
 - [x] H6.6 Custom agents `chaos-director` and `reviewer` in `.kiro/agents/`.
-- [ ] H6.7 Hooks in `.kiro/hooks/`: PBT on SDK save, fixture validation on contract save, reviewer on wave end.
+- [x] H6.7 Hooks in `.kiro/hooks/`: PBT on SDK save, fixture validation on contract save, reviewer on wave end. (Note: the fixture hook runs `npm run validate:events`, which becomes real when H0.6 lands.)
 - [ ] H6.8 Kiro Power packaging of Haunt.
 - [ ] H6.9 Kiro Crew app packaging: manifest, MCP tools, reviewer agent, skill `stress-test-my-workflow`, and a page that hosts the arena UI. Read the Kiro Crew apps doc first.
 - [ ] H6.10 The loop proof: run wave 1 (Rookie F), reviewer writes the hardening spec, Kiro implements it, run wave 2 (grade A). Save both reports in `docs/proof/`. (Partial: compareWaves and renderProofMarkdown exist in packages/haunt/src/report/proof.ts. Blocked: no bot files exist (E5 apps/haunted-orders/src/bots/<tier>.ts is unticked, no apps/ dir), `npm run live` starts no lanes without a bot command, so no real wave 1 or wave 2 can run. Remaining: E5 bots, wire bot command into live.ts, run both waves, reviewer hardening spec, save reports in docs/proof/.)

@@ -1,0 +1,13 @@
+{
+    "enabled":  true,
+    "name":  "Reviewer on wave end",
+    "description":  "Trigger manually when a wave finishes. Runs the reviewer agent on the newest run log.",
+    "version":  "1",
+    "when":  {
+                 "type":  "userTriggered"
+             },
+    "then":  {
+                 "type":  "askAgent",
+                 "prompt":  "A wave just ended. Act as the reviewer agent: find the newest run in .haunt/runs/, apply rules R1 to R8 from .kiro/specs/engine/design.md section 11, write postmortem.md and a hardening spec in .kiro/specs/hardening-\u003crun\u003e/. Do not change bot or source code."
+             }
+}

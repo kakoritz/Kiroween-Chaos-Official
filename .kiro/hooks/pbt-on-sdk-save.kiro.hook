@@ -1,0 +1,16 @@
+{
+    "enabled":  true,
+    "name":  "PBT on SDK save",
+    "description":  "Run the crash-point property test when an SDK source file is saved.",
+    "version":  "1",
+    "when":  {
+                 "type":  "fileEdited",
+                 "patterns":  [
+                                  "packages/haunt/src/sdk/**/*.ts"
+                              ]
+             },
+    "then":  {
+                 "type":  "runCommand",
+                 "command":  "npx vitest run packages/haunt/test/pbt-crash-point.test.ts"
+             }
+}
