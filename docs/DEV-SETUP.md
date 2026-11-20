@@ -40,7 +40,7 @@ git clone https://github.com/kakoritz/Kiroween-Chaos.git C:\dev\Kiroween-Chaos-u
     arena-ui/                  the arena (Lane B)
   apps/
     haunted-orders/            App 1 (Node): src/bots/<tier>.ts, haunt.yaml (input orders are generated into the run folder)
-    haunted-inbox/             App 2 (Python): bot/, helpdesk/, haunt.yaml, inbox/
+    haunted-inbox/             App 2 (Python): bot/, haunt.yaml (uses the shared provider; inputs generated into the run folder)
   tools/                       make-fixtures.ts, validate-events.ts, fresh-clone-test
   package.json                 workspaces
 ```

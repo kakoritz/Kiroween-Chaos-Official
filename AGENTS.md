@@ -2,7 +2,7 @@
 
 Two sessions work on this repo. Read `docs/SWIMLANES.md` before touching anything.
 
-- **Lane A, Core:** `packages/core`, `packages/haunt`, `apps/`, `tools/`. Specs: `.kiro/specs/haunted-house/`, `.kiro/specs/harness/`.
+- **Lane A, Core:** `packages/core`, `packages/haunt`, `apps/`, `tools/`. Specs: `.kiro/specs/engine/`, `.kiro/specs/harness/`, `.kiro/specs/inbox-app/`.
 - **Lane B, Visuals:** `packages/arena-ui`. Spec: `.kiro/specs/arena/`.
 - The seam is `contract/CONTRACT.md`. Build against the mock server first.
 - Never edit the other lane's folders. Never commit to `main`.

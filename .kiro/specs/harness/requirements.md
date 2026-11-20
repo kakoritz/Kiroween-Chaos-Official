@@ -20,6 +20,8 @@ Adapters can be combined.
 
 Declares: stages in order, which stages cause side effects and of what kind, how to start the process, where inputs live, how to read the result, and the targets (SLOs).
 
+> The authoritative `haunt.yaml` format is in `.kiro/specs/engine/runtime.md` section 9. The example below is illustrative and may be stale.
+
 ```yaml
 name: order-bot
 start: node bots/order.js
@@ -29,7 +31,7 @@ effects:
   confirmation: { kind: email,  idempotent: preferred }
 inputs: ./orders/
 truth: http://localhost:9000/ledger     # source of truth for side effects
-targets: { recoverMs: 15000, repeats: 0, throughputPerMin: 60 }
+targets: { recoverMs: 20000, repeats: 0, throughputPerMin: 60 }
 ```
 
 ## Requirements (EARS)

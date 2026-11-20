@@ -34,7 +34,7 @@ Counts shown are the ledger rows for the faulted order, in the format `kind x co
 
 Notes:
 - A6 and A17: "all 5 effect kinds x2" means account_create, charge, email, dispatch, and notify (both notifications) are each duplicated: 6 extra ledger rows.
-- A12 Phoenix: 3 failures then success on attempt 4 (waits of 2 s each from Retry-After, about 6 s). The breaker needs 4 failures, so it stays closed. Within the 15 s target, so the cell is `pass`.
+- A12 Phoenix: 3 failures then success on attempt 4 (waits of 2 s each from Retry-After, about 6 s). The breaker needs 4 failures, so it stays closed. Within the 20 s target, so the cell is `pass`.
 - A13 and A14 Phoenix: the breaker opens after 4 failures, the order is parked, and a probe after the open time resumes it. A14 may need a second probe (the fault window starts at the first matching call, runtime.md section 18). No probe count is asserted.
 - A19 Phoenix: 3 poll failures, success on attempt 4. A20 Phoenix: the same with no_driver.
 - All timings here assume the exact rules in `runtime.md` sections 4 and 7.

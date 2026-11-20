@@ -15,7 +15,7 @@ Part of the contract. Read with [CONTRACT.md](CONTRACT.md). **Where this file di
 - First message: `{"type":"hello","contractVersion":1,"mode":"live","seq":812,"app":"orders"}`.
 - Heartbeat: a `: ping` comment every 15 s.
 - The server keeps the last 5000 events. If `since` is older, it answers `410 {error:{code:"gone"}}`. The UI then reloads `GET /api/state` and subscribes without `since`.
-- `seq` strictly increases for the life of the server process. A new run emits `{"type":"reset"}` and the UI clears its state.
+- `seq` strictly increases for the life of the server process. A new **run** (server restart, app switch, or `POST /_mock/reset`) emits `{"type":"reset"}` and the UI clears its state. A new **wave** does not emit `reset`.
 - `ts` is server epoch ms. The UI must not use its own clock for ordering.
 
 ## Event types (full list)
@@ -30,8 +30,8 @@ Part of the contract. Read with [CONTRACT.md](CONTRACT.md). **Where this file di
 | `order_start` | `{index, total}` | lane picks the next order |
 | `stage_start` | `{attempt}` | stage begins |
 | `stage_progress` | `{pct, label}` | 0..100, at least every 300 ms during a stage |
-| `stage_done` | `{ms, skipped}` | `skipped: true` when replayed from the journal |
-| `stage_fail` | `{error, retryable, attempt}` | stage errored |
+| `stage_done` | `{ms, skipped, reconciled?}` | `skipped: true` when replayed from the journal |
+| `stage_fail` | `{error, retryable, attempt, degraded?}` | stage errored |
 | `chaos` | `{creature, fault, scope, depth, injectedAt, source, deferred?}` | fault armed. `source`: `user`, `random`, `boss`, `demo`, `sweep` |
 | `chaos_absorbed` | `{creature, fault, reason}` | fault had no visible effect (disk_full on a tier with no journal, a slow link under the timeout) |
 | `process_dead` | `{reason, restartInMs}` | bot process killed |
@@ -49,7 +49,7 @@ Part of the contract. Read with [CONTRACT.md](CONTRACT.md). **Where this file di
 | `order_abandoned` | `{}` | lane halted before this order started |
 | `lane_halted` | `{reason}` | lane stopped. No more events for it except `order_abandoned` |
 | `part_added` | `{part, source: "hardening_spec"\|"manual", spec?}` | a tier started using a part it did not use before |
-| `boss_warning`, `boss_start`, `boss_end` | `{boss, startsInMs?, durationMs?}` | `startsInMs` is 8000 |
+| `boss_warning`, `boss_start`, `boss_end` | `{boss, startsInMs?, durationMs?}` | `startsInMs` is 8000 ms at 1x, so real ms are `8000 / speed` (rule 21) |
 | `score` | `{delta, total, reason}` | after the event that caused it |
 | `hardening_spec` | `{spec, title, path, findings}` | the reviewer wrote a hardening spec |
 | `fix_applied` | `{spec, files: [{path, add, del}], recorded}` | Kiro applied the spec (or a recorded fix was applied in browser mode) |
@@ -58,12 +58,12 @@ Effect kinds: `account_create`, `charge`, `email`, `dispatch`, `notify`, `ticket
 
 ## Ordering rules (checked by `npm run validate:events`)
 
-1. `hello`, then optional `reset`, then `wave_start`. `wave_end` is last. One `lane_ready` per lane after `wave_start`.
+1. `hello`, then optional `reset`, then `wave_start`. `wave_end` is the last event **of its wave** (several waves can follow in one stream, rule 26). One `lane_ready` per lane after `wave_start`.
 2. Per (lane, order): `order_start`, then stages in pipeline order. Each stage is `stage_start`, zero or more `stage_progress`, then `stage_done` or `stage_fail`. A skipped stage is a `stage_start` directly followed by `stage_done{skipped:true}` (rule 27). A stage left open by a kill has no terminal event until the restart (rule 6).
-3. After `stage_fail`, exactly one of: `recover_start`, then `recover_done`, then `stage_start` with `attempt + 1`; or `order_failed`; or `order_parked`; or `order_quarantined`; or `lane_halted`.
+3. After `stage_fail`, exactly one of: `recover_start{retry|backoff}` then `recover_done`, after which **the same stage continues** (no new `stage_start`; it ends in `stage_done` or another `stage_fail`); or `order_failed`; or `order_parked`; or `order_quarantined`; or `lane_halted`; or, if `degraded:true`, the next stage's `stage_start`. A new `stage_start` (higher `attempt`) appears only when a stage restarts from the top (after a restart, a resume, or an order restart).
 4. After `order_failed`, `order_parked` or `order_quarantined` the lane emits `order_start` for the next order, or the lane is done.
 5. `order_done` comes right after the last stage's `stage_done` (`handoff` or `archive`).
-6. `process_dead` is followed by `process_up`. Between them that lane emits no stage events. After `process_up` come `recover_start{action:"replay"}`, then one `stage_done{skipped:true}` per journaled stage, then `recover_done`. A tier with no journal emits `recover_start{action:"restart"}`, `recover_done`, then `stage_start` at stage 1.
+6. `process_dead` is followed by `process_up`. Between them that lane emits no stage events. **`process_dead` implicitly closes the lane's open stage as killed** (no terminal event is emitted for it; validators treat it as closed). After `process_up` come `recover_start{action:"replay"}`, then skipped-stage pairs (rule 27), then any reconcile pair (rule 13), then `recover_done{replay}` (nested pairs close last in, first out, rules 13 and 30). A tier with no journal emits `recover_start{action:"restart"}`, `recover_done`, then `stage_start` at stage 1.
 7. Every `chaos` is followed in the same lane by one of: `chaos_absorbed`, `stage_fail`, `process_dead`, `recover_start`, `lane_halted`, `order_parked`.
 8. `effect` is emitted after the provider call returns. If the request was processed but timed out, `effect` is emitted and the timeout `stage_fail` follows it. `repeat` immediately follows the `effect` that caused it.
 9. `score` follows the event that caused it. `score.total` is the lane total after the delta.
@@ -102,7 +102,7 @@ Effect kinds: `account_create`, `charge`, `email`, `dispatch`, `notify`, `ticket
 |---|---|---|
 | `POST /api/wave/start` | `{orders?: 12, seed?: int, tiers?: "race"\|"allPhoenix", lanes?: 1..5, speed?: 0.5\|1\|2\|4, pace?: "normal"\|"show", app?: "orders"\|"inbox"}` | `200 {wave: n}` |
 | `POST /api/wave/stop` | none | `200 {}` |
-| `POST /api/speed` | `{speed}` | `200 {speed}` |
+| `POST /api/speed` | `{speed}` (0.5, 1, 2 or 4) | `200 {speed}` |
 | `POST /api/chaos` | `{lane?, creature?, fault?, scope?: "inner"\|"outer", point?}` (`lane` may be omitted only for a boss fault, which fires on all lanes after the 8 s warning) | `200 {chaosId, creature, fault, depth, deferred}` |
 | `POST /api/chaos/mode` | `{mode: "off"\|"manual"\|"random", frequency?: 0..1, seed?}` | `200 {}` |
 | `POST /api/demo/start` | `{script: "hero"\|"full"\|"loop", speed?}` (in **mock mode** any fixture name is also accepted) | `200 {}` |
@@ -113,7 +113,7 @@ Effect kinds: `account_create`, `charge`, `email`, `dispatch`, `notify`, `ticket
 | `GET /api/lane/:lane/stage/:stage?order=` | | `{lane, order, stage, status, attempts: [{attempt, startTs, endTs, status, error?}], events: [], effects: [], chaos: [], recover: [], journal: []}` |
 | `GET /api/lane/:lane/log?order=&since=` | | `{lines: [{seq, ts, level, type, stage, order, text}]}`, `level` is `info\|warn\|error\|good` |
 | `GET /api/ledger` | | `{lanes: [{lane, byKind: {charge: {rows, repeats}}, rows: []}]}` |
-| `GET /api/waves` | | `[{n, startedAt, endedAt, grade?, score}]` |
+| `GET /api/waves` | | `[{n, startedAt, endedAt, grade?, grades?: {lane: grade}, score}]` where `grade` is the **worst lane grade** |
 | `GET /api/waves/:n/report` | | report JSON (see `.kiro/specs/engine/runtime.md` section 9) |
 | `GET /api/waves/:n/compare/:m` | | `{a: {score, grade, repeats}, b: {}, cells: []}` |
 | `GET /api/waves/:n/postmortem` | | `text/markdown`, or `404 {error:{code:"not_ready"}}` before the wave ends |
@@ -169,7 +169,7 @@ Generated by `tools/make-fixtures.ts` from `STORYBOARDS.md`, not typed by hand, 
 `GET /api/lane/:lane/orders` returns the order ids this lane has processed so far, with their outcome (`done|failed|parked|quarantined|abandoned|active`), for the inspector's order picker.
 
 ### Compare, report, hardening
-- `GET /api/waves/:n/compare/:m` returns `{a:{score,grade,repeats}, b:{score,grade,repeats}, cells:[{stage, fault, point?, a, b, change: "improved"|"worse"|"same"}]}` where `a` and `b` are matrix result codes.
+- `GET /api/waves/:n/compare/:m` returns `{a:{score,grade,repeats}, b:{score,grade,repeats}, cells:[...]}`. For **sweep reports** each cell is `{stage, fault, point?, a, b, change}` with matrix result codes. For **wave comparisons** each cell is `{lane, tier, a:{grade,score,repeats}, b:{grade,score,repeats}, change: "improved"|"worse"|"same"}`.
 - `GET /api/waves/:n/report` returns the report JSON defined in `.kiro/specs/engine/runtime.md` section 9.
 - `GET /api/waves/:n/hardening` returns `{spec, title, files:[{path, content}]}` (the hardening spec the reviewer wrote), or `404 {error:{code:"not_ready"}}`.
 - `GET /api/lane/:lane/log` line `text` is a short sentence generated by the server from the event (for example "Payment failed: 503 from provider (attempt 2)").
@@ -215,4 +215,12 @@ The mock has two modes.
 ### Mock corrections
 - A fresh mock boot streams only `hello` (quiet) until a wave starts, a demo starts, or a fixture is loaded. (This replaces "replays `calm` by default".)
 - In the mock, `POST /api/wave/start` runs the **simulator** (a synthetic wave built from the duration model). It does not scale a fixture.
-- Demo script lengths: `hero` 5 orders about 75 s, `full` 11 orders about 165 s, `loop` 4 orders per wave about 130 s in total, all show pace.
+- Demo script lengths: `hero` 5 orders about 75 s, `full` 9 orders about 165 s, `loop` 3 orders per wave about 125 s in total, all show pace.
+
+### Round 4 rules and shapes
+34. **In-stage retries** emit `stage_fail`, `recover_start{retry|backoff}`, `recover_done` and the same stage goes on (rule 3). The UI chip shows retrying from `recover_start`.
+35. **Idle state** (`GET /api/state` when no wave exists): `wave: null`, `lanes: []`, `boss: {next: null, startsInMs: null, active: false}`, `chaos` at its defaults, `stages` for the current app, `demo: {scripts: [...], running: null}`.
+36. **Wave grade:** `GET /api/waves` `grade` is the worst lane grade; `grades` has each lane. See `engine/runtime.md` section 23.
+37. **Detail fields** (in addition to the table): `stage_done.reconciled`, `stage_fail.degraded`, `chaos.deferred`, `wave_end.stopped`, `wave_end.summary[lane].grade`, `process_dead.restartInMs`.
+38. Fault lifecycle, the `input_read` hook, waves isolation, and live `part_added` timing are in `engine/runtime.md` sections 29 to 32.
+39. Demo script lengths: `hero` 5 orders about 75 s, `full` 9 orders about 165 s, `loop` 3 orders per wave about 125 s, all show pace.

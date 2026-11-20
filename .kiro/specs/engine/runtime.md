@@ -159,7 +159,7 @@ Extra records: `{t:"order_end", order, outcome:"done"|"failed"|"parked"|"quarant
 - **Reliability penalty:** `-15` per extra ledger row, floor 0.
 - A **clean completion** in the reliability formula means completed with zero extra rows.
 - **Sweep denominator:** one order per cell, so `orders` = number of applicable cells.
-- **`recovered_late`:** a cell that passed but whose recovery exceeded `targets.recoverMs` (default 5000).
+- **`recovered_late`:** a cell that passed but whose recovery exceeded `targets.recoverMs` (default 20000, 1x ms).
 - **Lost order** (replaces design.md): an order that is **paid but not fulfilled** (charge row present and no dispatch row; for the inbox, a ticket row and no reply row) or **abandoned** (never started because the lane halted). A plain `failed` order is not lost.
 - **Boss expected duration:** `expectedMs = orders x 7350 x pace / speed`, warning at `0.4 x expectedMs`. `pace` is 1 normally and 2 for show pacing (section 10).
 - **Random chaos tick:** every `1000 / speed` ms, cooldown 2500 ms per lane.
@@ -183,7 +183,7 @@ stages:                           # required, ordered
 inputs: ./orders/                 # optional; folder the process reads
 truth: http://127.0.0.1:7071      # required for effect stages (ledger base URL)
 targets:
-  recoverMs: 15000                # default (1x ms)
+  recoverMs: 20000                # default (1x ms)
   repeats: 0                      # default
   throughputPerMin: 60            # optional
   concurrency: 8                  # default, used for scalability grade
@@ -273,7 +273,7 @@ The mock is **not an engine**. It is a table of **outcome templates** keyed by t
 
 **Every millisecond constant in the engine docs is "at 1x" and is divided by `speed` at runtime**: stage work durations, client timeouts (1500 and 800), retry delay (500), backoff (500, 1000, 2000, 4000), breaker open time (5000), `Retry-After`, provider base latency, fault latencies (3000, 600), fault windows (`forMs`), restart delays, creature and boss timers, the offline-queue poll. Event `ms` fields are **real wall-clock ms** (already divided). **Reports normalize back to 1x**: `recoverMs` and other durations in reports are `realMs x speed`. Targets (`recoverMs` and so on) are in 1x ms. Therefore table A gives the same outcomes at any speed, and integration tests may run at speed 4 to 8.
 
-**Default `targets.recoverMs` is 15000 ms (1x)**, not 5000, so a parked order that resumes after an outage (A13, A14) is not "late". A cell is `recovered_late` only above the target.
+**Default `targets.recoverMs` is 20000 ms (1x)**, not 5000, so a parked order that resumes after an outage (A13, A14) is not "late". A cell is `recovered_late` only above the target.
 
 **Recovery time** runs from the **first failure event caused by the fault** (`stage_fail`, or `process_dead`) to the next `stage_done` of that stage (for parked orders, to the `stage_done` after `order_resumed`). It does not include the press time or leftover work sleep.
 
@@ -356,3 +356,49 @@ Outcome = function of (tier, fault class, stage role). "Earlier effects" are eff
 ## 27. Demo scripts: triggers
 
 A demo script entry is `{at: {ms: N} | {when: {lane, event, stage}}, lane, fault, creature?, point?, scope?}`. The `when` form fires on the first matching event after the previous entry, so beats such as "Ghost during recovery" always land correctly. Scripts and orders per script: `hero` 5 orders, `full` 11 orders, `loop` 4 orders per wave, all `pace: show`.
+
+---
+
+# Round 4 amendments (win over everything above)
+
+## 28. Retry, sleep and probe model (settles timing)
+
+- **Work sleep happens once per (order, stage) per process lifetime.** A stage that is retried or resumed in the **same process** skips the work sleep. After a **restart** the work sleep runs again.
+- **In-stage retries do not emit `stage_start`.** A failed call emits `stage_fail{attempt}` (the call attempt number), then `recover_start{retry|backoff}`, then after the wait `recover_done`, and the **same stage continues** (progress keeps going, then `stage_done`). `stage_start` is emitted only when a stage (re)starts from the top: first run, after a restart, after `order_resumed`, or after an order restart. Its `attempt` is runner-assigned (runtime s19). The chip shows the retry through `recover_start`.
+- **Breaker probe:** when a breaker is half-open the probe is the parked stage's own provider call. A failed probe **re-opens for another 5000 ms/speed**. A resumed parked order starts the stage with `stage_start` and **skips the work sleep** (it already ran).
+- **Provider base latency** is `uniform(50, 70)` ms (seeded), not 20 to 100, to keep margins stable.
+- **Timing-sensitive rows** A13, A14, A19, A20, A21 are tested at speed 1 or 2 only. Other rows run at any speed up to 8.
+- **Duration seed** uses `HAUNT_ATTEMPT` (process start count) and a **bot-local stage-run counter** (1, 2, ... for this order and stage in this process), not the runner's `attempt`: `u = hash(seed|lane|order|stage|HAUNT_ATTEMPT|localRun)`. The runner's `attempt` is display only. (Replaces the seed in section 5.)
+- With these rules A14 Phoenix: failures at about T+0, 0.56, 1.7, 3.8; the 4th opens the breaker; probe at about 8.8 fails (window ends T+10); re-open; probe at about 13.8 succeeds with no re-sleep; recovery about 13.8 s, under 20 s: `pass`.
+
+## 29. Fault lifecycle
+
+- A `count` fault that has not been fully consumed when the **order in flight at arming** leaves the queue (`order_done`, `order_failed`, `order_parked`, `order_quarantined`) is **disarmed**. If it never fired at all, the runner emits `chaos_absorbed{reason:"fault expired unused"}`.
+- **Time-boxed window faults** (`internet_outage`, `endpoint_down`, `hazard_event`, `driver_unreachable`, `slow_link`, boss versions) run for their full `forMs` from the first matching call and affect every order of that lane during that time (a real outage hits everything). They are not disarmed at order end.
+- At wave end any armed fault that never fired emits `chaos_absorbed{reason:"never fired"}`.
+- **`input_read` hook:** a new hook between listing the head file and opening it. The bot sends `at_point{point:"input_read"}` and waits for `{k:"proceed"}`. `missing_file` and `malformed_payload` act here: the runner renames or truncates **the head file** (the one the bot is about to read) and then sends `proceed`. So the fault always hits the order about to be read, with no race. If the lane is between orders the next intake hits it. **Intake reads the file first, then does its work sleep.**
+- A `missing_file` or `malformed_payload` press when a lane is mid-stage arms the hook for the **next** intake.
+
+## 30. Runner and provider in one process
+
+The runner hosts the provider server in the **same process**. Every ledger write calls a synchronous callback before the HTTP response is sent, so the runner emits `effect` at write time. This guarantees `effect` comes before `process_dead` and before `stage_done`.
+
+## 31. Waves are isolated
+
+Each wave has fresh journals, ledger, input folders and provider state: `<run>/wave-<n>/lane-<k>/...`, and `POST /_reset` at wave start. Order ids repeat across waves. Run-level state is only the events file and reports.
+
+## 32. Live `loop` and `part_added`
+
+- Bot bundles support `node dist/bots/<name>.js --parts`, which prints `{"parts":[...]}` and exits. The build generates these from the real bot code.
+- Between waves the runner compares the next wave's bundle parts with the previous wave's and emits `part_added` for each new part (carrying the previous wave number, rule 26), **before** `wave_start`.
+- The repo contains `apps/haunted-orders/src/bots/rookie.hardened.ts`, committed from the real fix that Kiro applies. The live `loop` swaps lane 1's bundle to it for wave 2 and emits `fix_applied{recorded:true}` (a real proof run in the video shows Kiro making the edit; automated runs use the recorded file).
+
+## 33. Misc rules
+
+- **Degraded beats park at `updates`:** `updates` never parks. If calls still fail after retries (or the breaker is open) the stage emits `stage_fail{degraded:true}` and the pipeline continues. The order can be `clean` with fewer notify rows.
+- A bot never sends `{"k":"idle"}` while `parked/` is non-empty or a parked order is awaiting a probe.
+- **Distinct order ids** are the denominator of reliability. A duplicated order counts its extra ledger rows against the original id.
+- **Outcome-template file:** `packages/core/mock/outcomes.json`, an array of `{tier, fault, role, point?, outcome, extraRows: {kind: n}, template}` where `template` is one of `T_OK, T_REPEAT, T_FAILED, T_HALT, T_PARKED_OK, T_QUAR, T_ABSORBED, T_DEGRADED`. `T_PARKED_OK` sequence: `chaos`, `stage_fail` per attempt each with `recover_start{retry|backoff}` and `recover_done`, `breaker{open}`, `order_parked`, the lane starts the next order, `breaker{half_open}`, `order_resumed`, `order_start` (same order), `stage_start`, `breaker{closed}` (if the probe passes), `stage_done` and the rest, `order_done`. The same file feeds the acceptance tests.
+- **Demo `when` triggers** (replaces section 27 wording): `{when: {lane, event, stage, order?, attempt?}, forEachOrder?: true, lane, fault, creature?, point?, scope?}`. Entries are tracked **per lane**, so lanes do not consume each other's triggers. `attempt: 1` filters out restart passes. `forEachOrder: true` fires once per order. The `loop` script uses `{when: {lane: L, event: "stage_start", stage: "payment", attempt: 1}, forEachOrder: true, fault: "crash", point: "after_effect_before_journal"}` for lanes 1 and 2.
+- **Orders per script:** `hero` 5, `full` 9, `loop` 3 per wave.
+- Speed 8 is **internal for tests only**; the public enum stays 0.5, 1, 2, 4.

@@ -201,7 +201,7 @@ Computed by `haunt` for a run (sweep, stack, ramp, soak, boss, compare). The wav
 
 **Coverage matrix:** for each (stage, fault) pair that applies, one cell: `pass` (completed clean), `repeat` (completed, repeated side effect), `recovered_late` (completed clean but recovery over target), `fail`, `halt`, `n/a`.
 
-**Recovery time:** from `chaos` (or `process_dead`) to the next `stage_done` for that order. Report p50, p95, max. Target default 15000 ms (1x, see runtime.md section 17).
+**Recovery time:** from `chaos` (or `process_dead`) to the next `stage_done` for that order. Report p50, p95, max. Target default 20000 ms (1x, see runtime.md section 17).
 
 **Scalability (ramp):** concurrency steps 1, 2, 4, 8, 16, 32 orders in flight on one lane, 30 orders per step, no chaos. Per step: throughput (orders/min), p50 and p95 order latency, error rate.
 - **Knee:** first step where p95 > 2 x the step-1 p95, or error rate > 2%.

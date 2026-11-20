@@ -7,7 +7,7 @@ Two sessions work in parallel. They meet only at `contract/`.
 | Owner | Session 1 (this one) | Session 2 (the second session session) |
 | Folder | `packages/core/`, `packages/haunt/`, `apps/`, `tools/` | `packages/arena-ui/` |
 | Builds | Chaos engine, SDK, bots, provider, journal, scoring, reviewer, stress-test reports, CLI, server | Race arena, sprites, creatures, stage inspector, rank board, report viewer, sound, demo mode |
-| Specs | `.kiro/specs/haunted-house/`, `.kiro/specs/harness/` | `.kiro/specs/arena/` |
+| Specs | `.kiro/specs/engine/`, `.kiro/specs/harness/`, `.kiro/specs/inbox-app/` (and the first draft `haunted-house/`) | `.kiro/specs/arena/` |
 | Branch prefix | `core/` | `ui/` |
 | May edit | Its own folders and `contract/` (with a contract PR) | Its own folders and `contract/` (with a contract PR) |
 | Must not edit | `packages/arena-ui/` (except creating the empty workspace stub in task H0.9) | `packages/core/`, `packages/haunt/`, `apps/`, `tools/` |
@@ -47,3 +47,9 @@ README, `docs/`, CI and `contract/` are shared. Edit through a PR the other lane
 - Contract PRs (anything in `contract/`): label `contract`, and the other lane approves in a PR comment before merge.
 - If a lane is blocked on the other, open an issue labelled `lane-question`, state exactly what is missing, and keep working on something else.
 - Handoff guides: `docs/HANDOFF-CORE.md` and `docs/HANDOFF-VISUALS.md`.
+
+## Contract approval rule (removes the first-day deadlock)
+
+- Lane B **pre-approves** `contract/` as it is in the repo today. Lane A may add H0 artifacts (`events.schema.json`, fixtures, the mock, validators) with no approval as long as they do not change any meaning in `PROTOCOL.md`.
+- Any **semantic** contract change needs the other lane's approval in a PR comment. If the other lane does not answer in 4 hours, the author may merge and note it in `docs/DECISIONS.md`.
+- Both lanes record every decision they make on an ambiguity in `docs/DECISIONS.md` (date, question, choice, reason). **Rule for ambiguity:** pick the simplest option that keeps `engine/acceptance.md` table A true, log it, and keep going. Do not wait for the owner.
