@@ -1,0 +1,8 @@
+{
+  "name": "@haunt/haunt",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The skeleton: shared catalog and data (engine, SDK, chaos director and reviewer arrive in later tasks).",
+  "license": "MIT"
+}

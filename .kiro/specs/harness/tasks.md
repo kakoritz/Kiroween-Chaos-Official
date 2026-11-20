@@ -77,7 +77,7 @@ H0 is complete only when all of these are done:
 - [ ] H0.6 `tools/validate-events.ts` checks the schema and every ordering rule in `contract/PROTOCOL.md`. Wired to `npm run validate:events` and CI.
 - [ ] H0.7 Mock simulator implements `engine/acceptance.md` table A for every tier and fault.
 - [ ] H0.8 `npm run test:contract` suite. Runs against the mock in H0 and also against live once H1.6 exists.
-- [ ] H0.9 Repo scaffolding per `docs/DEV-SETUP.md`: workspaces, TypeScript, Vitest, CI, `npm run demo`.
+- [x] H0.9 Repo scaffolding per `docs/DEV-SETUP.md`: workspaces, TypeScript, Vitest, CI, `npm run demo`.
 
 Engine detail tasks (map to engine/design.md sections):
 - [ ] E1 Order generator and per-lane provider namespace (1, 2).

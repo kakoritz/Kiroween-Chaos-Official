@@ -25,7 +25,7 @@ git clone https://github.com/kakoritz/Kiroween-Chaos.git C:\dev\Kiroween-Chaos-u
 | UI build | Vite, vanilla TypeScript, Canvas 2D. A UI framework is allowed if Lane B wants one, but the bundle must be static and offline. |
 | Python (App 2) | 3.12, standard library only |
 | Lint and format | ESLint and Prettier defaults |
-| CI | GitHub Actions: install, typecheck, test, validate fixtures, build UI |
+| CI | GitHub Actions: install, typecheck, validate fixtures, build. **No tests in CI** (owner decision, see `docs/KIRO-LOG.md`). Unit tests run locally. |
 
 ## Layout
 
@@ -65,7 +65,7 @@ git clone https://github.com/kakoritz/Kiroween-Chaos.git C:\dev\Kiroween-Chaos-u
 
 - Branch `core/<task-id>-<slug>` (Lane A) or `ui/<task-id>-<slug>` (Lane B). One PR per task. Task id in the title.
 - `main` changes only by pull request. No direct commits.
-- Non-contract PRs: the author merges after tests are green.
+- Non-contract PRs: the author merges after the local gate is green (typecheck, `npm test`, `npm run validate:events`). CI does not run tests.
 - Contract PRs (anything in `contract/`): label `contract`, and the **other lane's session approves in a PR comment** before merge.
 - Rebase on `main` before opening a PR. Squash merge.
 - Commit author: `kakoritz`. Commit trailer: `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`.

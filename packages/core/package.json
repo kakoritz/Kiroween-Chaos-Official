@@ -1,0 +1,8 @@
+{
+  "name": "@haunt/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Servers: the mock server (H0) and the live server (H1.6).",
+  "license": "MIT"
+}

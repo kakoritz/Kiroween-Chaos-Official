@@ -1,0 +1,34 @@
+{
+  "name": "kiroween-chaos",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Haunt: a chaos and resilience harness with a haunted arena.",
+  "license": "MIT",
+  "engines": { "node": ">=20" },
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "mock": "node tools/run-ts.mjs packages/core/src/bin/mock.ts",
+    "live": "node tools/todo.mjs live H1.6",
+    "ui:dev": "npm run dev -w @haunt/arena-ui",
+    "ui:build": "npm run build -w @haunt/arena-ui",
+    "build": "node tools/build.mjs",
+    "build:bots": "node tools/todo.mjs build:bots H1",
+    "demo": "node tools/demo.mjs",
+    "test": "vitest run",
+    "test:contract": "vitest run --config vitest.contract.config.ts",
+    "validate:events": "node tools/todo.mjs validate:events H0.6",
+    "make:fixtures": "node tools/run-ts.mjs tools/make-fixtures.ts",
+    "typecheck": "tsc --noEmit",
+    "haunt": "node tools/todo.mjs haunt H3",
+    "fresh-clone": "node tools/todo.mjs fresh-clone H6.12"
+  },
+  "devDependencies": {
+    "@types/node": "20.19.43",
+    "ajv": "8.20.0",
+    "esbuild": "0.28.2",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7"
+  }
+}
+
