@@ -24,7 +24,7 @@ Branch prefix `core/`. Each task is one PR. Tags: [C] touches `contract/`.
 
 ## H3. Harness product
 - [x] H3.1 `haunt.yaml` loader and validator.
-- [ ] H3.2 Sweep mode and coverage matrix.
+- [ ] H3.2 Sweep mode and coverage matrix. (Partial: sweep plan, coverage matrix, executor with per-cell seeds, sweep grade and deterministic report JSON done; pending: runner adapter that arms each cell on a live lane, and the haunt sweep CLI command.)
 - [ ] H3.3 Stack mode and depth curve.
 - [ ] H3.4 Ramp mode, knee and break detection.
 - [ ] H3.5 Soak mode.
