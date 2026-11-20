@@ -9,7 +9,7 @@
   "workspaces": ["packages/*", "apps/*"],
   "scripts": {
     "mock": "node tools/run-ts.mjs packages/core/src/bin/mock.ts",
-    "live": "node tools/todo.mjs live H1.6",
+    "live": "node tools/run-ts.mjs packages/core/src/bin/live.ts",
     "ui:dev": "npm run dev -w @haunt/arena-ui",
     "ui:build": "npm run build -w @haunt/arena-ui",
     "build": "node tools/build.mjs",
