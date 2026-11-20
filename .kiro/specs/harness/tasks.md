@@ -58,7 +58,7 @@ Ship H0, H1, H2.2, H3.1, H3.2, H3.4, H4.1, H4.2. That gives a graded sweep and a
 - [ ] H6.9 Kiro Crew app packaging: manifest, MCP tools, reviewer agent, skill `stress-test-my-workflow`, and a page that hosts the arena UI. Read the Kiro Crew apps doc first.
 - [x] H6.10 The loop proof: run wave 1 (Rookie F), reviewer writes the hardening spec, Kiro implements it, run wave 2 (grade A). Save both reports in `docs/proof/`. (Done 2026-11-20: wave 1 Rookie F with 5 repeats, reviewer spec `.kiro/specs/hardening-loop-w1/`, wave 2 hardened Rookie A with 0 repeats; reports, postmortems and `loop-proof.md` in docs/proof/. Reviewer findings still print `stage ?` because repeat events carry no stage.)
 - [x] H6.11 `docs/KIRO-LOG.md`: dated notes as we build. `docs/JUDGES.md`: a 60-second tour.
-- [ ] H6.12 Fresh-clone test script and a CI job for it.
+- [ ] H6.12 Fresh-clone test script and a CI job for it. (Partial 2026-11-20: tools/fresh-clone.mjs clones to .tmp, installs, runs `npm run demo -- --check`, verified through install; the check itself fails until the mock server H0.7 exists. CI job `fresh-clone` added, continue-on-error until H0.7. Tick when `npm run fresh-clone` passes.)
 
 ## Cut line update
 Never cut: H0, H1, H2.2, H3.1, H3.2, H4.1, H4.2, H6.3, H6.4, H6.10, H6.11. Cut first: H3.5, H3.6, H6.8.

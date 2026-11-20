@@ -21,3 +21,16 @@ jobs:
       - run: npm run typecheck
       - run: npm run validate:events
       - run: npm run build
+
+  fresh-clone:
+    runs-on: ubuntu-latest
+    # Installs and runs `npm run demo -- --check` only. No tests. Remove continue-on-error once the mock server (H0.7) lands.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run demo -- --check
