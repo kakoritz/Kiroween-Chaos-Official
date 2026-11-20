@@ -6,7 +6,9 @@ Owner: Lane B. Read this before drawing anything. The goal is the look of a poli
 
 - Kiro writes code, not pixels. It can produce **vector art as SVG and code-driven animation**, and it can look good if we iterate on screenshots. It cannot paint raster art by itself.
 - Expect a charming "indie cartoon" look, not hand-painted studio art. Quality comes from a strict style guide, a reusable rig, and several look-and-fix loops.
-- Allowed art sources: (1) art drawn in code (SVG, CSS, Canvas); (2) **CC0 assets** (for example Kenney or OpenGameArt packs) listed with licence and URL in `docs/ASSETS.md`. No assets without a clear licence. The earlier "no AI image models" statement is our own choice for the write-up. Keep it unless the owner changes it.
+- **Allowed art sources (the owner approved on 2026-11-20):** (1) art drawn in code (SVG, CSS, Canvas), always used for the **skeletons, the bosses and the main creatures**; (2) **CC0 sprite packs for minor creatures and props** (for example Kenney or OpenGameArt CC0 packs). Every CC0 asset must be listed with pack name, author, licence (must say CC0 or Public Domain) and URL in `docs/ASSETS.md` **before** it is committed. No asset without a clear licence. No AI-generated art or audio.
+- **Consistency rule for CC0 art:** it must be re-styled to match the style guide (same outline color and thickness added in code, same palette via tint or filter, same size class). If a pack cannot be made to match, draw the creature in code instead.
+- **Minor creatures** that may use CC0 art: Imp, Goblin, Gargoyle, Mummy, Will-o'-Wisp, Doppelganger, Poltergeist props, and background props (barrels, candles, cobwebs). The skeleton workers, Reaper, Wraith, Banshee, Zombie, Ghost, Witch, Werewolf and all three bosses stay drawn in code.
 
 ## Style guide (follow exactly)
 
@@ -59,5 +61,5 @@ Crypt in layered parallax: far wall with arches, mid stone pillars, near floor t
 
 1. Keep the rig and simplify dressings.
 2. Reuse the Reaper sprite recolored for other creatures with a different prop and face.
-3. Use CC0 monster sprites for the minor creatures (record in `docs/ASSETS.md`).
+3. Use CC0 sprites for more creatures than the minor list (record each in `docs/ASSETS.md`).
 Never ship plain squares or text placeholders in the video.

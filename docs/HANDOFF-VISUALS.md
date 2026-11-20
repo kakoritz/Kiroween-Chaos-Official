@@ -30,7 +30,7 @@ Build the **arena**: the video-game view of five skeleton workers racing through
 
 - Every animation is driven by an event. Never fake motion that is not backed by an event. Never keep your own script or timers for game logic.
 - Stage names, part names and creature names come from the server (`/api/state`, `/api/creatures`). Do not hard-code them, so the Python app needs no UI change. Have a generic fallback animation for unknown ids.
-- Everything is drawn in code or CSS (no image or audio files from AI models). Sound is generated with Web Audio. Provide a mute button.
+- Skeletons, bosses and main creatures are drawn in code or CSS. **CC0 sprite packs are allowed for minor creatures and props** (see `docs/ART-DIRECTION.md`), each recorded in `docs/ASSETS.md` with licence and URL before commit. No AI-generated image or audio. Sound is generated with Web Audio. Provide a mute button.
 - Build output must be static and offline, with relative asset paths (`base: './'`), because it is also hosted on GitHub Pages.
 - Never edit `packages/haunt/`, `packages/core/`, `apps/`. If the contract is missing something, open a contract PR (label `contract`, Lane A approves) or an issue labelled `lane-question`.
 - Do not run the full browser end to end suite repeatedly. One smoke spec at most.

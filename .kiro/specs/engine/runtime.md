@@ -183,7 +183,7 @@ stages:                           # required, ordered
 inputs: ./orders/                 # optional; folder the process reads
 truth: http://127.0.0.1:7071      # required for effect stages (ledger base URL)
 targets:
-  recoverMs: 5000                 # default
+  recoverMs: 15000                # default (1x ms)
   repeats: 0                      # default
   throughputPerMin: 60            # optional
   concurrency: 8                  # default, used for scalability grade
@@ -264,3 +264,95 @@ The mock is **not an engine**. It is a table of **outcome templates** keyed by t
 ## 16. Demo scripts
 
 `hero`, `full`, `loop` are data files under `packages/core/demo/` listing `{atMs, lane, fault, creature, point?}` presses plus optional boss, and use `pace: show`. Live runs them on the real engine with a fixed seed. Mock replays the fixture of the same name. Their storyboards are in `contract/STORYBOARDS.md`.
+
+---
+
+# Round 3 amendments (these win over any earlier text in this file and in design.md)
+
+## 17. One time base: everything scales with `speed`
+
+**Every millisecond constant in the engine docs is "at 1x" and is divided by `speed` at runtime**: stage work durations, client timeouts (1500 and 800), retry delay (500), backoff (500, 1000, 2000, 4000), breaker open time (5000), `Retry-After`, provider base latency, fault latencies (3000, 600), fault windows (`forMs`), restart delays, creature and boss timers, the offline-queue poll. Event `ms` fields are **real wall-clock ms** (already divided). **Reports normalize back to 1x**: `recoverMs` and other durations in reports are `realMs x speed`. Targets (`recoverMs` and so on) are in 1x ms. Therefore table A gives the same outcomes at any speed, and integration tests may run at speed 4 to 8.
+
+**Default `targets.recoverMs` is 15000 ms (1x)**, not 5000, so a parked order that resumes after an outage (A13, A14) is not "late". A cell is `recovered_late` only above the target.
+
+**Recovery time** runs from the **first failure event caused by the fault** (`stage_fail`, or `process_dead`) to the next `stage_done` of that stage (for parked orders, to the `stage_done` after `order_resumed`). It does not include the press time or leftover work sleep.
+
+## 18. Fault windows and counts (provider)
+
+- `count: N`: applies to the next N matching calls from the moment it is armed.
+- `forMs: W`: **the window starts at the first matching call after arming** and lasts W.
+- A latency fault **writes the ledger row on arrival**, then holds the response. So a retry with the same key during or after finds the row (A9 reconcile works) and `effect` is emitted at arrival (PROTOCOL rule 8).
+- Tracking: the stage duration is the total stage time. Polls run **inside** it every 300 ms. Delivery happens on the **5th successful poll**; a stalled or failed poll does not count. The stage ends when both the duration has elapsed and delivery happened. For effect stages the work sleep comes **first**, then the provider call (sequential).
+- **Speed bonus threshold:** `order ms <= 1.25 x (sum of attempt-1 durations) + 600 / speed`.
+- **Ramp mode** sets `HAUNT_WORKSCALE=0.05` (work sleeps x0.05) so the provider is the bottleneck and the capacity model produces a knee.
+
+## 19. Arming handshake and dead lanes
+
+- After spawn the bot sends `hello`, then **waits for `{"k":"go","arms":[...]}`** from the runner (all arms queued so far), with a 2000 ms/speed timeout, before it runs the `startup` hook. So an arm can never lose a race with `startup`.
+- Arming a lane whose process is `dead` (between `process_dead` and `process_up`) queues the arm. The `chaos` event is emitted at press with `scope:"inner"`, `injectedAt:"recovery"`, and the arm is delivered in the next `go`.
+- **The `chaos` event is emitted at the press (when armed)**, never at the kill. `injectedAt` is the phase where it will fire: `before` (`before_effect`), `after_effect` (`after_effect_before_journal` or `after_journal`), `during` (`mid_stage`, provider faults, file faults), `recovery` (recovery hooks, `startup`, or `scope:"inner"`).
+- "Blocks reading stdin" at `at_point` means: send the message, then `await new Promise(() => {})`. The runner kills the process. Do not busy-wait.
+- **`attempt` is assigned by the runner**: `attempt = (number of earlier stage_start events for this lane, order and stage in this wave) + 1`. Any `attempt` a bot sends is ignored. The duration seed uses this value.
+
+## 20. Input folder protocol (exact)
+
+- **Listing:** files in `orders/` matching `^ord-\d{4}(\.dup)?\.json$`, sorted by order number, then original before `.dup`. Everything else (`.haunted`, other names) is ignored.
+- **Who moves files:** the bot moves a file when its order leaves the queue: to `done/` (handoff), `failed/`, `parked/`, `quarantine/`. If the file does not exist under its name (renamed to `.haunted`), the bot just records the outcome.
+- **`missing_file` restore:** after `forMs` (from the first read attempt) the runner renames `ord-k.json.haunted` back to: `parked/ord-k.json` if the order was parked, `failed/ord-k.json` if failed, `orders/ord-k.json` otherwise (including a halted lane). So a failed order is never re-queued.
+- **Offline queue polling:** every `1000 / speed` ms a bot with `offline_queue` checks `parked/` for orders whose cause cleared: a file present in `parked/` (missing-file case), or a breaker probe success (outage case). It then emits `order_resumed` and moves the file back to `orders/` as the next order.
+- **Quarantine:** `quarantine/ord-k.json` is the bad file; the saved original is in `orig/`. (design.md's `orders/.quarantine/` is wrong.)
+- **`.dup.json` sorting** uses the explicit comparator above, not lexical order.
+
+## 21. Multi-effect stages and the degraded path
+
+- Each `s.effect()` call has the full hook sequence and its own `intent` and `result`, with its own key (`notify:1`, `notify:2`).
+- A stage declares its effect list in the manifest (`effects`). Resume treats a stage as done **only if every declared effect has a `result`** (or `stage_done` exists). Otherwise it resumes at the first effect without a `result`. This fixes the `updates` double notify case (P1 stays 2 rows).
+- **`updates` is non-critical:** a failure there (after retries) emits `stage_fail{degraded:true}` and the pipeline continues to the next stage. The order can still be `clean`. A bot with no `retry` also continues after a degraded failure.
+
+## 22. Runner-owned events and enums
+
+- The **runner** emits and fills: `order_done` (it computes `clean` and `repeats` from the ledger), `order_abandoned`, `effect`, `repeat`, `chaos`, `chaos_absorbed`, `process_dead`, `process_up`, `score`, `wave_*`, `lane_ready`, `boss_*`, `part_added`, `hardening_spec`, `fix_applied`. A bot sends `order_done` without `clean` or `repeats`.
+- `recover_start.action`: `restart` (no memory, start over), `replay` (journal replay), `reconcile` (lookup by key), `retry` (fixed-delay retry), `backoff` (breaker backoff wait).
+- `score.reason` strings: `order clean`, `order with repeats`, `duplicate <kind>`, `order failed`, `order quarantined`, `parked then resumed`, `lane halted`, `survived depth <d>`, `speed bonus`, `boss survived`.
+- `wave_end.summary[lane]` = `{score, grade, completed, failed, parked, quarantined, repeats}`.
+- `GET /api/health` returns `{ok:true, contractVersion:1, mode, app, version}`.
+
+## 23. Wave-level grade (used by `/api/waves` and the `loop` proof)
+
+Every wave gets a **wave grade per lane** with the same reliability formula and caps as design.md section 8, computed over that wave's orders (not the sweep matrix). `wave_end.summary[lane].grade` and `GET /api/waves` use it. The `loop` demo presses crash at Payment (`after_effect_before_journal`) on **every order** of both lanes: wave 1 Rookie gets F (every order has repeats), and after the recorded fix (retry, journal, idempotency) wave 2 gets A. Sweep grades (Reconciler B or C) are a separate, stricter measure.
+
+## 24. Depth
+
+Depth resets to 0 when the stack empties **or** the process comes back up (whichever first). Property P6 counts armed faults including ones wiped by a crash.
+
+## 25. Inbox on the same provider
+
+The inbox uses the **same provider server (7071)** for `POST /tickets` and `POST /replies` and the same `POST /_fault` (services `ticket` and `reply`). `/replies` ledger rows have `kind: "email"` with key `<id>:reply`. No separate helpdesk server and no proxy ports for the inbox. The **Proxy adapter** is exercised by the separate non-Node sample service (task H3.8) to prove reuse.
+
+## 26. Generalization rules for faults outside table A (used by the mock templates and the live tests)
+
+Outcome = function of (tier, fault class, stage role). "Earlier effects" are effects of stages already completed in that order.
+
+| Fault class and place | Rookie | Retrier | Journaler | Reconciler | Phoenix |
+|---|---|---|---|---|---|
+| Crash at `before_effect` of effect stage S | REPEAT earlier effects | REPEAT earlier effects | OK | OK | OK |
+| Crash at `after_effect_before_journal` of S | REPEAT earlier effects and S | same | REPEAT S | OK | OK |
+| Crash at `after_journal` of S (all effects done) | REPEAT earlier effects and S | same | OK | OK | OK |
+| Crash at `mid_stage` of a non-effect stage | REPEAT earlier effects | same | OK | OK | OK |
+| `timeout` at effect stage S (processed) | FAILED | REPEAT S | REPEAT S | OK | OK |
+| `http_404`, `http_500` at S | FAILED | OK | OK | OK | OK |
+| `http_429` at S | FAILED | FAILED | FAILED | FAILED | OK |
+| `internet_outage`, `endpoint_down` at S | FAILED | FAILED | FAILED | FAILED | PARKED then OK |
+| Any provider fault at `updates` | degraded, order continues, OK | OK if retry recovers else degraded | same | same | OK |
+| Poll stage faults (`hazard_event`, `driver_unreachable`) | FAILED | FAILED | FAILED | FAILED | OK |
+| Input stage faults (`missing_file`, `malformed_payload`, `duplicate_request`) | A15, A16, A17 | | | | |
+| `disk_full` | OK | OK | OK | OK | OK |
+
+- A fault that needs a provider call but hits a stage with none (work or final stages) is **deferred** to the next stage that has one.
+- **Bosses:** `boss_power_outage` = crash-family on every lane at the point `after_effect_before_journal` if the lane's current stage has an effect, else `mid_stage` (fixtures use this fixed choice). `boss_internet_outage` = `internet_outage` (12000 ms) on every lane, deferred to the next provider-call stage if needed. `boss_hazard_storm` = `hazard_event` at tracking and `http_429` at dispatch, deferred otherwise.
+- **Inbox roles:** `fetch` input, `classify` work, `ticket` effect (`ticket`), `draft` work, `reply` effect (`email`), `archive` final. Same table by role. `hazard_event` and `driver_unreachable` do not apply to the inbox (no poll stage).
+- Creatures' `apps` field: `werewolf` and `will_o_wisp` are `["orders"]`, all others `["orders","inbox"]`.
+
+## 27. Demo scripts: triggers
+
+A demo script entry is `{at: {ms: N} | {when: {lane, event, stage}}, lane, fault, creature?, point?, scope?}`. The `when` form fires on the first matching event after the previous entry, so beats such as "Ghost during recovery" always land correctly. Scripts and orders per script: `hero` 5 orders, `full` 11 orders, `loop` 4 orders per wave, all `pace: show`.

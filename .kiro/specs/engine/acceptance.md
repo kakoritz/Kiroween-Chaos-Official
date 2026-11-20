@@ -24,7 +24,7 @@ Counts shown are the ledger rows for the faulted order, in the format `kind x co
 | A12 | http_429 at payment (3 calls, Retry-After 2) | FAILED | FAILED | FAILED | FAILED | OK |
 | A13 | internet_outage during payment (8000 ms) | FAILED | FAILED | FAILED | FAILED | PARKED>OK |
 | A14 | endpoint_down at payment (10000 ms) | FAILED | FAILED | FAILED | FAILED | PARKED>OK |
-| A15 | missing_file at intake (6000 ms) | HALT | FAILED | FAILED | FAILED | PARKED>OK |
+| A15 | missing_file at intake (6000 ms; the restored file goes to `failed/`, `parked/` or `orders/` per runtime.md section 20) | HALT | FAILED | FAILED | FAILED | PARKED>OK |
 | A16 | malformed_payload at intake | HALT | FAILED | FAILED | FAILED | QUAR |
 | A17 | duplicate_request at intake | REPEAT all x2 | REPEAT all x2 | OK | OK | OK |
 | A18 | disk_full (one journal write) | OK | OK | OK | OK | OK |
@@ -34,8 +34,8 @@ Counts shown are the ledger rows for the faulted order, in the format `kind x co
 
 Notes:
 - A6 and A17: "all 5 effect kinds x2" means account_create, charge, email, dispatch, and notify (both notifications) are each duplicated: 6 extra ledger rows.
-- A12 Phoenix: 3 failures then success on attempt 4 (waits of 2 s each from Retry-After). The breaker needs 4 failures, so it stays closed. Cell result `recovered_late`.
-- A13 and A14 Phoenix: the breaker opens after 4 failures, the order is parked, and the probe after 5 s resumes it. A14 needs two probes.
+- A12 Phoenix: 3 failures then success on attempt 4 (waits of 2 s each from Retry-After, about 6 s). The breaker needs 4 failures, so it stays closed. Within the 15 s target, so the cell is `pass`.
+- A13 and A14 Phoenix: the breaker opens after 4 failures, the order is parked, and a probe after the open time resumes it. A14 may need a second probe (the fault window starts at the first matching call, runtime.md section 18). No probe count is asserted.
 - A19 Phoenix: 3 poll failures, success on attempt 4. A20 Phoenix: the same with no_driver.
 - All timings here assume the exact rules in `runtime.md` sections 4 and 7.
 - FAILED orders keep their effects done so far (for example A13 Rookie: account x1, charge x0). The score engine charges -50 for the failure.
@@ -119,3 +119,11 @@ Run with at least 200 cases per property in CI and 1000 in a nightly run. A shru
 | H3 | Every table A row is also run in in-process mode with the fake Clock and gives the same outcome. |
 | H4 | Provider: 404, 429, 500, 503 and drops write no ledger row. A latency fault over the client timeout writes a row. |
 | H5 | Hardening loop proof: after the recorded fix to `bots/rookie.ts`, the Rookie sweep grade improves and the SDK reports the new parts. |
+
+## I. Generalization
+
+Outcomes for faults at other stages follow runtime.md section 26. The mock outcome templates and the live tests both use that table. Add a test per row of that table (at least one stage per row).
+
+## J. Speed independence
+
+Table A and table I produce the same outcome codes at speed 1, 4 and 8 (runtime.md section 17).

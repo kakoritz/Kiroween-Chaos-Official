@@ -5,7 +5,7 @@
 - The truth source for any side-effect count is the provider ledger, never the bot.
 - Every room must have a test with an expected verdict for both bots.
 - No real money, no real keys, no external network calls.
-- Sound and graphics are generated in code. No image or audio assets from AI models.
+- Skeletons, bosses and main creatures are drawn in code. CC0 sprite packs are allowed for minor creatures and props, each listed with licence and URL in `docs/ASSETS.md`. Sound is generated in code. No AI-generated image or audio assets.
 - Keep the hero demo working at all times. If a change breaks `npm run demo`, fix it first.
 - Hackathon rules are in `docs/WINNING.md`. Read it before cutting scope. The deadline is Dec 4, 2026, 5 pm EST. Aim to submit Dec 3.
 - Never add `.kiro/` to `.gitignore`.

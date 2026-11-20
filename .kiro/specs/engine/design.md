@@ -125,7 +125,7 @@ Parts: `retry`, `journal`, `idempotency`, `breaker`, `offline_queue`.
 | `http_500` | imp | Returns 500 | effect stages | next 2 calls |
 | `missing_file` | poltergeist | Rename `orders/<order>.json` to `.haunted`; restore after `forMs` | intake | 6000 ms |
 | `duplicate_request` | doppelganger | Copy the current order into the lane queue again (same id) | intake | once |
-| `malformed_payload` | witch | Truncate the next input file to invalid JSON (restores a clean copy to `orders/.quarantine/`) | intake | once |
+| `malformed_payload` | witch | Truncate the next input file to invalid JSON (saves the original in `orig/` (see runtime.md section 20)) | intake | once |
 | `disk_full` | mummy | Next journal write throws `ENOSPC` | any | once |
 | `hazard_event` | werewolf | Tracking feed stalls (no response) | tracking | 5000 ms, then returns a reroute |
 | `driver_unreachable` | will_o_wisp | Tracking feed returns `{status:"no_driver"}` | tracking | 3000 ms |
@@ -153,7 +153,7 @@ Default for a user-triggered crash: the **next crash point reached** in the curr
 The director keeps a stack per lane. Each user press while the lane has an active fault condition or is recovering pushes a new fault.
 - `scope: "inner"` (default when the lane is in `recovering`): the fault is armed on the **recovery path** (the replay, reconcile, retry or restart code) and fires at its next hook.
 - `scope: "outer"`: armed on the next stage hook as normal.
-- `depth` = stack length at the time. It resets to 0 when the stack empties (the stage completes, or the order is parked/failed).
+- `depth` = stack length at the time. It resets to 0 when the stack empties (the stage completes, or the order is parked/failed) **or** when the process comes back up.
 - Max depth **5**. Further presses are rejected with `409 depth_limit`.
 - A fault armed in recovery that is a crash kills the process during replay. The runner restarts again (restart delay doubles each nested crash, cap 8 s).
 
@@ -201,7 +201,7 @@ Computed by `haunt` for a run (sweep, stack, ramp, soak, boss, compare). The wav
 
 **Coverage matrix:** for each (stage, fault) pair that applies, one cell: `pass` (completed clean), `repeat` (completed, repeated side effect), `recovered_late` (completed clean but recovery over target), `fail`, `halt`, `n/a`.
 
-**Recovery time:** from `chaos` (or `process_dead`) to the next `stage_done` for that order. Report p50, p95, max. Target default 5000 ms.
+**Recovery time:** from `chaos` (or `process_dead`) to the next `stage_done` for that order. Report p50, p95, max. Target default 15000 ms (1x, see runtime.md section 17).
 
 **Scalability (ramp):** concurrency steps 1, 2, 4, 8, 16, 32 orders in flight on one lane, 30 orders per step, no chaos. Per step: throughput (orders/min), p50 and p95 order latency, error rate.
 - **Knee:** first step where p95 > 2 x the step-1 p95, or error rate > 2%.
@@ -263,3 +263,7 @@ Output: `postmortem.md` (counts per rule, worst five findings, evidence as `seq`
 - A bot is a Worker. "Kill" is `worker.terminate()`. The journal lives on the main thread, so it survives.
 - Limits: no `ramp` above concurrency 8, no real files (the file stages use virtual files), no Python app. Banner shows "Browser mode".
 - Contract is identical. `GET /api/health` is answered by a service layer in the page, not HTTP. The UI's API client has one `transport` switch: `http` or `inpage`. **Lane A ships the in-page transport as `window.__haunt` with the same functions and an `EventSource`-like subscribe.** Lane B wires the switch.
+
+## Wave grade
+
+Waves are graded per lane with the same formula and caps as section 8 over the wave's orders. See runtime.md section 23.

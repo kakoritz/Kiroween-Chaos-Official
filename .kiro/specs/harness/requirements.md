@@ -29,7 +29,7 @@ effects:
   confirmation: { kind: email,  idempotent: preferred }
 inputs: ./orders/
 truth: http://localhost:9000/ledger     # source of truth for side effects
-targets: { recoverMs: 5000, repeats: 0, throughputPerMin: 60 }
+targets: { recoverMs: 15000, repeats: 0, throughputPerMin: 60 }
 ```
 
 ## Requirements (EARS)

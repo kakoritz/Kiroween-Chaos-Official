@@ -83,7 +83,7 @@ Keep a running `docs/KIRO-LOG.md`: dated notes of what Kiro did well, where it f
 
 Two targets, one contract:
 
-- **Live target** (local): child processes, real SIGKILL, SQLite. Used for the video's heavy runs and for the CLI report.
+- **Live target** (local): child processes, real SIGKILL, JSONL files. Used for the video's heavy runs and for the CLI report.
 - **Browser target** (hosted on GitHub Pages): the same engine, bots run in Web Workers, "crash" is `worker.terminate()` (a real kill), journal and ledger live in the page. Contract `mode: "browser"`. Judges open a URL, click Chaos, see it work.
 
 This costs extra work in Lane A (adapter swap) and none in Lane B.
