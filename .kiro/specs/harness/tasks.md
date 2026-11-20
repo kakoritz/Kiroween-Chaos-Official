@@ -49,7 +49,7 @@ Ship H0, H1, H2.2, H3.1, H3.2, H3.4, H4.1, H4.2. That gives a graded sweep and a
 ## H6. Win-the-hackathon items (see docs/WINNING.md)
 - [ ] H6.1 Repo layout for Skeleton Crew: `packages/haunt` is the skeleton, `apps/haunted-orders` and `apps/haunted-inbox` are the two apps, each in its own folder.
 - [ ] H6.2 App 2: Haunted Inbox in **Python** (email triage, ticket, reply), tested through the Proxy and Process adapters.
-- [ ] H6.3 Browser target: engine runs in Web Workers, crash is `worker.terminate()`, journal and ledger in the page. Contract mode `browser`. Hosted on GitHub Pages.
+- [ ] H6.3 Browser target: engine runs in Web Workers, crash is `worker.terminate()`, journal and ledger in the page. Contract mode `browser`. Hosted on GitHub Pages. (Partial: browser journal, in-page ledger (PageLedger with key dedupe), and WorkerProcess host (spawn, worker.terminate() kill, restart with journal replay, hook-armed kill, tested with a real thread) done; pending: bot SDK running inside a worker with browser Clock/Provider adapters, window.__haunt in-page transport, contract mode `browser`, GitHub Pages hosting.)
 - [x] H6.4 Property-based tests with `fast-check` for crash point by step: side-effect count is 1 for Phoenix. Record any bug it finds in KIRO-LOG.
 - [ ] H6.5 `haunt-mcp` server: `haunt_define`, `haunt_sweep`, `haunt_ramp`, `haunt_report`.
 - [ ] H6.6 Custom agents `chaos-director` and `reviewer` in `.kiro/agents/`.
