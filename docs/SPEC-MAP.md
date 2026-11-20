@@ -5,7 +5,7 @@ When two documents disagree, the higher one wins.
 | Rank | Document | Owns |
 |---|---|---|
 | 1 | `contract/PROTOCOL.md` | Events, endpoints, ordering, state shapes, mock behavior |
-| 2 | `contract/CONTRACT.md`, `STORYBOARDS.md` | IDs, catalogs, fixtures. (Where CONTRACT.md says `monkey`, read `creature`.) |
+| 2 | `contract/CONTRACT.md`, `STORYBOARDS.md` | IDs, catalogs, fixtures.  |
 | 3 | `.kiro/specs/engine/design.md` and `acceptance.md` | Pipeline, provider, journal, tiers, faults, scoring, grading, oracle |
 | 4 | `.kiro/specs/inbox-app/design.md` | App 2 |
 | 5 | `.kiro/specs/harness/` | Haunt product requirements and Lane A tasks |

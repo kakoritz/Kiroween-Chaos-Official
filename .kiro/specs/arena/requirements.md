@@ -85,13 +85,13 @@ Toggle: "All Phoenix" mode runs five identical bots to test the system rather th
 
 ### A9. Reviewer agent (self-improving loop)
 1. AFTER each wave, A reviewer SHALL read the logs and list where bots failed or repeated work.
-2. IT SHALL write a postmortem and a proposed spec file `.kiro/specs/hardening-wave-N/` with requirements, a design note, tasks and suggested code changes.
+2. IT SHALL write a postmortem and a proposed spec file `.kiro/specs/hardening-<run-id>/` with requirements, a design note, tasks and suggested code changes.
 3. THE SYSTEM SHALL NOT apply code changes automatically. A human (or a Kiro run) accepts the spec, and the code is changed through that spec.
 4. THE NEXT wave SHALL show score change versus the last wave.
 5. THE REVIEWER SHALL work offline with a rule-based mode, and use an LLM when a key is set.
 
 ### A10. Demo script
-1. DEMO mode SHALL run a 3-minute scripted story: calm race, first creature on the Rookie, hero crash after the charge, stacked creatures on Phoenix, Power Outage boss, wave end, postmortem, hardening spec appears.
+1. DEMO mode SHALL provide three scripted stories (`hero`, `full`, `loop`, see PROTOCOL) that together cover a 3-minute video. The `full` story is: calm race, first creature on the Rookie, hero crash after the charge, stacked creatures on Phoenix, Power Outage boss, wave end, postmortem, hardening spec appears.
 
 ## Acceptance
 

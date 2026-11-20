@@ -48,10 +48,10 @@ JSON lines (one object per line, UTF-8). Bot to runner on **stdout**, runner to 
 {"type":"stage_progress","order":"...","stage":"...","detail":{"pct":40,"label":"Charging"}}
 ```
 Bots emit: `order_start`, `stage_start`, `stage_progress`, `stage_done`, `stage_fail`, `recover_start`, `recover_done`, `order_done`, `order_failed`, `order_parked`, `order_resumed`, `order_quarantined`, `lane_halted`, `breaker`.
-Bots also emit control messages (not forwarded): `{"k":"hello","tier":"...","parts":["retry","journal"],"pid":123}` at start, `{"k":"at_point","point":"after_effect_before_journal","order":"...","stage":"payment","id":"<armId>"}`, `{"k":"reconciled","kind":"charge","key":"..."}`, `{"k":"duplicate_skipped","order":"..."}`, `{"k":"idle"}` when the lane has no more work.
+Bots also emit control messages (not forwarded): `{"k":"hello","tier":"...","parts":["retry","journal"],"pid":123}` at start, `{"k":"at_point","point":"after_effect_before_journal","order":"...","stage":"payment","id":"<armId>"}`, `{"k":"reconciled","kind":"charge","key":"..."}`, `{"k":"duplicate_skipped","order":"..."}`, `{"k":"absorbed","reason":"journal write retried"}`, `{"k":"idle"}` when the lane has no more work.
 `stage_progress` is emitted at least every 300 ms during a stage.
 
-**The runner, not the bot, emits** (from the provider ledger and its own state): `effect`, `repeat`, `chaos`, `chaos_absorbed`, `process_dead`, `process_up`, `score`, `wave_*`, `lane_ready`, `boss_*`, `part_added`. For `{"k":"reconciled"}` it emits `effect{replayed:true}`. For `duplicate_skipped` it emits `chaos_absorbed{reason:"duplicate skipped by journal"}`.
+**The runner, not the bot, emits** (from the provider ledger and its own state): `effect`, `repeat`, `chaos`, `chaos_absorbed`, `process_dead`, `process_up`, `score`, `wave_*`, `lane_ready`, `boss_*`, `part_added`. For `{"k":"reconciled"}` it emits `effect{replayed:true}`. For `duplicate_skipped` it emits `chaos_absorbed{reason:"duplicate skipped by journal"}`. For `absorbed` it emits `chaos_absorbed` with that reason. A duplicate processed twice by a no-journal bot is closed by the runner with `chaos_absorbed{reason:"processed twice"}` when that order finishes.
 
 **Runner to bot (stdin):**
 ```

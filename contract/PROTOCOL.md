@@ -88,7 +88,7 @@ Effect kinds: `account_create`, `charge`, `email`, `dispatch`, `notify`, `ticket
     "parts": [{"id": "retry", "label": "Lantern", "installed": false}]
   }],
   "boss": {"next": "boss_power_outage", "startsInMs": null, "active": false},
-  "demo": {"scripts": ["hero", "full"], "running": null}
+  "demo": {"scripts": ["hero", "full", "loop"], "running": null}
 }
 ```
 
@@ -105,22 +105,22 @@ Effect kinds: `account_create`, `charge`, `email`, `dispatch`, `notify`, `ticket
 | `POST /api/speed` | `{speed}` | `200 {speed}` |
 | `POST /api/chaos` | `{lane?, creature?, fault?, scope?: "inner"\|"outer", point?}` (`lane` may be omitted only for a boss fault, which fires on all lanes after the 8 s warning) | `200 {chaosId, creature, fault, depth, deferred}` |
 | `POST /api/chaos/mode` | `{mode: "off"\|"manual"\|"random", frequency?: 0..1, seed?}` | `200 {}` |
-| `POST /api/demo/start` | `{script: "hero"\|"full", speed?}` | `200 {}` |
+| `POST /api/demo/start` | `{script: "hero"\|"full"\|"loop", speed?}` (in **mock mode** any fixture name is also accepted) | `200 {}` |
 | `POST /api/demo/stop` | none | `200 {}` |
-| `GET /api/creatures` | | `[{id, label, family, sprite, causes: [fault], boss: bool, description}]` |
+| `GET /api/creatures` | | `[{id, label, family, sprite, causes: [fault], boss: bool, apps: ["orders","inbox"], description}]` |
 | `GET /api/apps` | | `[{id, label, stages}]` |
 | `POST /api/app` | `{app}` | `200 {}` |
 | `GET /api/lane/:lane/stage/:stage?order=` | | `{lane, order, stage, status, attempts: [{attempt, startTs, endTs, status, error?}], events: [], effects: [], chaos: [], recover: [], journal: []}` |
 | `GET /api/lane/:lane/log?order=&since=` | | `{lines: [{seq, ts, level, type, stage, order, text}]}`, `level` is `info\|warn\|error\|good` |
 | `GET /api/ledger` | | `{lanes: [{lane, byKind: {charge: {rows, repeats}}, rows: []}]}` |
 | `GET /api/waves` | | `[{n, startedAt, endedAt, grade?, score}]` |
-| `GET /api/waves/:n/report` | | report JSON (see `.kiro/specs/engine/design.md` section 8) |
+| `GET /api/waves/:n/report` | | report JSON (see `.kiro/specs/engine/runtime.md` section 9) |
 | `GET /api/waves/:n/compare/:m` | | `{a: {score, grade, repeats}, b: {}, cells: []}` |
-| `GET /api/waves/:n/postmortem` | | `text/markdown` |
+| `GET /api/waves/:n/postmortem` | | `text/markdown`, or `404 {error:{code:"not_ready"}}` before the wave ends |
 
 Errors: `{"error":{"code","message"}}`. Codes: `no_wave` (409), `wave_running` (409), `bad_lane` (400), `bad_creature` (400), `bad_fault` (400), `not_applicable` (409, only when a fault cannot be deferred), `depth_limit` (409), `bad_request` (400), `gone` (410).
 
-`POST /api/chaos` with neither `creature` nor `fault` picks a random applicable one. A `creature` with several faults picks one (random, seeded). `chaos` detail uses the fields `creature` and `fault`. (The earlier table in CONTRACT.md says `monkey`. That is stale.)
+`POST /api/chaos` with neither `creature` nor `fault` picks a random applicable one. A `creature` with several faults picks one (random, seeded). `chaos` detail uses the fields `creature` and `fault`.
 
 ## Demo mode
 
@@ -182,3 +182,18 @@ In addition to the earlier list the mock must provide: fixtures for **parked** (
 
 ### Error codes (complete)
 `no_wave` (409), `wave_running` (409), `bad_lane` (400), `bad_creature` (400), `bad_fault` (400), `lane_not_active` (409, chaos on a halted, done or idle lane), `not_applicable` (409), `depth_limit` (409), `not_ready` (404), `bad_request` (400), `gone` (410). `POST /api/app` while a wave runs returns `wave_running`.
+
+### More rules (round 2)
+20. Every `chaos` is closed by exactly one of its consequences (rule 7 and 14) **or** by a `chaos_absorbed` when the fault caused no failure. For `duplicate_request` on a tier with no journal (it is processed twice) the closer is `chaos_absorbed{reason:"processed twice"}`. For `disk_full` on a tier that retries its journal write, `chaos_absorbed{reason:"journal write retried"}`.
+21. **All millisecond values in events are real wall-clock ms**, already divided by `speed` (`restartInMs`, `startsInMs`, `durationMs`, `ms`).
+22. **Max chaos depth is 5.** Pressing again returns `depth_limit`. `depth` resets to 0 when the process comes back up (`process_up`).
+23. `order_resumed` is always followed by an `order_start` for the same order when the lane picks it up.
+24. Boss faults on a lane that cannot be hit now (for example hazard storm while a lane is not at dispatch or tracking) emit `chaos{deferred:true}` and land at the next applicable stage.
+
+### Mock server modes and selectors (answers to "how do I load a fixture")
+The mock has two modes.
+- **sim** (default at boot and after `POST /api/wave/start`): a simulator builds a synthetic wave from the stage duration model and accepts chaos. `POST /api/chaos` hits that lane's current stage and applies the outcome template for (tier, fault) from acceptance table A. `POST /api/chaos {fault:"boss_*"}` (no lane) emits `boss_warning`, waits `startsInMs`, then emits `boss_start` and one `chaos{source:"boss"}` per lane with the outcome of that fault for each lane's current stage. `POST /api/chaos/mode {mode:"random"}` makes it fire `source:"random"` chaos at the given frequency. Fresh boot has an idle quiet state.
+- **replay** (after `POST /api/demo/start {script}` or `POST /_mock/fixture {name}`): a fixture plays at `speed`. Chaos presses during a replay return `409 {error:{code:"bad_request", message:"replay mode"}}`.
+- `GET /_mock/fixtures` lists fixture names. `POST /_mock/fixture {name}` loads one. `POST /_mock/reset {samples: true|false}` returns to sim mode; with `samples:false` `GET /api/waves` is empty (empty state), with `true` (default) waves 1 and 2 exist with sample reports, postmortems and a hardening spec.
+- `POST /_mock/fault {kind: "drop_sse"|"gone"|"slow"|"version"|"unreachable"}`: `version` makes `hello` report `contractVersion: 2`.
+- Fixtures named in this protocol that exist: `calm, hero-crash, stacked-chaos, boss-power, meltdown, full, loop, parked, absorbed, deferred, boss-internet, boss-storm, inbox, stress, breaker, part-added`.

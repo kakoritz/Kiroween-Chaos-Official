@@ -3,30 +3,30 @@
 Do after Phase 1 of [haunted-house tasks](../haunted-house/tasks.md) (hero crash works headless).
 
 ## Phase A: Playable race
-- [ ] A1. Pipeline module with eight stages and the five policy tiers. (A1, Lanes)
-- [ ] A2. Wave manager and five lane workers with an event log. (A8)
-- [ ] A3. Canvas arena: lanes, sprites, work, cheer, fail animations, progress bars. (A1)
-- [ ] A4. Rank board, ledger panel, score engine. (A1.5, A7)
+- [ ] UI-A1. Pipeline module with eight stages and the five policy tiers. (A1, Lanes)
+- [ ] UI-A2. Wave manager and five lane workers with an event log. (A8)
+- [ ] UI-A3. Canvas arena: lanes, sprites, work, cheer, fail animations, progress bars. (A1)
+- [ ] UI-A4. Rank board, ledger panel, score engine. (A1.5, A7)
 
 ## Phase B: Chaos
-- [ ] B1. Chaos director and SDK hook points, nested fault stack. (A3)
-- [ ] B2. Six creatures end to end: Crash, Timeout, 404, Missing file, Duplicate, Power outage. (A4)
-- [ ] B3. Creature animations and the stack badge. (A3)
-- [ ] B4. Random chaos mode with frequency slider and seed. (A6)
-- [ ] B5. Mini boss schedule and warning banner. (A5)
-- [ ] B6. Remaining creatures from the catalog. (A4)
+- [ ] UI-B1. Chaos director and SDK hook points, nested fault stack. (A3)
+- [ ] UI-B2. Six creatures end to end: Crash, Timeout, 404, Missing file, Duplicate, Power outage. (A4)
+- [ ] UI-B3. Creature animations and the stack badge. (A3)
+- [ ] UI-B4. Random chaos mode with frequency slider and seed. (A6)
+- [ ] UI-B5. Mini boss schedule and warning banner. (A5)
+- [ ] UI-B6. Remaining creatures from the catalog. (A4)
 
 ## Phase C: Inspect and learn
-- [ ] C1. Stage inspector popup with live stream, Chaos button and replay. (A2)
-- [ ] C2. Rule-based reviewer: postmortem and hardening spec writer. (A9)
-- [ ] C3. Wave-over-wave score delta view. (A9.4)
-- [ ] C4. Optional LLM pass for suggested diffs. (A9.5)
+- [ ] UI-C1. Stage inspector popup with live stream, Chaos button and replay. (A2)
+- [ ] UI-C2. Rule-based reviewer: postmortem and hardening spec writer. (A9)
+- [ ] UI-C3. Wave-over-wave score delta view. (A9.4)
+- [ ] UI-C4. Optional LLM pass for suggested diffs. (A9.5)
 
 ## Phase D: Show
-- [ ] D1. Demo mode 3-minute script. (A10)
-- [ ] D2. Sound effects. (A1)
-- [ ] D3. Perf check at 5 lanes, 60 fps. (Acceptance 1)
-- [ ] D4. Record the video, write the Devpost text.
+- [ ] UI-D1. Demo mode 3-minute script. (A10)
+- [ ] UI-D2. Sound effects. (A1)
+- [ ] UI-D3. Perf check at 5 lanes, 60 fps. (Acceptance 1)
+- [ ] UI-D4. Record the video, write the Devpost text.
 
 ## Cut line
 If time is short, ship A, B1 to B5, C1, C2, D1. Everything else is polish.
@@ -40,28 +40,30 @@ Backend items in this file belong to **Lane A** and are tracked in `.kiro/specs/
 Lane B owns: A3, the rank board and ledger panel views, B3, the B4 slider UI, the B5 banner, C1, C3 views, D1, D2, D3, D4, plus a report viewer for the harness HTML report.
 
 ## Win-the-hackathon items for Lane B (see docs/WINNING.md)
-- [ ] W1. UI works in all three contract modes: `mock`, `live`, `browser`. No mode-specific code.
-- [ ] W2. A mode badge and an "Open in demo mode" button so judges land on a running show in under 5 seconds.
-- [ ] W3. App switcher: Haunted Orders and Haunted Inbox, same arena, different stage names and sprites. Stage names come from `/api/state`, not hard-coded.
-- [ ] W4. Report viewer with the before and after (wave 1 vs wave 2) side by side.
-- [ ] W5. Kiro Crew app page that hosts the arena (see harness H6.9).
-- [ ] W6. Polish pass: consistent palette, sound with a mute button, motion that follows reduced-motion, readable at 1080p video capture.
-- [ ] W7. Accessibility: keyboard Chaos, color-blind safe states (icons plus color).
-- [ ] W8. Video capture helper: a "present mode" that hides cursor chrome and shows a clean frame.
+- [ ] UI-W1. UI works in all three contract modes: `mock`, `live`, `browser`. No mode-specific code.
+- [ ] UI-W2. A mode badge and an "Open in demo mode" button so judges land on a running show in under 5 seconds.
+- [ ] UI-W3. App switcher: Haunted Orders and Haunted Inbox, same arena, different stage names and sprites. Stage names come from `/api/state`, not hard-coded.
+- [ ] UI-W4. Report viewer with the before and after (wave 1 vs wave 2) side by side.
+- [ ] UI-W5. Kiro Crew app page that hosts the arena (see harness H6.9).
+- [ ] UI-W6. Polish pass: consistent palette, sound with a mute button, motion that follows reduced-motion, readable at 1080p video capture.
+- [ ] UI-W7. Accessibility: keyboard Chaos, color-blind safe states (icons plus color).
+- [ ] UI-W8. Video capture helper: a "present mode" that hides cursor chrome and shows a clean frame.
 
 
 ## Skeleton Crew theme (see docs/WINNING.md)
-- [ ] S1. Crypt look: dark stone, candlelight, fog, cobwebs. Lanes are workbenches in a crypt.
-- [ ] S2. Skeleton sprite built from bones in code, with poses: work, cheer, fail (collapse), recover (reassemble), dead.
-- [ ] S3. Gear overlays for the five resilience parts. Gear list comes from `/api/state`.
-- [ ] S4. Equip animation when `part_added` arrives: gear flies to the skeleton, score ticks up.
-- [ ] S5. Creature sprites and animations from the table in design.md. Start with Reaper, Zombie, Ghost, Wraith, Poltergeist, Doppelganger, plus the Lich boss.
-- [ ] S6. Orders as parchment scrolls on a conveyor into the crypt.
-- [ ] S7. Sound set generated in code: bone rattle, creak, wail, thud, sting.
+- [ ] UI-S1. Crypt look per ui-spec section 20 (stone floors, torch pools, cobwebs, fog).
+- [ ] UI-S2. Skeleton sprite built from bones in code, with poses: work, cheer, fail (collapse), recover (reassemble), dead.
+- [ ] UI-S3. Gear overlays for the five resilience parts. Gear list comes from `/api/state`.
+- [ ] UI-S4. Equip animation when `part_added` arrives: gear flies to the skeleton, score ticks up.
+- [ ] UI-S5. Creature sprites and animations from the table in design.md. Start with Reaper, Zombie, Ghost, Wraith, Poltergeist, Doppelganger, plus the Lich boss.
+- [ ] UI-S6. Orders as parchment scrolls: queue in the lane stats area, one drops into the hand at `order_start`.
+- [ ] UI-S7. Sound set generated in code: bone rattle, creak, wail, thud, sting.
 
+
+Task ids are prefixed `UI-` (for example `UI-A3`) so they do not collide with requirement ids or acceptance rows. `ui-spec.md` is the visual source of truth.
 
 ## Where to start (see docs/HANDOFF-VISUALS.md)
 1. Read order in the handoff doc.
 2. Build against fake events using the types in `contract/PROTOCOL.md` until Lane A merges H0.
 3. Every outcome you must draw is listed in `.kiro/specs/engine/acceptance.md` table A.
-4. Sprites for creatures: see the creature table in `design.md`. Start with Reaper, Zombie, Ghost, Wraith, Poltergeist, Doppelganger, Lich.
+4. Sprites for creatures: see the creature table in `ui-spec.md` section 7. Start with Reaper, Zombie, Ghost, Wraith, Poltergeist, Doppelganger, Lich.

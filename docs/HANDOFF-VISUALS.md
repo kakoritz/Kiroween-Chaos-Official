@@ -15,12 +15,13 @@ Build the **arena**: the video-game view of five skeleton workers racing through
 5. `.kiro/specs/engine/acceptance.md` section A: it tells you what outcomes to expect and draw per tier and fault
 6. `docs/DEMO-SCRIPT.md`: the 3-minute video you are building toward
 7. `docs/DEV-SETUP.md`
+8. `.kiro/specs/engine/runtime.md` section 9 only (the report JSON shape for the report viewer)
 
 ## Order of work
 
 1. While waiting for Lane A's mock server (task H0, expected within a day), build the sprite system and the lane layout with a local array of fake events. Do not invent new event types. Use the types in `PROTOCOL.md`.
 2. When the mock lands: connect with `npm run mock` and `npm run ui:dev`. Work only against the contract from then on.
-3. Build in this order: skeleton in a lane with stage progress and cheer (A3), fail and collapse and reassemble, ledger and rank board, Chaos button and creature animations (Reaper, Zombie, Ghost, Wraith first), nested depth badge, inspector popup, boss banner, then the rest of the creatures, sound, polish.
+3. Build in this order: skeleton in a lane with stage progress and cheer (UI-A3), fail and collapse and reassemble, ledger and rank board, Chaos button and creature animations (Reaper, Zombie, Ghost, Wraith, Poltergeist, Doppelganger, Lich first), nested depth badge, inspector popup, boss banner, then the rest of the creatures, sound, polish.
 4. Support all three modes with the same code: `mock`, `live`, `browser` (the `transport` switch in `PROTOCOL.md`).
 5. Demo mode: a "Play demo" button that calls `POST /api/demo/start {script:"hero"}` and just renders what comes back. Judges must reach a running show in under 5 seconds.
 

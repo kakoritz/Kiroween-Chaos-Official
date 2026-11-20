@@ -32,7 +32,7 @@ Contrast of text on panels must be at least 4.5:1. Never use color alone: every 
 ```
 y=0    ┌ HEADER 72 ─────────────────────────────────────────────────────────────┐
 y=72   │ BOSS BAR 0..48 (overlay, only when a boss is announced or active)      │
-       │ LANES AREA 768 (y 72..840): N lanes, each 768/N tall (max 160)         │
+       │ LANES AREA 768 (y 72..840): N lanes, each 768/N tall (max 200)         │
 y=840  ├ BOTTOM 240 ────────────────────────────────────────────────────────────┤
        │ RANK BOARD x0..640 │ LEDGER x640..1280 │ EVENT TICKER x1280..1920      │
 y=1080 └────────────────────────────────────────────────────────────────────────┘
@@ -40,18 +40,18 @@ y=1080 └───────────────────────�
 
 **Header (72 px), left to right:** logo "HAUNT" and wave label `Wave n` (n from `GET /api/state` and from the count of `wave_start` seen), app switcher dropdown, Start/Stop wave button, chaos mode selector (Off | Manual | Random) with a frequency slider (labelled Calm to Storm, 0 to 1, step 0.05) shown only in Random, speed segmented control (0.5x 1x 2x 4x), **Summon boss** menu, total score (sum of lane scores), mode badge, Play demo button, mute button, present-mode button.
 
-**Lane (160 px tall at 5 lanes; with fewer lanes the height is `768 / N` capped at 200 and the group is vertically centered):**
+**Lane (pitch 153.6 px, drawn 148 px tall at 5 lanes; with fewer lanes the height is `768 / N` capped at 200 and the group is vertically centered). Vertical zones inside a lane (at 148 px): 0-44 chip row (chips 36 px tall), 44-116 skeleton and prop zone (skeleton about 64 px tall), 116-148 progress bar and counters:**
 
 | x range | Content |
 |---|---|
-| 0-260 | **Label card:** tier label (22 px), gear row (5 slots), lane number, score, depth badge, **Chaos button** (56 px round, skull icon, `▾` arrow opens the creature menu) |
+| 0-260 | **Label card (260x148):** row 1 tier label (22 px) and lane number; row 2 the **5 gear slots** (the `journal` slot is the journal book, the `offline_queue` slot is the Coffin Stash with its parked counter badge); row 3 score; depth badge at the top-right corner; the **Chaos button** (48 px round, skull icon, `▾` opens the creature menu) at the bottom-right; the lane torch drawn on the card's left edge |
 | 260-1500 | **Track:** one **station** per stage, evenly spaced. Each station is a DOM **stage chip** (about 120x44) above the track line and a small prop drawn on the canvas below it. The **skeleton walks along the track** to the current station (x = station of `stageIndex` plus progress within the stage). The order **scroll** is carried in its hand. The progress bar sits under the chip. |
 | 1500-1600 | **Provider door:** a crypt door icon at the end of the track. The "connection line" is a dotted line from the skeleton to this door. Effect calls are drawn as small coins, envelopes or boxes flying along this line. |
-| 1600-1920 | **Lane stats:** completed, failed, parked, quarantined counters (small icons), repeats counter (red when above zero), order progress `orderIndex / ordersTotal` with a queue of small scrolls |
+| 1600-1920 | **Lane stats:** completed, failed, quarantined counters (small icons), repeats counter (red when above zero), order progress `orderIndex / ordersTotal`, the **queue of upcoming scrolls** (max 4 mini scrolls plus `+n`), and a small **shelf** along the bottom edge holding purple quarantine jars |
 
-Each lane also has a **torch** on its label card and a **journal slot** (a book icon, outlined when empty, filled when the `journal` part is installed).
+Each lane has a **torch** on its label card. Gear slots are outlined when the part is not installed and filled when it is.
 
-**Orders queue:** upcoming orders are small parchment scrolls stacked left of the track start (max 4 shown plus `+n`). `order_start` slides the next scroll into the skeleton's hand (300 ms).
+**Orders queue:** upcoming orders are the mini scrolls in the lane stats area. At `order_start` one scroll drops from above the first station into the skeleton's hand (300 ms). There is no conveyor.
 
 **Scroll content:** order id, then three lines of rune text (decorative, deterministic from the id). No real order data is available or needed.
 
@@ -64,7 +64,7 @@ Each lane also has a **torch** on its label card and a **journal slot** (a book 
 | done | ✓ | `ok` | `stage_done{skipped:false}` |
 | replayed | ⟲ | `ok` dimmed | `stage_done{skipped:true}` |
 | retrying | ↻ with attempt number | `warn` | `stage_start` with `attempt > 1`, or `recover_start{action:retry\|backoff}` |
-| failed | ✕ | `fail` | `stage_fail` with no recovery following, or `order_failed` |
+| failed | ✕ | `fail` | `stage_fail` (immediately; flips to retrying if a retry follows) or `order_failed` |
 | dead | ☠ | `muted` dim | between `process_dead` and `process_up`, on the stage that was active |
 | parked | ⏸ | `ghost` | `order_parked` |
 | quarantined | ⛓ | `hex` | `order_quarantined` |
@@ -150,7 +150,7 @@ Unknown creature id: generic "specter" sprite with the fault caption. The `sprit
 
 ## 8. Event to visual table (every PROTOCOL event)
 
-Lane-level events carry `lane`. Events with no lane: `hello`, `reset`, `wave_start`, `wave_end`, `boss_*`, `score` (always has a lane). Unknown event types are ignored.
+Lane-level events carry `lane`. Events with **no** lane (global): `hello`, `reset`, `wave_start`, `wave_end`, `boss_warning`, `boss_start`, `boss_end`, `hardening_spec`, `fix_applied`. Unknown event types are ignored.
 
 | Event | Visual |
 |---|---|
@@ -237,7 +237,7 @@ Table: one row per lane, one column per effect kind present in this app (orders:
 
 Entry points: wave end card, a "Reports" button in the header (list from `GET /api/waves`).
 
-**Hardening scene** (demo script `loop`; see PROTOCOL): after a wave a "Reviewer" card slides in showing the hardening spec title and its first lines (from `GET /api/waves/:n/hardening`), then a "Kiro applying fix" panel lists the files from the `fix_applied` event with a progress ticker (cosmetic, driven by event details), then `part_added` events equip gear on the lane, then the next wave starts. A "Recorded fix" label shows in `browser` mode.
+**Hardening scene** (demo script `loop`; driven by the events `hardening_spec`, `fix_applied`, `part_added`; see section 20): after a wave a "Reviewer" card slides in showing the hardening spec title and its first lines (from `GET /api/waves/:n/hardening`), then a "Kiro applying fix" panel lists the files from the `fix_applied` event with a progress ticker (cosmetic, driven by event details), then `part_added` events equip gear on the lane, then the next wave starts. A "Recorded fix" label shows in `browser` mode.
 
 ## 13. Inspector popup
 
@@ -306,3 +306,62 @@ No ambient music. Negative `score` makes no sound beyond the event that caused i
 ## 19. What Lane B needs from the mock server beyond the earlier list
 
 See PROTOCOL "Mock requirements" and `harness/tasks.md` H0.10 to H0.14: fixtures for parked, breaker, part_added, chaos_absorbed, deferred, all three bosses, the inbox app, the `loop` demo, a stress stream, sample reports, a sample postmortem and a sample hardening spec, plus transport fault injection and a `window.__haunt` stub.
+
+## 20. Review fixes (round 2)
+
+### Layout details
+- **Crypt look:** stone-tile lane floors, torch light pools, cobwebs in the lane corners, a slow drifting fog layer (cosmetic) behind the lanes, dark stone wall behind the header. All drawn in code.
+- **Z-order (bottom to top):** canvas background, lane floors, props, scrolls, skeletons, creatures, boss sprite, particles; then all DOM on top. The **canvas never receives pointer events** (`pointer-events: none`), so the 400 px Lich never blocks a chip or Chaos button. The Lich is centered at x=960 spanning the lanes area, top aligned to y=72.
+- **Creature placement:** hover spot is above and to the right of the skeleton inside the lane's chip row zone (y 0-44), sprite height 56 px at 5 lanes, stacked creatures sit side by side to the right at 70% scale, 56 px apart. Sprites are clipped to their lane rectangle (bosses excepted).
+- **Header slots:** left to right: logo and wave label, app switcher, Start/Stop, chaos mode (the Random popover holds the frequency slider and the **chaos seed**, which is `chaos.seed` sent with `POST /api/chaos/mode`; the **wave seed** is in the Start panel), speed, Summon boss, total score, Reports button, Play demo, mode badge, mute, present.
+- **Event ticker (bottom right, x1280-1920):** newest first, last 12 lines, one line each: `[lane n Tier] text`. Shown events and the text built **client-side** from templates: `stage_fail` "<stage> failed (<error>)", `chaos` "<Creature> strikes <stage>", `process_dead` "crashed, back in <n> s", `process_up` "restarted", `recover_start` "<action>", `recover_done` "recovered in <ms> ms", `repeat` "DUPLICATE <kind> x<count>", `order_done` "order done" (with "clean" or "x repeats"), `order_failed`, `order_parked`, `order_quarantined`, `lane_halted`, `boss_*`, `part_added` "Kiro added <part>", `score` only when `abs(delta) >= 100`, `hardening_spec`, `fix_applied`. Colors by level (info, warn, error, good).
+
+### Chip, time, depth semantics
+- **Chip on `stage_fail`:** the chip turns **failed** immediately and the red flash and slump play (they are short). If the next event is `recover_start{action:retry|backoff}` or `stage_start` with a higher `attempt`, the chip flips to **retrying** and the skeleton returns to its work pose. Failed is final only if `order_failed`, `order_parked`, `order_quarantined` or `lane_halted` follows.
+- **All millisecond values in events are real wall-clock ms** (`restartInMs`, `startsInMs`, `ms`, `durationMs`). The server has already divided by `speed`. The timer ring and countdown use them as given. **Animation durations** in this spec (collapse 600 ms and so on) are divided by `speed` (a cosmetic choice).
+- **Depth:** max depth is **5** (`depth_limit` beyond). The badge shows the `depth` of the latest `chaos`. A `recover_done{depth:d}` removes the creature of depth d and lowers the badge to d-1. **At `process_up` the badge resets to 0**, and all creatures on that lane exit except the killing creature (Reaper, Wraith, or Lich), which exits at `process_up` as in the table. On `process_dead` every other creature of that lane leaves in a 200 ms puff.
+- **Enter vs snap:** the 400 ms enter may be truncated by the 150 ms snap rule when `process_dead` follows `chaos` within 150 ms (as in the hero). That is intended.
+- **Two cheers:** the stage cheer is 300 ms and quiet, the order cheer (`order_done`) is 700 ms with confetti.
+
+### Creature rule additions
+- **Faults with no failure consequence** (`duplicate_request`, `slow_link`, `disk_full` on journal tiers, any absorbed fault): the creature acts 300 ms after `chaos`, then stays until the closing `chaos_absorbed` (PROTOCOL rule 20) or `order_done`.
+- **Zombie on a processed timeout** (A9): sits on the bar from `chaos`; the `effect` coin still flies; at `stage_fail` the Zombie acts (bar freezes red).
+- **Poltergeist** on an `order_failed` order: the file stays gone, the scroll crumples, the Poltergeist exits at `order_failed`.
+- **Chaos menu filtering:** `GET /api/creatures` has `apps: ["orders","inbox"]`. The menu shows only creatures whose `apps` contains the current app (Werewolf and Will-o'-Wisp are orders-only). A 409 `not_applicable` shows a toast.
+- **Where submenu** appears under Reaper and Wraith and maps: Next point = omit `point`; Before effect = `before_effect`; After effect, before journal = `after_effect_before_journal`; After journal = `after_journal`; Mid stage = `mid_stage`.
+- **Bosses:** one big boss sprite is drawn once on `boss_start`; per-lane effects follow each lane's own `chaos{source:"boss"}`. For the Horseman, lanes not yet at tracking or dispatch have `deferred: true` and show rain only until their stage arrives. At `boss_end` a "Survived" flash shows on every lane that is not `dead` or `halted`.
+- **Banshee** stays while the line is broken; it exits by the general rule.
+
+### More event rows (adds to section 8)
+
+| Event | Visual |
+|---|---|
+| `hardening_spec` | The Reviewer card slides in with the title and findings count. Fetch the spec text from `GET /api/waves/:n/hardening` for the first 12 lines. |
+| `fix_applied` | The "Kiro applying fix" panel lists `files` with `+add -del`. A "Recorded fix" label shows when `recorded: true`. |
+| `wave_end{stopped:true}` | No end card. A toast "Wave stopped". |
+| `wave_end` in a demo | The end card shows for 3 s, then closes by itself so following demo events can play. |
+| `effect` kinds | `account_create` an ID card flies, `charge` a coin, `email` an envelope, `dispatch` a box, `notify` a speech bubble, `ticket` a ticket card. |
+| `stage_start` on an earlier stage (Rookie restart) | The skeleton **walks back fast (300 ms)** to that station. |
+| `order_resumed` | Stash counter -1 and the scroll flies back to the queue area. The next `order_start` for it picks it up into the hand. |
+
+**Ledger columns:** `account_create` "Accounts", `charge` "Charges", `email` "Emails", `dispatch` "Dispatches", `notify` "Notices", `ticket` "Tickets". A cell shows the total row count; if `repeat` events were seen for that kind it also shows `+k` where k is the sum of `count - 1` over those repeats.
+
+### Sound additions
+creak on Wraith `chaos`, wail on Banshee and Banshee Queen `chaos`, soft whoosh on `chaos_absorbed`, low buzz on `order_failed`, clunk on `order_parked`, shield clang on `breaker`. **Sound default:** muted until the first click anywhere, then unmuted unless the saved preference is muted. For a recording open with `?sound=1`, click once, and then start the demo.
+
+### Transport detection
+1. `window.__haunt` exists: `inpage`.
+2. Else `?api=<url>` if present.
+3. Else try `GET /api/health` on the same origin with an 800 ms timeout; if it answers, use it.
+4. Else `http://127.0.0.1:7070`.
+`?embed=1` (for the Kiro Crew page iframe) hides the app switcher and present button and reads the API base from `?api=`.
+
+### Kiro Crew page scope (W5)
+Lane B only guarantees that `packages/arena-ui/dist/index.html` runs **inside an iframe** with `?embed=1&api=<url>`: no use of `window.top`, relative paths only, scales to the iframe size (down to 1280x720 stage scaling). Lane A packages it as a Crew app page.
+
+### Report data
+The report JSON is defined in `.kiro/specs/engine/runtime.md` section 9. Sample reports from the mock include `ramp` (6 steps, knee at 8, break at 32), `depth`, `scalability`, `tiers`, at least 40 matrix cells covering all six result codes, and at least 5 findings, so every tab can be built and shown.
+
+### Demo and video
+- Present mode has **no** title card feature. The receipt opener, title cards and ledger close-ups are made in a video editor.
+- For the inspector shot, use the `meltdown` fixture (it has a failed stage) with `?demo=meltdown` in mock mode, or any live run where a Rookie fails.

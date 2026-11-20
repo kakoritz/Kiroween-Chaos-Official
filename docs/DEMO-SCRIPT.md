@@ -33,7 +33,7 @@ Record only after a fresh-clone test passes. If the live run fails on camera, us
 | 0:00 to 0:15 | Title cards (made in the arena's present mode, no script) |
 | 0:15 to 1:30 | `hero` (calm race, then the Payment crash on lanes 1 and 5) |
 | 1:30 to 1:50 | `full`, stacked chaos and the Lich boss part |
-| 1:50 to 2:10 | Inspector popup, recorded live in the arena (no script) |
+| 1:50 to 2:10 | Inspector popup on the `meltdown` fixture (`?demo=meltdown` in mock mode), which has a failed stage |
 | 2:10 to 2:35 | `loop` (report, hardening spec, Kiro applies the fix, grade F to A) |
 | 2:35 to 3:00 | Inbox app (`inbox` fixture or live) and the closing card |
 
