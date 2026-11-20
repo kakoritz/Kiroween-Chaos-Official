@@ -1,0 +1,8 @@
+{
+  "name": "@haunt/haunted-inbox",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "App 2: the support mailbox triage target (Python 3.12, standard library only).",
+  "license": "MIT"
+}

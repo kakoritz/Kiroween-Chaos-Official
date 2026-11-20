@@ -1,0 +1,38 @@
+name: haunted-inbox
+start: python bot/run.py
+adapter: process
+inputs: ./inbox/
+truth: http://127.0.0.1:7071
+targets:
+  recoverMs: 20000
+  repeats: 0
+  concurrency: 8
+stages:
+  - id: fetch
+    label: Fetch mail
+    role: input
+    duration: [400, 800]
+  - id: classify
+    label: Classify
+    role: work
+    duration: [500, 1000]
+  - id: ticket
+    label: File ticket
+    role: effect
+    effects:
+      - { kind: ticket, key: ticket, idempotent: required }
+    duration: [500, 1000]
+  - id: draft
+    label: Draft reply
+    role: work
+    duration: [500, 1000]
+  - id: reply
+    label: Send reply
+    role: effect
+    effects:
+      - { kind: reply, key: reply, idempotent: required }
+    duration: [500, 1000]
+  - id: archive
+    label: Archive
+    role: final
+    duration: [300, 600]

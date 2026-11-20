@@ -1,0 +1,86 @@
+[
+    {
+        "id":  "msg-01",
+        "from":  "dana@example.test",
+        "subject":  "Invoice 4821 charged twice",
+        "body":  "My invoice shows a duplicate charge this month. Please refund one.",
+        "class_expected":  "billing"
+    },
+    {
+        "id":  "msg-02",
+        "from":  "lee@example.test",
+        "subject":  "App crash on export",
+        "body":  "The export button gives an error and the app will crash every time.",
+        "class_expected":  "bug"
+    },
+    {
+        "id":  "msg-03",
+        "from":  "sam@example.test",
+        "subject":  "Cannot login",
+        "body":  "I forgot my password and the reset link is not arriving to my account.",
+        "class_expected":  "account"
+    },
+    {
+        "id":  "msg-04",
+        "from":  "promo@example.test",
+        "subject":  "You are a winner",
+        "body":  "Claim your free money now, click here to collect the lottery prize.",
+        "class_expected":  "spam"
+    },
+    {
+        "id":  "msg-05",
+        "from":  "kim@example.test",
+        "subject":  "Payment declined",
+        "body":  "My payment was declined but the billing page says it is fine.",
+        "class_expected":  "billing"
+    },
+    {
+        "id":  "msg-06",
+        "from":  "ravi@example.test",
+        "subject":  "Search is broken",
+        "body":  "Search results are not working after the update, I see an exception page.",
+        "class_expected":  "bug"
+    },
+    {
+        "id":  "msg-07",
+        "from":  "ana@example.test",
+        "subject":  "Change username",
+        "body":  "Please change the username on my profile to a new one.",
+        "class_expected":  "account"
+    },
+    {
+        "id":  "msg-08",
+        "from":  "deals@example.test",
+        "subject":  "Crypto opportunity",
+        "body":  "Unsubscribe from nothing, just buy crypto today and double it.",
+        "class_expected":  "spam"
+    },
+    {
+        "id":  "msg-09",
+        "from":  "omar@example.test",
+        "subject":  "Refund request",
+        "body":  "I would like a refund for last month, the invoice total was wrong.",
+        "class_expected":  "billing"
+    },
+    {
+        "id":  "msg-10",
+        "from":  "zoe@example.test",
+        "subject":  "Upload failed",
+        "body":  "Uploading a file fails with an error code and then nothing happens.",
+        "class_expected":  "bug"
+    },
+    {
+        "id":  "msg-11",
+        "from":  "jo@example.test",
+        "subject":  "Update email address",
+        "body":  "Can you update the email address on my account please.",
+        "class_expected":  "account"
+    },
+    {
+        "id":  "msg-12",
+        "from":  "win@example.test",
+        "subject":  "Congratulations",
+        "body":  "You are a winner of our lottery, click here to claim.",
+        "class_expected":  "spam"
+    }
+]
