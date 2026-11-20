@@ -33,7 +33,7 @@ Branch prefix `core/`. Each task is one PR. Tags: [C] touches `contract/`.
 - [ ] H3.8 Second sample process (non-Node) to prove reuse.
 
 ## H4. Report and loop
-- [ ] H4.1 Grading rules and target checks.
+- [x] H4.1 Grading rules and target checks.
 - [ ] H4.2 Report builder: JSON, Markdown, offline HTML.
 - [ ] H4.3 Reviewer: postmortem and hardening spec writer.
 - [ ] H4.4 CI exit codes and a GitHub Actions example.

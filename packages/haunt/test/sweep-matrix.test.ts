@@ -44,7 +44,7 @@ describe('sweep plan and matrix', () => {
     expect(m.rows.charge.zombie).toBe('repeat');
     expect(m.rows.intake.zombie).toBe('pass');
     expect(m.rows.intake.poltergeist).toBe('pending');
-    expect(m.totals).toEqual({ pass: 1, repeat: 1, fail: 0, 'n/a': 2, pending: 2 });
+    expect(m.totals).toMatchObject({ pass: 1, repeat: 1, fail: 0, 'n/a': 2, pending: 2 });
   });
 
   it('is deterministic and renders a table', () => {

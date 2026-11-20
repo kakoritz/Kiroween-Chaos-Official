@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseHauntConfig } from '../src/config/haunt-config';
 import { CreatureRegistry } from '../src/creatures/plugin';
-import { planSweep, runSweep, type RunCell } from '../src/sweep';
+import { gradeSweep, planSweep, runSweep, type RunCell } from '../src/sweep';
 
 function plan() {
   const r = parseHauntConfig(`
@@ -51,5 +51,25 @@ describe('sweep executor', () => {
     expect(a).toBe(b);
     expect(seen.slice(0, n)).toEqual(seen.slice(n));
     expect(new Set(seen.slice(0, n)).size).toBe(n);
+  });
+
+  it('caps the grade: repeated charge at C, lost order at D, halt at D', async () => {
+    const totals = { pass: 19, repeat: 0, recovered_late: 0, fail: 0, halt: 0, 'n/a': 0, pending: 0 };
+    const big = { stages: [], creatures: [], rows: {}, totals };
+    const cell = { stage: 'charge', creature: 'zombie', fault: 'timeout', outcome: 'pass' as const };
+    expect(gradeSweep(big).grade).toBe('A');
+    expect(gradeSweep(big, [{ ...cell, repeatedKinds: ['charge'] }]).grade).toBe('C');
+    expect(gradeSweep(big, [{ ...cell, repeatedKinds: ['notify'] }]).grade).toBe('A');
+    const lost = await runSweep(plan(), (c) => (c.stage === 'charge' && c.creature === 'zombie' ? { outcome: 'fail', lost: true } : 'pass'));
+    expect(lost.grade).toBe('D');
+    const halt = await runSweep(plan(), (c) => (c.creature === 'ghost' ? 'halt' : 'pass'));
+    expect(halt.matrix.totals.halt).toBe(1);
+    expect(halt.grade).toBe('D');
+  });
+
+  it('counts recovered_late as a clean completion', async () => {
+    const rep = await runSweep(plan(), (c) => (c.stage === 'intake' ? 'recovered_late' : 'pass'));
+    expect(rep.matrix.totals.recovered_late).toBe(1);
+    expect(rep.grade).toBe('A');
   });
 });

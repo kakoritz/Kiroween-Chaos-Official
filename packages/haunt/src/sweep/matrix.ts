@@ -2,7 +2,7 @@
 import type { HauntConfig, StageDef } from '../config/haunt-config';
 import type { CreaturePlugin } from '../creatures/plugin';
 
-export type CellStatus = 'pass' | 'repeat' | 'fail' | 'n/a' | 'pending';
+export type CellStatus = 'pass' | 'repeat' | 'recovered_late' | 'fail' | 'halt' | 'n/a' | 'pending';
 export type CellOutcome = Exclude<CellStatus, 'n/a' | 'pending'>;
 
 export interface SweepCell { stage: string; creature: string; fault: string }
@@ -41,7 +41,7 @@ export interface CoverageMatrix {
 }
 
 export function buildMatrix(plan: SweepPlan, outcomes: Record<string, CellOutcome> = {}): CoverageMatrix {
-  const totals: Record<CellStatus, number> = { pass: 0, repeat: 0, fail: 0, 'n/a': 0, pending: 0 };
+  const totals: Record<CellStatus, number> = { pass: 0, repeat: 0, recovered_late: 0, fail: 0, halt: 0, 'n/a': 0, pending: 0 };
   const applicable = new Set(plan.cells.map((c) => `${c.stage}/${c.creature}`));
   const rows: CoverageMatrix['rows'] = {};
   for (const s of plan.stages) {
