@@ -17,6 +17,8 @@ export interface RunnerEngineOptions {
   laneInfo?: (lane: string) => LaneInfo;
   /** POST to the provider's /_fault. Omit to skip provider faults. */
   post?: PostFault;
+  /** Send a crash arm to the lane's running bot over stdin (runtime.md section 2). Omit and arms only reach the next `go`. */
+  sendArm?: (lane: string, arm: { k: 'arm' } & Record<string, unknown>) => void;
   /** Called after lanes are registered, so the caller can start `runLane` for each. */
   onWaveStart?: (wave: number, settings: EngineWaveSettings, lanes: string[]) => void;
   onWaveStop?: () => void;
@@ -63,6 +65,7 @@ export class RunnerEngine {
     if (!r.ok) throw new Error(r.error);
     const chaosId = `c${this.wave}-${++this.seq}`;
     this.record?.({ type: 'chaos', lane, detail: { id: chaosId, creature: req.creature, ...(req.source ? { source: req.source } : {}), ...r.detail } });
+    if (r.arm) this.opts.sendArm?.(lane, { k: 'arm', id: String(r.id), ...r.arm });
     if (r.provider && this.opts.post) void postProviderArm(this.opts.post, lane, info.stage, r.provider as ProviderArm);
     return { chaosId, creature: req.creature ?? '', fault: r.detail.fault, depth: r.detail.depth, deferred: r.detail.deferred === true };
   };

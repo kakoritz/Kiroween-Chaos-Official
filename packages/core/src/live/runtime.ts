@@ -27,11 +27,16 @@ export interface SpawnerOptions {
   onLaneError?: (lane: string, err: unknown) => void;
   /** Called once when every spawned lane loop has ended on its own. Not called after `stop` or when no lane was spawned. */
   onWaveDone?: (wave: number) => void;
+  /** Bot event lines and runner process events for a lane, before the envelope. */
+  onEvent?: (lane: string, ev: Record<string, unknown>) => void;
 }
 
 /** Starts `runLane` for every lane of a wave and aborts them all on stop. */
 export class LaneSpawner {
   private ctl?: AbortController;
+  private readonly senders = new Map<string, (m: Record<string, unknown>) => void>();
+  /** Push a control line (for example a crash arm) to the lane's running bot. No-op when none runs. */
+  send = (lane: string, m: Record<string, unknown>): void => { this.senders.get(lane)?.(m); };
   /** Settles when every lane loop of the current wave has ended. */
   done: Promise<void> = Promise.resolve();
 
@@ -39,6 +44,7 @@ export class LaneSpawner {
 
   start = (wave: number, settings: EngineWaveSettings, lanes: string[]): void => {
     this.stop();
+    this.senders.clear();
     const ctl = new AbortController();
     this.ctl = ctl;
     const run = this.o.run ?? runLane;
@@ -48,7 +54,13 @@ export class LaneSpawner {
       const cmd = this.o.botCommand(lane, wave, settings);
       if (!cmd) continue;
       loops.push(
-        run({ lane, director: this.o.engine.director, command: cmd.command, args: cmd.args, env: cmd.env, signal: ctl.signal })
+        run({
+          lane, director: this.o.engine.director, command: cmd.command, args: cmd.args, env: cmd.env, signal: ctl.signal,
+          onEvent: (ev) => this.o.onEvent?.(lane, ev),
+          onProcess: (send) => { this.senders.set(lane, send); },
+          onKilled: (k) => this.o.onEvent?.(lane, { type: 'process_dead', detail: { reason: k.fired.fault, restartInMs: k.fired.restartMs } }),
+          onStart: (n) => { if (n > 1) this.o.onEvent?.(lane, { type: 'process_up', detail: { attempt: n } }); },
+        })
           .then((r) => this.o.onLaneExit?.(lane, r))
           .catch((e) => failed(lane, e)),
       );
@@ -212,6 +224,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
   let spawner: LaneSpawner | undefined;
   const engine: RunnerEngine = new RunnerEngine({
     post: opts.post,
+    sendArm: (lane, arm) => spawner?.send(lane, arm),
     onWaveStart: (wave, settings, lanes) => {
       if (opts.clock !== false && record) {
         clock = new WaveClock({
@@ -228,6 +241,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
   if (opts.botCommand) {
     spawner = new LaneSpawner({
       engine, botCommand: opts.botCommand, run: opts.run,
+      onEvent: (lane, ev) => { record?.({ detail: {}, ...ev, lane } as unknown as HauntEvent); },
       onWaveDone: () => { clock?.stop(); clock = undefined; demo?.stop(); demo = undefined; endWave?.(); },
     });
   }

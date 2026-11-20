@@ -16,6 +16,10 @@ export interface LaneLoopOptions {
   onStart?: (n: number, pid: number) => void;
   onKilled?: (k: Killed) => void;
   onRestart?: (n: number, delayMs: number) => void;
+  /** Event-shaped bot lines (with `type`), to be enveloped and forwarded as contract events (runtime.md section 2). */
+  onEvent?: (ev: Record<string, unknown>) => void;
+  /** Called with a sender for each new bot process, so the caller can push control lines (arm) mid-run. */
+  onProcess?: (send: (m: Record<string, unknown>) => void) => void;
 }
 
 export interface LaneLoopResult {
@@ -41,8 +45,14 @@ export async function runLane(o: LaneLoopOptions): Promise<LaneLoopResult> {
     o.onStart?.(n, proc.pid);
     let killed: Killed | null = null;
     serveRendezvous(proc, o.director, o.lane, (k) => { killed = k; });
+    proc.onMessage((m) => {
+      const msg = m as Record<string, unknown>;
+      if (typeof msg.type === 'string') o.onEvent?.(msg);
+      else if (msg.k === 'idle') proc.send({ k: 'shutdown' });
+    });
     await proc.waitFor('ready');
     proc.send({ k: 'go', arms: o.director.pendingArms(o.lane) });
+    o.onProcess?.((m) => proc.send(m as never));
     const exit = await proc.exited;
     o.signal?.removeEventListener('abort', onAbort);
     if (o.signal?.aborted) return { starts: n, kills, exit, clean: false };
