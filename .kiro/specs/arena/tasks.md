@@ -10,11 +10,11 @@ Do after Phase 1 of [haunted-house tasks](../haunted-house/tasks.md) (hero crash
 
 ## Phase B: Chaos
 - [ ] B1. Chaos director and SDK hook points, nested fault stack. (A3)
-- [ ] B2. Six monkeys end to end: Crash, Timeout, 404, Missing file, Duplicate, Power outage. (A4)
-- [ ] B3. Monkey animations and the stack badge. (A3)
+- [ ] B2. Six creatures end to end: Crash, Timeout, 404, Missing file, Duplicate, Power outage. (A4)
+- [ ] B3. Creature animations and the stack badge. (A3)
 - [ ] B4. Random chaos mode with frequency slider and seed. (A6)
 - [ ] B5. Mini boss schedule and warning banner. (A5)
-- [ ] B6. Remaining monkeys from the catalog. (A4)
+- [ ] B6. Remaining creatures from the catalog. (A4)
 
 ## Phase C: Inspect and learn
 - [ ] C1. Stage inspector popup with live stream, Chaos button and replay. (A2)
@@ -35,7 +35,7 @@ If time is short, ship A, B1 to B5, C1, C2, D1. Everything else is polish.
 
 This spec is **Lane B, Visuals** (`packages/arena-ui/`), built against `contract/CONTRACT.md` and the mock server.
 
-Backend items in this file belong to **Lane A** and are tracked in `.kiro/specs/harness/tasks.md`: A1 (pipeline and tiers), A2 (wave manager, event log), A4 score engine, B1 (chaos director), B2 and B6 (monkey behavior), B4 (random mode engine), B5 (boss schedule), C2 and C4 (reviewer).
+Backend items in this file belong to **Lane A** and are tracked in `.kiro/specs/harness/tasks.md`: A1 (pipeline and tiers), A2 (wave manager, event log), A4 score engine, B1 (chaos director), B2 and B6 (creature behavior), B4 (random mode engine), B5 (boss schedule), C2 and C4 (reviewer).
 
 Lane B owns: A3, the rank board and ledger panel views, B3, the B4 slider UI, the B5 banner, C1, C3 views, D1, D2, D3, D4, plus a report viewer for the harness HTML report.
 
@@ -49,10 +49,12 @@ Lane B owns: A3, the rank board and ledger panel views, B3, the B4 slider UI, th
 - [ ] W7. Accessibility: keyboard Chaos, color-blind safe states (icons plus color).
 - [ ] W8. Video capture helper: a "present mode" that hides cursor chrome and shows a clean frame.
 
-## Frankenstein theme (category change, see docs/WINNING.md)
-- [ ] F1. Lab look: dark lab, lightning, sparks, tesla coils, stitched-thread borders. Characters are creatures, not ghosts.
-- [ ] F2. Each creature shows its parts as visible limbs: Journal, Idempotency Keys, Retry, Circuit Breaker, Offline Queue. Missing parts are bare bones with loose stitches. The part list comes from `/api/state`.
-- [ ] F3. "Stitch" animation: when a part is added (event `part_stitched`), a needle sews it on with a lightning flash, score ticks up.
-- [ ] F4. Resume plays an "It's alive!" moment. Death plays a flat-line.
-- [ ] F5. Monkeys styled as lab accidents and an angry mob. Bosses are storms.
-- [ ] F6. Lab sound set generated in code: crackle, thunder, zap, sting.
+
+## Skeleton Crew theme (see docs/WINNING.md)
+- [ ] S1. Crypt look: dark stone, candlelight, fog, cobwebs. Lanes are workbenches in a crypt.
+- [ ] S2. Skeleton sprite built from bones in code, with poses: work, cheer, fail (collapse), recover (reassemble), dead.
+- [ ] S3. Gear overlays for the five resilience parts. Gear list comes from `/api/state`.
+- [ ] S4. Equip animation when `part_added` arrives: gear flies to the skeleton, score ticks up.
+- [ ] S5. Creature sprites and animations from the table in design.md. Start with Reaper, Zombie, Ghost, Wraith, Poltergeist, Doppelganger, plus the Lich boss.
+- [ ] S6. Orders as parchment scrolls on a conveyor into the crypt.
+- [ ] S7. Sound set generated in code: bone rattle, creak, wail, thud, sting.

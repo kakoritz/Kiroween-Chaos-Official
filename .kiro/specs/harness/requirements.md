@@ -40,12 +40,12 @@ targets: { recoverMs: 5000, repeats: 0, throughputPerMin: 60 }
 3. THE SYSTEM SHALL read side-effect truth from the declared `truth` endpoint, not from the process.
 
 ### H2. Chaos plugin system
-1. A monkey SHALL be a plugin with: id, family, applies-to (stage or effect kinds), `inject()`, `cleanup()`, and a description.
-2. THE SYSTEM SHALL ship the monkey catalog in [contract](../../../contract/CONTRACT.md) as built-in plugins.
-3. USERS SHALL be able to add a monkey by dropping a file in `monkeys/`.
+1. A creature SHALL be a plugin with: id, family, applies-to (stage or effect kinds), `inject()`, `cleanup()`, and a description.
+2. THE SYSTEM SHALL ship the creature catalog in [contract](../../../contract/CONTRACT.md) as built-in plugins.
+3. USERS SHALL be able to add a creature by dropping a file in `creatures/`.
 
 ### H3. Test modes
-1. **Sweep (reliability).** Hit every stage with every applicable monkey, one at a time. Output a stage by monkey coverage matrix.
+1. **Sweep (reliability).** Hit every stage with every applicable creature, one at a time. Output a stage by creature coverage matrix.
 2. **Stack (depth).** Nest faults 1 to N deep per stage. Find the depth where recovery fails.
 3. **Ramp (scalability).** Increase concurrent orders step by step. Find the knee where latency or errors climb, and the breaking point.
 4. **Soak (endurance).** Run for a set time with random chaos at a set rate. Watch for leaks, drift and slow recovery.
@@ -64,9 +64,9 @@ targets: { recoverMs: 5000, repeats: 0, throughputPerMin: 60 }
 
 ### H5. Stress test report
 1. THE REPORT SHALL include: overall grade (A to F), resilience score, scalability grade, summary in plain language.
-2. IT SHALL include the coverage matrix (stage by monkey, with pass, repeat, fail, not applicable).
+2. IT SHALL include the coverage matrix (stage by creature, with pass, repeat, fail, not applicable).
 3. IT SHALL include the depth curve, the load curve with knee and break point, and recovery time charts.
-4. IT SHALL list the worst findings, each with the stage, the monkey, the evidence (log lines) and a suggested fix.
+4. IT SHALL list the worst findings, each with the stage, the creature, the evidence (log lines) and a suggested fix.
 5. IT SHALL include a target table: each target from `haunt.yaml` with pass or fail.
 6. IT SHALL render as one offline HTML file and as JSON. It SHALL also render as Markdown for pull requests.
 7. THE CLI SHALL exit non-zero when targets fail, so it works as a CI gate.

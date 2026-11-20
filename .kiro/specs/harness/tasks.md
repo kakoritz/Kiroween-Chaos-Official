@@ -17,10 +17,10 @@ Branch prefix `core/`. Each task is one PR. Tags: [C] touches `contract/`.
 - [ ] H1.6 Live server implementing the contract. Fixtures regenerated from real runs.
 - [ ] H1.7 Hero crash test: Rookie 2 charges, Phoenix 1.
 
-## H2. Monkeys as plugins
+## H2. Creatures as plugins
 - [ ] H2.1 Plugin interface and loader.
-- [ ] H2.2 Six core monkeys: crash, timeout, 404, missing file, duplicate, power outage.
-- [ ] H2.3 Remaining monkeys and the three bosses.
+- [ ] H2.2 Six core creatures: crash, timeout, 404, missing file, duplicate, power outage.
+- [ ] H2.3 Remaining creatures and the three bosses.
 
 ## H3. Harness product
 - [ ] H3.1 `haunt.yaml` loader and validator.
@@ -63,7 +63,8 @@ Ship H0, H1, H2.2, H3.1, H3.2, H3.4, H4.1, H4.2. That gives a graded sweep and a
 ## Cut line update
 Never cut: H0, H1, H2.2, H3.1, H3.2, H4.1, H4.2, H6.3, H6.4, H6.10, H6.11. Cut first: H3.5, H3.6, H6.8.
 
-## Frankenstein theme for Lane A
-- [ ] F-A1. Express the five tiers as sets of resilience parts. Policy objects become `parts[]`. Adding a part changes behavior.
-- [ ] F-A2. Emit `part_stitched` when a hardening spec lands and the policy gains a part.
-- [ ] F-A3. Write the write-up section "What we stitched together and why it is unexpectedly powerful" in KIRO-LOG and the Devpost text.
+
+## Skeleton Crew theme for Lane A
+- [ ] S-A1. Express the five tiers as sets of resilience parts (`journal`, `idempotency`, `retry`, `breaker`, `offline_queue`). Adding a part changes behavior.
+- [ ] S-A2. Emit `part_added` when a hardening spec lands and a policy gains a part.
+- [ ] S-A3. Keep the creature display names (Reaper, Zombie, ...) in the creature catalog data, served by `/api/creatures`.

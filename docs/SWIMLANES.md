@@ -6,7 +6,7 @@ Two sessions work in parallel. They meet only at `contract/`.
 |---|---|---|
 | Owner | Session 1 (this one) | Session 2 (the second session session) |
 | Folder | `packages/core/`, `packages/haunt/`, `packages/bots/` | `packages/arena-ui/` |
-| Builds | Chaos engine, SDK, bots, provider, journal, scoring, reviewer, stress-test reports, CLI, server | Race arena, sprites, monkeys, stage inspector, rank board, report viewer, sound, demo mode |
+| Builds | Chaos engine, SDK, bots, provider, journal, scoring, reviewer, stress-test reports, CLI, server | Race arena, sprites, creatures, stage inspector, rank board, report viewer, sound, demo mode |
 | Specs | `.kiro/specs/haunted-house/`, `.kiro/specs/harness/` | `.kiro/specs/arena/` |
 | Branch prefix | `core/` | `ui/` |
 | May edit | Its own folders and `contract/` (with a contract PR) | Its own folders and `contract/` (with a contract PR) |

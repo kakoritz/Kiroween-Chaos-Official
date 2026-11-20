@@ -1,6 +1,6 @@
 # Requirements: The Arena (game layer)
 
-Builds on [haunted-house](../haunted-house/requirements.md). The five rooms become **chaos monkeys**. The floor plan becomes a **race arena** with five lanes.
+Builds on [haunted-house](../haunted-house/requirements.md). The five rooms become **spooky chaos creatures**, and the five bots are **skeleton workers**. The floor plan becomes a **race arena** with five lanes.
 
 ## Concept
 
@@ -44,16 +44,16 @@ Toggle: "All Phoenix" mode runs five identical bots to test the system rather th
 3. WHILE a stage is in progress, THE POPUP SHALL stream live and show a Chaos button.
 4. THE USER SHALL be able to replay a finished stage as a short animation.
 
-### A3. Chaos monkeys
+### A3. Chaos creatures
 1. EACH lane SHALL have a Chaos button, in the lane and in the popup.
-2. WHEN pressed, A monkey SHALL run in, jump on the character, and throw an exception into the current stage. The monkey type is random unless chosen from a menu.
-3. WHEN pressed again while the lane is still failing or recovering, A new monkey SHALL arrive and throw a nested exception, either in the recovery (inner) or in the surrounding stage (outer).
+2. WHEN pressed, A creature SHALL float in, loom over the skeleton, and throw an exception into the current stage. The creature type is random unless chosen from a menu.
+3. WHEN pressed again while the lane is still failing or recovering, A new creature SHALL arrive and throw a nested exception, either in the recovery (inner) or in the surrounding stage (outer).
 4. THE DEPTH of nesting SHALL be shown as a stack counter on the character.
 5. THE SYSTEM SHALL inject the real fault into the real bot. The animation reflects an actual event.
 
-### A4. Monkey catalog (starter list)
+### A4. Creature catalog (starter list)
 
-| Family | Monkeys |
+| Family | Creatures |
 |---|---|
 | Network | Timeout, Comm timeout, Internet outage, Slow link |
 | HTTP | 404, 429, 500, Endpoint down |
@@ -91,12 +91,12 @@ Toggle: "All Phoenix" mode runs five identical bots to test the system rather th
 5. THE REVIEWER SHALL work offline with a rule-based mode, and use an LLM when a key is set.
 
 ### A10. Demo script
-1. DEMO mode SHALL run a 3-minute scripted story: calm race, first monkey on the Rookie, hero crash after the charge, stacked monkeys on Phoenix, Power Outage boss, wave end, postmortem, hardening spec appears.
+1. DEMO mode SHALL run a 3-minute scripted story: calm race, first creature on the Rookie, hero crash after the charge, stacked creatures on Phoenix, Power Outage boss, wave end, postmortem, hardening spec appears.
 
 ## Acceptance
 
 1. Five lanes run at once and stay at 60 fps in a normal browser.
-2. Clicking Chaos in any lane causes a real fault, a monkey animation and a log entry.
+2. Clicking Chaos in any lane causes a real fault, a creature animation and a log entry.
 3. Three stacked hits produce nesting depth 3 and the log shows all three.
 4. Phoenix survives the hero crash with 1 charge. Rookie shows 2.
 5. After a wave, a hardening spec is written to disk.

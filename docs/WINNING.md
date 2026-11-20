@@ -16,34 +16,20 @@ Source: the official rules and Devpost page, read 2026-11-20. Re-read before sub
 - **Overall prizes (1st, 2nd, 3rd) go to the top scores across all categories.** Category only decides the category prize.
 - **Judges may not run the app.** They may judge from the text, images and video alone. So the video and a no-install live URL carry the score.
 
-## Category: Frankenstein (the owner's choice)
+## Category: Skeleton Crew
 
-> "Stitch together a chimera of technologies into one app. Bring together seemingly incompatible elements to build something unexpectedly powerful."
+> "Build a skeleton code template lean enough to be clear but flexible enough to support various use cases. Show us its versatility with two distinct applications from your foundation." The repo must contain **2 separate repo folders for the 2 applications**.
 
-Judges must see **stitching**, so the chimera is the pitch and the visual theme, not a side note.
+Haunt is exactly this: a lean skeleton (the harness) and two different apps built on it. The name is literal too: the workers are skeletons, and Haunt is the crew that runs them.
 
-**The parts we stitch (each looks incompatible with the others):**
+**Theme: the Skeleton Crew vs the Haunting**
+- The five lane bots are **skeleton workers** processing orders. Orders arrive as parchment scrolls.
+- Chaos is done by **spooky creatures**, not creatures (see the creature table in the contract). A Reaper kills the process, a Zombie slows the link, a Ghost makes a record vanish, a Goblin hoards your rate limit, a Witch hexes the data.
+- Bosses: the Lich (power outage), the Banshee Queen (internet outage), the Headless Horseman (hazard storm).
+- A crash makes the skeleton **collapse into a pile of bones**. A successful resume makes it **reassemble** and rattle on. This is the hero moment.
+- Each skeleton wears **gear** for its resilience: Spellbook (Journal), Seal (Idempotency Keys), Lantern (Retry), Shield (Circuit Breaker), Coffin Stash (Offline Queue). The Rookie is a bare skeleton. Phoenix is fully geared. When Kiro applies a hardening spec, a new piece of gear is equipped on screen.
 
-| Part | From | Why it looks wrong together |
-|---|---|---|
-| Chaos monkeys | Chaos engineering (infrastructure testing) | Built for servers, not for arcade games |
-| Race arena with progress bars and cheering sprites | Cooking-game style video games | Games are for fun, ops tools are boring |
-| Journal, idempotency keys, reconcile | Durable execution (workflow engines) | Heavy back-end theory in a toy |
-| Real process kills and Web Worker kills | OS processes and browsers | Two runtimes, one contract |
-| Node engine plus Python AI agent | Two languages | Different worlds, one harness |
-| A reviewer that writes specs, and Kiro that applies them | AI code generation | Tests that fix themselves |
-| MCP server, Kiro Power, Kiro Crew app | Kiro platform pieces | Three packagings of one tool |
-
-**Make the Frankenstein theme literal in the product:**
-- Each bot is a **creature stitched from resilience parts**: Journal, Idempotency Keys, Retry, Circuit Breaker, Offline Queue.
-- The Rookie is a bare skeleton with exposed stitches. Phoenix is fully assembled.
-- When Kiro applies a hardening spec, the UI **stitches a new limb onto the creature** with a lightning flash. The score climbs. This is the loop-proof moment, drawn as a mad-scientist lab.
-- Sound: crackle, thunder, a "It's alive!" sting on resume. All generated in code.
-- Monkeys are the mob with torches, or the lab accident. Bosses are storms.
-
-**Why it can win overall, not just the category:** the 1st, 2nd and 3rd places go to the top scores across all categories. Frankenstein gives us a clear Innovation story and a strong Design story at once.
-
-Skeleton Crew is dropped. Its "two apps in two folders" rule no longer applies. We still keep Haunted Inbox (Python) because a second app proves the chimera is reusable.
+Frankenstein was considered and dropped. Skeleton Crew matches the structure of the project better, and the overall prizes ignore category anyway.
 
 ## Bonus prizes to collect (all are separate and stackable)
 
@@ -56,7 +42,7 @@ Skeleton Crew is dropped. Its "two apps in two folders" rule no longer applies. 
 | **Best Ghost of Kiroween Past** | Only if the owner registered for Kiroween 2025. Ask him. | the owner |
 | Best Startup Project | Only if the owner is a founder and wants to enter a startup. Skip unless he says so. | the owner |
 
-## The two applications (proof the chimera is reusable)
+## The two applications (Skeleton Crew requirement)
 
 | | App 1: Haunted Orders | App 2: Haunted Inbox |
 |---|---|---|
@@ -66,7 +52,7 @@ Skeleton Crew is dropped. Its "two apps in two folders" rule no longer applies. 
 | Side effects | charge, email, dispatch | ticket created, reply sent |
 | Why it matters | The classic double-charge | The 2026 problem: AI agents repeat actions after a crash |
 
-Both run in the same arena, with the same monkeys, the same report. Two unrelated apps through one harness, in two languages, is the chimera proof.
+Both run in the same arena, with the same creatures, the same report. Two unrelated apps through one harness, in two languages, is the Skeleton Crew proof.
 
 ## What makes a judge say "this is amazing"
 
@@ -106,11 +92,11 @@ This costs extra work in Lane A (adapter swap) and none in Lane B.
 
 - [ ] Kiro credit request filed (by Dec 1, noon PT)
 - [ ] Repo public, MIT license visible, `.kiro/` committed, not ignored
-- [ ] App folders: `apps/haunted-orders`, `apps/haunted-inbox` (not required for Frankenstein, but proves reuse)
+- [ ] **Two separate app folders** (required for Skeleton Crew): `apps/haunted-orders`, `apps/haunted-inbox`
 - [ ] Hosted demo URL works with no login
 - [ ] Video under 3:00, public on YouTube, own music or none, no trademarks
 - [ ] Write-up covers every Kiro item in the table above
-- [ ] Category set to **Frankenstein**, plus Best Kiro Crew App
+- [ ] Category set to **Skeleton Crew**, plus Best Kiro Crew App
 - [ ] Blog post published, link added
 - [ ] Social post with `#KiroweenHackathon26` first, link added
 - [ ] Fresh-clone test: clone, install, `npm run demo` in under 3 minutes
@@ -121,7 +107,7 @@ This costs extra work in Lane A (adapter swap) and none in Lane B.
 | Days | Lane A (Core) | Lane B (Visuals) |
 |---|---|---|
 | Nov 20-21 | H0 contract, fixtures, mock server | Starts arena against mock |
-| Nov 22-25 | Engine, hero crash, monkeys, SDK, PBT | Race, stages, monkeys, inspector |
+| Nov 22-25 | Engine, hero crash, creatures, SDK, PBT | Race, stages, creatures, inspector |
 | Nov 26-29 | Harness modes, report, reviewer loop, App 2 | Report viewer, scoring UI, bosses, Crew app page |
 | Nov 30-Dec 1 | Browser target, MCP, Power, hardening loop proof | Polish, sound, demo mode |
 | Dec 2 | Freeze. Fresh-clone test. Record video. | Freeze. Record video. |
