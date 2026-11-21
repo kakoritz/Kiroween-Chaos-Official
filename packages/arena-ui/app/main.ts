@@ -11,6 +11,8 @@ import { AppSwitcher, currentApp } from '../src/arena/appswitch';
 import { ArenaSound } from '../src/sound';
 import { FrameSampler, perfSecondsFromQuery } from '../src/perf';
 import { KEY_HELP, chaosAnnouncement, keyAction, nextMode, renderLegend } from '../src/arena/keys';
+import { Splash, splashDecision, splashTarget } from '../src/onboarding/splash';
+import '../src/onboarding/splash.css';
 import { ApiError, createApi, resolveHttpBase, type ArenaApi, type ArenaEvent, type ConnectionStatus, type HauntInPage } from '../src/api';
 
 // W1/W2 shell plus the A3 canvas arena: the client connects the same way for mock, live and\n// browser. Events feed a pure reducer; the canvas redraws every animation frame from that state.
@@ -289,6 +291,22 @@ async function boot() {
 let pendingInspect = new URLSearchParams(window.location.search).get('inspect');
 
 void boot();
+
+// Title splash (ON-U1). Buttons also emit `haunt:splash` so the tour (ON-U3) and campaign can hook in.
+{
+  const sd = splashDecision(window.location.search);
+  if (sd.show) {
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    new Splash(stageEl, {
+      onAction: (action) => {
+        window.dispatchEvent(new CustomEvent('haunt:splash', { detail: { action } }));
+        const href = splashTarget(action);
+        if (href) window.location.assign(href);
+      },
+      onDismiss: () => { /* the demo already plays behind the splash */ },
+    }, { reduced, autoDismissMs: sd.autoDismissMs });
+  }
+}
 
 // Fixed 1920x1080 design stage, scaled uniformly to fit and centred (letterboxed). The canvas
 // backing store follows the scale and DPR so lines stay crisp; all drawing uses design pixels.

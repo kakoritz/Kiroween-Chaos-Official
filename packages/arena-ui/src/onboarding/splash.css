@@ -1,0 +1,13 @@
+.splash { position: absolute; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at 50% 40%, rgba(42,36,70,0.94), rgba(13,11,20,0.98) 70%); color: var(--text); }
+.splash__box { display: flex; flex-direction: column; align-items: center; text-align: center; max-width: 1100px; padding: 0 40px; }
+.splash__logo { margin: 0; font-size: 160px; letter-spacing: 0.18em; color: var(--bone); text-shadow: 0 0 40px var(--torch), 0 6px 0 #000; }
+.splash__tag { margin: 8px 0 40px; font-size: 34px; color: var(--torch); }
+.splash__hook { margin: 0 0 16px; min-height: 64px; font-size: 52px; font-weight: 700; color: var(--bone); }
+.splash__caret { display: inline-block; width: 4px; height: 52px; margin-left: 6px; vertical-align: -8px; background: var(--torch); animation: splash-blink 1s steps(2) infinite; }
+.splash__problem { margin: 0 0 48px; max-width: 900px; font-size: 26px; line-height: 1.35; color: var(--muted); }
+.splash__btns { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
+.splash__btn { font-size: 24px; padding: 14px 28px; border-radius: 14px; }
+.splash__btn--hero { font-size: 30px; padding: 18px 40px; background: var(--torch); color: #1a1208; border-color: var(--torch); }
+.splash__skip { position: absolute; right: 32px; bottom: 28px; background: none; border: 0; color: var(--muted); font-size: 22px; text-decoration: underline; cursor: pointer; }
+@keyframes splash-blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .splash__caret { animation: none; } }
