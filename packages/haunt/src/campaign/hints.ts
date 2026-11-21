@@ -1,6 +1,7 @@
 // Night plans and hint mapping for nights 1 to 3 (cp-night-1-3). Pure functions over the campaign data; no I/O.
 // Plans: which order meets which fault at which stage. Hints: night hint text <-> gearHint parts <-> shop gear.
 import type { PartId } from '../shared/catalog';
+import { WORLD_FAULT_PART } from './world-faults';
 import type { CampaignGear, CampaignNight, CampaignPress } from './types';
 
 /** One concrete press: forEachOrder entries are expanded to one row per order (`ord-0001`, `ord-0002`, ...). */
@@ -15,6 +16,7 @@ export const FAULT_PART: Readonly<Record<string, PartId>> = {
   missing_file: 'offline_queue',
   malformed_payload: 'offline_queue',
   duplicate_request: 'journal',
+  ...WORLD_FAULT_PART,
 };
 
 export const orderId = (n: number): string => `ord-${String(n).padStart(4, '0')}`;

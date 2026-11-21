@@ -1,4 +1,4 @@
-﻿# Campaign tasks
+# Campaign tasks
 
 Depends on `playtest-v2` P0 to P2 (laps, scoring, reviews). Branches `core/CP-...` and `ui/CP-...`.
 
@@ -9,6 +9,7 @@ Depends on `playtest-v2` P0 to P2 (laps, scoring, reviews). Branches `core/CP-..
 - [x] **CP-C4 Determinism and balance tests.** Each night is deterministic; medal thresholds checked against the rival tiers (Phoenix should reach gold on every night; Rookie should not reach bronze on nights 1 to 3). Done: `packages/haunt/src/campaign/balance.ts` and `packages/haunt/test/campaign-balance.test.ts` (acceptance 4, and acceptance 5 for mock and wire events); no threshold changes in nights.json. Partial: runs on the scripted mock waves; a live and browser engine replay (acceptance 5) is a `todo` until S1 lands scoring v2 in the live runner, because the mock summaries differ from a re-score (night 1 hint gear 796 vs 632) and night 3 with the hint gear still fails in the mock.
 - [x] **CP-NIGHT-1-3 Plans and hint mapping (nights 1 to 3).** Done: `packages/haunt/src/campaign/hints.ts` (expanded per-order attacks, hint text built from gear labels, fault to gear suggestion for the results explainer) and `packages/haunt/test/campaign-hints.test.ts`. Partial: only the faults of nights 1 to 3 are mapped; nights 4 to 7 follow with their own tasks.
 - [x] **CP-NIGHT-5-BOSS Boss night plan (night 5).** Done: `packages/haunt/src/campaign/boss-night.ts` (boss windows, per-lane boss recovery replay, five-part coverage, plan check) and `packages/haunt/test/campaign-boss-night.test.ts`; acceptance 3 asserted. Partial: checked on synthetic streams and the scripted mock, not on a live runner replay.
+- [x] **CP-NIGHT-4-WORLD World faults and bosses (nights 4 to 7).** Done: `packages/haunt/src/campaign/world-faults.ts` (`WORLD_FAULT_PART` merged into `FAULT_PART`, `BOSS_PART`, `checkWorldNights`) and `packages/haunt/test/campaign-night-4-world.test.ts`. Partial: plans and mapping are checked on the data only; no live world-runner replay.
 - [ ] **CP-C5 Inbox night.** Night 6 on the Python app with the Crew parts (depends on the live inbox runner in the arena).
 
 ## Lane B

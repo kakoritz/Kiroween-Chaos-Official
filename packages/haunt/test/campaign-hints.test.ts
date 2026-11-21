@@ -38,7 +38,7 @@ describe('hint mapping (cp-night-1-3)', () => {
   it('suggests gear for a fault and nothing for an unmapped one', () => {
     expect(gearForFault('crash', gear)?.label).toBe('Seal');
     expect(gearForFault('missing_file', gear)?.label).toBe('Coffin Stash');
-    expect(gearForFault('sms_down', gear)).toBeUndefined();
+    expect(gearForFault('no_such_fault', gear)).toBeUndefined();
   });
 
   it('the shipped nights 1 to 3 have no plan or hint problems', () => {
