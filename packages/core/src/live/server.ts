@@ -10,6 +10,7 @@ import type { HauntEvent } from '../../../haunt/src/score/score';
 import { tiersForLanes, type TierMode } from '../../../haunt/src/runner/lanes';
 import { MAX_DEPTH } from '../../../haunt/src/chaos/catalog';
 import { fnv1a32, mulberry32 } from '../../../haunt/src/shared/rng';
+import { loadCampaign } from '../../../haunt/src/campaign/nights';
 import { APPS, APP_STAGES, CONTRACT_VERSION, CREATURES, DEMO_SCRIPTS, FAULT_IDS, type AppId } from './catalog';
 import { buildPostmortem, buildReport, waveEvents } from './report';
 import { loadDemo } from './demo';
@@ -333,6 +334,7 @@ export class LiveServer {
       if (p === '/api/health') return { json: { ok: true, contractVersion: CONTRACT_VERSION, mode: 'live', app: this.app } };
       if (p === '/api/state') return { json: this.state() };
       if (p === '/api/creatures') return { json: CREATURES };
+      if (p === '/api/campaign') return { json: loadCampaign() };
       if (p === '/api/apps') return { json: APPS };
       if (p === '/api/ledger') return { json: this.ledger() };
       if (p === '/api/waves') return { json: this.wavesView() };

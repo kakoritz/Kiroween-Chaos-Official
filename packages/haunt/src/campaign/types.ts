@@ -1,4 +1,4 @@
-﻿// Campaign types (CP-C1). Additive contract: contract/V1_1.md section 12. Data lives in packages/core/campaign.
+// Campaign types (CP-C1). Additive contract: contract/V1_1.md section 12. Data lives in packages/core/campaign.
 import type { PartId } from '../shared/catalog';
 
 export type MedalTier = 'bronze' | 'silver' | 'gold';

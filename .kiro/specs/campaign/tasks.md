@@ -3,7 +3,7 @@
 Depends on `playtest-v2` P0 to P2 (laps, scoring, reviews). Branches `core/CP-...` and `ui/CP-...`.
 
 ## Lane A
-- [ ] **CP-C1 Campaign data and endpoint.** `packages/core/campaign/nights.json` (seven entries), `GET /api/campaign`, schema, mock data.
+- [x] **CP-C1 Campaign data and endpoint.** `packages/core/campaign/nights.json` (seven entries), `GET /api/campaign`, schema, mock data.
 - [ ] **CP-C2 Crew bot and wave config.** `bots/crew.ts` and `bot/crew.py` driven by `HAUNT_PARTS`; `POST /api/wave/start {campaign}`; `lane_ready` for the Crew; rivals unchanged. Acceptance: campaign acceptance 1 to 4.
 - [ ] **CP-C3 Mock and fixtures.** Scripted fixtures `night1` to `night6`, `finale` for the mock (with and without gear variants where the result differs), `inpage` `getCampaign()`.
 - [ ] **CP-C4 Determinism and balance tests.** Each night is deterministic; medal thresholds checked against the rival tiers (Phoenix should reach gold on every night; Rookie should not reach bronze on nights 1 to 3).

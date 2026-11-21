@@ -1,0 +1,10 @@
+{
+  "start": { "gear": [], "credits": 300 },
+  "items": [
+    { "id": "lantern", "label": "Lantern", "badge": "R", "part": "retry", "cost": 200, "effect": "Tries again 3 times.", "blocks": "One-off timeouts and server errors." },
+    { "id": "spellbook", "label": "Spellbook", "badge": "J", "part": "journal", "cost": 300, "effect": "Remembers finished work after a crash.", "blocks": "Restarting an order from zero." },
+    { "id": "seal", "label": "Seal", "badge": "I", "part": "idempotency", "cost": 400, "effect": "Every charge carries a unique key and is checked before it is repeated.", "blocks": "Double charges and double emails." },
+    { "id": "shield", "label": "Shield", "badge": "B", "part": "breaker", "cost": 500, "effect": "Waits longer after each try and stops hammering a broken service.", "blocks": "Retry storms and rate limits." },
+    { "id": "coffin_stash", "label": "Coffin Stash", "badge": "Q", "part": "offline_queue", "cost": 500, "effect": "Parks broken orders and resumes them later.", "blocks": "Lost orders and poison input." }
+  ]
+}

@@ -80,6 +80,7 @@ export function createHaunt(options = {}) {
     startDemo: (script) => post('/api/demo/start', typeof script === 'string' ? { script } : script),
     stopDemo: () => post('/api/demo/stop'),
     getCreatures: () => get('/api/creatures'),
+    getCampaign: () => get('/api/campaign'),
     getApps: () => get('/api/apps'),
     setApp: (app) => post('/api/app', { app }),
     getLaneStage: (lane, stage, order) => get(`/api/lane/${lane}/stage/${stage}${q({ order })}`),

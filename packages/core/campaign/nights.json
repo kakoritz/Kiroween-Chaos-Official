@@ -1,0 +1,185 @@
+[
+  {
+    "id": 1,
+    "title": "The Double Charge",
+    "briefing": "The power dies right after the charge. Every order gets hit at the worst moment.",
+    "lesson": [
+      "A crash after the effect but before the note-taking is the classic double charge.",
+      "A journal remembers finished work, so a restart does not begin from zero.",
+      "An idempotency key lets a retry check first, so the card is charged once."
+    ],
+    "hint": "Try Spellbook and Seal.",
+    "orders": 4,
+    "pace": "slow",
+    "seed": 101,
+    "plan": [
+      { "when": { "lane": 1, "event": "stage_start", "stage": "payment", "attempt": 1 }, "forEachOrder": true, "delayMs": 600, "lane": 1, "fault": "crash", "creature": "reaper", "point": "after_effect_before_journal" }
+    ],
+    "rivals": ["retrier", "journaler", "reconciler", "phoenix"],
+    "medals": {
+      "bronze": { "credits": 100 },
+      "silver": { "credits": 400, "repeats": 0 },
+      "gold": { "credits": 700, "repeats": 0, "avgStars": 3.5 }
+    },
+    "gearHint": ["journal", "idempotency"]
+  },
+  {
+    "id": 2,
+    "title": "Flaky Network",
+    "briefing": "The network is moody. Calls time out, get throttled and fail with server errors.",
+    "lesson": [
+      "Many failures are temporary, so trying again is often the right answer.",
+      "Waiting longer between tries and stopping when a service is down avoids retry storms.",
+      "A blind retry can repeat a side effect, so retries need keys or a journal."
+    ],
+    "hint": "Try Lantern and Shield.",
+    "orders": 4,
+    "pace": "slow",
+    "seed": 102,
+    "plan": [
+      { "when": { "lane": 1, "event": "stage_start", "stage": "payment", "order": "ord-0001", "attempt": 1 }, "lane": 1, "fault": "timeout", "creature": "zombie" },
+      { "when": { "lane": 1, "event": "stage_start", "stage": "confirmation", "order": "ord-0002", "attempt": 1 }, "lane": 1, "fault": "http_429", "creature": "goblin" },
+      { "when": { "lane": 1, "event": "stage_start", "stage": "dispatch", "order": "ord-0003", "attempt": 1 }, "lane": 1, "fault": "http_500", "creature": "imp" },
+      { "when": { "lane": 1, "event": "stage_start", "stage": "payment", "order": "ord-0004", "attempt": 1 }, "lane": 1, "fault": "timeout", "creature": "zombie" }
+    ],
+    "rivals": ["retrier", "journaler", "reconciler", "phoenix"],
+    "medals": {
+      "bronze": { "credits": 100 },
+      "silver": { "credits": 350, "repeats": 0 },
+      "gold": { "credits": 600, "repeats": 0, "cancelled": 0 }
+    },
+    "gearHint": ["retry", "breaker"]
+  },
+  {
+    "id": 3,
+    "title": "Missing Pieces",
+    "briefing": "Orders arrive broken: a file is missing, the data is cursed and one order shows up twice.",
+    "lesson": [
+      "Bad input should be parked, not dropped and not retried forever.",
+      "A dead-letter queue keeps broken orders so they can be fixed and resumed later.",
+      "Deduplication stops the same request from being processed twice."
+    ],
+    "hint": "Try Coffin Stash and Spellbook.",
+    "orders": 4,
+    "pace": "slow",
+    "seed": 103,
+    "plan": [
+      { "when": { "lane": 1, "event": "stage_start", "stage": "intake", "order": "ord-0001", "attempt": 1 }, "lane": 1, "fault": "missing_file", "creature": "poltergeist" },
+      { "when": { "lane": 1, "event": "stage_start", "stage": "intake", "order": "ord-0002", "attempt": 1 }, "lane": 1, "fault": "malformed_payload", "creature": "witch" },
+      { "when": { "lane": 1, "event": "stage_start", "stage": "intake", "order": "ord-0003", "attempt": 1 }, "lane": 1, "fault": "duplicate_request", "creature": "doppelganger" }
+    ],
+    "rivals": ["retrier", "journaler", "reconciler", "phoenix"],
+    "medals": {
+      "bronze": { "credits": 150 },
+      "silver": { "credits": 400, "repeats": 0 },
+      "gold": { "credits": 700, "repeats": 0, "abandoned": 0 }
+    },
+    "gearHint": ["offline_queue", "journal"]
+  },
+  {
+    "id": 4,
+    "title": "The Long Road",
+    "briefing": "The real world gets in the way: texts fail, the dispatch app is down, the address is wrong, nobody answers and a car crashes.",
+    "lesson": [
+      "A circuit breaker stops calling a broken service and lets it recover.",
+      "Graceful degradation keeps the important work going when a side service is down.",
+      "Recovery time is a score: shorter downtime means happier customers."
+    ],
+    "hint": "Try Shield, Coffin Stash and Lantern.",
+    "orders": 4,
+    "pace": "slow",
+    "seed": 104,
+    "plan": [
+      { "when": { "lane": 1, "event": "stage_start", "stage": "confirmation", "order": "ord-0001", "attempt": 1 }, "lane": 1, "fault": "sms_down", "creature": "gargoyle" },
+      { "when": { "lane": 1, "event": "stage_start", "stage": "dispatch", "order": "ord-0002", "attempt": 1 }, "lane": 1, "fault": "app_down", "creature": "imp" },
+      { "when": { "lane": 1, "event": "stage_start", "stage": "tracking", "order": "ord-0003", "attempt": 1 }, "lane": 1, "fault": "wrong_address", "creature": "scarecrow" },
+      { "when": { "lane": 1, "event": "stage_start", "stage": "handoff", "order": "ord-0004", "attempt": 1 }, "lane": 1, "fault": "no_answer", "creature": "black_cat" },
+      { "afterPrevMs": 3500, "lane": 1, "fault": "car_accident", "creature": "phantom_car" }
+    ],
+    "rivals": ["retrier", "journaler", "reconciler", "phoenix"],
+    "medals": {
+      "bronze": { "credits": 150 },
+      "silver": { "credits": 450, "repeats": 0 },
+      "gold": { "credits": 750, "repeats": 0, "maxDowntimeMsPerOrder": 20000 }
+    },
+    "gearHint": ["breaker", "offline_queue", "retry"]
+  },
+  {
+    "id": 5,
+    "title": "Boss Night",
+    "briefing": "The Lich, the Banshee Queen and the Headless Horseman each come for the whole crypt in turn.",
+    "lesson": [
+      "Big outages hit many parts at once, so one defence is never enough.",
+      "Each part covers a different failure, and the full set recovers every order.",
+      "Test the worst day before it happens."
+    ],
+    "hint": "Wear all five parts.",
+    "orders": 4,
+    "pace": "slow",
+    "seed": 105,
+    "plan": [
+      { "boss": "boss_power_outage", "warnAtMs": 4000, "startAtMs": 8000 },
+      { "boss": "boss_internet_outage", "warnAtMs": 24000, "startAtMs": 28000 },
+      { "boss": "boss_hazard_storm", "warnAtMs": 44000, "startAtMs": 48000 }
+    ],
+    "rivals": ["retrier", "journaler", "reconciler", "phoenix"],
+    "medals": {
+      "bronze": { "credits": 200 },
+      "silver": { "credits": 500, "repeats": 0 },
+      "gold": { "credits": 800, "repeats": 0, "cancelled": 0, "abandoned": 0 }
+    },
+    "gearHint": ["retry", "journal", "idempotency", "breaker", "offline_queue"]
+  },
+  {
+    "id": 6,
+    "title": "The Inbox",
+    "briefing": "An AI agent files tickets and sends replies. The same crashes strike a different app.",
+    "lesson": [
+      "The same skeleton protects a different application.",
+      "A crash after filing a ticket must not file it twice.",
+      "A repeated reply to a customer is as bad as a double charge."
+    ],
+    "hint": "Wear all five parts.",
+    "orders": 4,
+    "pace": "slow",
+    "seed": 106,
+    "app": "inbox",
+    "plan": [
+      { "when": { "lane": 1, "event": "stage_start", "stage": "ticket", "attempt": 1 }, "forEachOrder": true, "delayMs": 600, "lane": 1, "fault": "crash", "creature": "reaper", "point": "after_effect_before_journal" },
+      { "when": { "lane": 1, "event": "stage_start", "stage": "reply", "order": "msg-0003", "attempt": 1 }, "lane": 1, "fault": "timeout", "creature": "zombie" }
+    ],
+    "rivals": ["retrier", "journaler", "reconciler", "phoenix"],
+    "medals": {
+      "bronze": { "credits": 150 },
+      "silver": { "credits": 400, "repeats": 0 },
+      "gold": { "credits": 700, "repeats": 0 }
+    },
+    "gearHint": ["retry", "journal", "idempotency", "breaker", "offline_queue"]
+  },
+  {
+    "id": 7,
+    "title": "Wrong Order",
+    "briefing": "A typo sends the wrong item to a customer while a storm rolls in. Fix it fast and kindly.",
+    "lesson": [
+      "Some mistakes cannot be undone, only compensated.",
+      "A refund, a discount or a redo are compensating actions, and each has a cost.",
+      "Decide quickly: the customer is waiting."
+    ],
+    "hint": "Wear all five parts and choose the fix with care.",
+    "orders": 4,
+    "pace": "slow",
+    "seed": 107,
+    "finale": true,
+    "plan": [
+      { "when": { "lane": 1, "event": "stage_start", "stage": "intake", "order": "ord-0002", "attempt": 1 }, "lane": 1, "fault": "order_typo", "creature": "prankster", "detect": "confirmation" },
+      { "boss": "boss_hazard_storm", "warnAtMs": 20000, "startAtMs": 24000 }
+    ],
+    "rivals": ["retrier", "journaler", "reconciler", "phoenix"],
+    "medals": {
+      "bronze": { "credits": 200 },
+      "silver": { "credits": 500, "repeats": 0 },
+      "gold": { "credits": 900, "repeats": 0, "avgStars": 4.5 }
+    },
+    "gearHint": ["retry", "journal", "idempotency", "breaker", "offline_queue"]
+  }
+]

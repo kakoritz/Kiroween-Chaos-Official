@@ -187,3 +187,15 @@ describe('mock server SSE (H0.3)', () => {
     });
   });
 });
+
+describe('GET /api/campaign (CP-C1)', () => {
+  it('serves the nights, gear and start state', async () => {
+    await withServer(async (base) => {
+      const c = await get(base, '/api/campaign');
+      expect(c.nights).toHaveLength(7);
+      expect(c.gear).toHaveLength(5);
+      expect(c.start).toEqual({ gear: [], credits: 300 });
+      expect(c.nights[0].title).toBe('The Double Charge');
+    });
+  });
+});

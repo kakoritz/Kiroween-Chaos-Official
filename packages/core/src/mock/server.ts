@@ -10,6 +10,7 @@ import { Hub, BUFFER_MAX } from './hub';
 import { OutcomeTable } from './outcomes';
 import { ChaosSim, DEMO_SCRIPTS, MockError, Player, fixtureFor, scaledWave } from './play';
 import { hardening, laneLaps, laneLog, laneOrderRecord, laneOrders, ledger, pendingDecision, postmortem, stageDetail, waveCompare, waveLaps, waveReport, waveStars, wavesList } from './queries';
+import { loadCampaign } from '../../../haunt/src/campaign/nights';
 
 export { DEMO_SCRIPTS };
 export const SPEEDS = [0.5, 1, 2, 4];
@@ -47,6 +48,7 @@ const isObj = (v: unknown): v is Record<string, any> => typeof v === 'object' &&
 
 export function createMockServer(opts: MockOptions = {}): { server: Server; listen: () => Promise<number>; close: () => Promise<void> } {
   const table = loadOutcomeTable();
+  let campaign: ReturnType<typeof loadCampaign> | undefined;
   const hub = new Hub();
   const player = new Player(hub);
   const chaos = new ChaosSim(hub, player, table);
@@ -154,6 +156,7 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
     if (method === 'GET') {
       if (path === '/api/health') return send(res, 200, { ok: true, mode: 'mock', contractVersion: advertised() });
       if (path === '/api/creatures') return send(res, 200, CREATURES);
+      if (path === '/api/campaign') return send(res, 200, campaign ??= loadCampaign());
       if (path === '/api/apps') return send(res, 200, Object.values(APPS).map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role })) })));
       if (path === '/api/state') return send(res, 200, stateBody());
       if (path === '/api/events') return sse(req, res, url);
