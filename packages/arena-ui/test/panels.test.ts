@@ -68,3 +68,24 @@ describe('ledger', () => {
     reconcileLedger(vm, null);
   });
 });
+
+describe('ledger warning (BUG b)', () => {
+  it('shows the warning only on lanes with repeats > 0, never on Phoenix with a clean ledger', () => {
+    const vm = emptyVM();
+    applyEvent(vm, ev('wave_start', undefined, { lanes: 5 }), 0);
+    for (let lane = 1; lane <= 5; lane++) {
+      applyEvent(vm, ev('effect', lane, { kind: 'charge', key: 'ord-0001:charge', replayed: false }), 1);
+      applyEvent(vm, ev('effect', lane, { kind: 'account_create', key: 'ord-0001:account', replayed: false }), 1);
+    }
+    // Rookie (lane 1) repeats the charge; Phoenix (lane 5) replays are idempotent and emit no repeat.
+    applyEvent(vm, ev('effect', 1, { kind: 'charge', key: 'ord-0001:charge', replayed: false }), 2);
+    applyEvent(vm, ev('repeat', 1, { kind: 'charge', key: 'ord-0001:charge', count: 2 }), 2);
+    applyEvent(vm, ev('effect', 5, { kind: 'charge', key: 'ord-0001:charge', replayed: true }), 2);
+    reconcileLedger(vm, { lanes: vm.lanes.map((l) => ({ lane: l.lane, byKind: { charge: { rows: l.lane === 1 ? 2 : 1, repeats: l.lane === 1 ? 1 : 0 }, account_create: { rows: 1, repeats: 0 } } })) });
+    const dup = (lane: number, kind: string) => cellView(vm.lanes.find((l) => l.lane === lane)!, kind).dup;
+    expect(dup(1, 'charge')).toBe(true);
+    expect(dup(1, 'account_create')).toBe(false);
+    for (const lane of [2, 3, 4, 5]) for (const k of ['charge', 'account_create']) expect(dup(lane, k)).toBe(false);
+    expect(vm.lanes.find((l) => l.lane === 5)!.counts.repeats).toBe(0);
+  });
+});
