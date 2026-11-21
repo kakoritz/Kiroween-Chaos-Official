@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { existsSync } from 'node:fs';
 import { LiveServer, lineDelta, loopFixEvents } from '../src/live';
 
 let srv: LiveServer | undefined;
@@ -58,5 +59,11 @@ describe('loop fix events', () => {
     expect(evs[i - 1]!.type).toBe('wave_end');
     expect(evs[i + 1]).toMatchObject({ type: 'wave_start', wave: 2 });
     expect(evs.filter((e) => e.type === 'part_added')).toHaveLength(1);
+  });
+
+  const bundles = ['rookie', 'rookie.hardened'].map((n) => join(process.cwd(), 'dist', 'bots', n + '.js'));
+  it.skipIf(!bundles.every((b) => existsSync(b)))('real Rookie bundles: hardening adds retry, journal and idempotency', () => {
+    const evs = loopFixEvents({ lane: '1', root: process.cwd(), beforeSrc: 'apps/haunted-orders/src/bots/rookie.ts', afterSrc: 'apps/haunted-orders/src/bots/rookie.hardened.ts', beforeBundle: bundles[0]!, afterBundle: bundles[1]! });
+    expect(evs.filter((e) => e.type === 'part_added').map((e: any) => e.detail.part).sort()).toEqual(['idempotency', 'journal', 'retry']);
   });
 });
