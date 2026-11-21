@@ -9,6 +9,7 @@ import { stationX, type ArenaVM, type ChipState, type LaneVM } from './model';
 import { captionOf, creatureFrame, shown, spriteOf, MAX_SHOWN, type CreatureVM } from './creatures';
 import { drawCreature } from '../creatures/draw';
 import { survivedAge } from './boss';
+import { cobweb, flagstoneFloor, fogTexture, laneVignette, torchPools } from './crypt';
 
 export const STAGE_W = 1920;
 export const STAGE_H = 1080;
@@ -67,51 +68,6 @@ function bricks(ctx: Ctx, x: number, y: number, w: number, h: number, seed: numb
   ctx.stroke();
 }
 
-function cobweb(ctx: Ctx, x: number, y: number, dx: number, dy: number, size: number): void {
-  ctx.save();
-  ctx.strokeStyle = 'rgba(239,230,210,0.28)';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  for (let i = 0; i <= 4; i++) {
-    const a = (i / 4) * (Math.PI / 2);
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + dx * Math.cos(a) * size, y + dy * Math.sin(a) * size);
-  }
-  for (let k = 1; k <= 3; k++) {
-    const rr = (size * k) / 3;
-    ctx.moveTo(x + dx * rr, y);
-    for (let i = 1; i <= 4; i++) {
-      const a = (i / 4) * (Math.PI / 2);
-      const m = rr * (0.82 + 0.06 * (i % 2));
-      ctx.lineTo(x + dx * Math.cos(a) * m, y + dy * Math.sin(a) * m);
-    }
-  }
-  ctx.stroke();
-  ctx.restore();
-}
-
-function floorTiles(ctx: Ctx, x: number, y: number, w: number, h: number, seed: number): void {
-  const r = rng(seed);
-  const g = ctx.createLinearGradient(0, y, 0, y + h);
-  g.addColorStop(0, '#221d3a');
-  g.addColorStop(1, '#17132a');
-  ctx.fillStyle = g;
-  ctx.fillRect(x, y, w, h);
-  const tw = 80;
-  const floorTop = y + h * 0.62;
-  for (let xx = x; xx < x + w; xx += tw) {
-    const shade = Math.floor(r() * 12);
-    ctx.fillStyle = `rgba(${52 + shade},${44 + shade},${86 + shade},0.34)`;
-    ctx.fillRect(xx + 2, floorTop + 2, tw - 4, y + h - floorTop - 4);
-  }
-  ctx.strokeStyle = 'rgba(10,8,18,0.7)';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(x, floorTop); ctx.lineTo(x + w, floorTop);
-  for (let xx = x; xx <= x + w; xx += tw) { ctx.moveTo(xx, floorTop); ctx.lineTo(xx - 10, y + h); }
-  ctx.stroke();
-}
-
 function door(ctx: Ctx, x: number, baseY: number, h: number, glow: number): void {
   const w = h * 0.62;
   ctx.save();
@@ -146,7 +102,9 @@ export function renderStatic(n: number): HTMLCanvasElement {
   const boxes = laneBoxes(n);
   boxes.forEach((b, i) => {
     bricks(ctx, 0, b.top, TRACK_X0, b.h, 100 + i, '#17132b', 'rgba(8,6,16,0.9)');
-    floorTiles(ctx, TRACK_X0, b.top, STAGE_W - TRACK_X0, b.h, 200 + i);
+    flagstoneFloor(ctx, TRACK_X0, b.top, STAGE_W - TRACK_X0, b.h, 200 + i);
+    torchPools(ctx, [TRACK_X0 + 90, 720, 1140, 1548], b.top, b.h);
+    laneVignette(ctx, TRACK_X0, b.top, STAGE_W - TRACK_X0, b.h);
     // lane frame
     ctx.strokeStyle = 'rgba(8,6,16,0.95)'; ctx.lineWidth = 4;
     ctx.strokeRect(2, b.top, STAGE_W - 4, b.h);
@@ -155,8 +113,10 @@ export function renderStatic(n: number): HTMLCanvasElement {
     const ty = b.top + b.h * 0.8;
     ctx.beginPath(); ctx.moveTo(TRACK_X0 + 20, ty); ctx.lineTo(1500, ty); ctx.stroke();
     ctx.setLineDash([]);
-    cobweb(ctx, TRACK_X0 + 4, b.top + 2, 1, 1, 34);
-    cobweb(ctx, STAGE_W - 6, b.top + 2, -1, 1, 34);
+    cobweb(ctx, TRACK_X0 + 4, b.top + 2, 1, 1, 46);
+    cobweb(ctx, STAGE_W - 6, b.top + 2, -1, 1, 46);
+    cobweb(ctx, 1150 + (i % 3) * 90, b.top + 2, i % 2 ? 1 : -1, 1, 26);
+    cobweb(ctx, TRACK_X0 + 4, b.top + b.h - 2, 1, -1, 24);
     door(ctx, 1548, b.top + b.h - 8, Math.min(100, b.h * 0.7), 0.4);
   });
   // lane stats panel edge
@@ -416,8 +376,19 @@ export class ArenaScene {
     drawn.forEach((l, i) => this.drawLane(ctx, vm, l, boxes[i]!, now));
   }
 
+  private fogTex: HTMLCanvasElement | null = null;
+  private fogTex2: HTMLCanvasElement | null = null;
+
   private fog(ctx: Ctx, now: number, n: number): void {
     if (this.lite) return;
+    this.fogTex ??= fogTexture(STAGE_W, LANES_H, 7);
+    this.fogTex2 ??= fogTexture(STAGE_W, LANES_H, 19);
+    const drift = this.reducedMotion ? 0 : now;
+    const o1 = (drift / 90) % STAGE_W; const o2 = STAGE_W - ((drift / 55) % STAGE_W);
+    ctx.drawImage(this.fogTex, -o1, HEADER); ctx.drawImage(this.fogTex, STAGE_W - o1, HEADER);
+    ctx.globalAlpha = 0.8;
+    ctx.drawImage(this.fogTex2, -o2, HEADER); ctx.drawImage(this.fogTex2, STAGE_W - o2, HEADER);
+    ctx.globalAlpha = 1;
     const boxes = laneBoxes(n);
     ctx.save();
     for (let i = 0; i < 3; i++) {
