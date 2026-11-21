@@ -24,6 +24,8 @@ import { SPLASH_TAGLINE } from '../src/onboarding/splash';
 import { Tour, tourRequested } from '../src/onboarding/tour';
 import '../src/onboarding/tour.css';
 import '../src/arena/lanes-ticker.css';
+import { ReviewCardView } from '../src/arena/review-card';
+import '../src/arena/review-card.css';
 import { mountCampaignHub } from '../src/campaign/hub';
 import '../src/campaign/hub.css';
 import { gearShopStarter } from '../src/campaign/shop';
@@ -127,6 +129,7 @@ const rankBoard = new RankBoard($('rank-body'));
 const ledgerPanel = new LedgerPanel($('ledger-body'));
 const rankEl = $('rank');
 const ledgerEl = $('ledger');
+const reviewCards = new ReviewCardView(stageEl, (n) => { const i = vm.lanes.findIndex((x) => x.lane === n); return i < 0 ? null : laneBoxes(vm.lanes.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET)[i] ?? null; });
 const tickerEl = $('ticker');
 const tickerModel = new LaneTickerModel((id) => vm.stages.find((s) => s.id === id)?.label ?? id);
 const ticker = new LaneTickerView($('ticker-body'), tickerModel, {
@@ -243,6 +246,7 @@ function onEvent(ev: ArenaEvent) {
   sound.onEvent(ev, performance.now());
   inspector.record(ev);
   tickerModel.push(ev, performance.now());
+  reviewCards.onEvent(ev);
   events++;
   if (typeof ev.seq === 'number') lastSeq = ev.seq;
   if (ev.type === 'hello') {

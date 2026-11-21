@@ -1,4 +1,4 @@
-# Kiro log
+﻿# Kiro log
 
 Dated notes on what Kiro did and decided while building Haunt. Newest last.
 
@@ -208,5 +208,6 @@ pm run live). SSE with hello, since replay (exclusive), 410 gone beyond 5000 eve
 - 2026-11-21 PT-X1 core/pt-x1: docs/proof re-recorded with scoring v2 through `npm run live -- --loop` (loop demo, 2 lanes, seed 7, crash-only plan). Wave 1 grade F score -229; wave 2 grade A score 702 (lane 1 hardened Rookie A, lane 2 Phoenix A, 0 repeats, 0 lost). Grader unchanged. README, WINNING and DEMO-SCRIPT updated with these numbers.
 - 2026-11-21 PT-doc core/pt-design-fix: playtest-v2 design.md worked example "two extra rows, 2 stars" corrected from -340 to -300 (review is (2 - 3) x 40 = -40, not -80), matching reviewReward in score.ts and the PT-C4 test.
 - 2026-11-21 PT-X2 core/pt-x2: SPEC-MAP rows for contract v1.1 and playtest-v2 plus glossary confirmed present; DEMO-SCRIPT notes the slow-pace edit rule; PT-X2 ticked.
+- 2026-11-21 PT-U7 ui/pt-u7-reviews: review card toast with a customer ghost (delighted, neutral, angry), five sub-score bars and the quote, "Never arrived" for cancelled orders (`review-card.ts`, `review-card.css`). The lane label card now shows the live tracker with the last review's stars (`8/15 (4)`) and the rating title from the running average. Door stars were already drawn by PT-U2. Test in `review-card.test.ts`.
 - 2026-11-21 PT-deflake core/pt-adapters-deflake: packages/haunt/test/adapters.test.ts flaked under CPU load (25 of 64 runs failed with 16 parallel runs). Root cause: a blind 400 ms sleep before reading the child's stdout, but node start-up exceeds 400 ms when loaded. Now waits on the output with vi.waitFor. The latency test's wall-clock ceiling (<120 ms for an unfaulted request) is replaced by an ordering check against a 600 ms delayed POST. Assertions unchanged; 0 of 64 failed after.
 - 2026-11-21 SH-K2 ui/share-sh-k2: `docs/KIRO-WRITEUP.md` in rubric order (IDE, CLI, Web and Crew, custom agents, hooks, spec-driven vs vibe, steering, MCP, property testing, Powers, what Kiro got wrong, five Devpost moments) built only from the log and repo. Sections that need the owner's own numbers or screenshots are marked **Owner:** and make no claim. Candid digest added at the top of this log. Docs only.

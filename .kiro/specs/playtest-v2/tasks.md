@@ -1,14 +1,14 @@
-# Play-test v2: tasks
+﻿# Play-test v2: tasks
 
 Branches: `core/PT-...` (Lane A), `ui/PT-...` (Lane B). One PR per task. Contract changes (`contract/V1_1.md`) are one PR with the `contract` label. Record every ambiguity decision in `docs/DECISIONS.md`. Tick the box in this file in the same PR.
 
 ## Phases and dependencies
 
 ```
-P0  PT-C0 contract+schema+fixtures+mock  â”€â”€â”¬â”€> P1 UX (PT-U1..U5, U9)  needs PT-C2 travel, PT-C5 order records
-                                           â”œâ”€> P2 laps/score/reviews (PT-C3,C4,C6, PT-U3,U6,U7,U8)
-                                           â”œâ”€> P3 world events (PT-C7, PT-U10, PT-ART)
-                                           â””â”€> P4 wrong order (PT-C8, PT-U11)
+P0  PT-C0 contract+schema+fixtures+mock  Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€Â¬Ã¢â€â‚¬> P1 UX (PT-U1..U5, U9)  needs PT-C2 travel, PT-C5 order records
+                                           Ã¢â€Å“Ã¢â€â‚¬> P2 laps/score/reviews (PT-C3,C4,C6, PT-U3,U6,U7,U8)
+                                           Ã¢â€Å“Ã¢â€â‚¬> P3 world events (PT-C7, PT-U10, PT-ART)
+                                           Ã¢â€â€Ã¢â€â‚¬> P4 wrong order (PT-C8, PT-U11)
 ```
 Order: P0, then P1 (the visible fixes the owner asked for first), then P2, P3, P4. Lane B can build P1, P2, P3 against the mock as soon as PT-C0 merges.
 
@@ -37,7 +37,7 @@ Order: P0, then P1 (the visible fixes the owner asked for first), then P2, P3, P
 - [x] **PT-U4 Lane ticker.** (Done: `arena/lanes-ticker.ts` pure model + view replacing the Event Log; `test/lanes-ticker.test.ts`; row click opens the inspector until PT-U5.) One row per lane, sliding messages, queue and fast-forward, templates, click to popup (ui.md section 4).
 - [x] **PT-U5 Lane popup v2.** (Done: `arena/lane-popup-model.ts` + `lane-popup.ts` + `lane-popup.css`; `test/lane-popup.test.ts`; opens from chips, ticker rows and the lane label.) Live mini scene, stage table, order picker, log filters, lap summary, replay (ui.md section 5). Replaces and extends UI-C1.
 - [x] **PT-U6 Laps and wave summary.** Lap table with best and slowest tags, wave end card v2, star progression chart, report tab "Laps & stars" (ui.md section 6).
-- [ ] **PT-U7 Reviews.** Door stars, review card, customer ghost, live tracker in the label card, rating titles (ui.md sections 6 and 7).
+- [x] **PT-U7 Reviews.** Door stars, review card, customer ghost, live tracker in the label card, rating titles (ui.md sections 6 and 7).
 - [ ] **PT-U8 Score visuals.** Downtime chip, cancel slam, boss recovered banner, score explainer popover, rank board fixes (ui.md section 8).
 - [ ] **PT-U9 Header, gear menu, legend, pace.** Gear menu that closes, Play and Stop demo buttons, badge tooltip, legend modal and gear badge tooltips, Slow default pace control (ui.md sections 9 and 12).
 - [ ] **PT-U10 World creature choreographies.** Scarecrow, black cat, phantom car, prankster, plus captions on gargoyle, imp, goblin (ui.md section 11).
