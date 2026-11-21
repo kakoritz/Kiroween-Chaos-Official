@@ -3,10 +3,10 @@
 Branch prefix `core/`. Each task is one PR. Tags: [C] touches `contract/`.
 
 ## H0. Unblock the visuals lane (do first)
-- [ ] H0.1 [C] Write `contract/events.schema.json` from CONTRACT.md and a validator script.
-- [ ] H0.2 [C] Generate the fixtures (see H0.5) and validate them. Do not hand-type events.
-- [ ] H0.3 Mock server: all REST calls and SSE, replay fixtures, accept chaos commands and answer with scripted events.
-- [ ] H0.4 `npm run mock` and a README section for Lane B.
+- [x] H0.1 [C] Write `contract/events.schema.json` from CONTRACT.md and a validator script.
+- [x] H0.2 [C] Generate the fixtures (see H0.5) and validate them. Do not hand-type events.
+- [x] H0.3 Mock server: all REST calls and SSE, replay fixtures, accept chaos commands and answer with scripted events.
+- [x] H0.4 `npm run mock` and a README section for Lane B.
 
 ## H1. Engine (haunted-house tasks 1 to 8)
 - [x] H1.1 Provider with idempotency keys and ledger.
@@ -73,10 +73,10 @@ Never cut: H0, H1, H2.2, H3.1, H3.2, H4.1, H4.2, H6.3, H6.4, H6.10, H6.11. Cut f
 ## Additions from the full spec pass (authoritative detail in `.kiro/specs/engine/`)
 
 H0 is complete only when all of these are done:
-- [ ] H0.5 `tools/make-fixtures.ts` generates the five fixtures from `contract/STORYBOARDS.md`.
-- [ ] H0.6 `tools/validate-events.ts` checks the schema and every ordering rule in `contract/PROTOCOL.md`. Wired to `npm run validate:events` and CI.
-- [ ] H0.7 Mock simulator implements `engine/acceptance.md` table A for every tier and fault.
-- [ ] H0.8 `npm run test:contract` suite. Runs against the mock in H0 and also against live once H1.6 exists.
+- [x] H0.5 `tools/make-fixtures.ts` generates the five fixtures from `contract/STORYBOARDS.md`.
+- [x] H0.6 `tools/validate-events.ts` checks the schema and every ordering rule in `contract/PROTOCOL.md`. Wired to `npm run validate:events` and CI.
+- [x] H0.7 Mock simulator implements `engine/acceptance.md` table A for every tier and fault.
+- [x] H0.8 `npm run test:contract` suite. Runs against the mock in H0 and also against live once H1.6 exists.
 - [x] H0.9 Repo scaffolding per `docs/DEV-SETUP.md`: workspaces, TypeScript, Vitest, CI, `npm run demo`.
 
 Engine detail tasks (map to engine/design.md sections):

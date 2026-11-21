@@ -1,0 +1,1638 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://haunt.local/contract/events.schema.json",
+  "title": "Haunt contract v1 event",
+  "description": "One event of the Haunt contract (contract/PROTOCOL.md). Ordering rules are checked by tools/validate-events.ts, not by this schema.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/hello"
+    },
+    {
+      "$ref": "#/$defs/reset"
+    },
+    {
+      "$ref": "#/$defs/wave_start"
+    },
+    {
+      "$ref": "#/$defs/wave_end"
+    },
+    {
+      "$ref": "#/$defs/lane_ready"
+    },
+    {
+      "$ref": "#/$defs/order_start"
+    },
+    {
+      "$ref": "#/$defs/stage_start"
+    },
+    {
+      "$ref": "#/$defs/stage_progress"
+    },
+    {
+      "$ref": "#/$defs/stage_done"
+    },
+    {
+      "$ref": "#/$defs/stage_fail"
+    },
+    {
+      "$ref": "#/$defs/chaos"
+    },
+    {
+      "$ref": "#/$defs/chaos_absorbed"
+    },
+    {
+      "$ref": "#/$defs/process_dead"
+    },
+    {
+      "$ref": "#/$defs/process_up"
+    },
+    {
+      "$ref": "#/$defs/recover_start"
+    },
+    {
+      "$ref": "#/$defs/recover_done"
+    },
+    {
+      "$ref": "#/$defs/effect"
+    },
+    {
+      "$ref": "#/$defs/repeat"
+    },
+    {
+      "$ref": "#/$defs/breaker"
+    },
+    {
+      "$ref": "#/$defs/order_done"
+    },
+    {
+      "$ref": "#/$defs/order_failed"
+    },
+    {
+      "$ref": "#/$defs/order_parked"
+    },
+    {
+      "$ref": "#/$defs/order_resumed"
+    },
+    {
+      "$ref": "#/$defs/order_quarantined"
+    },
+    {
+      "$ref": "#/$defs/order_abandoned"
+    },
+    {
+      "$ref": "#/$defs/lane_halted"
+    },
+    {
+      "$ref": "#/$defs/part_added"
+    },
+    {
+      "$ref": "#/$defs/boss_warning"
+    },
+    {
+      "$ref": "#/$defs/boss_start"
+    },
+    {
+      "$ref": "#/$defs/boss_end"
+    },
+    {
+      "$ref": "#/$defs/score"
+    },
+    {
+      "$ref": "#/$defs/hardening_spec"
+    },
+    {
+      "$ref": "#/$defs/fix_applied"
+    }
+  ],
+  "$defs": {
+    "seq": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "ts": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "waveNo": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "laneNo": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "orderId": {
+      "type": "string",
+      "pattern": "^(ord|msg)-[0-9]{4}$"
+    },
+    "stageId": {
+      "type": "string",
+      "enum": [
+        "intake",
+        "account",
+        "payment",
+        "confirmation",
+        "dispatch",
+        "updates",
+        "tracking",
+        "handoff",
+        "fetch",
+        "classify",
+        "ticket",
+        "draft",
+        "reply",
+        "archive"
+      ]
+    },
+    "envelope": {
+      "description": "Fields every event carries. Unknown fields are allowed (the contract is additive).",
+      "type": "object",
+      "required": [
+        "seq",
+        "ts",
+        "type"
+      ],
+      "properties": {
+        "seq": {
+          "$ref": "#/$defs/seq"
+        },
+        "ts": {
+          "$ref": "#/$defs/ts"
+        },
+        "type": {
+          "type": "string"
+        },
+        "wave": {
+          "$ref": "#/$defs/waveNo"
+        },
+        "lane": {
+          "$ref": "#/$defs/laneNo"
+        },
+        "order": {
+          "$ref": "#/$defs/orderId"
+        },
+        "stage": {
+          "$ref": "#/$defs/stageId"
+        },
+        "detail": {
+          "type": "object"
+        }
+      }
+    },
+    "hello": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "contractVersion",
+            "mode",
+            "app"
+          ],
+          "properties": {
+            "type": {
+              "const": "hello"
+            },
+            "contractVersion": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "mode": {
+              "enum": [
+                "live",
+                "mock",
+                "browser"
+              ]
+            },
+            "app": {
+              "enum": [
+                "orders",
+                "inbox"
+              ]
+            },
+            "lane": false
+          }
+        }
+      ]
+    },
+    "reset": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "reset"
+            },
+            "detail": {
+              "type": "object",
+              "required": [],
+              "properties": {}
+            },
+            "lane": false
+          }
+        }
+      ]
+    },
+    "wave_start": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "wave_start"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "orders",
+                "seed",
+                "tiers",
+                "lanes",
+                "speed",
+                "app",
+                "pace"
+              ],
+              "properties": {
+                "orders": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "seed": {
+                  "type": "integer"
+                },
+                "tiers": {
+                  "enum": [
+                    "race",
+                    "allPhoenix"
+                  ]
+                },
+                "lanes": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 5
+                },
+                "speed": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "app": {
+                  "enum": [
+                    "orders",
+                    "inbox"
+                  ]
+                },
+                "pace": {
+                  "enum": [
+                    "normal",
+                    "show"
+                  ]
+                }
+              }
+            },
+            "lane": false
+          }
+        }
+      ]
+    },
+    "wave_end": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "wave_end"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "summary"
+              ],
+              "properties": {
+                "summary": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "required": [
+                      "score",
+                      "completed",
+                      "failed",
+                      "parked",
+                      "quarantined",
+                      "repeats"
+                    ],
+                    "properties": {
+                      "score": {
+                        "type": "integer"
+                      },
+                      "grade": {
+                        "enum": [
+                          "A",
+                          "B",
+                          "C",
+                          "D",
+                          "F"
+                        ]
+                      },
+                      "completed": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "failed": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "parked": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "quarantined": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "repeats": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    }
+                  }
+                },
+                "stopped": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "lane": false
+          }
+        }
+      ]
+    },
+    "lane_ready": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "lane_ready"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "tier",
+                "label",
+                "parts"
+              ],
+              "properties": {
+                "tier": {
+                  "enum": [
+                    "rookie",
+                    "retrier",
+                    "journaler",
+                    "reconciler",
+                    "phoenix"
+                  ]
+                },
+                "label": {
+                  "type": "string"
+                },
+                "parts": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "retry",
+                      "journal",
+                      "idempotency",
+                      "breaker",
+                      "offline_queue"
+                    ]
+                  },
+                  "uniqueItems": true
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "order_start": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "order",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "order_start"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "index",
+                "total"
+              ],
+              "properties": {
+                "index": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "total": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "stage_start": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "order",
+            "stage",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "stage_start"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "attempt"
+              ],
+              "properties": {
+                "attempt": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "stage_progress": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "order",
+            "stage",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "stage_progress"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "pct",
+                "label"
+              ],
+              "properties": {
+                "pct": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "label": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "stage_done": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "order",
+            "stage",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "stage_done"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "ms",
+                "skipped"
+              ],
+              "properties": {
+                "ms": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "skipped": {
+                  "type": "boolean"
+                },
+                "reconciled": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "stage_fail": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "order",
+            "stage",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "stage_fail"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "error",
+                "retryable",
+                "attempt"
+              ],
+              "properties": {
+                "error": {
+                  "type": "string"
+                },
+                "retryable": {
+                  "type": "boolean"
+                },
+                "attempt": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "degraded": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "chaos": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "chaos"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "creature",
+                "fault",
+                "scope",
+                "depth",
+                "injectedAt",
+                "source"
+              ],
+              "properties": {
+                "creature": {
+                  "type": "string"
+                },
+                "fault": {
+                  "type": "string"
+                },
+                "scope": {
+                  "enum": [
+                    "inner",
+                    "outer"
+                  ]
+                },
+                "depth": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 5
+                },
+                "injectedAt": {
+                  "enum": [
+                    "before",
+                    "during",
+                    "after_effect",
+                    "recovery"
+                  ]
+                },
+                "source": {
+                  "enum": [
+                    "user",
+                    "random",
+                    "boss",
+                    "demo",
+                    "sweep"
+                  ]
+                },
+                "deferred": {
+                  "type": "boolean"
+                },
+                "point": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "chaos_absorbed": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "chaos_absorbed"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "creature",
+                "fault",
+                "reason"
+              ],
+              "properties": {
+                "creature": {
+                  "type": "string"
+                },
+                "fault": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "process_dead": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "process_dead"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "reason",
+                "restartInMs"
+              ],
+              "properties": {
+                "reason": {
+                  "type": "string"
+                },
+                "restartInMs": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "process_up": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "process_up"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "attempt"
+              ],
+              "properties": {
+                "attempt": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "recover_start": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "recover_start"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "action",
+                "depth"
+              ],
+              "properties": {
+                "action": {
+                  "enum": [
+                    "restart",
+                    "replay",
+                    "reconcile",
+                    "retry",
+                    "backoff"
+                  ]
+                },
+                "depth": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "recover_done": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "recover_done"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "action",
+                "ms",
+                "depth"
+              ],
+              "properties": {
+                "action": {
+                  "enum": [
+                    "restart",
+                    "replay",
+                    "reconcile",
+                    "retry",
+                    "backoff"
+                  ]
+                },
+                "ms": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "depth": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "effect": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "order",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "effect"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "kind",
+                "key",
+                "replayed"
+              ],
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "account_create",
+                    "charge",
+                    "email",
+                    "dispatch",
+                    "notify",
+                    "ticket"
+                  ]
+                },
+                "key": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "replayed": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "repeat": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "order",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "repeat"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "kind",
+                "key",
+                "count"
+              ],
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "account_create",
+                    "charge",
+                    "email",
+                    "dispatch",
+                    "notify",
+                    "ticket"
+                  ]
+                },
+                "key": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 2
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "breaker": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "breaker"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "service",
+                "state"
+              ],
+              "properties": {
+                "service": {
+                  "type": "string"
+                },
+                "state": {
+                  "enum": [
+                    "open",
+                    "half_open",
+                    "closed"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "order_done": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "order",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "order_done"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "clean",
+                "ms",
+                "repeats"
+              ],
+              "properties": {
+                "clean": {
+                  "type": "boolean"
+                },
+                "ms": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "repeats": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "order_failed": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "order",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "order_failed"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "stage",
+                "error"
+              ],
+              "properties": {
+                "stage": {
+                  "type": "string"
+                },
+                "error": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "order_parked": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "order",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "order_parked"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "stage",
+                "reason"
+              ],
+              "properties": {
+                "stage": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "order_resumed": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "order",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "order_resumed"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "stage"
+              ],
+              "properties": {
+                "stage": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "order_quarantined": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "order",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "order_quarantined"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "stage",
+                "reason"
+              ],
+              "properties": {
+                "stage": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "order_abandoned": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "order",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "order_abandoned"
+            },
+            "detail": {
+              "type": "object",
+              "required": [],
+              "properties": {}
+            }
+          }
+        }
+      ]
+    },
+    "lane_halted": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "lane_halted"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "reason"
+              ],
+              "properties": {
+                "reason": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "part_added": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "part_added"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "part",
+                "source"
+              ],
+              "properties": {
+                "part": {
+                  "enum": [
+                    "retry",
+                    "journal",
+                    "idempotency",
+                    "breaker",
+                    "offline_queue"
+                  ]
+                },
+                "source": {
+                  "enum": [
+                    "hardening_spec",
+                    "manual"
+                  ]
+                },
+                "spec": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "boss_warning": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "boss_warning"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "boss",
+                "startsInMs"
+              ],
+              "properties": {
+                "boss": {
+                  "enum": [
+                    "boss_power_outage",
+                    "boss_internet_outage",
+                    "boss_hazard_storm"
+                  ]
+                },
+                "startsInMs": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            },
+            "lane": false
+          }
+        }
+      ]
+    },
+    "boss_start": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "boss_start"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "boss"
+              ],
+              "properties": {
+                "boss": {
+                  "enum": [
+                    "boss_power_outage",
+                    "boss_internet_outage",
+                    "boss_hazard_storm"
+                  ]
+                },
+                "durationMs": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            },
+            "lane": false
+          }
+        }
+      ]
+    },
+    "boss_end": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "boss_end"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "boss"
+              ],
+              "properties": {
+                "boss": {
+                  "enum": [
+                    "boss_power_outage",
+                    "boss_internet_outage",
+                    "boss_hazard_storm"
+                  ]
+                },
+                "durationMs": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            },
+            "lane": false
+          }
+        }
+      ]
+    },
+    "score": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "score"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "delta",
+                "total",
+                "reason"
+              ],
+              "properties": {
+                "delta": {
+                  "type": "integer"
+                },
+                "total": {
+                  "type": "integer"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "hardening_spec": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "hardening_spec"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "spec",
+                "title",
+                "path",
+                "findings"
+              ],
+              "properties": {
+                "spec": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string"
+                },
+                "findings": {
+                  "oneOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "array"
+                    }
+                  ]
+                }
+              }
+            },
+            "lane": false
+          }
+        }
+      ]
+    },
+    "fix_applied": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "fix_applied"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "spec",
+                "files",
+                "recorded"
+              ],
+              "properties": {
+                "spec": {
+                  "type": "string"
+                },
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "path",
+                      "add",
+                      "del"
+                    ],
+                    "properties": {
+                      "path": {
+                        "type": "string"
+                      },
+                      "add": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "del": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    }
+                  }
+                },
+                "recorded": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "lane": false
+          }
+        }
+      ]
+    }
+  }
+}

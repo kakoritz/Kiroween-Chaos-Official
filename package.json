@@ -18,8 +18,9 @@
     "demo": "node tools/demo.mjs",
     "test": "vitest run",
     "test:contract": "vitest run --config vitest.contract.config.ts",
-    "validate:events": "node tools/todo.mjs validate:events H0.6",
+    "validate:events": "node tools/run-ts.mjs tools/validate-events.ts",
     "make:fixtures": "node tools/run-ts.mjs tools/make-fixtures.ts",
+    "make:outcomes": "node tools/run-ts.mjs tools/make-outcomes.ts",
     "typecheck": "tsc --noEmit",
     "haunt": "node tools/run-ts.mjs packages/core/src/bin/haunt.ts",
     "fresh-clone": "node tools/fresh-clone.mjs"
