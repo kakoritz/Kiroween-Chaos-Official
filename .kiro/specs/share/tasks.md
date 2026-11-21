@@ -15,7 +15,7 @@ Branches `core/SH-...`, `ui/SH-...`, `docs/SH-...`.
 - [ ] **SH-K5 Steering files.** `tech.md`, `contract.md`, `art.md` in `.kiro/steering/`.
 
 ## Lane B
-- [ ] **SH-U1 Workflow Lab UI.** Form, presets, protections toggles, run view, report, export of `haunt.yaml`, badge, scorecard, honest "model-based" label.
+- [x] **SH-U1 Workflow Lab UI.** Form, presets, protections toggles, run view, report, export of `haunt.yaml`, badge, scorecard, honest "model-based" label.
 - [x] **SH-U2 Share button.** In the report viewer: download badge and scorecard, copy README snippet.
 - [ ] **SH-U3 Architecture diagram page.** In the hosted demo footer ("How it works").
 

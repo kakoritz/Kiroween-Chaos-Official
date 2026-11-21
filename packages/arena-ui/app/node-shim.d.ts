@@ -2,4 +2,4 @@
 declare module 'node:fs' {
   export const closeSync: any, existsSync: any, fsyncSync: any, openSync: any, readFileSync: any, writeSync: any;
 }
-declare const process: { env: Record<string, string | undefined> };
+declare const process: { env: Record<string, string | undefined>; pid: number };

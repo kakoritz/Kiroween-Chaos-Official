@@ -24,7 +24,7 @@ export default defineConfig({
   server: { host: '127.0.0.1', port: 5173, proxy },
   preview: { host: '127.0.0.1', port: 4173, proxy },
   build: { outDir: 'dist', emptyOutDir: true, target: 'es2022', sourcemap: false,
-    rollupOptions: { input: { main: resolve(__dirname, 'index.html'), lab: resolve(__dirname, 'lab.html'), report: resolve(__dirname, 'report.html'), browser: resolve(__dirname, 'browser.html'), hosted: resolve(__dirname, 'hosted.html') } } },
+    rollupOptions: { input: { main: resolve(__dirname, 'index.html'), lab: resolve(__dirname, 'lab.html'), report: resolve(__dirname, 'report.html'), browser: resolve(__dirname, 'browser.html'), hosted: resolve(__dirname, 'hosted.html'), workflowLab: resolve(__dirname, 'workflow-lab.html') } } },
 });
 
 
