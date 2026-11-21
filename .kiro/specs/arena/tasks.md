@@ -3,30 +3,33 @@
 Do after Phase 1 of [haunted-house tasks](../haunted-house/tasks.md) (hero crash works headless).
 
 ## Phase A: Playable race
-- [ ] UI-A1. Pipeline module with eight stages and the five policy tiers. (A1, Lanes)
-- [ ] UI-A2. Wave manager and five lane workers with an event log. (A8)
+- [x] UI-A1. (done in Lane A, see harness/tasks.md) Pipeline module with eight stages and the five policy tiers. (A1, Lanes)
+- [x] UI-A2. (done in Lane A, see harness/tasks.md) Wave manager and five lane workers with an event log. (A8)
 - [x] UI-A3. Canvas arena: lanes, sprites, work, cheer, fail animations, progress bars. (A1)
 - [x] UI-A4. Rank board, ledger panel, score engine. (A1.5, A7)
 
 ## Phase B: Chaos
-- [ ] UI-B1. Chaos director and SDK hook points, nested fault stack. (A3)
-- [ ] UI-B2. Six creatures end to end: Crash, Timeout, 404, Missing file, Duplicate, Power outage. (A4)
+- [x] UI-B1. (done in Lane A, see harness/tasks.md) Chaos director and SDK hook points, nested fault stack. (A3)
+- [x] UI-B2. (done in Lane A, see harness/tasks.md) Six creatures end to end: Crash, Timeout, 404, Missing file, Duplicate, Power outage. (A4)
 - [x] UI-B3. Creature animations and the stack badge. (A3)
 - [x] UI-B4. Random chaos mode with frequency slider and seed. (A6)
 - [x] UI-B5. Mini boss schedule and warning banner. (A5)
-- [ ] UI-B6. Remaining creatures from the catalog. (A4)
+- [x] UI-B6. (done in Lane A, see harness/tasks.md) Remaining creatures from the catalog. (A4)
 
 ## Phase C: Inspect and learn
 - [x] UI-C1. Stage inspector popup with live stream, Chaos button and replay. (A2)
-- [ ] UI-C2. Rule-based reviewer: postmortem and hardening spec writer. (A9)
+- [x] UI-C2. (done in Lane A, see harness/tasks.md) Rule-based reviewer: postmortem and hardening spec writer. (A9)
 - [x] UI-C3. Wave-over-wave score delta view. (A9.4)
-- [ ] UI-C4. Optional LLM pass for suggested diffs. (A9.5)
+- [x] UI-C4. (done in Lane A, see harness/tasks.md) Optional LLM pass for suggested diffs. (A9.5)
 
 ## Phase D: Show
 - [x] UI-D1. Demo mode 3-minute script. (A10)
 - [x] UI-D2. Sound effects. (A1)
 - [x] UI-D3. Perf check at 5 lanes, 60 fps. (Acceptance 1)
 - [ ] UI-D4. Record the video, write the Devpost text.
+
+## Open list (Lane B)
+Only two rows remain open: UI-D4 (video and Devpost text) and UI-ART5 (keep docs/ASSETS.md current). Cut rule from docs/WINNING.md: anything not working at the end of Nov 29 is cut, except the hero crash, the arena, the report, the loop proof and the video.
 
 ## Cut line
 If time is short, ship A, B1 to B5, C1, C2, D1. Everything else is polish.
