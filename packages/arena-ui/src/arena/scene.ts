@@ -10,6 +10,7 @@ import { captionOf, creatureFrame, shown, spriteOf, MAX_SHOWN, type CreatureVM }
 import { drawCreature } from '../creatures/draw';
 import { survivedAge } from './boss';
 import { equipPhase, flightPoint, PART_LABEL, wornParts } from './equip';
+import { dropPoint, dropProgress, queueLeft, queueShape } from './order';
 import { cobweb, flagstoneFloor, fogTexture, laneVignette, torchPools } from './crypt';
 
 export const STAGE_W = 1920;
@@ -266,12 +267,15 @@ function stats(ctx: Ctx, b: LaneBox, l: LaneVM): void {
   });
   txt(ctx, `↻ repeats ${l.counts.repeats}`, x, y + 70, 16, l.counts.repeats > 0 ? C.fail : C.muted, 'left', MONO, '700');
   txt(ctx, `⚰ parked ${l.counts.parked}`, x, y + 92, 16, l.counts.parked > 0 ? C.ghost : C.muted, 'left', MONO, '600');
-  // upcoming scrolls, max 4 plus +n
-  const left = Math.max(0, l.ordersTotal - l.orderIndex);
-  for (let i = 0; i < Math.min(4, left); i++) scroll(ctx, x + 200 + i * 20, y + 8, 0.45, `${l.lane}${i}`, false);
-  if (left > 4) txt(ctx, `+${left - 4}`, x + 200 + 4 * 20 + 6, y + 50, 14, C.muted, 'left', MONO, '700');
+  // order queue: parchment scrolls waiting to be picked up, max 4 plus +n (UI-S6)
+  const q = queueShape(queueLeft(l.orderIndex, l.ordersTotal));
+  txt(ctx, 'QUEUE ' + (q.shown + q.more), x + 200, y + 4, 12, C.muted, 'left', MONO, '700');
+  for (let i = q.shown - 1; i >= 0; i--) scroll(ctx, x + QUEUE_X + i * 20, y + 14, 0.5, l.lane + '' + i, false);
+  if (q.more > 0) txt(ctx, `+${q.more}`, x + QUEUE_X + 4 * 20 + 6, y + 56, 14, C.muted, 'left', MONO, '700');
 }
 
+/** Top-left of the first queued scroll, relative to the stats column. */
+const QUEUE_X = 200;
 function scroll(ctx: Ctx, x: number, y: number, s: number, seed: string, crumpled: boolean): void {
   ctx.save();
   ctx.translate(x, y); ctx.scale(s, s);
@@ -631,7 +635,17 @@ export class ArenaScene {
     if (l.mode === 'fail') txt(ctx, '✕', x, headY + size * 0.22, 26, C.fail, 'center', SANS, '800');
     // scroll in hand
     const holding = l.order && l.mode !== 'dead' && l.mode !== 'sleep' && l.mode !== 'halted' && l.mode !== 'reassembling';
-    if (holding) scroll(ctx, x + size * 0.34, feetY - size * 0.62 + (l.mode === 'fail' ? 8 : 0), size / 150, l.order ?? '', l.mode === 'fail' && l.chips.includes('failed'));
+    if (holding) {
+      const hx = x + size * 0.34, hy = feetY - size * 0.62 + (l.mode === 'fail' ? 8 : 0), hs = size / 150;
+      const dp = dropProgress(l.orderDrop, now, this.speed, this.reducedMotion);
+      if (dp >= 0) {
+        const from = { x: 1616 + QUEUE_X, y: b.top + 22 };
+        const pt = dropPoint(dp, from, { x: hx, y: hy });
+        ctx.save(); ctx.translate(pt.x, pt.y); ctx.rotate(pt.rot); ctx.translate(-pt.x, -pt.y);
+        scroll(ctx, pt.x, pt.y, hs * pt.scale, l.order ?? '', false);
+        ctx.restore();
+      } else scroll(ctx, hx, hy, hs, l.order ?? '', l.mode === 'fail' && l.chips.includes('failed'));
+    }
     if (l.mode === 'working' && !walking) workProp(ctx, l.workAnim, pose.p, x + size * 0.1, feetY - 2, size, 1548);
     if (l.cheer && now - l.cheer.since < l.cheer.dur / this.speed) {
       const big = l.cheer.dur > 400;

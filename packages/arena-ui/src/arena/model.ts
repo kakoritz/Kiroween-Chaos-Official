@@ -4,6 +4,7 @@
 import type { ArenaEvent, ArenaState, StageInfo } from '../api/types';
 import { applyBossEvent, emptyBoss, loadBoss, type BossVM } from './boss';
 import { EQUIP_LIFE_MS, type EquipVM } from './equip';
+import type { OrderDropVM } from './order';
 import { absorb, actAll, addCreature, exitAll, exitDepth, exitStage, prune, PUFF_MS, type CreatureVM } from './creatures';
 
 export type ChipState = 'pending' | 'active' | 'done' | 'replayed' | 'retrying' | 'failed' | 'dead' | 'parked' | 'quarantined';
@@ -49,6 +50,8 @@ export interface LaneVM {
   equips: EquipVM[];
   /** Last score change, for the +N pop (cosmetic). */
   scorePop: { since: number; delta: number } | null;
+  /** Scroll dropping into the hand at order_start (UI-S6). Cosmetic. */
+  orderDrop?: OrderDropVM | null;
 }
 
 export interface LedgerCell { rows: number; repeats: number }
@@ -148,7 +151,7 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
       break;
     case 'order_start':
       resetChips(l); l.order = ev.order ?? null; l.orderIndex = num(d.index); l.ordersTotal = num(d.total);
-      l.stageIndex = 0; l.dirty = false; setMode(l, 'idle', now);
+      l.stageIndex = 0; l.dirty = false; l.orderDrop = { since: now }; setMode(l, 'idle', now);
       break;
     case 'stage_start': {
       const attempt = num(d.attempt, 1);

@@ -56,7 +56,7 @@ Lane B owns: A3, the rank board and ledger panel views, B3, the B4 slider UI, th
 - [x] UI-S3. Gear overlays for the five resilience parts. Gear list comes from `/api/state`.
 - [x] UI-S4. Equip animation when `part_added` arrives: gear flies to the skeleton, score ticks up.
 - [x] UI-S5. Creature sprites and animations from the table in design.md. Start with Reaper, Zombie, Ghost, Wraith, Poltergeist, Doppelganger, plus the Lich boss.
-- [ ] UI-S6. Orders as parchment scrolls: queue in the lane stats area, one drops into the hand at `order_start`.
+- [x] UI-S6. Orders as parchment scrolls: queue in the lane stats area, one drops into the hand at `order_start`.
 - [ ] UI-S7. Sound set generated in code: bone rattle, creak, wail, thud, sting.
 
 
