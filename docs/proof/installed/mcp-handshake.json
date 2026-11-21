@@ -1,0 +1,15 @@
+{
+  "server": {
+    "name": "haunt-mcp",
+    "version": "0.1.0"
+  },
+  "protocolVersion": "2024-11-05",
+  "tools": [
+    "haunt_define",
+    "haunt_sweep",
+    "haunt_ramp",
+    "haunt_report",
+    "haunt_badge"
+  ],
+  "powerAndAppUseSameServerArgs": true
+}

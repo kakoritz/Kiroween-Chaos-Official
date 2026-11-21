@@ -12,4 +12,4 @@ Use:
 2. Kiro: Powers panel, Add Custom Power, Import power from a folder, pick `kiro-power/`.
 3. The server command is relative (`tools/run-ts.mjs`), so Kiro must start it with the repository root as working directory.
 
-Servers bind 127.0.0.1 only. Nothing here is published or installed. The install check is task H6.9.
+Servers bind 127.0.0.1 only. Nothing here is published or installed. The manifest command was verified with a local stdio handshake (`docs/proof/installed/`). The import into the Kiro IDE itself is still to be done by the owner.
