@@ -6,12 +6,15 @@ import { frameFor } from '../rig/skeleton';
 import { drawSkeleton } from '../rig/draw';
 import { TIER_IDS, TIER_LABEL, type Tier } from '../rig/dress';
 import { stationX, type ArenaVM, type ChipState, type LaneVM } from './model';
+import { captionOf, creatureFrame, shown, spriteOf, MAX_SHOWN, type CreatureVM } from './creatures';
+import { drawCreature } from '../creatures/draw';
 
 export const STAGE_W = 1920;
 export const STAGE_H = 1080;
 const HEADER = 72;
 const LANES_H = 768;
 const TRACK_X0 = 260;
+const CREATURE_X1 = 1500;
 
 const C = {
   bg: '#0d0b14', stone: '#1c1830', stone2: '#2a2446', torch: '#ff9a3c', bone: '#efe6d2', text: '#f3ecff',
@@ -345,6 +348,8 @@ export class ArenaScene {
   /** Divides animation durations (wave speed). */
   speed = 1;
   private lite = false;
+  /** prefers-reduced-motion: creatures appear in place, no travel or shake. */
+  reducedMotion = false;
 
   constructor(private readonly ctx: Ctx) {}
 
@@ -442,9 +447,70 @@ export class ArenaScene {
       if (l.progressLabel && l.mode === 'working') { ctx.font = `600 13px ${MONO}`; txt(ctx, fit(ctx, l.progressLabel, 130), bx + 78, by + 7, 13, C.muted, 'left', MONO, '600'); }
     }
     this.drawSkeleton(ctx, vm, l, b, now);
+    this.drawCreatures(ctx, l, b, now);
     ctx.restore();
   }
 
+  /** Creature stack (ui-spec section 7): row above the skeleton, newest on the right, 70% scale when stacked. */
+  private drawCreatures(ctx: Ctx, l: LaneVM, b: LaneBox, now: number): void {
+    const list = shown(l, now, this.speed);
+    if (!list.length) return;
+    const skelX = this.walkers.get(l.lane)?.x ?? TRACK_X0 + 40;
+    const stacked = list.length > 1;
+    const baseX = Math.max(TRACK_X0 + 40, Math.min(skelX + 84, CREATURE_X1 - 56 * (list.length - 1)));
+    const fromLeft = baseX < (TRACK_X0 + CREATURE_X1) / 2;
+    list.forEach((c, i) => {
+      const fr = creatureFrame(c, now, this.speed, this.reducedMotion);
+      const scale = c.inner ? 0.55 : stacked ? 0.7 : 1;
+      const size = 56 * scale;
+      const hx = c.inner ? skelX : baseX + i * 56;
+      const hy = c.inner ? b.top + b.h * 0.8 - 80 : b.top + 74 - (stacked ? 0 : 6);
+      const e = 1 - Math.pow(1 - fr.enter, 3);
+      const x = hx + (fromLeft ? -1 : 1) * (1 - e) * 360;
+      const y = hy - (1 - e) * 90 - fr.exit * 14 + (fr.exit === 0 && !this.reducedMotion ? Math.sin(now / 420 + i) * 3 : 0);
+      const shake = !this.reducedMotion && fr.acted && fr.p < 0.9 ? Math.sin(now / 24) * 1.5 : 0;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, 1 - fr.exit) * (e < 1 ? 0.35 + 0.65 * e : 1);
+      ctx.translate(x + shake, y);
+      ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(0, size / 2 + 3, size * 0.28, 4, 0, 0, Math.PI * 2); ctx.fill();
+      const id = spriteOf(c.id);
+      if (id) {
+        if (c.shrug && !this.reducedMotion) ctx.rotate(Math.sin(((now - (c.actAt ?? now)) / 500) * Math.PI * 4) * 0.12);
+        drawCreature(ctx, id, fr.anim, fr.p, { silhouette: false, size });
+      } else {
+        ctx.filter = 'hue-rotate(160deg)';
+        drawCreature(ctx, 'ghost', 'idle', fr.p, { silhouette: false, size });
+        ctx.filter = 'none';
+      }
+      ctx.restore();
+      this.creatureTags(ctx, c, x, y, size, now, fr.exit);
+    });
+    if (l.creatures.length > MAX_SHOWN) txt(ctx, '+' + (l.creatures.length - MAX_SHOWN), baseX - 40, b.top + 74, 13, C.muted, 'center', MONO, '700');
+  }
+
+  /** Fault caption, dice for random chaos, hourglass for a deferred fault. */
+  private creatureTags(ctx: Ctx, c: CreatureVM, x: number, y: number, size: number, now: number, exit: number): void {
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, 1 - exit);
+    const cap = captionOf(c.fault || c.id);
+    ctx.font = '700 11px ' + MONO;
+    const w = Math.ceil(ctx.measureText(cap).width) + 10;
+    rr(ctx, x - w / 2, y + size / 2 + 6, w, 15, 4); ctx.fillStyle = 'rgba(10,8,18,0.82)'; ctx.fill();
+    ctx.lineWidth = 1.5; ctx.strokeStyle = C.out; ctx.stroke();
+    txt(ctx, cap, x, y + size / 2 + 14, 11, C.warn, 'center', MONO, '700');
+    if (c.random) {
+      const dx = x + size * 0.38, dy = y - size * 0.42;
+      rr(ctx, dx - 7, dy - 7, 14, 14, 3); ctx.fillStyle = C.bone; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = C.out; ctx.stroke();
+      ctx.fillStyle = C.out;
+      for (const [px, py] of [[-3, -3], [0, 0], [3, 3]] as const) { ctx.beginPath(); ctx.arc(dx + px, dy + py, 1.4, 0, Math.PI * 2); ctx.fill(); }
+    }
+    if (c.deferred && (c.actAt === null || now < c.actAt)) {
+      const hx = x - size * 0.38, hy = y - size * 0.42;
+      ctx.beginPath(); ctx.moveTo(hx - 6, hy - 8); ctx.lineTo(hx + 6, hy - 8); ctx.lineTo(hx, hy); ctx.lineTo(hx + 6, hy + 8); ctx.lineTo(hx - 6, hy + 8); ctx.lineTo(hx, hy); ctx.closePath();
+      ctx.fillStyle = C.ghost; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = C.out; ctx.stroke();
+    }
+    ctx.restore();
+  }
   private drawSkeleton(ctx: Ctx, vm: ArenaVM, l: LaneVM, b: LaneBox, now: number): void {
     const size = Math.min(88, b.h * 0.5);
     const feetY = b.top + b.h * 0.8 + 4;
@@ -524,7 +590,7 @@ function sleepers(vm: ArenaVM, now: number): LaneVM[] {
       chips: Array<ChipState>(vm.stages.length).fill('pending'), attempts: Array<number>(vm.stages.length).fill(0),
       stageIndex: 0, progress: 0, progressLabel: '', workAnim: '', order: null, orderIndex: 0, ordersTotal: 0, score: 0,
       counts: { completed: 0, failed: 0, parked: 0, quarantined: 0, repeats: 0 }, depth: 0, action: '', restartInMs: 0, cheer: null, dirty: false,
-      ledger: {}, keyMax: {}, flash: {},
+      ledger: {}, keyMax: {}, flash: {}, creatures: [],
     } satisfies LaneVM;
     return l;
   });

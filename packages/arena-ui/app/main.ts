@@ -74,6 +74,9 @@ function showError(e: unknown) {
 const vm = emptyVM();
 const queue: ArenaEvent[] = [];
 const scene = new ArenaScene(canvas.getContext('2d')!);
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+scene.reducedMotion = reduceMotion.matches;
+reduceMotion.addEventListener('change', () => { scene.reducedMotion = reduceMotion.matches; });
 const rankBoard = new RankBoard($('rank-body'));
 const ledgerPanel = new LedgerPanel($('ledger-body'));
 const rankEl = $('rank');

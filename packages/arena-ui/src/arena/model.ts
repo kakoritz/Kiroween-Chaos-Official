@@ -2,6 +2,7 @@
 // `now` is passed in by the caller and only stamps cosmetic timers (pose changes, cheer length).
 // Order, counts, scores and outcomes come from events alone (ui-spec section 5).
 import type { ArenaEvent, ArenaState, StageInfo } from '../api/types';
+import { absorb, actAll, addCreature, exitAll, exitDepth, exitStage, prune, PUFF_MS, type CreatureVM } from './creatures';
 
 export type ChipState = 'pending' | 'active' | 'done' | 'replayed' | 'retrying' | 'failed' | 'dead' | 'parked' | 'quarantined';
 export type SkelMode = 'sleep' | 'idle' | 'working' | 'fail' | 'recovering' | 'dead' | 'reassembling' | 'halted' | 'done';
@@ -38,6 +39,8 @@ export interface LaneVM {
   keyMax: Record<string, number>;
   /** Timestamp of the last repeat per kind (cosmetic flash). */
   flash: Record<string, number>;
+  /** Creature stack (UI-B3), oldest first. Not restorable from a snapshot. */
+  creatures: CreatureVM[];
 }
 
 export interface LedgerCell { rows: number; repeats: number }
@@ -59,7 +62,7 @@ export function newLane(n: number, stageCount: number, now: number): LaneVM {
     stageIndex: 0, progress: 0, progressLabel: '', workAnim: '', order: null, orderIndex: 0, ordersTotal: 0,
     score: 0, counts: { completed: 0, failed: 0, parked: 0, quarantined: 0, repeats: 0 },
     depth: 0, action: '', restartInMs: 0, cheer: null, dirty: false,
-    ledger: {}, keyMax: {}, flash: {},
+    ledger: {}, keyMax: {}, flash: {}, creatures: [],
   };
 }
 
@@ -119,6 +122,7 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
   const l = laneOf(vm, ev);
   if (!l) return;
   const si = ev.stage ? vm.stages.findIndex((s) => s.id === ev.stage) : -1;
+  prune(l, now);
   switch (ev.type) {
     case 'lane_ready':
       l.tier = str(d.tier, l.tier); l.label = str(d.label, l.label);
@@ -151,22 +155,26 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
       if (si >= 0) l.chips[si] = d.skipped === true ? 'replayed' : 'done';
       l.progress = 100;
       if (d.skipped !== true) l.cheer = { since: now, dur: 300 };
+      if (ev.stage) exitStage(l, now, ev.stage);
       setMode(l, 'idle', now);
       break;
     case 'stage_fail':
+      actAll(l, now);
       if (si >= 0) l.chips[si] = 'failed';
       setMode(l, 'fail', now);
       break;
-    case 'chaos': l.depth = num(d.depth, l.depth + 1); break;
-    case 'chaos_absorbed': l.depth = Math.max(0, l.depth - 1); break;
+    case 'chaos': l.depth = num(d.depth, l.depth + 1); addCreature(l, now, d, ev.stage ?? vm.stages[l.stageIndex]?.id ?? ''); break;
+    case 'chaos_absorbed': l.depth = Math.max(0, l.depth - 1); absorb(l, now, typeof d.creature === 'string' ? d.creature : undefined); break;
     case 'process_dead': {
+      actAll(l, now, true); exitAll(l, now, { dur: PUFF_MS, keepKillers: true });
       for (let i = 0; i < l.chips.length; i++) if (l.chips[i] === 'active' || l.chips[i] === 'retrying') l.chips[i] = 'dead';
       l.restartInMs = num(d.restartInMs); setMode(l, 'dead', now);
       break;
     }
-    case 'process_up': l.depth = 0; setMode(l, 'reassembling', now); break;
-    case 'recover_start': l.action = str(d.action); setMode(l, 'recovering', now); break;
+    case 'process_up': l.depth = 0; exitAll(l, now); setMode(l, 'reassembling', now); break;
+    case 'recover_start': l.action = str(d.action); actAll(l, now); setMode(l, 'recovering', now); break;
     case 'recover_done':
+      exitDepth(l, now, num(d.depth, l.depth));
       l.depth = Math.max(0, num(d.depth, l.depth) - 1);
       setMode(l, l.chips[l.stageIndex] === 'active' || l.chips[l.stageIndex] === 'retrying' ? 'working' : 'idle', now);
       break;
@@ -186,22 +194,22 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
       break;
     }
     case 'order_done':
-      l.counts.completed += 1; l.dirty = d.clean === false;
+      l.counts.completed += 1; l.dirty = d.clean === false; exitAll(l, now);
       l.cheer = { since: now, dur: 700 }; setMode(l, 'idle', now);
       break;
     case 'order_failed':
-      l.counts.failed += 1;
+      l.counts.failed += 1; exitAll(l, now, { delay: 600 });
       { const fi = vm.stages.findIndex((s) => s.id === d.stage); if (fi >= 0) l.chips[fi] = 'failed'; }
       setMode(l, 'fail', now);
       break;
     case 'order_parked':
-      l.counts.parked += 1; if (si >= 0) l.chips[si] = 'parked'; setMode(l, 'idle', now);
+      l.counts.parked += 1; exitAll(l, now, { delay: 600 }); if (si >= 0) l.chips[si] = 'parked'; setMode(l, 'idle', now);
       break;
     case 'order_resumed': l.counts.parked = Math.max(0, l.counts.parked - 1); break;
     case 'order_quarantined':
-      l.counts.quarantined += 1; if (si >= 0) l.chips[si] = 'quarantined'; setMode(l, 'idle', now);
+      l.counts.quarantined += 1; exitAll(l, now, { delay: 600 }); if (si >= 0) l.chips[si] = 'quarantined'; setMode(l, 'idle', now);
       break;
-    case 'lane_halted': setMode(l, 'halted', now); break;
+    case 'lane_halted': exitAll(l, now, { delay: 600 }); setMode(l, 'halted', now); break;
     case 'score': l.score = num(d.total, l.score + num(d.delta)); break;
     default: break;
   }
