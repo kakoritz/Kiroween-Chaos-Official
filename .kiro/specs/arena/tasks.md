@@ -42,7 +42,7 @@ Lane B owns: A3, the rank board and ledger panel views, B3, the B4 slider UI, th
 ## Win-the-hackathon items for Lane B (see docs/WINNING.md)
 - [x] UI-W1. UI works in all three contract modes: `mock`, `live`, `browser`. No mode-specific code.
 - [x] UI-W2. A mode badge and an "Open in demo mode" button so judges land on a running show in under 5 seconds.
-- [ ] UI-W3. App switcher: Haunted Orders and Haunted Inbox, same arena, different stage names and sprites. Stage names come from `/api/state`, not hard-coded.
+- [x] UI-W3. App switcher: Haunted Orders and Haunted Inbox, same arena, different stage names and sprites. Stage names come from `/api/state`, not hard-coded.
 - [x] UI-W4. Report viewer with the before and after (wave 1 vs wave 2) side by side.
 - [ ] UI-W5. Kiro Crew app page that hosts the arena (see harness H6.9).
 - [ ] UI-W6. Polish pass: consistent palette, sound with a mute button, motion that follows reduced-motion, readable at 1080p video capture.

@@ -7,6 +7,7 @@ import { EventTicker } from '../src/arena/ticker';
 import { StageInspector, chipAt } from '../src/arena/inspector';
 import { BossBar, bossAnnouncement } from '../src/arena/boss';
 import { ChaosModeControl, readChaosState } from '../src/arena/chaosmode';
+import { AppSwitcher, currentApp } from '../src/arena/appswitch';
 import { ArenaSound } from '../src/sound';
 import { ApiError, createApi, resolveHttpBase, type ArenaApi, type ArenaEvent, type ConnectionStatus, type HauntInPage } from '../src/api';
 
@@ -19,6 +20,7 @@ root.innerHTML = `
     <header class="hdr">
       <span class="logo">HAUNT</span>
       <span class="wave" id="wave">Wave -</span>
+      <div id="app-switch"></div>
       <div id="chaos-mode"></div>
       <span class="spacer"></span>
       <span class="total" id="total" title="Total score"></span>
@@ -62,6 +64,7 @@ let lastSeq = 0;
 let waveNo = 0;
 let api: ArenaApi;
 let chaosCtl: ChaosModeControl;
+let appSwitch: AppSwitcher | null = null;
 let demoRunning = false;
 let waveRunning = false;
 let chainDemo = false;
@@ -165,6 +168,7 @@ async function loadState() {
     mode = String(s.mode);
     const cs = readChaosState(s);
     if (cs) chaosCtl.adopt(cs);
+    appSwitch?.setActive(currentApp(s));
     waveNo = s.wave?.n ?? 0;
     waveRunning = !!s.wave?.running;
     demoRunning = !!s.demo?.running;
@@ -204,7 +208,21 @@ async function boot() {
     try { chainDemo = false; await api.stopDemo(); demoRunning = false; paintDemo(); } catch (e) { showError(e); }
   });
 
+  appSwitch = new AppSwitcher($('app-switch'), {
+    getApps: () => api.getApps(),
+    setApp: (id) => api.setApp(id),
+    stopRunning: async () => {
+      chainDemo = false;
+      if (demoRunning) { await api.stopDemo(); demoRunning = false; }
+      if (waveRunning) { await api.stopWave(); waveRunning = false; }
+      paintDemo();
+    },
+    reload: loadState,
+    onError: showError,
+  });
+
   await loadState();
+  void appSwitch.load(currentApp(await api.getState().catch(() => null)));
   api.subscribe({
     onEvent,
     onStatus: (s) => { status = s; paintBadge(); },

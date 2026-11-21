@@ -143,3 +143,6 @@ html, body { overflow: hidden; }
 .insp-line--warn { color: var(--warn); }
 .insp-line--error { color: var(--fail); }
 .insp-foot { display: flex; gap: 12px; padding: 12px 16px; border-top: 2px solid var(--stone-2); }
+
+.as { display: inline-flex; align-items: center; gap: 8px; }
+.as-label { color: var(--muted); font-size: 14px; letter-spacing: 0.14em; text-transform: uppercase; }
