@@ -80,10 +80,10 @@ H0 is complete only when all of these are done:
 - [x] H0.9 Repo scaffolding per `docs/DEV-SETUP.md`: workspaces, TypeScript, Vitest, CI, `npm run demo`.
 
 Engine detail tasks (map to engine/design.md sections):
-- [ ] E1 Order generator and per-lane provider namespace (1, 2).
-- [ ] E2 Provider with key semantics, ledger JSONL, `_fault` admin (2).
-- [ ] E3 Journal JSONL with fsync, torn-line tolerance, replay (3).
-- [ ] E4 SDK `step()` and `effect()` with the four crash points and parts instrumentation (3, 4).
+- [x] E1 Order generator and per-lane provider namespace (1, 2). (done via H1.3, PR #10, and H1.5b, PR #13; audited 2026-11-20)
+- [x] E2 Provider with key semantics, ledger JSONL, `_fault` admin (2). (done via H1.1, PR #8; audited 2026-11-20)
+- [x] E3 Journal JSONL with fsync, torn-line tolerance, replay (3). (done via H1.2, PR #9; audited 2026-11-20)
+- [x] E4 SDK `step()` and `effect()` with the four crash points and parts instrumentation (3, 4). (done via H1.2, PR #9; audited 2026-11-20)
 - [x] E5 Five bot files `apps/haunted-orders/src/bots/<tier>.ts` (4).
 - [ ] E6 Fault catalog with deferral, nesting stack, restart delays (5).
 - [ ] E7 Random mode and boss schedule (5).
