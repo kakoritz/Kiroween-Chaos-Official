@@ -9,7 +9,7 @@ import { FIXTURES } from '../sim/fixtures';
 import { Hub, BUFFER_MAX } from './hub';
 import { OutcomeTable } from './outcomes';
 import { ChaosSim, DEMO_SCRIPTS, MockError, Player, fixtureFor, scaledWave } from './play';
-import { hardening, laneLog, laneOrders, ledger, postmortem, stageDetail, waveCompare, waveReport, wavesList } from './queries';
+import { hardening, laneLaps, laneLog, laneOrderRecord, laneOrders, ledger, pendingDecision, postmortem, stageDetail, waveCompare, waveLaps, waveReport, waveStars, wavesList } from './queries';
 
 export { DEMO_SCRIPTS };
 export const SPEEDS = [0.5, 1, 2, 4];
@@ -171,11 +171,20 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
         if (!APPS[hub.app].stages.some((s) => s.id === m![2])) return fail(res, 400, 'bad_request', `unknown stage ${m[2]}`);
         return send(res, 200, stageDetail(hub, lane, m[2], url.searchParams.get('order') ?? undefined));
       }
-      m = path.match(/^\/api\/lane\/(\d+)\/(log|orders)$/);
+      m = path.match(/^\/api\/lane\/(\d+)\/order\/([\w:.-]+)$/);
+      if (m) {
+        const lane = Number(m[1]);
+        if (lane < 1 || lane > 5) return fail(res, 400, 'bad_lane', 'lane must be 1 to 5');
+        const rec = laneOrderRecord(hub, lane, decodeURIComponent(m[2]));
+        return rec ? send(res, 200, rec) : fail(res, 404, 'not_found', 'no such order on this lane');
+      }
+      m = path.match(/^\/api\/lane\/(\d+)\/(log|orders|laps)$/);
+
       if (m) {
         const lane = Number(m[1]);
         if (lane < 1 || lane > 5) return fail(res, 400, 'bad_lane', 'lane must be 1 to 5');
         if (m[2] === 'orders') return send(res, 200, laneOrders(hub, lane));
+        if (m[2] === 'laps') return send(res, 200, laneLaps(hub, lane));
         const since = url.searchParams.get('since');
         return send(res, 200, laneLog(hub, lane, url.searchParams.get('order') ?? undefined, since === null ? undefined : Number(since)));
       }
@@ -187,7 +196,14 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
         if (w.endedAt === undefined) return fail(res, 404, 'not_ready', 'wave has not ended');
         return m[2] === 'postmortem' ? send(res, 200, postmortem(hub, w), 'text/markdown') : send(res, 200, hardening(hub, w));
       }
+      m = path.match(/^\/api\/waves\/(\d+)\/(laps|stars)$/);
+      if (m) {
+        const w = hub.waves.find((x) => x.n === Number(m![1]));
+        if (!w) return fail(res, 404, 'not_ready', 'no such wave');
+        return send(res, 200, m[2] === 'laps' ? waveLaps(hub, w) : waveStars(hub, w));
+      }
       m = path.match(/^\/api\/waves\/(\d+)\/compare\/(\d+)$/);
+
       if (m) {
         const a = hub.waves.find((x) => x.n === Number(m![1]));
         const b = hub.waves.find((x) => x.n === Number(m![2]));
@@ -213,7 +229,7 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
       if (!Number.isInteger(seed)) return fail(res, 400, 'bad_request', 'seed must be an integer');
       if (tiers !== 'race' && tiers !== 'allPhoenix') return fail(res, 400, 'bad_request', 'tiers must be race or allPhoenix');
       if (!SPEEDS.includes(speed)) return fail(res, 400, 'bad_request', `speed must be one of ${SPEEDS.join(', ')}`);
-      if (pace !== 'normal' && pace !== 'show') return fail(res, 400, 'bad_request', 'pace must be normal or show');
+      if (pace !== 'normal' && pace !== 'show' && pace !== 'slow') return fail(res, 400, 'bad_request', 'pace must be normal, show or slow');
       if (app !== 'orders' && app !== 'inbox') return fail(res, 400, 'bad_request', 'app must be orders or inbox');
       if (app !== hub.app) { hub.app = app; hub.reset(); }
       const wave = startWave(scaledWave({ orders, seed, tiers, lanes, pace, app }), speed);
@@ -225,7 +241,16 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
       hub.speed = b.speed;
       return send(res, 200, { speed: b.speed });
     }
+    if (path === '/api/decision') {
+      if (!Number.isInteger(b.lane) || b.lane < 1 || b.lane > 5) return fail(res, 400, 'bad_lane', 'lane must be 1 to 5');
+      if (typeof b.order !== 'string' || typeof b.choice !== 'string') return fail(res, 400, 'bad_request', 'order and choice are required');
+      const need = pendingDecision(hub, b.lane, b.order);
+      if (!need) return fail(res, 409, 'no_decision', 'no decision is pending for that order');
+      if (!(need.detail?.options ?? []).includes(b.choice)) return fail(res, 400, 'bad_request', 'choice is not one of the options');
+      return send(res, 200, {});
+    }
     if (path === '/api/chaos') return send(res, 200, chaos.inject(b));
+
     if (path === '/api/chaos/mode') {
       if (!['off', 'manual', 'random'].includes(b.mode)) return fail(res, 400, 'bad_request', 'mode must be off, manual or random');
       if (b.frequency !== undefined && !(typeof b.frequency === 'number' && b.frequency >= 0 && b.frequency <= 1)) return fail(res, 400, 'bad_request', 'frequency must be 0 to 1');

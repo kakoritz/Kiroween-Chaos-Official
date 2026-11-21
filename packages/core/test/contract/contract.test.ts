@@ -191,3 +191,72 @@ describe('contract: mock fault hooks', () => {
 });
 
 
+
+async function waitIdle(ms = 40000): Promise<void> {
+  const t0 = Date.now();
+  while (Date.now() - t0 < ms && ((await (await get('/api/state')).json()) as any).wave?.running) await new Promise((r) => setTimeout(r, 200));
+}
+
+describe('contract v1.1: laps, order records, stars, decisions (mock)', () => {
+  mockOnly('typo-redo replays, then laps, order record, wave laps and stars answer', async () => {
+    await post('/api/wave/stop');
+    await post('/_mock/reset');
+    expect((await post('/api/demo/start', { script: 'typo-redo', speed: 4 })).status).toBe(200);
+    await waitIdle();
+    const wave = ((await (await get('/api/state')).json()) as any).wave.n;
+    const laps = (await (await get('/api/lane/1/laps')).json()) as any[];
+    expect(laps.length).toBeGreaterThanOrEqual(2);
+    for (const l of laps) {
+      expect(typeof l.order).toBe('string');
+      expect(typeof l.lap.ms).toBe('number');
+      expect(l.review.stars).toBeGreaterThanOrEqual(1);
+    }
+    const rec = (await (await get(`/api/lane/1/order/${laps[0].order}`)).json()) as any;
+    expect(rec.order).toBe(laps[0].order);
+    expect(rec.outcome).toBe('done');
+    expect(rec.lap.ms).toBe(laps[0].lap.ms);
+    expect(rec.stages.length).toBeGreaterThan(0);
+    expect(rec.stages[0]).toHaveProperty('recoverable');
+    const wl = (await (await get(`/api/waves/${wave}/laps`)).json()) as any;
+    expect(wl.lanes[0].lane).toBe(1);
+    expect(wl.lanes[0].laps.length).toBe(laps.length);
+    const ws = (await (await get(`/api/waves/${wave}/stars`)).json()) as any;
+    const last = ws.lanes[0].series.at(-1);
+    expect(last.cumMax).toBe(5 * ws.lanes[0].series.length);
+    expect(typeof last.cumStars).toBe('number');
+  });
+
+  mockOnly('unknown order, bad lane and unknown wave answer errors', async () => {
+    expect((await get('/api/lane/1/order/nope')).status).toBe(404);
+    expect(await errCode(await get('/api/lane/9/order/x'))).toBe('bad_lane');
+    expect(await errCode(await get('/api/lane/9/laps'))).toBe('bad_lane');
+    const r = await get('/api/waves/999/laps');
+    expect(r.status).toBe(404);
+    expect(await errCode(r)).toBe('not_ready');
+    expect(await errCode(await get('/api/waves/999/stars'))).toBe('not_ready');
+  });
+
+  mockOnly('POST /api/decision: 409 no_decision when nothing pending, 400 on bad input', async () => {
+    await post('/api/wave/stop');
+    await post('/_mock/reset');
+    const r = await post('/api/decision', { lane: 1, order: 'ord-0001', choice: 'refund' });
+    expect(r.status).toBe(409);
+    expect(await errCode(r)).toBe('no_decision');
+    expect(await errCode(await post('/api/decision', { lane: 9, order: 'x', choice: 'refund' }))).toBe('bad_lane');
+    expect(await errCode(await post('/api/decision', { lane: 1 }))).toBe('bad_request');
+  });
+
+  mockOnly('POST /api/decision answers 200 while a decision is pending', async () => {
+    await post('/api/wave/stop');
+    await post('/_mock/reset');
+    expect((await post('/api/demo/start', { script: 'typo-redo', speed: 4 })).status).toBe(200);
+    let ok: Response | undefined;
+    const t0 = Date.now();
+    while (Date.now() - t0 < 30000 && (!ok || ok.status !== 200)) {
+      ok = await post('/api/decision', { lane: 1, order: 'ord-0002', choice: 'refund' });
+      if (ok.status !== 200) await new Promise((r) => setTimeout(r, 50));
+    }
+    expect(ok!.status).toBe(200);
+    await post('/api/demo/stop');
+  });
+});

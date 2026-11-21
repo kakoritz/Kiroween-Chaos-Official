@@ -143,3 +143,113 @@ export function hardening(hub: Hub, w: WaveRecord) {
     files: [{ path: `.haunt/hardening/wave-${w.n}.md`, content: `# Hardening spec (sample)\n\nFinding: ${top?.summary ?? 'none'}.\nAdd the ${part} part to the affected stage.\n` }],
   };
 }
+
+// ---- Contract v1.1 (contract/V1_1.md section 9): order records, laps, stars, decisions. Derived from the buffer.
+const ENDS = new Set(['order_done', 'order_failed']);
+const ISSUE_TYPES = new Set(['stage_fail', 'process_dead', 'repeat', 'order_parked']);
+
+/** The events of one lane from the last `order_start` of `order` up to its `review` (or last order event). */
+function orderWindow(hub: Hub, lane: number, order: string, wave?: number): HauntEvent[] {
+  const mine = hub.buffer.filter((e) => e.lane === lane && (wave === undefined || e.wave === wave));
+  let from = -1;
+  mine.forEach((e, i) => { if (e.type === 'order_start' && e.order === order) from = i; });
+  if (from < 0) return [];
+  const out: HauntEvent[] = [];
+  for (let i = from; i < mine.length; i++) {
+    const e = mine[i];
+    if (i > from && e.type === 'order_start') break;
+    out.push(e);
+    if (e.type === 'review' && e.order === order) break;
+  }
+  return out;
+}
+
+export function laneOrderRecord(hub: Hub, lane: number, order: string) {
+  const win = orderWindow(hub, lane, order);
+  if (win.length === 0) return undefined;
+  const end = win.find((e) => ENDS.has(e.type));
+  const review = win.find((e) => e.type === 'review');
+  const outcome = laneOrders(hub, lane).find((o) => o.order === order)?.outcome ?? 'active';
+  const stages = new Map<string, { stage: string; status: string; attempts: number; retries: number; recoverable: boolean; issues: number; downtimeMs: number; ms: number; recoveries: { startTs: number; endTs: number; ms: number; action: string; depth: number }[]; open?: number; failed: boolean }>();
+  const get = (s: string) => {
+    let r = stages.get(s);
+    if (!r) { r = { stage: s, status: 'pending', attempts: 0, retries: 0, recoverable: false, issues: 0, downtimeMs: 0, ms: 0, recoveries: [], failed: false }; stages.set(s, r); }
+    return r;
+  };
+  let cur: string | undefined;
+  const pending: HauntEvent[] = [];
+  for (const e of win) {
+    const s = e.stage ?? cur;
+    if (e.type === 'stage_start' && e.stage) {
+      const r = get(e.stage);
+      r.attempts++; r.status = 'running'; r.open = e.ts; cur = e.stage;
+    } else if ((e.type === 'stage_done' || e.type === 'stage_fail') && e.stage) {
+      const r = get(e.stage);
+      if (r.open !== undefined) { r.ms += Math.max(0, e.ts - r.open); r.open = undefined; }
+      if (e.type === 'stage_done') { r.status = e.detail?.skipped ? 'skipped' : 'done'; if (r.failed) r.recoverable = true; }
+      else { r.status = 'failed'; r.failed = true; }
+      cur = e.stage;
+    }
+    if (s && ISSUE_TYPES.has(e.type)) get(s).issues++;
+    if (s && e.type === 'breaker' && e.detail?.state === 'open') get(s).issues++;
+    if (e.type === 'recover_start') pending.push(e);
+    if (e.type === 'recover_done') {
+      const st = pending.pop();
+      const ms = e.detail?.ms ?? (st ? e.ts - st.ts : 0);
+      const action = e.detail?.action ?? st?.detail?.action ?? 'unknown';
+      if (s) {
+        const r = get(s);
+        r.recoveries.push({ startTs: e.ts - ms, endTs: e.ts, ms, action, depth: e.detail?.depth ?? 0 });
+        r.downtimeMs += ms;
+        if (action === 'retry' || action === 'backoff' || action === 'restart') r.retries++;
+      }
+    }
+  }
+  const startTs = win[0].ts;
+  const endTs = (end ?? win[win.length - 1]).ts;
+  return {
+    order, outcome, startTs, endTs: end ? endTs : null,
+    lap: end?.detail?.lap ?? null, review: review?.detail ?? null,
+    stages: [...stages.values()].map(({ open: _o, failed: _f, ...r }) => r),
+  };
+}
+
+export function laneLaps(hub: Hub, lane: number, wave = hub.wave?.n) {
+  const out: { order: string; outcome: string; lap: unknown; review: unknown }[] = [];
+  const evs = hub.buffer.filter((e) => e.lane === lane && (wave === undefined || e.wave === wave));
+  const reviews = new Map<string, unknown>();
+  for (const e of evs) if (e.type === 'review' && e.order) reviews.set(e.order, e.detail);
+  for (const e of evs) {
+    if (!ENDS.has(e.type) || !e.order) continue;
+    out.push({ order: e.order, outcome: e.type === 'order_done' ? 'done' : 'cancelled', lap: e.detail?.lap ?? null, review: reviews.get(e.order) ?? null });
+  }
+  return out;
+}
+
+const waveLanes = (hub: Hub, w: WaveRecord): number[] => [...new Set(waveEvents(hub, w).filter((e) => e.lane !== undefined).map((e) => e.lane as number))].sort((a, b) => a - b);
+
+export function waveLaps(hub: Hub, w: WaveRecord) {
+  return { lanes: waveLanes(hub, w).map((lane) => ({ lane, tier: hub.laneAt(lane)?.tier ?? `lane-${lane}`, laps: laneLaps(hub, lane, w.n) })) };
+}
+
+export function waveStars(hub: Hub, w: WaveRecord) {
+  return {
+    lanes: waveLanes(hub, w).map((lane) => ({
+      lane,
+      series: waveEvents(hub, w).filter((e) => e.lane === lane && e.type === 'review').map((e) => ({
+        order: e.order, stars: e.detail?.stars, cumStars: e.detail?.cum?.stars, cumMax: e.detail?.cum?.max,
+      })),
+    })),
+  };
+}
+
+/** The open `decision_needed` of a lane/order, if no `decision_made` followed it. */
+export function pendingDecision(hub: Hub, lane: number, order: string): HauntEvent | undefined {
+  let open: HauntEvent | undefined;
+  for (const e of hub.buffer) {
+    if (e.lane !== lane || e.order !== order) continue;
+    if (e.type === 'decision_needed') open = e;
+    else if (e.type === 'decision_made') open = undefined;
+  }
+  return open;
+}

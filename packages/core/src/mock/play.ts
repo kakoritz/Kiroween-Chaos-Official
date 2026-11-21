@@ -19,11 +19,11 @@ export const fixtureFor = (script: string): string | undefined => {
   return name in FIXTURES ? name : undefined;
 };
 
-export interface WaveParams { orders: number; seed: number; tiers: 'race' | 'allPhoenix'; lanes: number; pace: 'normal' | 'show'; app: AppId }
+export interface WaveParams { orders: number; seed: number; tiers: 'race' | 'allPhoenix'; lanes: number; pace: 'normal' | 'show' | 'slow'; app: AppId }
 
 /** A scaled wave: the lane planner run with the requested orders, lanes, tiers and pace (no faults). */
 export function scaledWave(p: WaveParams): HauntEvent[] {
-  const spec = { app: p.app, tiers: laneTiers(p.lanes, p.tiers), tiersMode: p.tiers, orders: p.orders, seed: p.seed, pace: (p.pace === 'show' ? 2 : 1) as 1 | 2 };
+  const spec = { app: p.app, tiers: laneTiers(p.lanes, p.tiers), tiersMode: p.tiers, orders: p.orders, seed: p.seed, pace: (p.pace === 'normal' ? 1 : 2) as 1 | 2 };
   return assignSeq(assembleWave(planWave(spec), BASE_TS));
 }
 
