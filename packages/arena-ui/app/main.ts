@@ -15,6 +15,8 @@ import { Splash, splashDecision, splashTarget } from '../src/onboarding/splash';
 import '../src/onboarding/splash.css';
 import { CaptionOverlay, CaptionPlayer, freezeFromQuery } from '../src/onboarding/captions';
 import '../src/onboarding/captions.css';
+import { quietBadge, waveLabel } from '../src/onboarding/polish';
+import { SPLASH_TAGLINE } from '../src/onboarding/splash';
 import { Tour, tourRequested } from '../src/onboarding/tour';
 import '../src/onboarding/tour.css';
 import { ApiError, createApi, resolveHttpBase, type ArenaApi, type ArenaEvent, type ConnectionStatus, type HauntInPage } from '../src/api';
@@ -27,7 +29,8 @@ root.innerHTML = `
     <canvas id="arena" width="1920" height="1080" aria-label="The haunted arena" role="img"></canvas>
     <header class="hdr">
       <span class="logo">HAUNT</span>
-      <span class="wave" id="wave">Wave -</span>
+      <span class="tagline">${SPLASH_TAGLINE}</span>
+      <span class="wave" id="wave"></span>
       <div id="app-switch"></div>
       <div id="chaos-mode"></div>
       <span class="spacer"></span>
@@ -85,7 +88,7 @@ let lastDemoStart = 0;
 let demoScripts: string[] | null = null;
 
 function paintBadge() {
-  const b = modeBadge(mode, status);
+  const b = quietBadge(modeBadge(mode, status), { waveNo, demoRunning });
   badgeEl.className = `badge badge--${b.tone}`;
   badgeEl.textContent = `${b.icon} ${b.label}`;
   badgeEl.title = b.title;
@@ -207,7 +210,7 @@ function onEvent(ev: ArenaEvent) {
     waveRunning = false;
     void reconcile();
   }
-  waveEl.textContent = waveNo ? `Wave ${waveNo}` : 'Wave -';
+  waveEl.textContent = waveLabel(waveNo);
   statsEl.textContent = `${events} events received, last seq ${lastSeq}`;
   paintBadge();
   paintDemo();
@@ -224,7 +227,7 @@ async function loadState() {
     waveRunning = !!s.wave?.running;
     demoRunning = !!s.demo?.running;
     demoScripts = Array.isArray(s.demo?.scripts) ? s.demo.scripts : demoScripts;
-    waveEl.textContent = waveNo ? `Wave ${waveNo}` : 'Wave -';
+    waveEl.textContent = waveLabel(waveNo);
     queue.length = 0;
     loadSnapshot(vm, s, performance.now());
     await reconcile();

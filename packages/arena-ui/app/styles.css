@@ -166,3 +166,11 @@ body.present #demo-open, body.present #demo-big, body.present #demo-stop, body.p
 body.present #keys-pop, body.present #insp, body.present #err, body.present #stats { display: none !important; }
 .present-hint { position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 30; padding: 8px 18px; border-radius: 10px; background: rgba(28,24,48,0.92); border: 2px solid var(--stone-2); color: var(--text); font-size: 16px; opacity: 0; pointer-events: none; transition: opacity 0.4s; }
 .present-hint.on { opacity: 1; }
+/* First-impression polish (ON-U4): one tagline in the header, bigger text for video capture. */
+.tagline { color: var(--muted); font-size: 18px; font-style: italic; }
+.wave:empty { display: none; }
+body.present .tagline { font-size: 24px; }
+body.present .logo { font-size: 36px; }
+body.present .wave, body.present .total { font-size: 26px; }
+body.present .badge { font-size: 22px; }
+body.present .rb-row, body.present .lg td, body.present .lg th, body.present .tk-body { font-size: 20px; }

@@ -1,6 +1,7 @@
 // Rank board and ledger panel (UI-A4). The pure helpers (sorting, columns, cell text) carry the
 // logic and are unit tested; the DOM painters only mirror the view model (ui-spec sections 10, 11).
 import type { ArenaVM, LaneVM, SkelMode } from './model';
+import { rankGlyph } from '../onboarding/polish';
 
 export const ROW_H = 40;
 const KIND_ORDER = ['account_create', 'charge', 'email', 'dispatch', 'notify', 'ticket'];
@@ -65,7 +66,7 @@ export class RankBoard {
       const st = stateIcon(l.mode);
       el.style.transform = `translateY(${i * ROW_H}px)`;
       el.className = `rb-row rb-${l.mode}`;
-      el.innerHTML = `<span class="rb-rank">${i === 0 && l.score > 0 ? '\u265B' : i + 1}</span>`
+      el.innerHTML = `<span class="rb-rank">${rankGlyph(i, l.score)}</span>`
         + `<span class="rb-name">${esc(tierName(l.tier))} <i>#${l.lane}</i></span>`
         + `<span class="rb-score">${l.score}</span>`
         + `<span class="rb-cf" title="completed / failed">${l.counts.completed}/${l.counts.failed}</span>`
