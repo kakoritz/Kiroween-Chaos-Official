@@ -2,7 +2,7 @@
 // Spec: design.md section 5 (Nesting, Crash points); runtime.md sections 3, 19, 29.
 import type { HookPoint, Part } from '../sdk';
 import {
-  BOSSES, EFFECT_STAGES, MAX_DEPTH, faultById, injectedAtFor, nextApplicableStage, restartDelay,
+  BOSSES, JOURNALED_EFFECT_STAGES, MAX_DEPTH, faultById, injectedAtFor, nextApplicableStage, restartDelay,
   type BossId, type FaultDef, type InjectedAt,
 } from './catalog';
 import { innerPoints, matchesHook, type ArmMsg } from './hooks';
@@ -200,7 +200,7 @@ export class ChaosDirector {
     const out: { lane: string; req: ArmRequest }[] = [];
     for (const [lane, info] of Object.entries(lanes)) {
       if (boss === 'boss_power_outage') {
-        const point: HookPoint = info.stage !== null && EFFECT_STAGES.includes(info.stage)
+        const point: HookPoint = info.stage !== null && JOURNALED_EFFECT_STAGES.includes(info.stage)
           ? 'after_effect_before_journal' : 'mid_stage';
         out.push({ lane, req: { fault: 'power_outage', point } });
       } else if (boss === 'boss_internet_outage') {

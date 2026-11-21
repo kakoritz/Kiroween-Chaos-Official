@@ -33,7 +33,7 @@ describe('boss creatures', () => {
     expect(pressed).toEqual([
       { lane: 'L1', req: { fault: 'power_outage', point: 'after_effect_before_journal' } },
       { lane: 'L2', req: { fault: 'power_outage', point: 'mid_stage' } },
-      { lane: 'L3', req: { fault: 'power_outage', point: 'after_effect_before_journal' } },
+      { lane: 'L3', req: { fault: 'power_outage', point: 'mid_stage' } },
     ]);
   });
 

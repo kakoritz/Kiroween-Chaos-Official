@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { createInterface } from 'node:readline';
 import { ChaosHost } from '../chaos';
 import { InputError, LaneHalted, Pipeline, STAGES, tierById, type OrderData, type TierDef } from '../pipeline';
-import { PARTS, Sdk, type Part, type Transport } from '../sdk';
+import { PARTS, ParkSignal, Sdk, type Part, type Transport } from '../sdk';
 
 export interface BotDef {
   tier: TierDef['id'];
@@ -211,14 +211,19 @@ export async function runBot(def: BotDef): Promise<void> {
       try {
         const r = await call(`/tracking/${encodeURIComponent(shipment)}?lane=${encodeURIComponent(lane)}`, { method: 'GET' }, 800);
         const b = r.body as { status?: string };
-        if (r.status === 200 && b.status === 'delivered') return true;
-        if (r.status === 200 && b.status === 'in_transit') return false;
+        if (r.status === 200 && b.status === 'delivered') { if (hasPart('breaker')) sdk.noteSuccess('tracking'); return true; }
+        if (r.status === 200 && b.status === 'in_transit') { if (hasPart('breaker')) sdk.noteSuccess('tracking'); return false; }
         failure = r.status === 200 ? String(b.status ?? 'unexpected') : `status ${r.status}`;
       } catch (e) {
         failure = e instanceof Error ? e.message : String(e);
       }
       send({ type: 'stage_fail', order: curOrder, stage: 'tracking', detail: { attempt: n, reason: failure } });
-      if (n >= max) throw new Error(`tracking failed: ${failure}`);
+      if (hasPart('breaker')) sdk.noteFailure('tracking');
+      if (n >= max) {
+        // An exhausted breaker bot with an offline queue parks the order and resumes it when the breaker closes.
+        if (hasPart('breaker') && hasPart('offline_queue')) throw new ParkSignal('breaker_open');
+        throw new Error(`tracking failed: ${failure}`);
+      }
       const action = hasPart('breaker') ? 'backoff' : 'retry';
       send({ type: 'recover_start', order: curOrder, stage: 'tracking', detail: { action, attempt: n } });
       await host.hook('during_backoff', { order: curOrder, stage: 'tracking' });

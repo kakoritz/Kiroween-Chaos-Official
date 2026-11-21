@@ -12,6 +12,8 @@ export const RECOVERY_POINTS: readonly HookPoint[] = ['during_replay', 'during_r
 
 /** Stages that make provider calls. */
 export const EFFECT_STAGES: readonly string[] = ['account', 'payment', 'confirmation', 'dispatch', 'updates', 'tracking'];
+/** Stages that run a journaled effect (tracking only polls), so only these have an fter_effect_before_journal hook. */
+export const JOURNALED_EFFECT_STAGES: readonly string[] = EFFECT_STAGES.filter((s) => s !== 'tracking');
 const ALL = ['intake', 'account', 'payment', 'confirmation', 'dispatch', 'updates', 'tracking', 'handoff'];
 
 export interface FaultDef {

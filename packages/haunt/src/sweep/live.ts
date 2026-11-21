@@ -4,7 +4,7 @@
 import { mkdirSync, mkdtempSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import type { LedgerRow } from '../../../core/src/provider';
-import { ChaosDirector, EFFECT_STAGES, faultById } from '../chaos';
+import { ChaosDirector, JOURNALED_EFFECT_STAGES, faultById } from '../chaos';
 import { corruptNext, hauntFile, injectDuplicate, nextOrderFile, prepareLane, runLane } from '../runner';
 import { postProviderArm, scanRepeats, type PostFault } from '../runner/provider';
 import type { CreatureContext, CreaturePlugin } from '../creatures/plugin';
@@ -75,7 +75,7 @@ export function createLiveCellRunner(o: LiveCellOptions): RunCell {
     let fired = false;
 
     const armProcess = (fault: string, params?: Record<string, unknown>): void => {
-      const point: HookPoint = EFFECT_STAGES.includes(cell.stage) ? 'after_effect_before_journal' : 'mid_stage';
+      const point: HookPoint = JOURNALED_EFFECT_STAGES.includes(cell.stage) ? 'after_effect_before_journal' : 'mid_stage';
       const r = director.arm(LANE, { fault, point, ...(params?.forMs ? { forMs: Number(params.forMs) } : {}) }, { state: 'working', stage });
       if (!r.ok) throw new Error(r.error);
       if (r.arm) send?.({ k: 'arm', id: String(r.id), ...r.arm });

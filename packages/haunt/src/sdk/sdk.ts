@@ -316,6 +316,10 @@ export class Sdk {
     return b;
   }
 
+  noteSuccess(service: string): void {
+    this.breakerFor(service).fails = 0;
+  }
+
   private isOpen(service: string): boolean {
     const b = this.breakerFor(service);
     return b.openUntil !== null && this.o.host.now() < b.openUntil;
@@ -334,7 +338,8 @@ export class Sdk {
     this.o.host.emit({ type: 'breaker', order: this.order_, detail: { service, state: 'half_open' } });
   }
 
-  private noteFailure(service: string): void {
+  /** Counts a failed call against the service breaker (also used for tracking polls, which sit outside effect()). */
+  noteFailure(service: string): void {
     const b = this.breakerFor(service);
     b.fails++;
     if (b.fails >= BREAKER.openAfter && b.openUntil === null) {
