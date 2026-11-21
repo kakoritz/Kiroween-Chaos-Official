@@ -3,7 +3,7 @@ import { autoplayDecision, pickScript } from '../src/demo';
 import { ArenaScene, BOSS_INSET, STAGE_H, STAGE_W } from '../src/arena/scene';
 import { applyEvent, emptyVM, loadSnapshot, reconcileLedger, totalScore } from '../src/arena/model';
 import { LedgerPanel, RankBoard } from '../src/arena/panels';
-import { EventTicker } from '../src/arena/ticker';
+import { LaneTickerModel, LaneTickerView } from '../src/arena/lanes-ticker';
 import { StageInspector, chipAt } from '../src/arena/inspector';
 import { chipTipAt } from '../src/arena/chiptip';
 import { BossBar, bossAnnouncement } from '../src/arena/boss';
@@ -20,6 +20,7 @@ import { quietBadge, waveLabel } from '../src/onboarding/polish';
 import { SPLASH_TAGLINE } from '../src/onboarding/splash';
 import { Tour, tourRequested } from '../src/onboarding/tour';
 import '../src/onboarding/tour.css';
+import '../src/arena/lanes-ticker.css';
 import { mountCampaignHub } from '../src/campaign/hub';
 import '../src/campaign/hub.css';
 import { gearShopStarter } from '../src/campaign/shop';
@@ -55,7 +56,7 @@ root.innerHTML = `
     <div class="present-hint" id="present-hint" aria-hidden="true">Present mode. Press P or Esc to exit.</div>
     <section class="panel panel--rank hidden" id="rank" aria-label="Rank board"><h2>Rank board</h2><div class="rb-body" id="rank-body"></div></section>
     <section class="panel panel--ledger hidden" id="ledger" aria-label="Ledger"><h2>Ledger</h2><div id="ledger-body"></div></section>
-    <section class="panel panel--ticker hidden" id="ticker" aria-label="Event ticker"><h2>Event log</h2><div class="tk-body" id="ticker-body"></div></section>
+    <section class="panel panel--ticker hidden" id="ticker" aria-label="Lane ticker"><h2>Lane ticker</h2><div class="lt-body" id="ticker-body"></div></section>
     <section class="quiet" id="quiet">
       <h1>The crypt is quiet</h1>
       <p>Five skeletons are asleep. Start the show.</p>
@@ -122,7 +123,17 @@ const ledgerPanel = new LedgerPanel($('ledger-body'));
 const rankEl = $('rank');
 const ledgerEl = $('ledger');
 const tickerEl = $('ticker');
-const ticker = new EventTicker($('ticker-body'), (id) => vm.stages.find((s) => s.id === id)?.label ?? id);
+const tickerModel = new LaneTickerModel((id) => vm.stages.find((s) => s.id === id)?.label ?? id);
+const ticker = new LaneTickerView($('ticker-body'), tickerModel, {
+  tier: (lane) => vm.lanes.find((l) => l.lane === lane)?.tier ?? '',
+  open: (lane) => {
+    const l = vm.lanes.find((x) => x.lane === lane);
+    if (!l) return;
+    const at = Math.max(0, l.chips.findIndex((c) => c === 'active' || c === 'retrying' || c === 'failed' || c === 'dead'));
+    const st = vm.stages[at];
+    if (st) inspector.open(l.lane, at, st.id, l.order);
+  },
+});
 const bossBar = new BossBar($('boss'));
 const liveAssertive = $('live-assertive');
 const inspector = new StageInspector($('insp'), {
@@ -200,7 +211,7 @@ function onEvent(ev: ArenaEvent) {
   captionPlayer.event(ev, performance.now());
   sound.onEvent(ev, performance.now());
   inspector.record(ev);
-  ticker.push(ev);
+  tickerModel.push(ev, performance.now());
   events++;
   if (typeof ev.seq === 'number') lastSeq = ev.seq;
   if (ev.type === 'hello') {
@@ -408,7 +419,8 @@ function frame(now: number) {
   rankEl.classList.toggle('hidden', vm.lanes.length === 0);
   ledgerEl.classList.toggle('hidden', vm.lanes.length === 0);
   tickerEl.classList.toggle('hidden', vm.lanes.length === 0);
-  ticker.render();
+  ticker.ensure(vm.lanes.map((l) => l.lane));
+  ticker.render(performance.now());
   if (pendingInspect) {
     const [ln, sid] = pendingInspect.split(':');
     const lane = vm.lanes.find((l) => l.lane === Number(ln));

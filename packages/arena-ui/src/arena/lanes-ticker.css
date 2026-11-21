@@ -1,0 +1,21 @@
+/* Lane ticker (PT-U4): five 44 px rows in the bottom right panel. Icon plus text, never colour alone. */
+.panel--ticker h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.lt-body { padding: 2px 6px; }
+.lt-row { display: flex; align-items: center; gap: 10px; width: 100%; height: 44px; padding: 0 8px; margin: 0; background: transparent; border: 0; border-bottom: 1px solid var(--stone-2); border-radius: 6px; color: var(--text); font: 600 16px ui-monospace, 'Cascadia Code', Menlo, monospace; text-align: left; cursor: pointer; }
+.lt-row:last-child { border-bottom: 0; }
+.lt-row:hover { background: rgba(255, 255, 255, 0.06); }
+.lt-row:focus-visible { outline: 3px solid var(--torch); outline-offset: -3px; }
+.lt-dot { flex: none; width: 24px; height: 24px; line-height: 24px; text-align: center; border-radius: 50%; background: var(--stone-2); color: var(--bone); font-size: 14px; }
+.lt-name { flex: none; width: 92px; color: var(--bone); text-transform: capitalize; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lt-view { position: relative; flex: 1 1 auto; height: 44px; overflow: hidden; }
+.lt-msg { position: absolute; inset: 0; display: flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lt-in { animation: lt-in 250ms ease-out both; }
+.lt-out { animation: lt-out 250ms ease-in both; }
+@keyframes lt-in { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes lt-out { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-100%); opacity: 0; } }
+.lt-i { flex: none; width: 22px; text-align: center; }
+.lt-info .lt-i { color: var(--ghost); } .lt-good .lt-i { color: var(--ok); } .lt-warn .lt-i { color: var(--warn); } .lt-error .lt-i { color: var(--fail); }
+.lt-error .lt-t { color: var(--fail); } .lt-warn .lt-t { color: var(--warn); }
+.lt-badge { flex: none; padding: 1px 8px; border: 1px solid var(--warn); border-radius: 10px; color: var(--warn); font-size: 14px; }
+.lt-badge.hidden { display: none; }
+body.present .lt-row { font-size: 20px; }
