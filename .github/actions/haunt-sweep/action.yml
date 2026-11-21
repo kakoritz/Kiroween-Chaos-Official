@@ -1,0 +1,103 @@
+name: Haunt sweep
+description: Run a Haunt chaos sweep, upload the report and badge, comment the grade on the pull request and fail when targets fail.
+inputs:
+  config:
+    description: Path to haunt.yaml
+    default: haunt.yaml
+  tiers:
+    description: Comma separated bot tiers to sweep (the first one feeds the badge and comment)
+    default: phoenix
+  fail-on:
+    description: "targets: fail the job when a target fails. never: report only."
+    default: targets
+  comment:
+    description: Post or update a pull request comment (true or false)
+    default: 'true'
+  seed:
+    description: Seed for the sweep
+    default: '1'
+  github-token:
+    description: Token used by gh to comment. Needs pull-requests write.
+    default: ${{ github.token }}
+outputs:
+  exit-code:
+    description: 0 when every target passed, 1 when a target failed, 2 on a usage or config error
+    value: ${{ steps.sweep.outputs.exit-code }}
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: npm
+    - name: Install
+      shell: bash
+      run: npm ci --ignore-scripts
+    - name: Build bots
+      shell: bash
+      run: npm run build:bots
+    - name: Sweep
+      id: sweep
+      shell: bash
+      env:
+        HAUNT_CONFIG: ${{ inputs.config }}
+        HAUNT_TIERS: ${{ inputs.tiers }}
+        HAUNT_FAIL_ON: ${{ inputs.fail-on }}
+        HAUNT_SEED: ${{ inputs.seed }}
+      run: |
+        mkdir -p .haunt/out
+        code=0
+        first=""
+        IFS=',' read -ra tiers <<< "$HAUNT_TIERS"
+        for t in "${tiers[@]}"; do
+          t="$(echo "$t" | xargs)"
+          [ -z "$first" ] && first="$t"
+          rc=0
+          npm run haunt -- sweep --config "$HAUNT_CONFIG" --tier "$t" --seed "$HAUNT_SEED" --out .haunt/out || rc=$?
+          [ "$rc" -gt "$code" ] && code=$rc
+        done
+        echo "exit-code=$code" >> "$GITHUB_OUTPUT"
+        echo "first=$first" >> "$GITHUB_OUTPUT"
+        report=".haunt/out/sweep-${first}-seed${HAUNT_SEED}.json"
+        if [ -f "$report" ]; then
+          cp "$report" .haunt/out/report.json
+          npm run haunt -- badge .haunt/out/report.json --out .haunt/out
+          cp .haunt/out/haunt-scorecard.html .haunt/out/report.html
+        fi
+        exit 0
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: haunt-report
+        path: |
+          .haunt/out/report.html
+          .haunt/out/report.json
+          .haunt/out/haunt-badge.svg
+          .haunt/out/haunt-scorecard.svg
+    - name: Pull request comment
+      if: ${{ always() && inputs.comment == 'true' && github.event_name == 'pull_request' }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        PR: ${{ github.event.pull_request.number }}
+        REPO: ${{ github.repository }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        CODE: ${{ steps.sweep.outputs.exit-code }}
+      run: |
+        [ -f .haunt/out/report.json ] || { echo "no report, skipping comment"; exit 0; }
+        passed=false; [ "$CODE" = "0" ] && passed=true
+        node tools/run-ts.mjs tools/haunt-comment.ts .haunt/out/report.json .haunt/out/comment.md --run-url "$RUN_URL" --passed "$passed"
+        id="$(gh api "repos/$REPO/issues/$PR/comments" --paginate --jq '[.[] | select(.body | contains("<!-- haunt-sweep-comment -->"))][0].id // empty')"
+        if [ -n "$id" ]; then
+          gh api -X PATCH "repos/$REPO/issues/comments/$id" -F body=@.haunt/out/comment.md
+        else
+          gh pr comment "$PR" --repo "$REPO" --body-file .haunt/out/comment.md
+        fi
+    - name: Gate
+      shell: bash
+      env:
+        CODE: ${{ steps.sweep.outputs.exit-code }}
+        FAIL_ON: ${{ inputs.fail-on }}
+      run: |
+        if [ "$FAIL_ON" = "never" ]; then exit 0; fi
+        exit "${CODE:-2}"
