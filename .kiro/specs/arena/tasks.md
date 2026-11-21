@@ -17,7 +17,7 @@ Do after Phase 1 of [haunted-house tasks](../haunted-house/tasks.md) (hero crash
 - [ ] UI-B6. Remaining creatures from the catalog. (A4)
 
 ## Phase C: Inspect and learn
-- [ ] UI-C1. Stage inspector popup with live stream, Chaos button and replay. (A2)
+- [x] UI-C1. Stage inspector popup with live stream, Chaos button and replay. (A2)
 - [ ] UI-C2. Rule-based reviewer: postmortem and hardening spec writer. (A9)
 - [ ] UI-C3. Wave-over-wave score delta view. (A9.4)
 - [ ] UI-C4. Optional LLM pass for suggested diffs. (A9.5)

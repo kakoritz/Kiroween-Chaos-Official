@@ -123,3 +123,23 @@ html, body { overflow: hidden; }
 .boss:not(.boss--still):not(.boss--active).boss--in .boss-status { animation: bosspulse 1s ease-in-out infinite; }
 @keyframes bosspulse { 50% { opacity: 0.45; } }
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+.insp { position: absolute; top: 88px; right: 16px; width: 520px; height: 740px; display: flex; flex-direction: column; background: rgba(28,24,48,0.97); border: 3px solid var(--torch); border-radius: 14px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); overflow: hidden; z-index: 20; }
+.insp-head { display: flex; align-items: center; gap: 12px; padding: 0 12px 0 16px; height: 48px; background: var(--stone-2); }
+.insp-head h2 { margin: 0; font-size: 20px; color: var(--torch); flex: 1; }
+.insp-x { padding: 4px 12px; font-size: 14px; }
+.insp-state { font-size: 14px; font-weight: 700; color: var(--muted); }
+.insp-state--live { color: var(--ok); }
+.insp-state--failed, .insp-state--dead { color: var(--fail); }
+.insp-state--done, .insp-state--replayed { color: var(--ok); }
+.insp-state--retrying, .insp-state--parked { color: var(--warn); }
+.insp-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; padding: 12px 16px; border-bottom: 2px solid var(--stone-2); }
+.insp-fact { display: flex; justify-content: space-between; font-size: 15px; color: var(--muted); }
+.insp-fact b { color: var(--text); font-weight: 600; }
+.insp-log { flex: 1; overflow-y: auto; padding: 10px 16px; font-family: ui-monospace, "Cascadia Code", Menlo, monospace; font-size: 15px; }
+.insp-line { display: flex; gap: 10px; padding: 3px 0; color: var(--text); }
+.insp-ic { width: 20px; text-align: center; flex: none; }
+.insp-line--good { color: var(--ok); }
+.insp-line--warn { color: var(--warn); }
+.insp-line--error { color: var(--fail); }
+.insp-foot { display: flex; gap: 12px; padding: 12px 16px; border-top: 2px solid var(--stone-2); }

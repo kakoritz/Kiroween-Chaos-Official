@@ -3,6 +3,7 @@ import { ArenaScene, STAGE_H, STAGE_W } from '../src/arena/scene';
 import { applyEvent, emptyVM, loadSnapshot, reconcileLedger, totalScore } from '../src/arena/model';
 import { LedgerPanel, RankBoard } from '../src/arena/panels';
 import { EventTicker } from '../src/arena/ticker';
+import { StageInspector, chipAt } from '../src/arena/inspector';
 import { BossBar, bossAnnouncement } from '../src/arena/boss';
 import { ChaosModeControl, readChaosState } from '../src/arena/chaosmode';
 import { ApiError, createApi, resolveHttpBase, type ArenaApi, type ArenaEvent, type ConnectionStatus, type HauntInPage } from '../src/api';
@@ -25,6 +26,7 @@ root.innerHTML = `
       <button class="btn" id="demo-open" type="button">Open in demo mode</button>
     </header>
     <div class="boss" id="boss" aria-hidden="true"></div>
+    <aside class="insp hidden" id="insp"></aside>
     <div class="sr-only" id="live-assertive" aria-live="assertive"></div>
     <section class="panel panel--rank hidden" id="rank" aria-label="Rank board"><h2>Rank board</h2><div class="rb-body" id="rank-body"></div></section>
     <section class="panel panel--ledger hidden" id="ledger" aria-label="Ledger"><h2>Ledger</h2><div id="ledger-body"></div></section>
@@ -93,12 +95,32 @@ const tickerEl = $('ticker');
 const ticker = new EventTicker($('ticker-body'), (id) => vm.stages.find((s) => s.id === id)?.label ?? id);
 const bossBar = new BossBar($('boss'));
 const liveAssertive = $('live-assertive');
+const inspector = new StageInspector($('insp'), {
+  stageLabel: (id) => vm.stages.find((s) => s.id === id)?.label ?? id,
+  chaos: (lane) => api.chaos({ lane }),
+  fetchStage: (lane, stage, order) => api.getLaneStage(lane, stage, order),
+  chipState: (laneIdx, i) => vm.lanes[laneIdx]?.chips[i] ?? 'pending',
+  onError: showError,
+});
+canvas.style.cursor = 'default';
+canvas.addEventListener('click', (e) => {
+  const r = canvas.getBoundingClientRect();
+  const hit = chipAt(((e.clientX - r.left) / r.width) * STAGE_W, ((e.clientY - r.top) / r.height) * STAGE_H, vm.lanes.length, vm.stages.length);
+  const lane = hit ? vm.lanes[hit.lane] : null;
+  const st = hit ? vm.stages[hit.stage] : null;
+  if (hit && lane && st) inspector.open(lane.lane, hit.stage, st.id, lane.order);
+});
+canvas.addEventListener('mousemove', (e) => {
+  const r = canvas.getBoundingClientRect();
+  canvas.style.cursor = chipAt(((e.clientX - r.left) / r.width) * STAGE_W, ((e.clientY - r.top) / r.height) * STAGE_H, vm.lanes.length, vm.stages.length) ? 'pointer' : 'default';
+});
 async function reconcile() {
   try { reconcileLedger(vm, await api.getLedger()); } catch { /* the event-built cells stay */ }
 }
 
 function onEvent(ev: ArenaEvent) {
   queue.push(ev);
+  inspector.record(ev);
   ticker.push(ev);
   events++;
   if (typeof ev.seq === 'number') lastSeq = ev.seq;
@@ -174,6 +196,9 @@ async function boot() {
   if (demo) void startDemo(demo);
 }
 
+// ?inspect=<lane>:<stage id> opens the inspector once the lane exists (used for screenshots).
+let pendingInspect = new URLSearchParams(window.location.search).get('inspect');
+
 void boot();
 
 // Fixed 1920x1080 design stage, scaled uniformly to fit and centred (letterboxed). The canvas
@@ -218,6 +243,13 @@ function frame(now: number) {
   ledgerEl.classList.toggle('hidden', vm.lanes.length === 0);
   tickerEl.classList.toggle('hidden', vm.lanes.length === 0);
   ticker.render();
+  if (pendingInspect) {
+    const [ln, sid] = pendingInspect.split(':');
+    const lane = vm.lanes.find((l) => l.lane === Number(ln));
+    const si = vm.stages.findIndex((s) => s.id === sid);
+    if (lane && lane.order && si >= 0) { inspector.open(lane.lane, si, sid!, lane.order); pendingInspect = null; }
+  }
+  inspector.render(now);
   rankBoard.update(vm);
   ledgerPanel.update(vm, now);
   scene.draw(vm, now);
