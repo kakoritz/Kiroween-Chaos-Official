@@ -8,6 +8,7 @@ import { TIER_IDS, TIER_LABEL, type Tier } from '../rig/dress';
 import { stationX, type ArenaVM, type ChipState, type LaneVM } from './model';
 import { captionOf, creatureFrame, shown, spriteOf, MAX_SHOWN, type CreatureVM } from './creatures';
 import { drawCreature } from '../creatures/draw';
+import { archWall, drawProp, pillar } from '../props/draw';
 import { survivedAge } from './boss';
 import { equipPhase, flightPoint, PART_LABEL, wornParts } from './equip';
 import { dropPoint, dropProgress, queueLeft, queueShape } from './order';
@@ -93,6 +94,26 @@ function door(ctx: Ctx, x: number, baseY: number, h: number, glow: number): void
   ctx.restore();
 }
 
+/** UI-ART4: far wall arches, mid pillars and floor-edge props, kept dim behind the actors. */
+function cryptLayers(ctx: Ctx, top: number, h: number): void {
+  const wallH = h * 0.58;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(TRACK_X0, top, 1600 - TRACK_X0, h); ctx.clip();
+  ctx.globalAlpha = 0.5;
+  archWall(ctx, TRACK_X0, top + 4, 1600 - TRACK_X0, wallH - 4, 6);
+  ctx.globalAlpha = 0.75;
+  for (const px of [TRACK_X0 + 6, 700, 1130]) pillar(ctx, px, top + 2, 30, wallH + 6);
+  ctx.globalAlpha = 1;
+  if (h >= 120) {
+    const fy = top + h - 6;
+    const bs = Math.min(34, h * 0.2); const rs = Math.min(54, h * 0.32); const cs = Math.min(40, h * 0.24);
+    ctx.translate(TRACK_X0 + 70, fy - bs / 2); drawProp(ctx, 'bones', 0, { silhouette: false, size: bs });
+    ctx.translate(1080 - TRACK_X0 - 70, (bs - rs) / 2); drawProp(ctx, 'barrel', 0, { silhouette: false, size: rs });
+    ctx.translate(300, (rs - cs) / 2); drawProp(ctx, 'candles', 0.3, { silhouette: false, size: cs });
+  }
+  ctx.restore();
+}
+
 /** Everything that never moves, drawn once per lane count. */
 export function renderStatic(n: number): HTMLCanvasElement {
   const cv = document.createElement('canvas');
@@ -105,6 +126,7 @@ export function renderStatic(n: number): HTMLCanvasElement {
   boxes.forEach((b, i) => {
     bricks(ctx, 0, b.top, TRACK_X0, b.h, 100 + i, '#17132b', 'rgba(8,6,16,0.9)');
     flagstoneFloor(ctx, TRACK_X0, b.top, STAGE_W - TRACK_X0, b.h, 200 + i);
+    cryptLayers(ctx, b.top, b.h);
     torchPools(ctx, [TRACK_X0 + 90, 720, 1140, 1548], b.top, b.h);
     laneVignette(ctx, TRACK_X0, b.top, STAGE_W - TRACK_X0, b.h);
     // lane frame
