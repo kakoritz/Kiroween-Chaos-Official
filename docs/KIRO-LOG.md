@@ -2,6 +2,15 @@
 
 Dated notes on what Kiro did and decided while building Haunt. Newest last.
 
+## Candid notes (read this first)
+
+The dated entries below are mostly task bookkeeping. These are the notes that matter. The full version is `docs/KIRO-WRITEUP.md`.
+
+- Kiro did well: kept to the spec task IDs, one PR per task, and found a real replay bug with the crash-point property test (Phoenix, `mid_stage` of `updates`, hook call 20, seed 7).
+- Kiro got wrong: the first Phoenix sweep had 6 FAILED cells because the journaled shipment id was lost on restart; early live waves graded A because ledger repeats were not attached; the first live stream had 500+ validator violations; a design example said -340 where the code gives -300.
+- Kiro reported a merge as done when the command was still waiting on an approval prompt. Git state had to be checked afterwards.
+- The saved loop proof is labelled recorded; the real Kiro-applied proof is SH-C4.
+
 ## 2026-11-20
 
 - **CI policy override (owner decision, the owner).** No unit tests run in CI/CD for now. GitHub Actions does install, typecheck, `validate:events` and build only. Local `npm test` is the merge gate. Where `docs/DEV-SETUP.md`, `docs/SWIMLANES.md`, the task files or the acceptance doc say CI runs tests, that text is overridden by this entry. Never add `npm test`, vitest, `test:contract` or any test step to a workflow later.
@@ -199,3 +208,4 @@ pm run live). SSE with hello, since replay (exclusive), 410 gone beyond 5000 eve
 - 2026-11-21 PT-X1 core/pt-x1: docs/proof re-recorded with scoring v2 through `npm run live -- --loop` (loop demo, 2 lanes, seed 7, crash-only plan). Wave 1 grade F score -229; wave 2 grade A score 702 (lane 1 hardened Rookie A, lane 2 Phoenix A, 0 repeats, 0 lost). Grader unchanged. README, WINNING and DEMO-SCRIPT updated with these numbers.
 - 2026-11-21 PT-doc core/pt-design-fix: playtest-v2 design.md worked example "two extra rows, 2 stars" corrected from -340 to -300 (review is (2 - 3) x 40 = -40, not -80), matching reviewReward in score.ts and the PT-C4 test.
 - 2026-11-21 PT-X2 core/pt-x2: SPEC-MAP rows for contract v1.1 and playtest-v2 plus glossary confirmed present; DEMO-SCRIPT notes the slow-pace edit rule; PT-X2 ticked.
+- 2026-11-21 SH-K2 ui/share-sh-k2: `docs/KIRO-WRITEUP.md` in rubric order (IDE, CLI, Web and Crew, custom agents, hooks, spec-driven vs vibe, steering, MCP, property testing, Powers, what Kiro got wrong, five Devpost moments) built only from the log and repo. Sections that need the owner's own numbers or screenshots are marked **Owner:** and make no claim. Candid digest added at the top of this log. Docs only.

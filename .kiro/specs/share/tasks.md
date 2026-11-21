@@ -21,7 +21,7 @@ Branches `core/SH-...`, `ui/SH-...`, `docs/SH-...`.
 
 ## Docs and owner
 - [ ] **SH-D1 Architecture diagram.** Mermaid in README and `docs/img/architecture.svg`.
-- [ ] **SH-K2 Kiro write-up.** `docs/KIRO-WRITEUP.md` in rubric order with the candid section; rewrite `docs/KIRO-LOG.md` entries from PR bookkeeping into real notes. (owner reviews wording)
+- [x] **SH-K2 Kiro write-up.** `docs/KIRO-WRITEUP.md` in rubric order with the candid section; rewrite `docs/KIRO-LOG.md` entries from PR bookkeeping into real notes. (owner reviews wording)
 
 ## Cut line
 SH-C4 (real proof), SH-K2, SH-C1, SH-U2, SH-K3 first (they fix the red flags and feed Social Blitz). Then SH-C2, SH-C3 plus SH-U1 (Workflow Lab), SH-K1, SH-C6. Then the rest.
