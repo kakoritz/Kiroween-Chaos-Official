@@ -13,6 +13,7 @@ import { survivedAge } from './boss';
 import { equipPhase, flightPoint, PART_LABEL, wornParts } from './equip';
 import { dropPoint, dropProgress, queueLeft, queueShape } from './order';
 import { grabPoint, grabProgress, lapMotion, START_X, STACK_STEP, STACK_X } from './lap';
+import { drawHandoff, drawRunDust } from './handoff';
 import { cobweb, flagstoneFloor, fogTexture, laneVignette, torchPools } from './crypt';
 
 export const STAGE_W = 1920;
@@ -410,11 +411,11 @@ export class ArenaScene {
       case 'sleep': return { anim: 'sleep', p: (now % 3200) / 3200 };
       case 'dead': return { anim: 'collapse', p: Math.min(1, el / 600) };
       case 'reassembling': return { anim: 'reassemble', p: Math.min(1, el / 700) };
-      case 'fail': return { anim: 'slump', p: (now % 1800) / 1800 };
+      case 'fail': return walking ? { anim: 'walk', p: (now * speed * gaitRate(l) % 900) / 900 } : { anim: 'slump', p: (now % 1800) / 1800 };
       case 'recovering': return { anim: 'recover', p: (now % 1200) / 1200 };
       case 'halted': return { anim: 'halted', p: (now % 2400) / 2400 };
       case 'working': return walking ? { anim: 'walk', p: (now * speed % 900) / 900 } : { anim: 'work', p: (now * speed % 700) / 700 };
-      default: return walking ? { anim: 'walk', p: (now * speed % 900) / 900 } : { anim: 'idle', p: (now % 1800) / 1800 };
+      default: return walking ? { anim: 'walk', p: (now * speed * gaitRate(l) % 900) / 900 } : { anim: 'idle', p: (now % 1800) / 1800 };
     }
   }
 
@@ -652,6 +653,7 @@ export class ArenaScene {
     drawSkeleton(ctx, fr, { silhouette: false, size }, tier, wornParts(l.parts, l.equips, now, this.speed, this.reducedMotion));
     ctx.restore();
     ctx.filter = 'none';
+    if (lm?.moving && l.lap?.move?.gait === 'run' && !this.reducedMotion) drawRunDust(ctx, x, feetY, lm.dir, now, this.lite);
 
     const k = size / 100;
     const headY = feetY - size * 0.98;
@@ -676,7 +678,7 @@ export class ArenaScene {
     if (l.mode === 'halted') txt(ctx, '⚰ HALTED', x, headY + size * 0.2, 15, C.muted, 'center', SANS, '700');
     if (l.mode === 'fail') txt(ctx, '✕', x, headY + size * 0.22, 26, C.fail, 'center', SANS, '800');
     // scroll in hand
-    const holding = l.order && !l.lap?.empty && l.mode !== 'dead' && l.mode !== 'sleep' && l.mode !== 'halted' && l.mode !== 'reassembling';
+    const holding = l.order && !l.lap?.empty && l.lap?.ceremony?.kind !== 'cancel' && l.mode !== 'dead' && l.mode !== 'sleep' && l.mode !== 'halted' && l.mode !== 'reassembling';
     if (holding) {
       const hx = x + size * 0.34, hy = feetY - size * 0.62 + (l.mode === 'fail' ? 8 : 0), hs = size / 150;
       const gp = this.reducedMotion ? -1 : grabProgress(l.lap, now);
@@ -689,6 +691,14 @@ export class ArenaScene {
         ctx.restore();
       } else scroll(ctx, hx, hy, hs, l.order ?? '', l.mode === 'fail' && l.chips.includes('failed'));
     }
+    if (l.lap?.ceremony) {
+      const hs = size / 150;
+      drawHandoff(ctx, l.lap.ceremony, {
+        doorX: 1548, floorY: b.top + b.h - 8, doorH: Math.min(100, b.h * 0.7), handX: x + size * 0.34, handY: feetY - size * 0.62, scrollScale: hs,
+        size, skelX: x, feetY, drawScroll: (sx, sy, s, rot) => { ctx.save(); ctx.translate(sx, sy); ctx.rotate(rot); ctx.translate(-sx, -sy); scroll(ctx, sx, sy, s, l.order ?? '', false); ctx.restore(); },
+        font: SANS, reduced: this.reducedMotion, lite: this.lite,
+      }, now);
+    }
     if (l.mode === 'working' && !walking) workProp(ctx, l.workAnim, pose.p, x + size * 0.1, feetY - 2, size, 1548);
     if (l.cheer && now - l.cheer.since < l.cheer.dur / this.speed) {
       const big = l.cheer.dur > 400;
@@ -699,6 +709,12 @@ export class ArenaScene {
       }
     }
   }
+}
+
+/** Step cadence: fast on the run back after a handoff, slow on the trudge after a cancel (PT-U2). */
+function gaitRate(l: LaneVM): number {
+  const g = l.lap?.move?.gait;
+  return g === 'run' ? 2.4 : g === 'trudge' ? 0.5 : 1;
 }
 
 const ACTION_CAPTION: Record<string, string> = {

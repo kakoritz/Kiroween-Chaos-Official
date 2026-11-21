@@ -33,7 +33,7 @@ o_answer, gated_house, car_accident, random family world.) Stage 8 handoff provi
 ## Lane B (Visuals)
 
 - [x] **PT-U1 Lap choreography.** (Done: `arena/lap.ts` anchors, walks of `walkMs`, grab of `grabMs` from the start stack, `next` chip outline, `travel_violation` snap by event time, return run after the ceremony; PT-U2 draws the door ceremony.) Skeleton anchor states, walking, grab from the **start stack**, `next` chip, `travel_violation` snap (ui.md sections 1 and 2). Acceptance: criteria 1 and 2 of ui.md section 17 against `laps-reviews`.
-- [ ] **PT-U2 Handoff ceremony and cancel sequence.** Door open, handover, close, stars float, run back; cancel burn and trudge (ui.md sections 1 and 7).
+- [x] **PT-U2 Handoff ceremony and cancel sequence.** (Done: `arena/handoff.ts`; door opens, hand takes the scroll, door closes with a dust thud over `ceremonyMs`; stars float 1.6 s from the door on `review`; run back with dust and bones over `returnMs`; cancel burns the scroll under a CANCELLED stamp over `cancelMs`, then a slow trudge; reduced motion uses a two-frame swap with a caption.) Door open, handover, close, stars float, run back; cancel burn and trudge (ui.md sections 1 and 7).
 - [ ] **PT-U3 Chips v2.** `chipState()` pure module, colours, flags, heat strip, tooltips (ui.md section 3). Acceptance: unit tests for every state.
 - [ ] **PT-U4 Lane ticker.** One row per lane, sliding messages, queue and fast-forward, templates, click to popup (ui.md section 4).
 - [ ] **PT-U5 Lane popup v2.** Live mini scene, stage table, order picker, log filters, lap summary, replay (ui.md section 5). Replaces and extends UI-C1.

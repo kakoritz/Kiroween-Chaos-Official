@@ -124,7 +124,7 @@ function resetChips(l: LaneVM): void {
   l.chips.fill('pending'); l.attempts.fill(0); l.progress = 0; l.progressLabel = '';
 }
 
-const LAP_EVENTS = new Set(['order_start', 'stage_start', 'stage_done', 'order_done', 'order_failed', 'order_parked', 'process_dead', 'process_up']);
+const LAP_EVENTS = new Set(['order_start', 'stage_start', 'stage_done', 'order_done', 'order_failed', 'order_parked', 'process_dead', 'process_up', 'review']);
 
 /** Apply one event. Unknown types are ignored (protocol rule 17). */
 export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {

@@ -11,7 +11,10 @@ export const STACK_STEP = 14;
 /** Server-time slack before an early stage_start counts as a travel violation. */
 export const TRAVEL_TOL_MS = 20;
 
-export interface LapMove { since: number; delay: number; dur: number; fromX: number; toX: number }
+export interface LapMove { since: number; delay: number; dur: number; fromX: number; toX: number; gait?: 'run' | 'trudge' }
+
+/** Door ceremony (order_done) or cancel sequence (order_failed) and the stars floating from the door (PT-U2). */
+export interface Ceremony { kind: 'done' | 'cancel'; since: number; dur: number; stars: number | null; starsAt: number }
 
 export interface LapVM {
   /** Where the skeleton stands when no move is active. */
@@ -27,9 +30,11 @@ export interface LapVM {
   empty: boolean;
   /** Count of stage_start events that arrived before the skeleton could have. */
   violations: number;
+  /** Handoff ceremony / cancel sequence in progress or recently ended (drawn by handoff.ts). */
+  ceremony: Ceremony | null;
 }
 
-export const newLap = (x = START_X): LapVM => ({ x, move: null, grab: null, next: -1, holdUntil: 0, empty: false, violations: 0 });
+export const newLap = (x = START_X): LapVM => ({ x, move: null, grab: null, next: -1, holdUntil: 0, empty: false, violations: 0, ceremony: null });
 
 const posNum = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : 0);
 
@@ -99,7 +104,15 @@ export function applyLap(
       const fromX = here.x;
       lap.next = -1; lap.grab = null; lap.holdUntil = 0; lap.empty = ev.type !== 'order_failed';
       lap.x = fromX;
-      lap.move = back ? { since: now, delay, dur: back, fromX, toX: START_X } : null;
+      lap.move = back ? { since: now, delay, dur: back, fromX, toX: START_X, ...(ev.type === 'order_done' ? { gait: 'run' as const } : ev.type === 'order_failed' ? { gait: 'trudge' as const } : {}) } : null;
+      lap.ceremony = delay ? { kind: ev.type === 'order_done' ? 'done' : 'cancel', since: now, dur: delay, stars: null, starsAt: 0 } : null;
+      break;
+    }
+    case 'review': {
+      const stars = typeof d.stars === 'number' && Number.isFinite(d.stars) ? d.stars : null;
+      if (stars === null) break;
+      lap.ceremony ??= { kind: stars <= 1 ? 'cancel' : 'done', since: now, dur: 0, stars: null, starsAt: 0 };
+      lap.ceremony.stars = stars; lap.ceremony.starsAt = now;
       break;
     }
     case 'process_dead': settle(); lap.next = -1; lap.holdUntil = 0; lap.grab = null; break;
