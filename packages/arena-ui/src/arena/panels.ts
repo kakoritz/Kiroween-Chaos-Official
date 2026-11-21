@@ -1,0 +1,104 @@
+// Rank board and ledger panel (UI-A4). The pure helpers (sorting, columns, cell text) carry the
+// logic and are unit tested; the DOM painters only mirror the view model (ui-spec sections 10, 11).
+import type { ArenaVM, LaneVM, SkelMode } from './model';
+
+export const ROW_H = 40;
+const KIND_ORDER = ['account_create', 'charge', 'email', 'dispatch', 'notify', 'ticket'];
+export const KIND_LABEL: Record<string, string> = {
+  account_create: 'Accounts', charge: 'Charges', email: 'Emails', dispatch: 'Dispatches', notify: 'Notices', ticket: 'Tickets',
+};
+export const DEFAULT_KINDS = ['account_create', 'charge', 'email', 'dispatch', 'notify'];
+
+/** Score descending, then fewer repeats, then lane number (ui-spec section 10). */
+export function rankLanes(lanes: readonly LaneVM[]): LaneVM[] {
+  return [...lanes].sort((a, b) => b.score - a.score || a.counts.repeats - b.counts.repeats || a.lane - b.lane);
+}
+
+/** Effect kinds to show: every kind seen, in the canonical order, or the orders-app default. */
+export function ledgerKinds(vm: ArenaVM): string[] {
+  const seen = new Set<string>();
+  for (const l of vm.lanes) for (const k of Object.keys(l.ledger)) seen.add(k);
+  if (!seen.size) return DEFAULT_KINDS;
+  const known = KIND_ORDER.filter((k) => seen.has(k));
+  const extra = [...seen].filter((k) => !KIND_ORDER.includes(k)).sort();
+  return [...known, ...extra];
+}
+
+export interface CellView { rows: number; repeats: number; text: string; dup: boolean }
+export function cellView(l: LaneVM, kind: string): CellView {
+  const c = l.ledger[kind] ?? { rows: 0, repeats: 0 };
+  return { rows: c.rows, repeats: c.repeats, dup: c.repeats > 0, text: c.repeats > 0 ? `${c.rows} +${c.repeats}` : String(c.rows) };
+}
+
+export const kindLabel = (k: string): string => KIND_LABEL[k] ?? k.replace(/_/g, ' ');
+
+/** Icon plus color for the state: dead dims, halted is struck through, done is checked. */
+export function stateIcon(m: SkelMode): { icon: string; label: string } {
+  switch (m) {
+    case 'dead': return { icon: '\u2620', label: 'dead' };
+    case 'halted': return { icon: '\u26D4', label: 'halted' };
+    case 'done': return { icon: '\u2714', label: 'done' };
+    case 'working': return { icon: '\u2699', label: 'working' };
+    case 'recovering': case 'reassembling': return { icon: '\u21BB', label: 'recovering' };
+    case 'fail': return { icon: '\u26A0', label: 'failing' };
+    default: return { icon: '\u00B7', label: 'idle' };
+  }
+}
+
+const esc = (s: string): string => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+const tierName = (t: string): string => (t ? t.charAt(0).toUpperCase() + t.slice(1) : 'Lane');
+
+export class RankBoard {
+  private rows = new Map<number, HTMLElement>();
+  private sig = '';
+  constructor(private host: HTMLElement) {}
+  update(vm: ArenaVM): void {
+    const ranked = rankLanes(vm.lanes);
+    const sig = ranked.map((l) => `${l.lane}:${l.score}:${l.counts.completed}:${l.counts.failed}:${l.counts.repeats}:${l.mode}`).join('|');
+    if (sig === this.sig) return;
+    this.sig = sig;
+    const live = new Set(ranked.map((l) => l.lane));
+    for (const [n, el] of this.rows) if (!live.has(n)) { el.remove(); this.rows.delete(n); }
+    ranked.forEach((l, i) => {
+      let el = this.rows.get(l.lane);
+      if (!el) { el = document.createElement('div'); el.className = 'rb-row'; this.host.appendChild(el); this.rows.set(l.lane, el); }
+      const st = stateIcon(l.mode);
+      el.style.transform = `translateY(${i * ROW_H}px)`;
+      el.className = `rb-row rb-${l.mode}`;
+      el.innerHTML = `<span class="rb-rank">${i === 0 && l.score > 0 ? '\u265B' : i + 1}</span>`
+        + `<span class="rb-name">${esc(tierName(l.tier))} <i>#${l.lane}</i></span>`
+        + `<span class="rb-score">${l.score}</span>`
+        + `<span class="rb-cf" title="completed / failed">${l.counts.completed}/${l.counts.failed}</span>`
+        + `<span class="rb-rep${l.counts.repeats ? ' bad' : ''}" title="repeats">${l.counts.repeats ? '\u00D7' + l.counts.repeats : '-'}</span>`
+        + `<span class="rb-state" title="${st.label}">${st.icon}</span>`;
+    });
+  }
+}
+
+export class LedgerPanel {
+  private sig = '';
+  private body: HTMLElement;
+  constructor(host: HTMLElement) {
+    host.innerHTML = '<table class="lg"><thead></thead><tbody></tbody></table>';
+    this.body = host;
+  }
+  update(vm: ArenaVM, now: number): void {
+    const kinds = ledgerKinds(vm);
+    const flash = vm.lanes.map((l) => kinds.map((k) => (l.flash[k] !== undefined && now - l.flash[k]! < 1200 ? 1 : 0)).join('')).join(',');
+    const sig = kinds.join() + '#' + vm.lanes.map((l) => `${l.lane}:${l.counts.completed}:${kinds.map((k) => cellView(l, k).text).join(',')}`).join('|') + '#' + flash;
+    if (sig === this.sig) return;
+    this.sig = sig;
+    const head = `<tr><th>Lane</th>${kinds.map((k) => `<th>${esc(kindLabel(k))}</th>`).join('')}</tr>`;
+    const rows = vm.lanes.map((l) => {
+      const cells = kinds.map((k) => {
+        const c = cellView(l, k);
+        const fl = l.flash[k] !== undefined && now - l.flash[k]! < 1200;
+        const txt = c.dup ? `<b>${c.rows}</b> <em>+${c.repeats}</em>` : String(c.rows);
+        return `<td class="${c.dup ? 'dup' : ''}${fl ? ' flash' : ''}">${c.dup ? '\u26A0 ' : ''}${txt}</td>`;
+      }).join('');
+      return `<tr><th>${esc(tierName(l.tier))} <i>#${l.lane}</i></th>${cells}<td class="lg-exp-c" title="orders completed so far">${l.counts.completed}</td></tr>`;
+    }).join('');
+    this.body.querySelector('thead')!.innerHTML = head.replace('</tr>', '<th title="orders completed so far">Orders</th></tr>');
+    this.body.querySelector('tbody')!.innerHTML = rows;
+  }
+}

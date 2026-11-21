@@ -1,6 +1,7 @@
 import { apiBaseFromQuery, demoFromQuery, modeBadge } from '../src/mode';
 import { ArenaScene, STAGE_H, STAGE_W } from '../src/arena/scene';
-import { applyEvent, emptyVM, loadSnapshot, totalScore } from '../src/arena/model';
+import { applyEvent, emptyVM, loadSnapshot, reconcileLedger, totalScore } from '../src/arena/model';
+import { LedgerPanel, RankBoard } from '../src/arena/panels';
 import { ApiError, createApi, resolveHttpBase, type ArenaApi, type ArenaEvent, type ConnectionStatus, type HauntInPage } from '../src/api';
 
 // W1/W2 shell plus the A3 canvas arena: the client connects the same way for mock, live and\n// browser. Events feed a pure reducer; the canvas redraws every animation frame from that state.
@@ -19,6 +20,8 @@ root.innerHTML = `
       <button class="btn btn--ghost hidden" id="demo-stop" type="button">Stop demo</button>
       <button class="btn" id="demo-open" type="button">Open in demo mode</button>
     </header>
+    <section class="panel panel--rank hidden" id="rank" aria-label="Rank board"><h2>Rank board</h2><div class="rb-body" id="rank-body"></div></section>
+    <section class="panel panel--ledger hidden" id="ledger" aria-label="Ledger"><h2>Ledger</h2><div id="ledger-body"></div></section>
     <section class="quiet" id="quiet">
       <h1>The crypt is quiet</h1>
       <p>Five skeletons are asleep. Start the show.</p>
@@ -71,6 +74,13 @@ function showError(e: unknown) {
 const vm = emptyVM();
 const queue: ArenaEvent[] = [];
 const scene = new ArenaScene(canvas.getContext('2d')!);
+const rankBoard = new RankBoard($('rank-body'));
+const ledgerPanel = new LedgerPanel($('ledger-body'));
+const rankEl = $('rank');
+const ledgerEl = $('ledger');
+async function reconcile() {
+  try { reconcileLedger(vm, await api.getLedger()); } catch { /* the event-built cells stay */ }
+}
 
 function onEvent(ev: ArenaEvent) {
   queue.push(ev);
@@ -87,6 +97,7 @@ function onEvent(ev: ArenaEvent) {
     errEl.textContent = '';
   } else if (ev.type === 'wave_end') {
     waveRunning = false;
+    void reconcile();
   }
   waveEl.textContent = waveNo ? `Wave ${waveNo}` : 'Wave -';
   statsEl.textContent = `${events} events received, last seq ${lastSeq}`;
@@ -104,6 +115,7 @@ async function loadState() {
     waveEl.textContent = waveNo ? `Wave ${waveNo}` : 'Wave -';
     queue.length = 0;
     loadSnapshot(vm, s, performance.now());
+    await reconcile();
   } catch (e) { showError(e); }
   paintBadge();
   paintDemo();
@@ -177,6 +189,10 @@ function frame(now: number) {
   scene.speed = vm.speed || 1;
   totalEl.textContent = vm.lanes.length ? `Score ${totalScore(vm)}` : '';
   quietEl.classList.toggle('hidden', vm.lanes.length > 0);
+  rankEl.classList.toggle('hidden', vm.lanes.length === 0);
+  ledgerEl.classList.toggle('hidden', vm.lanes.length === 0);
+  rankBoard.update(vm);
+  ledgerPanel.update(vm, now);
   scene.draw(vm, now);
   requestAnimationFrame(frame);
 }

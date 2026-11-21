@@ -524,6 +524,7 @@ function sleepers(vm: ArenaVM, now: number): LaneVM[] {
       chips: Array<ChipState>(vm.stages.length).fill('pending'), attempts: Array<number>(vm.stages.length).fill(0),
       stageIndex: 0, progress: 0, progressLabel: '', workAnim: '', order: null, orderIndex: 0, ordersTotal: 0, score: 0,
       counts: { completed: 0, failed: 0, parked: 0, quarantined: 0, repeats: 0 }, depth: 0, action: '', restartInMs: 0, cheer: null, dirty: false,
+      ledger: {}, keyMax: {}, flash: {},
     } satisfies LaneVM;
     return l;
   });

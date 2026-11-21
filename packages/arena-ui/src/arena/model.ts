@@ -32,7 +32,15 @@ export interface LaneVM {
   cheer: { since: number; dur: number } | null;
   /** The last order finished with repeats. */
   dirty: boolean;
+  /** Ledger rows created this wave per effect kind, plus extra rows beyond the first per key. */
+  ledger: Record<string, LedgerCell>;
+  /** Highest count seen per effect key, to derive repeats without double counting. */
+  keyMax: Record<string, number>;
+  /** Timestamp of the last repeat per kind (cosmetic flash). */
+  flash: Record<string, number>;
 }
+
+export interface LedgerCell { rows: number; repeats: number }
 
 export interface ArenaVM {
   stages: StageInfo[];
@@ -51,6 +59,7 @@ export function newLane(n: number, stageCount: number, now: number): LaneVM {
     stageIndex: 0, progress: 0, progressLabel: '', workAnim: '', order: null, orderIndex: 0, ordersTotal: 0,
     score: 0, counts: { completed: 0, failed: 0, parked: 0, quarantined: 0, repeats: 0 },
     depth: 0, action: '', restartInMs: 0, cheer: null, dirty: false,
+    ledger: {}, keyMax: {}, flash: {},
   };
 }
 
@@ -161,7 +170,21 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
       l.depth = Math.max(0, num(d.depth, l.depth) - 1);
       setMode(l, l.chips[l.stageIndex] === 'active' || l.chips[l.stageIndex] === 'retrying' ? 'working' : 'idle', now);
       break;
-    case 'repeat': l.counts.repeats += 1; break;
+    case 'effect': {
+      if (d.replayed === true) break;
+      const kind = str(d.kind, 'effect');
+      (l.ledger[kind] ??= { rows: 0, repeats: 0 }).rows += 1;
+      break;
+    }
+    case 'repeat': {
+      l.counts.repeats += 1;
+      const kind = str(d.kind, 'effect'), key = kind + '|' + str(d.key);
+      const count = num(d.count, 2), cell = (l.ledger[kind] ??= { rows: 0, repeats: 0 });
+      const prev = l.keyMax[key] ?? 1;
+      if (count > prev) { cell.repeats += count - prev; l.keyMax[key] = count; }
+      l.flash[kind] = now;
+      break;
+    }
     case 'order_done':
       l.counts.completed += 1; l.dirty = d.clean === false;
       l.cheer = { since: now, dur: 700 }; setMode(l, 'idle', now);
@@ -181,6 +204,17 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
     case 'lane_halted': setMode(l, 'halted', now); break;
     case 'score': l.score = num(d.total, l.score + num(d.delta)); break;
     default: break;
+  }
+}
+
+/** Reconcile ledger cells with GET /api/ledger (wave_end and page load). The server is the truth. */
+export function reconcileLedger(vm: ArenaVM, data: unknown): void {
+  const lanes = (data as { lanes?: Array<{ lane: number; byKind?: Record<string, { rows?: number; repeats?: number }> }> } | null)?.lanes;
+  if (!Array.isArray(lanes)) return;
+  for (const e of lanes) {
+    const l = vm.lanes.find((x) => x.lane === e.lane);
+    if (!l || !e.byKind) continue;
+    for (const [kind, c] of Object.entries(e.byKind)) l.ledger[kind] = { rows: num(c.rows), repeats: num(c.repeats) };
   }
 }
 

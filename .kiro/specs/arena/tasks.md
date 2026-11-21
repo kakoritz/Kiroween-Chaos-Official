@@ -6,7 +6,7 @@ Do after Phase 1 of [haunted-house tasks](../haunted-house/tasks.md) (hero crash
 - [ ] UI-A1. Pipeline module with eight stages and the five policy tiers. (A1, Lanes)
 - [ ] UI-A2. Wave manager and five lane workers with an event log. (A8)
 - [x] UI-A3. Canvas arena: lanes, sprites, work, cheer, fail animations, progress bars. (A1)
-- [ ] UI-A4. Rank board, ledger panel, score engine. (A1.5, A7)
+- [x] UI-A4. Rank board, ledger panel, score engine. (A1.5, A7)
 
 ## Phase B: Chaos
 - [ ] UI-B1. Chaos director and SDK hook points, nested fault stack. (A3)
