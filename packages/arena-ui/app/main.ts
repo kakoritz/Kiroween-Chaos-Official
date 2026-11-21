@@ -1,4 +1,5 @@
-import { apiBaseFromQuery, demoFromQuery, modeBadge } from '../src/mode';
+import { apiBaseFromQuery, modeBadge } from '../src/mode';
+import { autoplayDecision, pickScript } from '../src/demo';
 import { ArenaScene, STAGE_H, STAGE_W } from '../src/arena/scene';
 import { applyEvent, emptyVM, loadSnapshot, reconcileLedger, totalScore } from '../src/arena/model';
 import { LedgerPanel, RankBoard } from '../src/arena/panels';
@@ -61,6 +62,10 @@ let api: ArenaApi;
 let chaosCtl: ChaosModeControl;
 let demoRunning = false;
 let waveRunning = false;
+let chainDemo = false;
+let currentScript: string | null = null;
+let lastDemoStart = 0;
+let demoScripts: string[] | null = null;
 
 function paintBadge() {
   const b = modeBadge(mode, status);
@@ -152,6 +157,7 @@ async function loadState() {
     waveNo = s.wave?.n ?? 0;
     waveRunning = !!s.wave?.running;
     demoRunning = !!s.demo?.running;
+    demoScripts = Array.isArray(s.demo?.scripts) ? s.demo.scripts : demoScripts;
     waveEl.textContent = waveNo ? `Wave ${waveNo}` : 'Wave -';
     queue.length = 0;
     loadSnapshot(vm, s, performance.now());
@@ -165,6 +171,8 @@ async function startDemo(script: string) {
   errEl.textContent = '';
   try {
     if (waveRunning) await api.stopWave();
+    currentScript = script;
+    lastDemoStart = performance.now();
     await api.startDemo(script);
     demoRunning = true;
     paintDemo();
@@ -180,9 +188,9 @@ async function boot() {
   api = createApi({ inpage, baseUrl: base });
   chaosCtl = new ChaosModeControl($('chaos-mode'), { setChaosMode: (o) => api.setChaosMode(o), onError: showError });
 
-  for (const b of demoBtns) b.addEventListener('click', () => void startDemo('hero'));
+  for (const b of demoBtns) b.addEventListener('click', () => { chainDemo = true; void startDemo('hero'); });
   demoStop.addEventListener('click', async () => {
-    try { await api.stopDemo(); demoRunning = false; paintDemo(); } catch (e) { showError(e); }
+    try { chainDemo = false; await api.stopDemo(); demoRunning = false; paintDemo(); } catch (e) { showError(e); }
   });
 
   await loadState();
@@ -192,8 +200,20 @@ async function boot() {
     onGone: () => void loadState(),
   });
 
-  const demo = demoFromQuery(search);
-  if (demo) void startDemo(demo);
+  // Demo mode plays on load (?demo=off keeps it quiet, ?demo=<script> plays one script).
+  const plan = autoplayDecision({ search, demoRunning, waveRunning, available: demoScripts });
+  chainDemo = plan.chain;
+  if (plan.start) void startDemo(plan.start);
+  // Chain the playlist: when a script ends, start the next one so the show never goes quiet.
+  window.setInterval(async () => {
+    if (!chainDemo || performance.now() - lastDemoStart < 6000) return;
+    try {
+      const s = await api.getState();
+      if (s.demo?.running || s.wave?.running) return;
+      const next = pickScript(currentScript, Array.isArray(s.demo?.scripts) ? s.demo.scripts : demoScripts);
+      if (next) void startDemo(next);
+    } catch { /* retry on the next tick */ }
+  }, 3000);
 }
 
 // ?inspect=<lane>:<stage id> opens the inspector once the lane exists (used for screenshots).
