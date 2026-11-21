@@ -257,7 +257,7 @@ export class LiveServer {
     const speed = num('speed', 1, (n) => SPEEDS.includes(n));
     let tiers = body.tiers ?? 'race';
     if (tiers !== 'race' && tiers !== 'allPhoenix') fail(400, 'bad_request', 'bad tiers');
-    let pace = body.pace ?? 'normal';
+    let pace = body.pace ?? 'slow';
     if (pace !== 'normal' && pace !== 'show' && pace !== 'slow') fail(400, 'bad_request', 'bad pace');
     let app = body.app ?? this.app;
     if (app !== 'orders' && app !== 'inbox') fail(400, 'bad_request', 'bad app');

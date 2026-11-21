@@ -6,7 +6,7 @@ describe('demo scripts', () => {
     it(`${n} loads and validates`, () => {
       const d = loadDemo(n);
       expect(d.name).toBe(n);
-      expect(d.pace).toBe('show');
+      expect(d.pace).toBe('slow');
     });
   }
   it('hero presses lanes 1 and 5 with a crash', () => {

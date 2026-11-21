@@ -1,8 +1,8 @@
 {
   "name": "loop",
   "seed": 7,
-  "pace": "show",
-  "orders": 3,
+  "pace": "slow",
+  "orders": 2,
   "lanes": 2,
   "tiers": "race",
   "presses": [
