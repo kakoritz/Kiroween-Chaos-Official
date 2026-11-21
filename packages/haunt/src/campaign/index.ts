@@ -5,3 +5,4 @@ export * from './crew';
 export * from './wave-config';
 export * from './balance';
 export * from './hints';
+export * from './boss-night';
