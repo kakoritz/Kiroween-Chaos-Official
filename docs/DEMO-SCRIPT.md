@@ -45,4 +45,4 @@ Record only after a fresh-clone test passes. If the live run fails on camera, us
 | 2:20 to 2:40 | MCP scene (recorded terminal or agent chat) |
 | 2:40 to 3:00 | Inbox app (`inbox` fixture or live) and the end card |
 
-Record the segments separately and edit them together. Keep the total under 3:00.
+Record the segments separately and edit them together. Keep the total under 3:00. The demos run at the slow pace (travel gaps, door ceremony), so each take is longer than its slot; cut dead time in the edit, never speed up the arena.
