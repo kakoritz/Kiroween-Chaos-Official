@@ -74,3 +74,27 @@ html, body { overflow: hidden; }
 .lg td.flash { animation: lgflash 600ms 2; }
 .lg-exp-c { color: var(--muted); }
 @keyframes lgflash { 50% { background: rgba(255,77,94,0.28); } }
+
+/* UI-B4: chaos mode selector, frequency slider and seed (header). */
+.cm { position: relative; display: flex; align-items: center; gap: 10px; }
+.cm-label { color: var(--muted); font-size: 14px; letter-spacing: 0.14em; text-transform: uppercase; }
+.seg { display: inline-flex; border: 2px solid var(--stone-2); border-radius: 10px; overflow: hidden; }
+.seg-b { font: inherit; font-weight: 700; font-size: 15px; padding: 8px 14px; background: transparent; color: var(--muted); border: 0; border-right: 2px solid var(--stone-2); cursor: pointer; }
+.seg-b:last-child { border-right: 0; }
+.seg-b:hover { color: var(--bone); }
+.seg-b:focus-visible { outline: 3px solid var(--bone); outline-offset: -3px; }
+.seg-b--on { background: var(--hex); color: #fff; }
+.seg-b[disabled] { opacity: 0.5; cursor: default; }
+.cm-pop { position: absolute; left: 0; top: 60px; width: 380px; padding: 14px 16px; background: var(--stone); border: 2px solid var(--hex); border-radius: 12px; z-index: 20; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.cm-row { display: flex; justify-content: space-between; align-items: baseline; color: var(--muted); font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; margin: 2px 0 6px; }
+.cm-row output { color: var(--bone); font: 700 16px ui-monospace, 'Cascadia Code', Menlo, monospace; text-transform: none; letter-spacing: 0; }
+.cm-slide { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.cm-end { color: var(--muted); font-size: 14px; font-weight: 700; }
+.cm-slide input[type=range] { flex: 1; height: 28px; accent-color: var(--torch); cursor: pointer; }
+.cm-slide input[type=range]:focus-visible { outline: 3px solid var(--bone); outline-offset: 2px; }
+.cm-seed { display: flex; gap: 8px; }
+.cm-seed input { flex: 1; font: 700 18px ui-monospace, 'Cascadia Code', Menlo, monospace; padding: 6px 10px; background: var(--bg); color: var(--bone); border: 2px solid var(--stone-2); border-radius: 8px; }
+.cm-seed input[aria-invalid=true] { border-color: var(--fail); }
+.cm-seed input:focus-visible { outline: 3px solid var(--bone); outline-offset: 2px; }
+.cm-dice { padding: 4px 12px; font-size: 22px; line-height: 1; }
+.cm-err { color: var(--fail); font-size: 14px; font-weight: 600; min-height: 1.3em; margin-top: 6px; }

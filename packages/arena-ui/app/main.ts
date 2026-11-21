@@ -1,7 +1,8 @@
-import { apiBaseFromQuery, demoFromQuery, modeBadge } from '../src/mode';
+﻿import { apiBaseFromQuery, demoFromQuery, modeBadge } from '../src/mode';
 import { ArenaScene, STAGE_H, STAGE_W } from '../src/arena/scene';
 import { applyEvent, emptyVM, loadSnapshot, reconcileLedger, totalScore } from '../src/arena/model';
 import { LedgerPanel, RankBoard } from '../src/arena/panels';
+import { ChaosModeControl, readChaosState } from '../src/arena/chaosmode';
 import { ApiError, createApi, resolveHttpBase, type ArenaApi, type ArenaEvent, type ConnectionStatus, type HauntInPage } from '../src/api';
 
 // W1/W2 shell plus the A3 canvas arena: the client connects the same way for mock, live and\n// browser. Events feed a pure reducer; the canvas redraws every animation frame from that state.
@@ -13,6 +14,7 @@ root.innerHTML = `
     <header class="hdr">
       <span class="logo">HAUNT</span>
       <span class="wave" id="wave">Wave -</span>
+      <div id="chaos-mode"></div>
       <span class="spacer"></span>
       <span class="total" id="total" title="Total score"></span>
       <span class="pill hidden" id="demo-pill">DEMO</span>
@@ -49,6 +51,7 @@ let events = 0;
 let lastSeq = 0;
 let waveNo = 0;
 let api: ArenaApi;
+let chaosCtl: ChaosModeControl;
 let demoRunning = false;
 let waveRunning = false;
 
@@ -112,6 +115,8 @@ async function loadState() {
   try {
     const s = await api.getState();
     mode = String(s.mode);
+    const cs = readChaosState(s);
+    if (cs) chaosCtl.adopt(cs);
     waveNo = s.wave?.n ?? 0;
     waveRunning = !!s.wave?.running;
     demoRunning = !!s.demo?.running;
@@ -141,6 +146,7 @@ async function boot() {
   const inpage = (window as unknown as { __haunt?: HauntInPage }).__haunt ?? null;
   const base = inpage ? '' : await resolveHttpBase(apiBaseFromQuery(search));
   api = createApi({ inpage, baseUrl: base });
+  chaosCtl = new ChaosModeControl($('chaos-mode'), { setChaosMode: (o) => api.setChaosMode(o), onError: showError });
 
   for (const b of demoBtns) b.addEventListener('click', () => void startDemo('hero'));
   demoStop.addEventListener('click', async () => {
