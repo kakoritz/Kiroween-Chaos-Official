@@ -5,7 +5,7 @@ Branches `core/SH-...`, `ui/SH-...`, `docs/SH-...`.
 ## Lane A
 - [x] **SH-C1 Badge and scorecard.** `haunt badge`, SVG and HTML generators (deterministic), MCP tool `haunt_badge`, tests (same run same bytes).
 - [x] **SH-C2 GitHub Action.** Composite action, example workflow, optional demo repo; PR comment with the Markdown report and badge; exit codes. Decision on CI policy in `docs/DECISIONS.md`.
-- [ ] **SH-C3 Workflow Lab engine.** Generic bot built from declared stages and parts; in-page sweep (browser engine); suggestions from reviewer rules; `inpage` functions `labRun(model)`.
+- [x] **SH-C3 Workflow Lab engine.** Generic bot built from declared stages and parts; in-page sweep (browser engine); suggestions from reviewer rules; `inpage` functions `labRun(model)`.
 - [ ] **SH-C4 Real loop proof.** Run the live loop, get wave 2 to A on the stated plan, fix the Phoenix lost-order and `updates` crash cases if they appear, save everything in `docs/proof/`; label recorded fixes.
 - [ ] **SH-C5 LLM reviewer and hook.** `reviewer --llm`, fallback to rules, hook at wave end.
 - [ ] **SH-C6 Inbox live in the arena.** Spawn the Python inbox through the runner for real (not only the CLI sweep) so Night 6 and the app switcher use a live second app. (Judge panel noted this was not done.)
