@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { LiveServer, buildLedger, createLiveRuntime, makeBotCommand, DemoPlayer, LaneSpawner, loadDemo, readHardening } from '../src/live';
+import { LiveServer, buildLedger, createLiveRuntime, makeBotCommand, DemoPlayer, LaneSpawner, loadDemo, readHardening, validateDemo } from '../src/live';
 import { RunnerEngine } from '../../haunt/src/runner/engine';
 import type { HauntEvent } from '../../haunt/src/score/score';
 import type { LedgerRow } from '../src/provider';
@@ -22,30 +22,76 @@ describe('demo playback', () => {
     expect(loadDemo('loop').lanes).toBe(2);
   });
 
-  it('hero presses fire at their times, once each', () => {
+  it('hero presses wait for payment on their own lane, once each', () => {
     const engine = new RunnerEngine();
     const events: HauntEvent[] = [];
     engine.startWave(1, settings, (e) => events.push(e));
     const p = new DemoPlayer(engine, (e) => events.push(e), loadDemo('hero'));
+    const payment = (lane: string, order = 'ord-0001', attempt = 1) => ({ type: 'stage_start', lane, order, stage: 'payment', detail: { attempt } });
+    p.step(20000);
+    expect(events).toHaveLength(0);
+    p.observe(payment('1', 'ord-0001', 2));
+    p.observe(payment('1', 'ord-0002'));
+    p.step(21000);
+    expect(events).toHaveLength(0);
+    p.observe(payment('1'));
+    p.step(21500);
+    expect(events).toHaveLength(0);
+    p.step(21700);
+    expect(events.map((e) => e.lane)).toEqual(['1']);
+    p.observe(payment('5'));
+    p.observe(payment('1'));
+    p.step(22600);
+    p.step(30000);
+    expect(events.filter((e) => e.type === 'chaos').map((e) => e.lane)).toEqual(['1', '5']);
+    expect(p.finished).toBe(true);
+  });
+
+  it('afterPrevMs chains from the previous press and forEachOrder fires once per order', () => {
+    const engine = new RunnerEngine();
+    const events: HauntEvent[] = [];
+    engine.startWave(1, settings, (e) => events.push(e));
+    const base = loadDemo('hero');
+    const press = { fault: 'crash', creature: 'reaper', point: 'after_effect_before_journal' };
+    const script = {
+      ...base,
+      presses: [
+        { ...press, lane: 2, when: { lane: 2, event: 'stage_start', stage: 'payment' }, forEachOrder: true },
+        { ...press, lane: 3, afterPrevMs: 1000, when: undefined },
+      ],
+    };
+    const p = new DemoPlayer(engine, (e) => events.push(e), validateDemo(script));
+    const ev = (order: string) => ({ type: 'stage_start', lane: '2', order, stage: 'payment', detail: { attempt: 1 } });
+    p.observe(ev('ord-0001'));
+    p.observe(ev('ord-0001'));
+    p.step(100);
+    expect(events.filter((e) => e.type === 'chaos').map((e) => e.lane)).toEqual(['2']);
+    p.step(1200);
+    expect(events.filter((e) => e.type === 'chaos').map((e) => e.lane)).toEqual(['2', '3']);
+  });
+
+  it('timed presses (atMs) still fire in order, once each', () => {
+    const engine = new RunnerEngine();
+    const events: HauntEvent[] = [];
+    engine.startWave(1, settings, (e) => events.push(e));
+    const p = new DemoPlayer(engine, (e) => events.push(e), loadDemo('loop'));
     p.step(9000);
     expect(events).toHaveLength(0);
     p.step(9650);
     expect(events.map((e) => e.lane)).toEqual(['1']);
     p.step(9800);
-    p.step(20000);
-    expect(events.filter((e) => e.type === 'chaos').map((e) => e.lane)).toEqual(['1', '5']);
-    expect(p.finished).toBe(true);
+    p.step(9800);
+    expect(events.filter((e) => e.type === 'chaos').map((e) => e.lane)).toEqual(['1', '2']);
   });
 
   it('speed divides script time', () => {
     const engine = new RunnerEngine();
     const events: HauntEvent[] = [];
     engine.startWave(1, settings, (e) => events.push(e));
-    const p = new DemoPlayer(engine, (e) => events.push(e), loadDemo('hero'), 4);
+    const p = new DemoPlayer(engine, (e) => events.push(e), loadDemo('loop'), 4);
     p.step(2500);
     expect(events.filter((e) => e.type === 'chaos')).toHaveLength(2);
   });
-
   it('full plays the boss warning, start and end', () => {
     const engine = new RunnerEngine();
     const events: HauntEvent[] = [];

@@ -21,6 +21,12 @@ describe('reviewer', () => {
     const rules = new Set(reviewEvents(evs, { journal: [{ order: 'o1', kind: 'charge' }], ledger: [] }).map((f) => f.rule));
     expect([...rules].sort()).toEqual(['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8']);
   });
+  it('R7 also flags a ledger row the journal never recorded', () => {
+    const r7 = (o: Parameters<typeof reviewEvents>[1]) => reviewEvents([], o).filter((f) => f.rule === 'R7');
+    expect(r7({ journal: [], ledger: [{ order: 'o9', kind: 'charge' }] })).toHaveLength(1);
+    expect(r7({ journal: [{ order: 'o9', kind: 'charge' }], ledger: [{ order: 'o9', kind: 'charge' }] })).toHaveLength(0);
+    expect(r7({ ledger: [{ order: 'o9', kind: 'charge' }] })).toHaveLength(0);
+  });
   it('is deterministic and cites seq numbers', () => {
     const a = runReviewer('run-x', evs);
     const b = runReviewer('run-x', [...evs].reverse());

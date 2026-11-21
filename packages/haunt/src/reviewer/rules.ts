@@ -96,7 +96,7 @@ export function reviewEvents(events: HauntEvent[], opts: ReviewOptions = {}): Fi
     const l = count(opts.ledger);
     for (const k of [...new Set([...j.keys(), ...l.keys()])].sort()) {
       const rows = l.get(k) ?? 0;
-      if ((j.has(k) && rows === 0) || rows > 1) {
+      if ((j.has(k) && rows === 0) || rows > 1 || (opts.journal && opts.ledger && !j.has(k) && rows > 0)) {
         const [order, kind] = k.split('|');
         const ev = evs.find((x) => x.order === order && (x.type === 'effect' || x.type === 'repeat'));
         add('R7', 'high', { stage: ev?.stage }, '', `Journal and ledger disagree for ${kind} on order ${order}: ${rows} ledger row(s)`, ev ? [seqOf(ev)] : [], 'idempotency');

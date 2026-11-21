@@ -5,7 +5,16 @@ import { fileURLToPath } from 'node:url';
 import { BOSSES, faultById } from '../../../haunt/src/chaos/catalog';
 import type { TierMode } from '../../../haunt/src/runner/lanes';
 
-export interface DemoPress { atMs: number; lane: number; fault: string; creature: string; point?: string; scope?: 'inner' | 'outer' }
+export interface DemoWhen { lane: number; event: string; stage?: string; order?: string; attempt?: number }
+/**
+ * One press. Timing is one of: `atMs` (1x ms since playback start), `when` (first matching event on that lane,
+ * runtime.md section 27), or `afterPrevMs` (1x ms after the previous entry fired). `delayMs` waits after a `when` match.
+ * `forEachOrder` keeps a `when` entry live and fires it once per order.
+ */
+export interface DemoPress {
+  atMs?: number; when?: DemoWhen; afterPrevMs?: number; delayMs?: number; forEachOrder?: boolean;
+  lane: number; fault: string; creature: string; point?: string; scope?: 'inner' | 'outer';
+}
 export interface DemoBoss { id: string; warnAtMs: number; startAtMs: number }
 export interface DemoScript {
   name: string; seed: number; pace: 'show'; orders: number; lanes: number; tiers: TierMode;
@@ -27,9 +36,17 @@ export function validateDemo(raw: unknown): DemoScript {
   if (d.tiers !== 'race' && d.tiers !== 'allPhoenix') bad('tiers');
   if (!Array.isArray(d.presses)) bad('presses');
   let last = -1;
-  for (const p of d.presses) {
-    if (!Number.isFinite(p.atMs) || p.atMs < last) bad('presses must be sorted by atMs');
-    last = p.atMs;
+  for (const [i, p] of d.presses.entries()) {
+    if (p.when) {
+      if (!Number.isInteger(p.when.lane) || p.when.lane < 1 || p.when.lane > d.lanes) bad('when lane out of range');
+      if (typeof p.when.event !== 'string' || !p.when.event) bad('when event');
+    } else if (p.afterPrevMs !== undefined) {
+      if (!Number.isFinite(p.afterPrevMs) || p.afterPrevMs < 0 || i === 0) bad('afterPrevMs needs a previous press');
+    } else {
+      if (p.atMs === undefined || !Number.isFinite(p.atMs) || p.atMs < last) bad('presses must be sorted by atMs');
+      last = p.atMs as number;
+    }
+    if (p.forEachOrder && !p.when) bad('forEachOrder needs when');
     if (!Number.isInteger(p.lane) || p.lane < 1 || p.lane > d.lanes) bad(`lane ${p.lane} out of range`);
     const f = faultById(p.fault);
     if (!f) bad(`unknown fault ${p.fault}`);

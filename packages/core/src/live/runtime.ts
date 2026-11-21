@@ -129,9 +129,11 @@ export function makeBotCommand(o: BotCommandOptions): SpawnerOptions['botCommand
 
 /** Plays a demo script against the engine. Stepped with elapsed real ms; `start` attaches it to a timer. */
 export class DemoPlayer {
-  private next = 0;
   private phase: 'idle' | 'warned' | 'live' | 'done' = 'idle';
   private timer: ReturnType<typeof setInterval> | undefined;
+  private lastT = 0;
+  /** Per press: `firedAt` (1x ms) once fired, `dueAt` once a `when` matched and is waiting out its delay. */
+  private readonly st: { firedAt?: number; dueAt?: number; orders: Set<string> }[];
   finished = false;
 
   constructor(
@@ -139,17 +141,60 @@ export class DemoPlayer {
     private readonly record: (ev: HauntEvent) => void,
     readonly script: DemoScript,
     private readonly speed = 1,
-  ) {}
+  ) {
+    this.st = script.presses.map(() => ({ orders: new Set<string>() }));
+  }
+
+  private fire(i: number, t: number): void {
+    const p = this.script.presses[i]!;
+    this.st[i]!.firedAt = t;
+    try {
+      this.engine.chaos({ lane: p.lane, fault: p.fault, creature: p.creature, scope: p.scope, point: p.point });
+    } catch { /* lane at the depth limit or not in the wave: a press is best effort */ }
+  }
+
+  /** Feed a wave event. A `when` press arms on the first matching event after the previous `when` press of its lane. */
+  observe(ev: { type?: string; lane?: unknown; stage?: unknown; order?: unknown; detail?: unknown }): void {
+    const { presses } = this.script;
+    for (let i = 0; i < presses.length; i++) {
+      const p = presses[i]!;
+      const w = p.when;
+      const s = this.st[i]!;
+      if (!w || (s.firedAt !== undefined && !p.forEachOrder) || s.dueAt !== undefined && !p.forEachOrder) continue;
+      // Per lane: an earlier unfired `when` press of the same lane goes first.
+      if (presses.some((q, j) => j < i && q.when?.lane === w.lane && this.st[j]!.firedAt === undefined && this.st[j]!.dueAt === undefined && !q.forEachOrder)) continue;
+      if (ev.type !== w.event || String(ev.lane) !== String(w.lane)) continue;
+      if (w.stage !== undefined && ev.stage !== w.stage) continue;
+      if (w.order !== undefined && ev.order !== w.order) continue;
+      if (w.attempt !== undefined && (ev.detail as { attempt?: number } | undefined)?.attempt !== w.attempt) continue;
+      if (p.forEachOrder) {
+        const o = String(ev.order ?? '');
+        if (s.orders.has(o)) continue;
+        s.orders.add(o);
+      }
+      s.dueAt = this.lastT + (p.delayMs ?? 0);
+      if (!p.forEachOrder) break;
+    }
+  }
 
   /** Fire every press and boss phase due at `elapsedMs` real ms since playback start. Script times are 1x. */
   step(elapsedMs: number): void {
     const t = elapsedMs * this.speed;
+    this.lastT = t;
     const { presses, boss } = this.script;
-    while (this.next < presses.length && presses[this.next]!.atMs <= t) {
-      const p = presses[this.next++]!;
-      try {
-        this.engine.chaos({ lane: p.lane, fault: p.fault, creature: p.creature, scope: p.scope, point: p.point });
-      } catch { /* lane at the depth limit or not in the wave: a press is best effort */ }
+    for (let i = 0; i < presses.length; i++) {
+      const p = presses[i]!;
+      const s = this.st[i]!;
+      if (p.when) {
+        if (s.dueAt !== undefined && t >= s.dueAt) {
+          s.dueAt = p.forEachOrder ? undefined : s.dueAt;
+          if (p.forEachOrder || s.firedAt === undefined) this.fire(i, t);
+        }
+      } else if (s.firedAt === undefined) {
+        const prev = p.afterPrevMs !== undefined ? this.st[i - 1]!.firedAt : undefined;
+        const due = p.afterPrevMs !== undefined ? (prev === undefined ? Infinity : prev + p.afterPrevMs) : (p.atMs ?? Infinity);
+        if (t >= due) this.fire(i, t);
+      }
     }
     if (boss) {
       if (this.phase === 'idle' && t >= boss.warnAtMs) {
@@ -169,7 +214,7 @@ export class DemoPlayer {
         this.record({ type: 'boss_end', detail: { boss: boss.id, durationMs: Math.round(BOSS_DURATION_MS / this.speed) } });
       }
     }
-    this.finished = this.next >= presses.length && (!boss || this.phase === 'done');
+    this.finished = presses.every((p, i) => p.forEachOrder || this.st[i]!.firedAt !== undefined) && (!boss || this.phase === 'done');
   }
 
   start(now: () => number = Date.now): void {
@@ -292,7 +337,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
       norm.begin(settings.orders);
       const g = new SettleGate((e) => rec(e as unknown as HauntEvent));
       gate = g;
-      record = (e) => g.push(e as unknown as Record<string, any>);
+      record = (e) => { g.push(e as unknown as Record<string, any>); demo?.observe(e as never); };
       endWave = end;
       engine.startWave(wave, settings, record);
     },
