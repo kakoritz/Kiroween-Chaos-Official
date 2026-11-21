@@ -24,8 +24,7 @@ jobs:
 
   fresh-clone:
     runs-on: ubuntu-latest
-    # Installs and runs `npm run demo -- --check` only. No tests. Remove continue-on-error once the mock server (H0.7) lands.
-    continue-on-error: true
+    # Installs and runs `npm run demo -- --check` only. No tests.
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
