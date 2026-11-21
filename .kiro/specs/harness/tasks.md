@@ -40,7 +40,7 @@ Branch prefix `core/`. Each task is one PR. Tags: [C] touches `contract/`.
 - [x] H4.5 Determinism tests. (packages/haunt/test/determinism.test.ts: rng, random chaos plan, boss plan, sweep byte-identical JSON (P8, in-process runner), ramp, stable report. Live-process byte identity is tracked under H3.2.)
 
 ## H5. Ship
-- [ ] H5.1 README, quick start, "How Kiro built this".
+- [x] H5.1 README, quick start, "How Kiro built this".
 - [ ] H5.2 Demo run script that feeds the UI lane's demo mode.
 
 ## Cut line
