@@ -1,10 +1,12 @@
-﻿import { compareReports, parseReport, postmortemScore, renderMarkdown, gradeColor, signed, type Comparison, type HarnessReport } from '../src/report/model';
+import { compareReports, parseReport, postmortemScore, renderMarkdown, gradeColor, signed, type Comparison, type HarnessReport } from '../src/report/model';
+import { renderHeatRow, renderLapTable, renderStarChart } from '../src/arena/laps-view';
+import { heatOf, issuesByStageOf, laneLapsOf, laneStarsOf, ratingFor, ratingsOf, ratingTone, starNum, waveAvgStars } from '../src/arena/laps-model';
 import w1 from '../../../docs/proof/wave1-report.json';
 import w2 from '../../../docs/proof/wave2-report.json';
 import pm1 from '../../../docs/proof/wave1-postmortem.md?raw';
 import pm2 from '../../../docs/proof/wave2-postmortem.md?raw';
 
-interface Wave { n: number; report: HarnessReport; postmortem: string; source: string }
+interface Wave { n: number; report: HarnessReport; postmortem: string; source: string; lapsRaw?: unknown; starsRaw?: unknown }
 
 const root = document.getElementById('report')!;
 const waves: Wave[] = [];
@@ -38,7 +40,9 @@ async function load(): Promise<void> {
       try {
         const report = parseReport(await fetchJson(`/api/waves/${n}/report`));
         const postmortem = await fetchText(`/api/waves/${n}/postmortem`).catch(() => '');
-        waves.push({ n, report, postmortem, source: 'live API' });
+        const lapsRaw = await fetchJson(`/api/waves/${n}/laps`).catch(() => undefined);
+        const starsRaw = await fetchJson(`/api/waves/${n}/stars`).catch(() => undefined);
+        waves.push({ n, report, postmortem, source: 'live API', ...(lapsRaw !== undefined ? { lapsRaw } : {}), ...(starsRaw !== undefined ? { starsRaw } : {}) });
       } catch { break; }
     }
   }
@@ -122,6 +126,12 @@ function compareView(): HTMLElement {
     metric('Repeated effects', String(cmp.repeatsBefore), String(cmp.repeatsAfter), cmp.repeatsAfter < cmp.repeatsBefore ? 'improved' : cmp.repeatsAfter > cmp.repeatsBefore ? 'worsened' : 'same'),
     metric('Lost orders', String(cmp.lostBefore), String(cmp.lostAfter), cmp.lostAfter < cmp.lostBefore ? 'improved' : cmp.lostAfter > cmp.lostBefore ? 'worsened' : 'same'),
   );
+  const la = lapData(a); const lb = lapData(b);
+  if (la.avg !== null || lb.avg !== null) {
+    const tr = (lb.avg ?? 0) > (la.avg ?? 0) ? 'improved' : (lb.avg ?? 0) < (la.avg ?? 0) ? 'worsened' : 'same';
+    delta.append(metric('Avg stars', la.avg === null ? '-' : starNum(la.avg), lb.avg === null ? '-' : starNum(lb.avg), tr));
+    delta.append(metric('Rating', la.avg === null ? '-' : ratingFor(la.avg), lb.avg === null ? '-' : ratingFor(lb.avg), tr));
+  }
   for (const t of cmp.tiers) delta.append(metric(`Lane ${t.tier}`, t.before?.grade ?? '-', t.after?.grade ?? '-', t.trend));
   wrap.append(delta);
 
@@ -182,12 +192,59 @@ function summaryView(): HTMLElement {
   return wrap;
 }
 
+/** PT-U6: lap data of one wave, from the live endpoints when present, else from the report JSON. */
+function lapData(w: Wave) {
+  const laps = laneLapsOf(w.lapsRaw ?? w.report.laps);
+  const stars = laneStarsOf(w.starsRaw ?? w.report.stars);
+  const ratings = ratingsOf(w.report.ratings, stars);
+  return { laps, stars, ratings, avg: waveAvgStars(ratings) };
+}
+
+function ratingPill(rating: string, avg: number | null): HTMLElement {
+  return el('span', `rating rating--${ratingTone(rating)}`, rating ? `${rating}${avg !== null ? ` \u2605 ${starNum(avg)}` : ''}` : 'no reviews');
+}
+
+function lapsView(): HTMLElement {
+  const w = waves[selA]!;
+  const wrap = el('div', 'lapsview');
+  const pick = el('div', 'pickers');
+  const s = el('select'); s.setAttribute('aria-label', 'Wave');
+  waves.forEach((x, i) => { const o = el('option', undefined, `Wave ${x.n}`); o.value = String(i); o.selected = i === selA; s.append(o); });
+  s.onchange = () => { selA = Number(s.value); render(); };
+  pick.append(s);
+  wrap.append(pick);
+  const d = lapData(w);
+  if (d.laps.length === 0 && d.stars.size === 0) {
+    wrap.append(el('p', 'empty', 'This wave has no lap data. Laps and stars come with contract v1.1 (run a wave against a v1.1 server, or load a report JSON that has laps and stars).'));
+    return wrap;
+  }
+  const lanes = new Set<number>([...d.laps.map((l) => l.lane), ...d.stars.keys()]);
+  for (const lane of [...lanes].sort((a, b) => a - b)) {
+    const ll = d.laps.find((l) => l.lane === lane);
+    const rt = d.ratings.find((r) => r.lane === lane);
+    const sec = el('section', 'laneblock');
+    const h = el('h3', undefined, `Lane ${lane}${ll?.tier ? `: ${ll.tier}` : ''} `);
+    h.append(ratingPill(rt?.rating ?? '', rt?.avg ?? null));
+    sec.append(h);
+    sec.append(renderLapTable(ll?.rows ?? [], `Lane ${lane} laps`));
+    sec.append(el('h4', undefined, 'Star progression'), renderStarChart(d.stars.get(lane) ?? [], `Lane ${lane} star progression`));
+    const by = issuesByStageOf(ll?.rows ?? []);
+    const ids = Object.keys(by);
+    if (ids.length) {
+      const max = Math.max(...ids.map((i) => by[i]!));
+      sec.append(el('h4', undefined, 'Issues by step'), renderHeatRow(ids.map((id) => ({ stage: id, count: by[id]!, heat: heatOf(by[id]!, max) }))));
+    }
+    wrap.append(sec);
+  }
+  return wrap;
+}
+
 function render(): void {
   root.replaceChildren();
   const bar = el('header', 'bar');
   bar.append(el('strong', undefined, 'HAUNT'), el('span', 'muted', 'Report viewer'));
   const tabs = el('nav', 'tabs'); tabs.setAttribute('role', 'tablist');
-  for (const [id, label] of [['compare', 'Compare'], ['summary', 'Summary']]) {
+  for (const [id, label] of [['compare', 'Compare'], ['summary', 'Summary'], ['laps', 'Laps & stars']]) {
     const b = el('button', 'tab', label); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(tab === id));
     b.onclick = () => { tab = id; render(); };
     tabs.append(b);
@@ -200,7 +257,7 @@ function render(): void {
   };
   bar.append(el('span', 'spacer'), file);
   root.append(bar);
-  const main = el('main'); main.append(tab === 'summary' ? summaryView() : compareView());
+  const main = el('main'); main.append(tab === 'summary' ? summaryView() : tab === 'laps' ? lapsView() : compareView());
   root.append(main);
   root.dataset.ready = '1';
 }

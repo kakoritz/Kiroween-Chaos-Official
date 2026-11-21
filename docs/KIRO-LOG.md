@@ -1,4 +1,4 @@
-# Kiro log
+﻿# Kiro log
 
 Dated notes on what Kiro did and decided while building Haunt. Newest last.
 
@@ -191,6 +191,8 @@ pm run live). SSE with hello, since replay (exclusive), 410 gone beyond 5000 eve
 - 2026-11-21 CP-C3 finish core/camp-c3b: the mock campaign fixtures use the native world faults (sms_down, app_down, wrong_address, no_answer, car_accident) of the sim planner, merged with PT-C7a and PT-C7b, instead of the stand-in faults and the rename step. `night4` and `night4-r-b-q` regenerated; other nights unchanged. Night 5 still plays two of three bosses (a boss window lasts until the slowest lane settles) and night 3 with only Spellbook and Coffin Stash still fails (the planner halts without Lantern).
 - 2026-11-21 SH-C4 ui/share-sh-c4: real loop proof written up honestly. New `docs/proof/live-fix.md`: plan stated (crash-only, 2 lanes, 3 orders, seed 7), wave 1 F to wave 2 A verified from saved reports, hardening spec cited, and the fix labelled "Recorded fix" (not applied live by Kiro yet); steps to make it live. No Phoenix lost order or `updates` crash appeared.
 - 2026-11-21 PT-C8b (part 1) core/pt-c8b: provider 	ypo fault mode (one order, complaint on the confirmation email, or wrong_order at handoff), /refunds and /discounts ledger kinds (rf_, dc_), order_typo arm to /_fault body, repeat detector exemption P15 (refund and discount rows, :rN charge after a refund); tests in wrong-order-provider.test.ts. Still open: runner input_read mutation, SDK WrongOrder, live POST /api/decision, journal records, restart mid-decision.
+
+- 2026-11-21 PT-U6 ui/pt-u6-laps-wave-summary: laps and wave summary. New arena/laps-model.ts, laps-view.ts, laps.css, wave-summary.ts (lap table with best and slowest tags, wave end card v2, star progression chart); report tab 'Laps & stars' in report.ts; lane popup and scene wiring; #report-btn id on the View report button for the tour; tests in laps.test.ts.
 - 2026-11-21 SH-C5 ui/share-sh-c5: LLM reviewer. New `packages/haunt/src/reviewer/llm.ts` (Kiro CLI or API provider, sanitized draft diff appended to the hardening design, rule fallback on any failure), `reviewer/hook.ts` (`onWaveEnd` runs on `wave_end`), `tools/haunt-review.ts` (`npm run review -- <run> --llm`), hook prompt updated, tests in `reviewer-llm.test.ts`.
 - 2026-11-21 PT-C1 core/pt-c1: demo scripts hero, full, loop now pace slow with 3, 6 and 2 orders; interactive default pace slow; demo.test.ts expects slow.
 - 2026-11-21 SH-C6 ui/share-sh-c6: the inbox is live in the arena. New `packages/core/src/live/inbox-command.ts`; `makeBotCommand` now spawns the Python inbox (`bot/run.py`, or `bot/crew.py` for the Crew) through the runner when the app is `inbox`, writes the corpus mail into the lane folder, and falls back to the TypeScript bots if Python is missing. Night 6 and the app switcher now run a real second app. Test in `inbox-live.test.ts` runs a real Python lane against the provider.

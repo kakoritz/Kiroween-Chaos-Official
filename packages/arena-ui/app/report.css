@@ -37,3 +37,10 @@ th { color: var(--muted); font-weight: 600; }
 .finding { font-size: 14px; padding: 3px 0; } .none, .empty { color: var(--muted); }
 .summary { display: grid; gap: 16px; justify-items: start; } .pm { background: var(--stone); border-radius: 10px; padding: 4px 20px 12px; width: 100%; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* PT-U6 laps and stars tab */
+.lapsview .laneblock { margin: 14px 0; padding: 10px 14px; border: 2px solid #3a3358; border-radius: 12px; background: #231f3d; }
+.lapsview h3 { margin: 0 0 6px; }
+.lapsview h4 { margin: 10px 0 4px; color: #9a93b8; font-size: 12px; text-transform: uppercase; }
+.rating { padding: 1px 10px; border-radius: 10px; font-size: 13px; font-weight: 800; border: 1px solid currentColor; }
+.rating--gold { color: #ffd24a; } .rating--good { color: #5ee08a; } .rating--amber { color: #ff9a3c; } .rating--red { color: #ff4d5e; }

@@ -61,6 +61,8 @@ export interface LaneVM {
   v2?: ChipInfo[];
   heat?: Heat;
   heatFolded?: boolean;
+  /** Live star tracker (PT-U6): cum of the last review in this wave and that review's stars. */
+  stars?: { sum: number; max: number; last: number } | null;
 }
 
 export interface LedgerCell { rows: number; repeats: number }
@@ -107,6 +109,8 @@ export function loadSnapshot(vm: ArenaVM, s: ArenaState, now: number): void {
     l.tier = ls.tier; l.label = ls.label; l.parts = ls.parts.filter((p) => p.installed).map((p) => p.id);
     l.order = ls.order; l.orderIndex = ls.orderIndex; l.ordersTotal = ls.ordersTotal;
     l.score = ls.score; l.counts = { ...ls.counts }; l.depth = ls.depth;
+    const st = (ls as { stars?: { sum?: number; max?: number; count?: number } }).stars;
+    if (st && typeof st.sum === 'number' && typeof st.max === 'number' && (st.count ?? 1) > 0) l.stars = { sum: st.sum, max: st.max, last: 0 };
     const idx = Math.max(0, ls.stageIndex);
     l.stageIndex = idx;
     for (let i = 0; i < vm.stages.length; i++) {
@@ -272,6 +276,11 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
       if (!l.parts.includes(part)) l.parts = [...l.parts, part];
       l.equips = l.equips.filter((e) => now - e.since < EQUIP_LIFE_MS && e.part !== part);
       l.equips.push({ part, since: now, ...(typeof d.spec === 'string' ? { spec: d.spec } : {}) });
+      break;
+    }
+    case 'review': {
+      const c = (d.cum ?? {}) as Record<string, unknown>;
+      if (typeof c.stars === 'number' && typeof c.max === 'number') l.stars = { sum: c.stars, max: c.max, last: num(d.stars) };
       break;
     }
     case 'score': {

@@ -16,6 +16,7 @@ import { dropPoint, dropProgress, queueLeft, queueShape } from './order';
 import { grabPoint, grabProgress, lapMotion, START_X, STACK_STEP, STACK_X } from './lap';
 import { drawHandoff, drawRunDust } from './handoff';
 import { cobweb, flagstoneFloor, fogTexture, laneVignette, torchPools } from './crypt';
+import { starTracker } from './laps-model';
 
 export const STAGE_W = 1920;
 export const STAGE_H = 1080;
@@ -297,6 +298,7 @@ function labelCard(ctx: Ctx, b: LaneBox, l: LaneVM, t: number, worn: string[], s
     txt(ctx, g.label, gx, gy + 1, 14, on ? C.out : C.muted, 'center', MONO, '700');
   });
   txt(ctx, String(l.score), 46, b.top + h - 24, 24, l.score < 0 ? C.fail : C.text, 'left', MONO, '700');
+  if (l.stars) txt(ctx, `\u2605 ${starTracker({ stars: l.stars.sum, max: l.stars.max })}`, 46, b.top + h - 46, 14, l.stars.sum / Math.max(1, l.stars.max) >= 0.9 ? C.warn : C.muted, 'left', MONO, '700');
   if (l.scorePop) {
     const age = (t - l.scorePop.since) * speed / 1100;
     if (age >= 0 && age < 1) {

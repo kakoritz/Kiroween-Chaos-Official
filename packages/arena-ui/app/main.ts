@@ -7,6 +7,7 @@ import { LaneTickerModel, LaneTickerView } from '../src/arena/lanes-ticker';
 import { chipAt } from '../src/arena/inspector';
 import { LanePopup } from '../src/arena/lane-popup';
 import '../src/arena/lane-popup.css';
+import { WaveSummary } from '../src/arena/wave-summary';
 import { chipTipAt } from '../src/arena/chiptip';
 import { BossBar, bossAnnouncement } from '../src/arena/boss';
 import { ChaosModeControl, readChaosState } from '../src/arena/chaosmode';
@@ -222,11 +223,21 @@ muteBtn.addEventListener('click', () => {
 const captionPlayer = new CaptionPlayer(freezeFromQuery(window.location.search));
 const captionOverlay = new CaptionOverlay(stageEl, captionPlayer, { demoRunning: new URLSearchParams(window.location.search).get('demo') !== 'off' });
 
-const shopStart = gearShopStarter(stageEl, { getCampaign: () => api.getCampaign(), startWave: (o) => { campaignResults.begin(o.campaign.night); return api.startWave(o); } });
+const waveSummary = new WaveSummary(stageEl, {
+  stageIds: () => vm.stages.map((s) => s.id),
+  stageLabel: (id) => vm.stages.find((s) => s.id === id)?.label ?? id,
+  laneTitle: (n) => vm.lanes.find((l) => l.lane === n)?.tier ?? '',
+  fetchStars: (n) => api.getWaveStars(n),
+  nextWave: () => { api.startWave().catch(showError); },
+  playDemo: () => { void startDemo(pickScript(currentScript, demoScripts) ?? 'hero'); },
+  reportUrl: (n) => `report.html?live=1#/report/${n}`,
+}); // PT-U6
+const shopStart = gearShopStarter(stageEl, { getCampaign: () => api.getCampaign(), startWave: (o) => { campaignResults.begin(o.campaign.night); waveSummary.suppressNext(); return api.startWave(o); } });
 const campaignResults = mountCampaignResults(stageEl, { getCampaign: () => api.getCampaign() }, { onNight: (n) => shopStart(n), onHub: () => window.dispatchEvent(new CustomEvent('haunt:splash', { detail: { action: 'campaign' } })) }); // CP-U3
 
 function onEvent(ev: ArenaEvent) {
   campaignResults.onEvent(ev);
+  waveSummary.onEvent(ev);
   queue.push(ev);
   captionPlayer.event(ev, performance.now());
   sound.onEvent(ev, performance.now());

@@ -1,4 +1,4 @@
-﻿// UI-W4 / UI-C3: pure model for the report viewer. No DOM here so it is unit tested.
+// UI-W4 / UI-C3: pure model for the report viewer. No DOM here so it is unit tested.
 export type CellResult = 'pass' | 'repeat' | 'fail' | 'recovered_late' | 'halt' | 'na';
 
 export interface MatrixCell { stage: string; fault: string; result: string; repeats: unknown[]; evidenceSeq: number[] }
@@ -14,6 +14,8 @@ export interface HarnessReport {
   targets: unknown[];
   findings: Finding[];
   tiers: Tier[];
+  /** Contract v1.1 (design.md section 9): lap tables, star series and ratings per lane, when the report carries them. */
+  laps?: unknown; stars?: unknown; ratings?: unknown;
 }
 
 export const GRADE_ORDER = ['F', 'D', 'C', 'B', 'A', 'S'];
@@ -30,6 +32,7 @@ export function parseReport(raw: unknown): HarnessReport {
     generatedAt: Number(r.generatedAt ?? 0), grade: r.grade, reliability: String(r.reliability ?? r.grade),
     matrix: arr<MatrixCell>(r.matrix), recovery: { p50: rec.p50 ?? 0, p95: rec.p95 ?? 0, max: rec.max ?? 0 },
     repeats: arr(r.repeats), lost: arr(r.lost), targets: arr(r.targets), findings: arr<Finding>(r.findings), tiers: arr<Tier>(r.tiers),
+    ...(r.laps !== undefined ? { laps: r.laps } : {}), ...(r.stars !== undefined ? { stars: r.stars } : {}), ...(r.ratings !== undefined ? { ratings: r.ratings } : {}),
   };
 }
 

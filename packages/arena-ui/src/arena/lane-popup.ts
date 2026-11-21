@@ -8,6 +8,8 @@ import {
   secs, segment, stageRows, starGlyphs, starText, starTone, type LogFilter, type OrderRow,
 } from './lane-popup-model';
 import { replayCount } from './inspector';
+import { lapRowsFromEvents, lapRowsOf, mergeLapRows } from './laps-model';
+import { renderLapTable } from './laps-view';
 
 const MAX_BUF = 1500;
 const SCENE_W = 1100;
@@ -66,6 +68,8 @@ export class LanePopup {
   private readonly logHead: HTMLElement;
   private readonly summary: HTMLElement;
   private readonly review: HTMLElement;
+  private readonly lapsBox: HTMLDetailsElement;
+  private readonly lapsBody: HTMLElement;
   private readonly followBox: HTMLInputElement;
   private readonly scrubber: HTMLInputElement;
   private readonly replayBtn: HTMLButtonElement;
@@ -147,7 +151,11 @@ export class LanePopup {
     acts.append(this.replayBtn, this.speedSel, this.chaosSel, this.chaosBtn);
     foot.append(this.summary, this.review, acts);
 
-    dlg.append(head, sceneBar, mid, foot);
+    this.lapsBox = el('details', 'lp-laps') as HTMLDetailsElement;
+    this.lapsBody = el('div', 'lp-lapsbody');
+    this.lapsBox.append(el('summary', '', 'Laps of this wave'), this.lapsBody);
+    this.lapsBox.addEventListener('toggle', () => { this.sig = ''; });
+    dlg.append(head, sceneBar, mid, this.lapsBox, foot);
     root.append(dlg);
     root.addEventListener('mousedown', (e) => { if (e.target === root) this.close(); });
     window.addEventListener('keydown', (e) => this.onKey(e));
@@ -285,6 +293,7 @@ export class LanePopup {
     const cum = rv?.cum ?? this.latestCum();
     this.pace.textContent = cum ? `\u2605 ${starText(cum.stars)}/${cum.max}` : '';
     this.pace.title = 'Stars so far in this wave';
+    if (this.lapsBox.open) this.lapsBody.replaceChildren(renderLapTable(mergeLapRows(lapRowsOf(this.serverLaps), lapRowsFromEvents(this.buf, this.lane)), 'Laps of this wave'));
   }
 
   private latestCum(): { stars: number; max: number } | null {
