@@ -5,10 +5,10 @@ Branches: `core/PT-...` (Lane A), `ui/PT-...` (Lane B). One PR per task. Contrac
 ## Phases and dependencies
 
 ```
-P0  PT-C0 contract+schema+fixtures+mock  ──┬─> P1 UX (PT-U1..U5, U9)  needs PT-C2 travel, PT-C5 order records
-                                           ├─> P2 laps/score/reviews (PT-C3,C4,C6, PT-U3,U6,U7,U8)
-                                           ├─> P3 world events (PT-C7, PT-U10, PT-ART)
-                                           └─> P4 wrong order (PT-C8, PT-U11)
+P0  PT-C0 contract+schema+fixtures+mock  â”€â”€â”¬â”€> P1 UX (PT-U1..U5, U9)  needs PT-C2 travel, PT-C5 order records
+                                           â”œâ”€> P2 laps/score/reviews (PT-C3,C4,C6, PT-U3,U6,U7,U8)
+                                           â”œâ”€> P3 world events (PT-C7, PT-U10, PT-ART)
+                                           â””â”€> P4 wrong order (PT-C8, PT-U11)
 ```
 Order: P0, then P1 (the visible fixes the owner asked for first), then P2, P3, P4. Lane B can build P1, P2, P3 against the mock as soon as PT-C0 merges.
 
@@ -16,7 +16,7 @@ Order: P0, then P1 (the visible fixes the owner asked for first), then P2, P3, P
 
 - [x] **PT-C0 Contract v1.1 plumbing.** (PT-C0e done: `window.__haunt` getLaneOrder, getLaneLaps, getWaveLaps, getWaveStars, decide in the stub, HttpApi, InPageApi and ArenaApi; docs synced; `npm run mock` serves v1.1. PT-C0a schema done, `contractMinor`, `review`, `decision_*`, travel, lap and summary fields. PT-C0b validator rules 40 to 47 done, gated on `hello.contractMinor` >= 1, with negative tests in `packages/haunt/test/validate-v1-1.test.ts`. PT-C0c fixtures done: `hero-crash` regenerated with travel, laps and reviews, plus `laps-reviews`, `cancelled`, `world-events`, `typo-*`, `boss-recovered`, `downtime`; `full` and `loop` still v1.0. PT-C0d mock endpoints done (order record, laps, wave laps and stars, decision; covered by `test:contract`).) Merge `contract/V1_1.md` (this PR). Extend `events.schema.json` (new fields, `review`, `decision_*`, `hello.contractMinor`), the validator (rules 40 to 47), `tools/make-fixtures.ts` (travel gaps, laps, reviews, the new fixtures), the mock endpoints (`/api/lane/:lane/order/:order`, `/laps`, `/api/waves/:n/laps|stars`, `/api/decision`), and `window.__haunt` functions. Acceptance: all fixtures validate; `test:contract` covers the new endpoints in mock; `hero-crash` regenerated with travel and reviews.
 - [ ] **PT-C1 Pace `slow`.** Add pace factor 3, default for interactive and demo scripts; update `expectedMs`; demo scripts `hero` 3 orders, `full` 6, `loop` 2 per wave. Acceptance: tests at pace slow and speed 1 and 4; P13 constants.
-- [ ] **PT-C2 Travel scheduler.** Per-lane clock in the runner and `hold` message in the SDK (design section 1); guarantees of contract rule 40. Acceptance: P13; the hero crash still reconciles; replay pairs and restarts exempt.
+- [x] **PT-C2 Travel scheduler.** (done: packages/haunt/src/runner/travel.ts LaneTravel per-lane clock; createLiveRuntime holds each bot event until its gap has passed and adds walkMs, grabMs, ceremonyMs, returnMs, cancelMs; tests in packages/haunt/test/travel.test.ts; the mock and fixtures already carry travel from PT-C0c. SDK hold message not needed: the runner delays delivery of the next event, which keeps rule 40.) Per-lane clock in the runner and `hold` message in the SDK (design section 1); guarantees of contract rule 40. Acceptance: P13; the hero crash still reconciles; replay pairs and restarts exempt.
 - [ ] **PT-C3 Lap tracker and summaries.** `LapTracker` (pure), `lap` on `order_done` and `order_failed`, `wave_end.summary` additions, wave report `laps` and `stars`. Acceptance: P9, P10; `GET /api/lane/:lane/laps` and wave endpoints live.
 - [ ] **PT-C4 Scoring v2.** Replace the score table (design section 5): downtime, cancelled -300, halt -400, abandoned -150, boss recovered and refund, speed threshold with travel baseline. Update `acceptance.md` table D and tests. Acceptance: all worked examples pass; P14, P16.
 - [ ] **PT-C5 Order and stage records.** `GET /api/lane/:lane/order/:order` with stage rows (attempts, retries, recoverable, issues, downtime, recoveries). Acceptance: matches events for every fixture; mock and live agree.

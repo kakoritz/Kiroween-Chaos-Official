@@ -11,6 +11,8 @@ import { RepeatDetector } from '../../../haunt/src/runner/provider';
 import type { BossId } from '../../../haunt/src/chaos/catalog';
 import type { LedgerRow } from '../provider';
 import { DetailNormalizer, SettleGate } from './normalize';
+import { APPS } from '../../../haunt/src/shared/catalog';
+import { LaneTravel, travelAt } from '../../../haunt/src/runner/travel';
 import { loadDemo, type DemoScript } from './demo';
 import type { LiveEngine } from './server';
 
@@ -284,6 +286,11 @@ export interface LiveRuntimeOptions {
   post?: RunnerEngineOptions['post'];
   /** Events about the finished wave, emitted before the next `wave_start`. */
   betweenWaves?: LiveEngine['betweenWaves'];
+  /** Enforce travel gaps between a lane's events (contract rule 40). Defaults to true; false passes bot events through. */
+  travel?: boolean;
+  /** Clock and sleep for the travel scheduler (tests). */
+  now?: () => number;
+  sleep?: (ms: number) => Promise<void>;
 }
 
 /** The `LiveEngine` for `LiveServer`, plus the ledger payload function. */
@@ -293,6 +300,9 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
   let clock: WaveClock | undefined;
   let demo: DemoPlayer | undefined;
   let spawner: LaneSpawner | undefined;
+  let curApp = 'orders';
+  let curPace = 'normal';
+  let resetTravel: () => void = () => {};
   const norm = new DetailNormalizer();
   let gate: SettleGate | undefined;
   // Ledger rows become `repeat` events for the running wave (design.md section 8: repeats feed the wave grade).
@@ -325,15 +335,46 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
     onWaveStop: () => { clock?.stop(); clock = undefined; demo?.stop(); demo = undefined; spawner?.stop(); },
   });
   if (opts.botCommand) {
+    // Server-enforced travel gaps (contract rule 40): a per-lane queue holds each bot event until its gap has passed.
+    const chains = new Map<string, Promise<void>>();
+    const travels = new Map<string, LaneTravel>();
+    let epoch = 0;
+    const travelOf = (lane: string): LaneTravel => {
+      let t = travels.get(lane);
+      if (!t) {
+        const stages = APPS[(curApp as keyof typeof APPS)]?.stages ?? APPS.orders.stages;
+        t = new LaneTravel(() => travelAt(curPace, engine.speed), stages[stages.length - 1]!.id, opts.now, opts.sleep);
+        travels.set(lane, t);
+      }
+      return t;
+    };
+    const idle = (): Promise<unknown> => Promise.all([...chains.values()]);
     spawner = new LaneSpawner({
       engine, botCommand: opts.botCommand, run: opts.run,
-      onEvent: (lane, ev) => { for (const e of norm.shape(lane, { detail: {}, ...ev, lane })) record?.({ ...e, lane } as unknown as HauntEvent); },
-      onWaveDone: () => { clock?.stop(); clock = undefined; demo?.stop(); demo = undefined; gate?.finish(); endWave?.(); },
+      onEvent: (lane, ev) => {
+        if (opts.travel === false) { for (const e of norm.shape(lane, { detail: {}, ...ev, lane })) record?.({ ...e, lane } as unknown as HauntEvent); return; }
+        const my = epoch;
+        const lt = travelOf(lane);
+        const next = (chains.get(lane) ?? Promise.resolve()).then(async () => {
+          if (my !== epoch) return;
+          await lt.wait(ev);
+          if (my !== epoch) return;
+          for (const e of norm.shape(lane, { detail: {}, ...ev, lane })) record?.(lt.annotate({ ...e, lane }) as unknown as HauntEvent);
+        });
+        chains.set(lane, next);
+      },
+      onWaveDone: () => {
+        void idle().then(() => { clock?.stop(); clock = undefined; demo?.stop(); demo = undefined; gate?.finish(); endWave?.(); });
+      },
     });
+    resetTravel = () => { epoch++; chains.clear(); travels.clear(); };
   }
 
   const live: LiveEngine = {
     startWave(wave, settings, rec, end) {
+      resetTravel();
+      curApp = settings.app;
+      curPace = settings.pace;
       norm.begin(settings.orders);
       const g = new SettleGate((e) => rec(e as unknown as HauntEvent));
       gate = g;
@@ -342,7 +383,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
       engine.startWave(wave, settings, record);
     },
     betweenWaves: opts.betweenWaves,
-    stopWave: () => engine.stopWave(),
+    stopWave: () => { resetTravel(); engine.stopWave(); },
     setSpeed: (s) => engine.setSpeed(s),
     chaos: (req) => engine.chaos(req),
     setChaosMode: (m) => engine.setChaosMode(m),
