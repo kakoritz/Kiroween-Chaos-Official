@@ -13,9 +13,9 @@ export interface ExtraContext extends CoreContext {
 }
 
 export const banshee = providerCreature('banshee', 'Banshee', 'network', ['internet_outage']);
-export const gargoyle = providerCreature('gargoyle', 'Gargoyle', 'network', ['endpoint_down']);
-export const goblin = providerCreature('goblin', 'Goblin', 'http', ['http_429']);
-export const imp = providerCreature('imp', 'Imp', 'http', ['http_500']);
+export const gargoyle = providerCreature('gargoyle', 'Gargoyle', 'network', ['endpoint_down', 'sms_down']);
+export const goblin = providerCreature('goblin', 'Goblin', 'http', ['http_429', 'updates_down']);
+export const imp = providerCreature('imp', 'Imp', 'http', ['http_500', 'app_down']);
 export const werewolf = providerCreature('werewolf', 'Werewolf', 'world', ['hazard_event']);
 export const willOWisp = providerCreature('will_o_wisp', "Will-o'-Wisp", 'world', ['driver_unreachable']);
 

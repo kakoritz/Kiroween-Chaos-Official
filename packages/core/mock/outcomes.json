@@ -717,6 +717,16 @@
  {
   "app": "orders",
   "tier": "rookie",
+  "fault": "sms_down",
+  "stage": "confirmation",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
   "fault": "crash",
   "stage": "dispatch",
   "role": "effect",
@@ -948,6 +958,16 @@
  {
   "app": "orders",
   "tier": "rookie",
+  "fault": "app_down",
+  "stage": "dispatch",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
   "fault": "crash",
   "stage": "updates",
   "role": "effect",
@@ -1179,6 +1199,16 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "disk_full",
+  "stage": "updates",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "updates_down",
   "stage": "updates",
   "role": "effect",
   "outcome": "OK",
@@ -2077,6 +2107,16 @@
  {
   "app": "orders",
   "tier": "retrier",
+  "fault": "sms_down",
+  "stage": "confirmation",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
   "fault": "crash",
   "stage": "dispatch",
   "role": "effect",
@@ -2312,6 +2352,16 @@
  {
   "app": "orders",
   "tier": "retrier",
+  "fault": "app_down",
+  "stage": "dispatch",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
   "fault": "crash",
   "stage": "updates",
   "role": "effect",
@@ -2547,6 +2597,16 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "disk_full",
+  "stage": "updates",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "updates_down",
   "stage": "updates",
   "role": "effect",
   "outcome": "OK",
@@ -3388,6 +3448,16 @@
  {
   "app": "orders",
   "tier": "journaler",
+  "fault": "sms_down",
+  "stage": "confirmation",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
   "fault": "crash",
   "stage": "dispatch",
   "role": "effect",
@@ -3587,6 +3657,16 @@
  {
   "app": "orders",
   "tier": "journaler",
+  "fault": "app_down",
+  "stage": "dispatch",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
   "fault": "crash",
   "stage": "updates",
   "role": "effect",
@@ -3777,6 +3857,16 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "disk_full",
+  "stage": "updates",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "updates_down",
   "stage": "updates",
   "role": "effect",
   "outcome": "OK",
@@ -4552,6 +4642,16 @@
  {
   "app": "orders",
   "tier": "reconciler",
+  "fault": "sms_down",
+  "stage": "confirmation",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
   "fault": "crash",
   "stage": "dispatch",
   "role": "effect",
@@ -4741,6 +4841,16 @@
  {
   "app": "orders",
   "tier": "reconciler",
+  "fault": "app_down",
+  "stage": "dispatch",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
   "fault": "crash",
   "stage": "updates",
   "role": "effect",
@@ -4921,6 +5031,16 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "disk_full",
+  "stage": "updates",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "updates_down",
   "stage": "updates",
   "role": "effect",
   "outcome": "OK",
@@ -5696,6 +5816,16 @@
  {
   "app": "orders",
   "tier": "phoenix",
+  "fault": "sms_down",
+  "stage": "confirmation",
+  "role": "effect",
+  "outcome": "PARKED_OK",
+  "extraRows": {},
+  "template": "T_PARKED_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
   "fault": "crash",
   "stage": "dispatch",
   "role": "effect",
@@ -5885,6 +6015,16 @@
  {
   "app": "orders",
   "tier": "phoenix",
+  "fault": "app_down",
+  "stage": "dispatch",
+  "role": "effect",
+  "outcome": "PARKED_OK",
+  "extraRows": {},
+  "template": "T_PARKED_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
   "fault": "crash",
   "stage": "updates",
   "role": "effect",
@@ -6065,6 +6205,16 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "disk_full",
+  "stage": "updates",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "updates_down",
   "stage": "updates",
   "role": "effect",
   "outcome": "OK",

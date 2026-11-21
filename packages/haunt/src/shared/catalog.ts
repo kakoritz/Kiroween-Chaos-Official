@@ -95,13 +95,14 @@ export type FaultId =
   | 'internet_outage' | 'endpoint_down' | 'timeout' | 'comm_timeout' | 'slow_link'
   | 'http_404' | 'http_429' | 'http_500'
   | 'missing_file' | 'duplicate_request' | 'malformed_payload' | 'disk_full'
-  | 'hazard_event' | 'driver_unreachable';
+  | 'hazard_event' | 'driver_unreachable'
+  | 'sms_down' | 'app_down' | 'updates_down';
 export type BossFaultId = 'boss_power_outage' | 'boss_internet_outage' | 'boss_hazard_storm';
 
 export const FAULTS: FaultId[] = [
   'crash', 'out_of_memory', 'power_outage', 'internet_outage', 'endpoint_down', 'timeout', 'comm_timeout', 'slow_link',
   'http_404', 'http_429', 'http_500', 'missing_file', 'duplicate_request', 'malformed_payload', 'disk_full',
-  'hazard_event', 'driver_unreachable',
+  'hazard_event', 'driver_unreachable', 'sms_down', 'app_down', 'updates_down',
 ];
 export const BOSS_FAULTS: BossFaultId[] = ['boss_power_outage', 'boss_internet_outage', 'boss_hazard_storm'];
 
@@ -134,9 +135,9 @@ export const CREATURES: CreatureDef[] = [
   { id: 'banshee', label: 'Banshee', family: 'network', sprite: 'banshee', causes: ['internet_outage'], boss: false, apps: both, description: 'Drops every connection to the outside world.' },
   { id: 'zombie', label: 'Zombie', family: 'network', sprite: 'zombie', causes: ['timeout', 'comm_timeout', 'slow_link'], boss: false, apps: both, description: 'Makes calls crawl, or never answer in time.' },
   { id: 'ghost', label: 'Ghost', family: 'http', sprite: 'ghost', causes: ['http_404'], boss: false, apps: both, description: 'Makes an endpoint vanish for two calls.' },
-  { id: 'goblin', label: 'Goblin', family: 'http', sprite: 'goblin', causes: ['http_429'], boss: false, apps: both, description: 'Floods the service until it says slow down.' },
-  { id: 'imp', label: 'Imp', family: 'http', sprite: 'imp', causes: ['http_500'], boss: false, apps: both, description: 'Makes the service fail for two calls.' },
-  { id: 'gargoyle', label: 'Gargoyle', family: 'http', sprite: 'gargoyle', causes: ['endpoint_down'], boss: false, apps: both, description: 'Takes one endpoint down for ten seconds.' },
+  { id: 'goblin', label: 'Goblin', family: 'http', sprite: 'goblin', causes: ['http_429', 'updates_down'], boss: false, apps: both, description: 'Floods the service until it says slow down.' },
+  { id: 'imp', label: 'Imp', family: 'http', sprite: 'imp', causes: ['http_500', 'app_down'], boss: false, apps: both, description: 'Makes the service fail for two calls.' },
+  { id: 'gargoyle', label: 'Gargoyle', family: 'http', sprite: 'gargoyle', causes: ['endpoint_down', 'sms_down'], boss: false, apps: both, description: 'Takes one endpoint down for ten seconds.' },
   { id: 'poltergeist', label: 'Poltergeist', family: 'data', sprite: 'poltergeist', causes: ['missing_file'], boss: false, apps: both, description: 'Hides the input file.' },
   { id: 'doppelganger', label: 'Doppelganger', family: 'data', sprite: 'doppelganger', causes: ['duplicate_request'], boss: false, apps: both, description: 'Sends the same request twice.' },
   { id: 'witch', label: 'Witch', family: 'data', sprite: 'witch', causes: ['malformed_payload'], boss: false, apps: both, description: 'Curses the input so it cannot be read.' },
@@ -153,7 +154,11 @@ export function creatureForFault(fault: string): CreatureDef | undefined {
 }
 
 /** Which roles a fault can hit (runtime.md section 9). A fault that cannot hit the current stage is deferred. */
-export function faultApplies(fault: string, role: StageRole): boolean {
+/** World faults that only land on one orders stage (design.md section 7). Others defer to it. */
+export const WORLD_FAULT_STAGE: Record<string, string> = { sms_down: 'confirmation', app_down: 'dispatch', updates_down: 'updates' };
+
+export function faultApplies(fault: string, role: StageRole, stageId?: string): boolean {
+  if (WORLD_FAULT_STAGE[fault]) return role === 'effect' && (stageId === undefined || stageId === WORLD_FAULT_STAGE[fault]);
   if (isCrashFault(fault) || fault === 'disk_full') return true;
   switch (fault) {
     case 'missing_file':
@@ -201,6 +206,9 @@ export const FAULT_PARAMS: Record<string, { count?: number; forMs?: number; late
   http_429: { count: 3, status: 429, retryAfterMs: 2000 },
   internet_outage: { forMs: 8000 },
   endpoint_down: { forMs: 10000, status: 503 },
+  sms_down: { forMs: 8000, status: 503 },
+  app_down: { forMs: 8000, status: 503 },
+  updates_down: { forMs: 8000, status: 503 },
   hazard_event: { forMs: 5000 },
   driver_unreachable: { forMs: 3000 },
 };

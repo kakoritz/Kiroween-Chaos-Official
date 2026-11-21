@@ -24,6 +24,7 @@ export function faultBody(lane: string, stage: string | null, arm: ProviderArm):
   switch (arm.fault) {
     case 'internet_outage': base = { mode: 'drop' }; break;
     case 'endpoint_down': base = { mode: 'status', value: 503 }; break;
+    case 'sms_down': case 'app_down': case 'updates_down': base = { mode: 'status', value: 503, forMs: 8000 }; break;
     case 'timeout':
     case 'comm_timeout': base = { mode: 'latency', value: 3000, count: 1 }; break;
     case 'slow_link': base = { mode: 'latency', value: 600 }; break;

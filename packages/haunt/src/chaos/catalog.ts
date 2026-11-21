@@ -49,6 +49,9 @@ export const FAULTS: readonly FaultDef[] = [
   def({ id: 'malformed_payload', creature: 'witch', family: 'data', kind: 'file', stages: ['intake'], count: 1 }),
   def({ id: 'disk_full', creature: 'mummy', family: 'data', kind: 'disk', stages: ALL, count: 1 }),
   def({ id: 'hazard_event', creature: 'werewolf', family: 'world', kind: 'provider', stages: ['tracking'], forMs: 5000 }),
+  def({ id: 'sms_down', creature: 'gargoyle', family: 'network', kind: 'provider', stages: ['confirmation'], forMs: 8000 }),
+  def({ id: 'app_down', creature: 'imp', family: 'http', kind: 'provider', stages: ['dispatch'], forMs: 8000 }),
+  def({ id: 'updates_down', creature: 'goblin', family: 'http', kind: 'provider', stages: ['updates'], forMs: 8000 }),
   def({ id: 'driver_unreachable', creature: 'will_o_wisp', family: 'world', kind: 'provider', stages: ['tracking'], forMs: 3000 }),
 ];
 

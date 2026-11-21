@@ -56,7 +56,7 @@ export function resolveOutcome(app: AppId, tierId: TierId, fault: string, stageI
   const idx = stages.findIndex((s) => s.id === stageId);
   if (idx < 0) return null;
   const stage = stages[idx];
-  if (!faultApplies(fault, stage.role)) return null;
+  if (!faultApplies(fault, stage.role, stageId)) return null;
   const parts = new Set(TIERS[tierId].parts);
   const hasRetry = parts.has('retry');
   const journal = parts.has('journal');
@@ -117,6 +117,8 @@ export function resolveOutcome(app: AppId, tierId: TierId, fault: string, stageI
       return phoenix ? done('OK') : done('FAILED');
     case 'internet_outage':
     case 'endpoint_down':
+    case 'sms_down':
+    case 'app_down':
       return phoenix ? done('PARKED_OK') : done('FAILED');
     default:
       return null;

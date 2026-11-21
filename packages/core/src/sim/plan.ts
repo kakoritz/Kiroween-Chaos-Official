@@ -203,7 +203,7 @@ class Planner {
     switch (spec.fault) {
       case 'timeout': case 'comm_timeout': add(spec.fault, 'effect', 'latency'); break;
       case 'http_404': case 'http_500': case 'http_429': add(spec.fault, 'effect', 'status'); break;
-      case 'endpoint_down': add(spec.fault, 'effect', 'status'); break;
+      case 'endpoint_down': case 'sms_down': case 'app_down': case 'updates_down': add(spec.fault, 'effect', 'status'); break;
       case 'internet_outage': add(spec.fault, 'all', 'drop'); break;
       case 'boss_internet_outage': add('internet_outage', 'all', 'drop', { forMs: 12000 }); break;
       case 'slow_link': add(spec.fault, 'all', 'slow'); break;
@@ -374,7 +374,7 @@ class Planner {
         if (sub.lockedService && sub.lockedService !== service) continue;
         if (sub.count !== undefined) { if (sub.used >= sub.count) continue; }
         else if (sub.forMs !== undefined && sub.start !== undefined && t >= sub.start + sub.forMs) continue;
-        if (sub.fault === 'endpoint_down' && !sub.lockedService) sub.lockedService = service;
+        if ((sub.fault === 'endpoint_down' || sub.fault === 'sms_down' || sub.fault === 'app_down' || sub.fault === 'updates_down') && !sub.lockedService) sub.lockedService = service;
         if (sub.forMs !== undefined && sub.start === undefined) sub.start = t;
         sub.used++;
         arm.fired = true;
