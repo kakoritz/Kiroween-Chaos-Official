@@ -91,12 +91,39 @@ interface Lane {
   bossChaos: number;
   stageStarts: Map<string, number>;
   halted: boolean;
+  // Contract v1.1 state.
+  walk?: { ts: number; ms: number };
+  grab?: { ts: number; ms: number };
+  gap?: { ts: number; ms: number };
+  awaitReview?: { order: string; cancelled: boolean };
+  rv: { count: number; sum: number };
+  counts: { done: number; cancelled: number; quarantined: number; abandoned: number };
+  doneMs: number[];
+  fails: Map<string, number>;
+  orderStartTs: number;
+  decision?: { order: string; options: string[]; defaultChoice: string };
+  res?: { choice: string; effects: Set<string> };
+  intervalOpen: boolean;
+  closedInterval: boolean;
+  bossHalf?: string;
 }
 
 const newLane = (): Lane => ({
   ready: false, state: 'idle', doneIdx: -1, stack: [], pendingChaos: 0, parked: new Set(), parkedIdx: new Map(), finished: new Set(), score: 0,
   breaker: new Map(), bossChaos: 0, stageStarts: new Map(), halted: false,
+  rv: { count: 0, sum: 0 }, counts: { done: 0, cancelled: 0, quarantined: 0, abandoned: 0 }, doneMs: [], fails: new Map(),
+  orderStartTs: 0, intervalOpen: false, closedInterval: false,
 });
+
+/** Contract v1.1 section 8: fault id to creature. */
+const WORLD_FAULTS: Record<string, string> = {
+  sms_down: 'gargoyle', app_down: 'imp', updates_down: 'goblin', wrong_address: 'scarecrow',
+  no_answer: 'black_cat', gated_house: 'black_cat', car_accident: 'phantom_car', order_typo: 'prankster',
+};
+const WORLD_CREATURES = new Set(['scarecrow', 'black_cat', 'phantom_car', 'prankster']);
+const num = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x);
+/** Timestamps are whole ms, so gaps may be off by one. */
+const TOL = 1;
 
 export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {}): Violation[] {
   const out: Violation[] = [];
@@ -115,6 +142,90 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
   let boss: { fault: string; warnTs: number; startsInMs: number; started: boolean; startTs: number } | null = null;
   let stageIds: string[] = APPS.orders.stages.map((s) => s.id);
   let sawWaveStart = false;
+  let minor = 0;
+
+  /** Rule 41: the lap object of order_done and order_failed. */
+  const checkLap = (ev: HauntEvent, d: Record<string, any>, l: Lane): void => {
+    const lap = d.lap;
+    if (!lap || typeof lap !== 'object') { bad('R41', ev, `${ev.type} without detail.lap`); return; }
+    for (const k of ['ms', 'workMs', 'downtimeMs']) if (!num(lap[k]) || lap[k] < 0) bad('R41', ev, `lap.${k} is missing or negative`);
+    for (const k of ['attempts', 'retries']) if (!Number.isInteger(lap[k]) || lap[k] < 0) bad('R41', ev, `lap.${k} is missing or not a non-negative integer`);
+    if (num(lap.ms) && num(lap.workMs) && lap.workMs > lap.ms + TOL) bad('R41', ev, `lap.workMs ${lap.workMs} is above lap.ms ${lap.ms}`);
+    if (!Array.isArray(lap.issues)) { bad('R41', ev, 'lap.issues must be an array'); }
+    if (!Array.isArray(lap.recoveries)) bad('R41', ev, 'lap.recoveries must be an array');
+    const order = ev.order as string;
+    if (Array.isArray(lap.issues)) {
+      const seen = new Set<string>();
+      for (const it of lap.issues) {
+        if (!it || !stageIds.includes(it.stage) || !Number.isInteger(it.count) || it.count < 1) { bad('R41', ev, `lap.issues entry ${JSON.stringify(it)} needs a known stage and a count of 1 or more`); continue; }
+        if (seen.has(it.stage)) bad('R41', ev, `lap.issues lists stage ${it.stage} twice`);
+        seen.add(it.stage);
+      }
+      for (const [k, n] of l.fails) {
+        const [o, s] = k.split('|');
+        if (o !== order) continue;
+        const got = lap.issues.find((it: any) => it?.stage === s)?.count ?? 0;
+        if (got < n) bad('R41', ev, `lap.issues counts ${got} at ${s} but ${n} stage_fail events happened there`);
+      }
+    }
+    if (num(lap.attempts)) {
+      let starts = 0;
+      for (const [k, n] of l.stageStarts) if (k.startsWith(`${order}|`)) starts += n;
+      if (lap.attempts < starts) bad('R41', ev, `lap.attempts ${lap.attempts} is below the ${starts} stage_start events of the order`);
+    }
+    if (Array.isArray(lap.recoveries)) {
+      for (const r of lap.recoveries) if (!r || typeof r.action !== 'string' || !num(r.ms) || r.ms < 0 || !stageIds.includes(r.stage)) bad('R41', ev, `lap.recoveries entry ${JSON.stringify(r)} is malformed`);
+    }
+  };
+
+  /** Rule 43: the v1.1 wave summary of one lane. */
+  const checkSummary = (ev: HauntEvent, n: number, l: Lane, s: any, stopped: boolean): void => {
+    if (!s || typeof s !== 'object') return;
+    const need = (k: string, ok: boolean): boolean => { if (!ok) bad('R43', ev, `lane ${n} summary.${k} is missing or invalid`); return ok; };
+    const o = s.orders;
+    const okOrders = need('orders', !!o && ['done', 'cancelled', 'parked', 'quarantined', 'abandoned'].every((k) => Number.isInteger(o[k]) && o[k] >= 0));
+    need('totalMs', num(s.totalMs) && s.totalMs >= 0);
+    need('avgMs', s.avgMs === undefined || num(s.avgMs));
+    need('retries', Number.isInteger(s.retries) && s.retries >= 0);
+    need('downtimeMs', num(s.downtimeMs) && s.downtimeMs >= 0);
+    need('issuesByStage', !!s.issuesByStage && typeof s.issuesByStage === 'object' && Object.entries(s.issuesByStage).every(([k, v]) => stageIds.includes(k) && Number.isInteger(v) && (v as number) >= 0));
+    const st = s.stars;
+    const okStars = need('stars', !!st && num(st.sum) && num(st.max) && Number.isInteger(st.count) && num(st.avg));
+    need('rating', ['Five-Star Crypt', 'Respectable', 'Spooky Service', 'Cursed'].includes(s.rating));
+    if (okOrders) {
+      const done = o.done as number;
+      if (done > 0) {
+        need('bestMs', num(s.bestMs));
+        need('slowestMs', num(s.slowestMs));
+        need('avgMs', num(s.avgMs));
+        if (num(s.bestMs) && num(s.slowestMs) && s.bestMs > s.slowestMs) bad('R43', ev, `lane ${n} bestMs ${s.bestMs} is above slowestMs ${s.slowestMs}`);
+        if (num(s.bestMs) && num(s.avgMs) && num(s.slowestMs) && (s.avgMs < s.bestMs - TOL || s.avgMs > s.slowestMs + TOL)) bad('R43', ev, `lane ${n} avgMs ${s.avgMs} is outside bestMs..slowestMs`);
+      } else if (s.bestMs !== undefined || s.slowestMs !== undefined) {
+        bad('R43', ev, `lane ${n} has bestMs/slowestMs but no completed order`);
+      }
+      if (!stopped) {
+        if (o.done !== l.counts.done) bad('R43', ev, `lane ${n} summary.orders.done ${o.done} but ${l.counts.done} order_done events`);
+        if (o.cancelled !== l.counts.cancelled) bad('R43', ev, `lane ${n} summary.orders.cancelled ${o.cancelled} but ${l.counts.cancelled} order_failed events`);
+        if (o.quarantined !== l.counts.quarantined) bad('R43', ev, `lane ${n} summary.orders.quarantined ${o.quarantined} but ${l.counts.quarantined} order_quarantined events`);
+        if (o.abandoned !== l.counts.abandoned) bad('R43', ev, `lane ${n} summary.orders.abandoned ${o.abandoned} but ${l.counts.abandoned} order_abandoned events`);
+        if (done > 0 && l.doneMs.length) {
+          if (num(s.bestMs) && s.bestMs !== Math.min(...l.doneMs)) bad('R43', ev, `lane ${n} bestMs ${s.bestMs} is not the fastest done lap ${Math.min(...l.doneMs)}`);
+          if (num(s.slowestMs) && s.slowestMs !== Math.max(...l.doneMs)) bad('R43', ev, `lane ${n} slowestMs ${s.slowestMs} is not the slowest done lap ${Math.max(...l.doneMs)}`);
+        }
+      }
+    }
+    if (okStars) {
+      if (st.sum > st.max) bad('R43', ev, `lane ${n} stars.sum ${st.sum} is above stars.max ${st.max}`);
+      if (st.max !== 5 * st.count) bad('R43', ev, `lane ${n} stars.max ${st.max} should be 5 x count ${st.count}`);
+      if (st.count > 0) {
+        const avg = st.sum / st.count;
+        if (Math.abs(st.avg - avg) > 0.05) bad('R43', ev, `lane ${n} stars.avg ${st.avg} should be ${avg.toFixed(2)}`);
+        const want = avg >= 4.5 ? 'Five-Star Crypt' : avg >= 3.5 ? 'Respectable' : avg >= 2.5 ? 'Spooky Service' : 'Cursed';
+        if (s.rating !== want) bad('R43', ev, `lane ${n} rating ${s.rating} should be ${want} for avg ${avg.toFixed(2)}`);
+      }
+      if (!stopped && (st.count !== l.rv.count || st.sum !== l.rv.sum)) bad('R43', ev, `lane ${n} stars ${st.sum}/${st.count} do not match the reviews seen ${l.rv.sum}/${l.rv.count}`);
+    }
+  };
 
   const lane = (n: number): Lane => {
     let l = lanes.get(n);
@@ -147,7 +258,7 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
     if (t !== 'hello' && t !== 'reset' && ev.wave === undefined) bad('R16', ev, 'missing wave');
 
     switch (t) {
-      case 'hello': return;
+      case 'hello': minor = num((ev as any).contractMinor) ? (ev as any).contractMinor : 0; return;
       case 'reset':
         lanes = new Map(); waveOpen = false; boss = null;
         return;
@@ -173,6 +284,14 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
           }
         }
         for (const n of lanes.keys()) if (d.summary && d.summary[n] === undefined && d.summary[String(n)] === undefined) bad('R1', ev, `wave_end summary misses lane ${n}`);
+        if (minor >= 1) {
+          for (const [n, l] of lanes) {
+            if (!d.stopped && l.awaitReview) bad('R42', ev, `lane ${n} never got a review for ${l.awaitReview.order}`);
+            if (!d.stopped && l.decision) bad('R44', ev, `lane ${n} has an unanswered decision_needed for ${l.decision.order}`);
+            if (!d.stopped && l.bossHalf) bad('R46', ev, `lane ${n} has "${l.bossHalf}" without its partner score`);
+            checkSummary(ev, n, l, d.summary?.[n] ?? d.summary?.[String(n)], !!d.stopped);
+          }
+        }
         waveOpen = false;
         return;
       }
@@ -226,6 +345,21 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
     if (stageId !== undefined && !stageIds.includes(stageId)) bad('R19', ev, `stage ${stageId} is not a stage of app ${app}`);
     const idx = stageId !== undefined ? stageIds.indexOf(stageId) : -1;
 
+    if (minor >= 1) {
+      // Rule 42: a review follows its order_done/order_failed before any other event of the lane (accounting events aside).
+      if (L.awaitReview && t !== 'review' && !IGNORABLE.has(t)) {
+        bad('R42', ev, `${t} came before the review of ${L.awaitReview.order}`);
+        L.awaitReview = undefined;
+      }
+      // Rule 46: the two boss scores come together.
+      if (L.bossHalf && !(t === 'score' && ((L.bossHalf === 'boss recovered' && d.reason === 'boss downtime refund') || (L.bossHalf === 'boss downtime refund' && d.reason === 'boss recovered')))) {
+        bad('R46', ev, `"${L.bossHalf}" must be followed directly by its partner score`);
+        L.bossHalf = undefined;
+      }
+      // Rule 44: nothing starts while a decision is open.
+      if (L.decision && t === 'order_start' && !(d.redo && L.res)) bad('R44', ev, `order_start while the decision for ${L.decision.order} is open`);
+    }
+
     // Pending expectation (rules 3, 5, 6, 23).
     if (L.expect && !IGNORABLE.has(t)) {
       const exp = L.expect;
@@ -248,8 +382,20 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
     switch (t) {
       case 'order_start': {
         if (!needAlive()) break;
-        if (L.order) bad('R4', ev, `order_start while ${L.order} is still in flight`);
+        const isRedo = minor >= 1 && !!d.redo && L.res?.choice === 'redo';
+        if (L.order && !isRedo) bad('R4', ev, `order_start while ${L.order} is still in flight`);
         const o = ev.order as string;
+        if (minor >= 1) {
+          if (L.gap && ev.ts - L.gap.ts < L.gap.ms - TOL) bad('R40', ev, `order_start came ${ev.ts - L.gap.ts} ms after the previous order ended, expected at least ${L.gap.ms} (ceremony or cancel plus return)`);
+          L.gap = undefined; L.walk = undefined;
+          L.grab = num(d.grabMs) && d.grabMs > 0 ? { ts: ev.ts, ms: d.grabMs } : undefined;
+          L.orderStartTs = ev.ts;
+          if (isRedo) {
+            for (const k of [...L.stageStarts.keys()]) if (k.startsWith(`${o}|`)) L.stageStarts.delete(k);
+            for (const k of [...L.fails.keys()]) if (k.startsWith(`${o}|`)) L.fails.delete(k);
+            L.res = undefined; L.decision = undefined; L.intervalOpen = false;
+          }
+        }
         if (L.parked.has(o) && L.expectOrder !== o) bad('R23', ev, `parked order ${o} restarted without order_resumed`);
         // A resumed order continues where it parked. A fresh order and a duplicate pass start at stage 1.
         L.doneIdx = L.parked.has(o) ? (L.parkedIdx.get(o) ?? -1) : -1;
@@ -260,6 +406,12 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
       case 'stage_start': {
         if (!needAlive()) break;
         if (!L.order || L.order !== ev.order) { bad('R2', ev, 'stage_start outside its order'); break; }
+        if (minor >= 1) {
+          if (L.decision) bad('R44', ev, `stage_start before decision_made for ${L.decision.order}`);
+          if (L.grab && ev.ts - L.grab.ts < L.grab.ms - TOL) bad('R40', ev, `first stage_start came ${ev.ts - L.grab.ts} ms after order_start, expected at least grabMs ${L.grab.ms}`);
+          if (L.walk && ev.ts - L.walk.ts < L.walk.ms - TOL) bad('R40', ev, `stage_start came ${ev.ts - L.walk.ts} ms after stage_done, expected at least walkMs ${L.walk.ms}`);
+          L.grab = undefined; L.walk = undefined;
+        }
         if (L.state === 'failed' || L.state === 'continuing') bad('R34', ev, 'stage_start after stage_fail: an in-stage retry continues the same stage');
         if (L.open && !L.open.killed) bad('R2', ev, `stage_start ${stageId} while ${L.open.stage} is still open`);
         if (idx > L.doneIdx + 1) bad('R2', ev, `stage ${stageId} starts before stage ${stageIds[L.doneIdx + 1]} is done`);
@@ -286,11 +438,21 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
         L.doneIdx = Math.max(L.doneIdx, L.open.idx);
         L.open = undefined; L.state = 'running';
         if (idx === stageIds.length - 1 && !d.skipped) L.expect = 'order_done';
+        if (minor >= 1) {
+          L.walk = num(d.walkMs) && d.walkMs > 0 && !d.skipped ? { ts: ev.ts, ms: d.walkMs } : undefined;
+          L.closedInterval = L.intervalOpen;
+          L.intervalOpen = false;
+        }
         break;
       }
       case 'stage_fail': {
         if (!L.open || L.open.killed || L.open.stage !== stageId) { bad('R2', ev, 'stage_fail without its open stage'); break; }
         closeChaos();
+        if (minor >= 1) {
+          const fk = `${ev.order}|${stageId}`;
+          L.fails.set(fk, (L.fails.get(fk) ?? 0) + 1);
+          L.intervalOpen = true;
+        }
         if (d.degraded) { L.state = 'degraded_failed'; L.expect = 'stage_start_next'; L.doneIdx = Math.max(L.doneIdx, L.open.idx); L.open = undefined; }
         else L.state = 'failed';
         break;
@@ -299,6 +461,7 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
         if (L.state === 'dead') { bad('R6', ev, 'recover_start while dead'); break; }
         closeChaos();
         const a = d.action as string;
+        if (minor >= 1) { L.walk = undefined; L.grab = undefined; }
         if (a === 'retry' || a === 'backoff') {
           if (L.state !== 'failed') bad('R3', ev, `${a} recovery must follow a stage_fail`);
           L.state = 'continuing';
@@ -315,6 +478,7 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
       case 'process_dead': {
         if (L.state === 'dead') { bad('R6', ev, 'process_dead while already dead'); break; }
         closeChaos();
+        if (minor >= 1) { L.walk = undefined; L.grab = undefined; L.intervalOpen = true; }
         L.dead = { ts: ev.ts, restartInMs: d.restartInMs ?? 0 };
         L.state = 'dead'; L.stack = [];
         if (L.open) L.open.killed = true;
@@ -330,6 +494,11 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
       }
       case 'chaos': {
         if (L.state === 'halted') bad('R4', ev, 'chaos on a halted lane');
+        {
+          const want = WORLD_FAULTS[d.fault as string];
+          if (want && d.creature !== want) bad('R47', ev, `chaos fault ${d.fault} must carry creature ${want}, got ${d.creature}`);
+          if (!want && WORLD_CREATURES.has(d.creature as string)) bad('R47', ev, `creature ${d.creature} only appears with a world fault, got fault ${d.fault}`);
+        }
         L.pendingChaos++;
         if (d.source === 'boss') L.bossChaos++;
         break;
@@ -337,6 +506,7 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
       case 'chaos_absorbed': closeChaos(); break;
       case 'effect': {
         if (L.state === 'dead') bad('R6', ev, 'effect while dead');
+        if (L.res) L.res.effects.add(d.kind as string);
         break;
       }
       case 'repeat': {
@@ -357,12 +527,44 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
         if (d.total !== expected) bad('R9', ev, `score.total ${d.total} should be ${expected}`);
         L.score = d.total;
         if (typeof d.reason === 'string' && d.reason.startsWith('duplicate ') && L.prev?.type !== 'repeat') bad('R9', ev, 'a duplicate score must follow its repeat');
+        if (minor >= 1) {
+          if (d.reason === 'downtime') {
+            if (!(d.delta < 0)) bad('R45', ev, `downtime score must be negative, got ${d.delta}`);
+            if (L.prevSig?.type !== 'stage_done' || !L.closedInterval) bad('R45', ev, 'downtime score must be emitted once, right after the stage that ends a recovery interval');
+            L.closedInterval = false;
+          }
+          if (d.reason === 'boss recovered' || d.reason === 'boss downtime refund') {
+            const partner = d.reason === 'boss recovered' ? 'boss downtime refund' : 'boss recovered';
+            const p = L.prev;
+            if (L.bossHalf === partner && p?.type === 'score') {
+              L.bossHalf = undefined;
+            } else {
+              if (L.bossHalf) bad('R46', ev, `second "${d.reason}" without its partner`);
+              L.bossHalf = d.reason as string;
+              if (L.prevSig?.type !== 'order_done' && L.prevSig?.type !== 'review') bad('R46', ev, `${d.reason} must follow the completion of the in-flight order`);
+              if (L.bossChaos < 1) bad('R46', ev, `${d.reason} without a boss hit on this lane`);
+            }
+            if (d.reason === 'boss recovered' && !(d.delta > 0)) bad('R46', ev, `boss recovered must be positive, got ${d.delta}`);
+            if (d.reason === 'boss downtime refund' && !(d.delta >= 0)) bad('R46', ev, `boss downtime refund must not be negative, got ${d.delta}`);
+          }
+        }
         break;
       }
       case 'order_done': {
         if (!L.order || L.order !== ev.order) { bad('R5', ev, 'order_done outside its order'); break; }
         if (L.open) bad('R5', ev, 'order_done while a stage is open');
         if (L.state === 'failed') bad('R3', ev, 'order_done right after stage_fail');
+        if (minor >= 1) {
+          checkLap(ev, d, L);
+          if (num(d.lap?.ms)) L.doneMs.push(d.lap.ms);
+          L.counts.done++;
+          L.awaitReview = { order: L.order, cancelled: false };
+          L.gap = num(d.ceremonyMs) && num(d.returnMs) ? { ts: ev.ts, ms: d.ceremonyMs + d.returnMs } : undefined;
+          L.walk = undefined; L.grab = undefined; L.intervalOpen = false;
+          if (L.res && L.res.choice === 'discount' && !L.res.effects.has('discount')) bad('R44', ev, 'discount decision resolved without a discount effect');
+          if (L.res && L.res.choice !== 'discount') bad('R44', ev, `order_done after a ${L.res.choice} decision`);
+          L.res = undefined;
+        }
         L.finished.add(L.order);
         L.order = undefined; L.state = 'idle'; L.open = undefined;
         break;
@@ -373,6 +575,21 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
         if (!L.order || L.order !== ev.order) { bad('R4', ev, `${t} outside its order`); break; }
         if (L.state !== 'failed') bad('R3', ev, `${t} must directly follow a stage_fail`);
         closeChaos();
+        if (minor >= 1) {
+          if (t === 'order_failed') {
+            checkLap(ev, d, L);
+            L.counts.cancelled++;
+            L.awaitReview = { order: L.order, cancelled: d.outcome === 'cancelled' || d.outcome === undefined };
+            L.gap = num(d.cancelMs) && num(d.returnMs) ? { ts: ev.ts, ms: d.cancelMs + d.returnMs } : undefined;
+            if (L.res) {
+              if (L.res.choice !== 'refund') bad('R44', ev, `order_failed after a ${L.res.choice} decision`);
+              else if (!L.res.effects.has('refund')) bad('R44', ev, 'refund decision resolved without a refund effect');
+              else if (d.outcome !== 'cancelled' || d.reason !== 'refunded') bad('R44', ev, 'refund decision must end in order_failed{outcome:cancelled, reason:refunded}');
+            }
+          }
+          if (t === 'order_quarantined') L.counts.quarantined++;
+          L.res = undefined; L.decision = undefined; L.walk = undefined; L.grab = undefined; L.intervalOpen = false;
+        }
         if (t === 'order_parked') { L.parked.add(L.order); L.parkedIdx.set(L.order, L.doneIdx); }
         else L.finished.add(L.order);
         L.order = undefined; L.state = 'idle'; L.open = undefined; L.stack = [];
@@ -384,6 +601,41 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
         L.expect = 'order_start_same'; L.expectOrder = ev.order;
         break;
       }
+      case 'review': {
+        if (minor < 1) break;
+        const a = L.awaitReview;
+        if (!a || a.order !== ev.order) { bad('R42', ev, `review for ${ev.order} does not follow its order_done/order_failed`); break; }
+        L.awaitReview = undefined;
+        const c = d.cum ?? {};
+        if (d.order !== ev.order) bad('R42', ev, `review detail.order ${d.order} differs from the envelope order ${ev.order}`);
+        if (c.count !== L.rv.count + 1) bad('R42', ev, `review cum.count ${c.count} should be ${L.rv.count + 1}`);
+        if (num(d.stars) && num(c.stars) && Math.abs(c.stars - (L.rv.sum + d.stars)) > 1e-9) bad('R42', ev, `review cum.stars ${c.stars} should be ${L.rv.sum + (d.stars as number)}`);
+        if (c.max !== 5 * (L.rv.count + 1)) bad('R42', ev, `review cum.max ${c.max} should be ${5 * (L.rv.count + 1)}`);
+        if (a.cancelled && d.stars !== 1) bad('R42', ev, `a cancelled order must get 1 star, got ${d.stars}`);
+        L.rv = { count: L.rv.count + 1, sum: L.rv.sum + (num(d.stars) ? d.stars : 0) };
+        break;
+      }
+      case 'decision_needed': {
+        if (minor < 1) break;
+        if (L.decision) bad('R44', ev, `decision_needed for ${d.order} while ${L.decision.order} is still open`);
+        if (!L.order || d.order !== L.order) bad('R44', ev, `decision_needed for ${d.order} but the order in flight is ${L.order ?? '(none)'}`);
+        const opts = Array.isArray(d.options) ? (d.options as string[]) : [];
+        if (!opts.includes(d.defaultChoice as string)) bad('R44', ev, `defaultChoice ${d.defaultChoice} is not one of the options`);
+        L.decision = { order: d.order as string, options: opts, defaultChoice: d.defaultChoice as string };
+        break;
+      }
+      case 'decision_made': {
+        if (minor < 1) break;
+        if (!L.decision) { bad('R44', ev, 'decision_made without decision_needed'); break; }
+        if (L.decision.order !== d.order) bad('R44', ev, `decision_made for ${d.order}, the open decision is for ${L.decision.order}`);
+        if (!L.decision.options.includes(d.choice as string)) bad('R44', ev, `choice ${d.choice} is not one of the options`);
+        if ((d.source === 'default' || d.source === 'timeout') && d.choice !== L.decision.defaultChoice) bad('R44', ev, `source ${d.source} must choose the defaultChoice ${L.decision.defaultChoice}, got ${d.choice}`);
+        L.res = { choice: d.choice as string, effects: new Set() };
+        L.decision = undefined;
+        // The wrong-order failure is settled by the decision: a discount lets the open stage continue.
+        if (d.choice === 'discount') L.state = 'continuing';
+        break;
+      }
       case 'lane_halted': {
         if (L.state !== 'failed') bad('R3', ev, 'lane_halted must directly follow a stage_fail');
         closeChaos();
@@ -392,6 +644,7 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
       }
       case 'order_abandoned': {
         if (L.state !== 'halted') bad('R4', ev, 'order_abandoned before lane_halted');
+        if (minor >= 1) L.counts.abandoned++;
         closeChaos();
         break;
       }
