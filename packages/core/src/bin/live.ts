@@ -32,6 +32,7 @@ const rt = createLiveRuntime({
     : undefined,
 });
 provider.provider.onRow = rt.ledgerRow;
+provider.provider.onReplay = (row) => rt.ledgerRow(row, true);
 const server = new LiveServer({
   log: new EventLog(join(runDir, 'events.jsonl')),
   engine: rt.live,

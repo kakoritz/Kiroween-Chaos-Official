@@ -110,6 +110,8 @@ export class Provider {
   private faults: ActiveFault[] = [];
   /** Called once per new ledger row (not for idempotent replays). The live runtime turns rows into `repeat` events. */
   onRow?: (row: LedgerRow) => void;
+  /** Called when a keyed request returns the existing row (idempotent replay, no new row). */
+  onReplay?: (row: LedgerRow) => void;
 
   constructor(opts: ProviderOptions = {}) {
     this.seed = opts.seed ?? 'haunt';
@@ -191,6 +193,9 @@ export class Provider {
       let res: ProviderResponse;
       if (known !== undefined) {
         res = json(201, known, { 'Idempotent-Replayed': 'true' });
+        const k = known as Record<string, unknown>;
+        const amount = typeof k.amount === 'number' ? k.amount : null;
+        this.onReplay?.({ id: String(k.id), lane, kind, order, key, amount, index: null, ts: this.clock.now() });
       } else {
         const id = `${ID_PREFIX[kind]}_${this.next(`${lane}|${kind}`)}`;
         const amount = kind === 'charge' && typeof body.amount === 'number' ? body.amount : null;

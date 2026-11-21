@@ -2,6 +2,7 @@
 // chaos director, the lane tiers and the provider fault poster. Structurally matches `LiveEngine` in core/live/server.ts.
 // Spec: runtime.md sections 4, 7, 18. Process spawning per lane (runLane) is attached by the caller via `onWaveStart`.
 import { ChaosDirector, type LaneInfo, type ProviderArm } from '../chaos/director';
+import { FAULTS } from '../chaos/catalog';
 import type { HauntEvent } from '../score/score';
 import { tiersForLanes, type TierMode } from './lanes';
 import { postProviderArm, type PostFault } from './provider';
@@ -64,9 +65,10 @@ export class RunnerEngine {
     const r = this.director.arm(lane, { fault: req.fault, scope: req.scope, point: req.point as never, forMs: req.forMs }, info);
     if (!r.ok) throw new Error(r.error);
     const chaosId = `c${this.wave}-${++this.seq}`;
-    this.record?.({ type: 'chaos', lane, detail: { id: chaosId, creature: req.creature, ...(req.source ? { source: req.source } : {}), ...r.detail } });
+    const creature = req.creature ?? FAULTS.find((f) => f.id === req.fault)?.creature ?? req.fault;
+    this.record?.({ type: 'chaos', lane, detail: { id: chaosId, creature, ...(req.source ? { source: req.source } : {}), ...r.detail } });
     if (r.arm) this.opts.sendArm?.(lane, { k: 'arm', id: String(r.id), ...r.arm });
     if (r.provider && this.opts.post) void postProviderArm(this.opts.post, lane, info.stage, r.provider as ProviderArm);
-    return { chaosId, creature: req.creature ?? '', fault: r.detail.fault, depth: r.detail.depth, deferred: r.detail.deferred === true };
+    return { chaosId, creature, fault: r.detail.fault, depth: r.detail.depth, deferred: r.detail.deferred === true };
   };
 }

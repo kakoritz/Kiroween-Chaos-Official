@@ -10,7 +10,7 @@ import { BOSS_DURATION_MS, WaveClock } from '../../../haunt/src/runner/live';
 import { RepeatDetector } from '../../../haunt/src/runner/provider';
 import type { BossId } from '../../../haunt/src/chaos/catalog';
 import type { LedgerRow } from '../provider';
-import { DetailNormalizer } from './normalize';
+import { DetailNormalizer, SettleGate } from './normalize';
 import { loadDemo, type DemoScript } from './demo';
 import type { LiveEngine } from './server';
 
@@ -187,6 +187,9 @@ export class DemoPlayer {
 
 // ---- ledger and hardening payloads ----
 
+/** Provider ledger kind to contract effect kind (CONTRACT.md: account_create | charge | email | dispatch | notify | ticket). */
+const EFFECT_KIND: Record<string, string> = { account: 'account_create', reply: 'email' };
+
 /** `GET /api/ledger` body: per lane, rows by kind with repeat counts (PROTOCOL.md). */
 export function buildLedger(lanes: readonly string[], rowsOf: (lane: string) => LedgerRow[]): { lanes: unknown[] } {
   return {
@@ -246,11 +249,18 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
   let demo: DemoPlayer | undefined;
   let spawner: LaneSpawner | undefined;
   const norm = new DetailNormalizer();
+  let gate: SettleGate | undefined;
   // Ledger rows become `repeat` events for the running wave (design.md section 8: repeats feed the wave grade).
   const repeats = new RepeatDetector();
-  const ledgerRow = (row: LedgerRow): void => {
+  const ledgerRow = (row: LedgerRow, replayed = false): void => {
+    if (!record) return;
+    const kind = EFFECT_KIND[row.kind] ?? row.kind;
+    const key = row.key ?? (row.index === null || row.index === undefined ? `${row.order}:${row.kind}` : `${row.order}:${row.kind}:${row.index}`);
+    // PROTOCOL.md rule 8: every provider row is an `effect`, and its `repeat` follows it immediately.
+    record({ type: 'effect', lane: row.lane, order: row.order, detail: { kind, key, replayed, ...(typeof row.amount === 'number' ? { amount: row.amount } : {}) } } as HauntEvent);
+    if (replayed) return;
     const r = repeats.add(row);
-    if (r && record) record({ type: 'repeat', lane: row.lane, order: row.order, detail: { kind: r.kind, key: r.key, count: r.count } } as HauntEvent);
+    if (r) record({ type: 'repeat', lane: row.lane, order: row.order, detail: { kind, key: r.key, count: r.count } } as HauntEvent);
   };
   const engine: RunnerEngine = new RunnerEngine({
     post: opts.post,
@@ -272,13 +282,20 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
   if (opts.botCommand) {
     spawner = new LaneSpawner({
       engine, botCommand: opts.botCommand, run: opts.run,
-      onEvent: (lane, ev) => { record?.({ ...norm.fix(lane, { detail: {}, ...ev, lane }), lane } as unknown as HauntEvent); },
-      onWaveDone: () => { clock?.stop(); clock = undefined; demo?.stop(); demo = undefined; endWave?.(); },
+      onEvent: (lane, ev) => { for (const e of norm.shape(lane, { detail: {}, ...ev, lane })) record?.({ ...e, lane } as unknown as HauntEvent); },
+      onWaveDone: () => { clock?.stop(); clock = undefined; demo?.stop(); demo = undefined; gate?.finish(); endWave?.(); },
     });
   }
 
   const live: LiveEngine = {
-    startWave(wave, settings, rec, end) { norm.begin(settings.orders); record = rec; endWave = end; engine.startWave(wave, settings, rec); },
+    startWave(wave, settings, rec, end) {
+      norm.begin(settings.orders);
+      const g = new SettleGate((e) => rec(e as unknown as HauntEvent));
+      gate = g;
+      record = (e) => g.push(e as unknown as Record<string, any>);
+      endWave = end;
+      engine.startWave(wave, settings, record);
+    },
     betweenWaves: opts.betweenWaves,
     stopWave: () => engine.stopWave(),
     setSpeed: (s) => engine.setSpeed(s),
