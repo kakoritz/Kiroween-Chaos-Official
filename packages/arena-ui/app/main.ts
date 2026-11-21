@@ -9,6 +9,7 @@ import { BossBar, bossAnnouncement } from '../src/arena/boss';
 import { ChaosModeControl, readChaosState } from '../src/arena/chaosmode';
 import { AppSwitcher, currentApp } from '../src/arena/appswitch';
 import { ArenaSound } from '../src/sound';
+import { KEY_HELP, chaosAnnouncement, keyAction, nextMode, renderLegend } from '../src/arena/keys';
 import { ApiError, createApi, resolveHttpBase, type ArenaApi, type ArenaEvent, type ConnectionStatus, type HauntInPage } from '../src/api';
 
 // W1/W2 shell plus the A3 canvas arena: the client connects the same way for mock, live and\n// browser. Events feed a pure reducer; the canvas redraws every animation frame from that state.
@@ -24,6 +25,7 @@ root.innerHTML = `
       <div id="chaos-mode"></div>
       <span class="spacer"></span>
       <span class="total" id="total" title="Total score"></span>
+      <button class="btn btn--ghost" id="keys-btn" type="button" aria-expanded="false" aria-controls="keys-pop" title="Keyboard and state legend (?)">&#9000; Keys</button>
       <button class="btn btn--ghost" id="mute" type="button" aria-pressed="true" title="Sound is off until you turn it on">&#128263; Sound off</button>
       <span class="pill hidden" id="demo-pill">DEMO</span>
       <span class="badge badge--offline" id="badge" role="status"></span>
@@ -32,6 +34,7 @@ root.innerHTML = `
     </header>
     <div class="boss" id="boss" aria-hidden="true"></div>
     <aside class="insp hidden" id="insp"></aside>
+    <div class="keys-pop hidden" id="keys-pop" role="dialog" aria-label="Keyboard and state legend"><h2>Keyboard</h2><ul class="keys-list" id="keys-list"></ul><h2>States</h2><ul class="lg-list" id="legend-list"></ul></div>
     <div class="sr-only" id="live-assertive" aria-live="assertive"></div>
     <section class="panel panel--rank hidden" id="rank" aria-label="Rank board"><h2>Rank board</h2><div class="rb-body" id="rank-body"></div></section>
     <section class="panel panel--ledger hidden" id="ledger" aria-label="Ledger"><h2>Ledger</h2><div id="ledger-body"></div></section>
@@ -123,6 +126,30 @@ canvas.addEventListener('click', (e) => {
 canvas.addEventListener('mousemove', (e) => {
   const r = canvas.getBoundingClientRect();
   canvas.style.cursor = chipAt(((e.clientX - r.left) / r.width) * STAGE_W, ((e.clientY - r.top) / r.height) * STAGE_H, vm.lanes.length, vm.stages.length) ? 'pointer' : 'default';
+});
+const keysPop = $('keys-pop');
+const keysBtn = $<HTMLButtonElement>('keys-btn');
+$('keys-list').innerHTML = KEY_HELP.map((k) => `<li><kbd>${k.keys}</kbd> ${k.does}</li>`).join('');
+renderLegend($('legend-list'));
+function toggleKeys(force?: boolean) {
+  const open = force ?? keysPop.classList.contains('hidden');
+  keysPop.classList.toggle('hidden', !open);
+  keysBtn.setAttribute('aria-expanded', String(open));
+}
+keysBtn.addEventListener('click', () => toggleKeys());
+if (new URLSearchParams(window.location.search).get('keys') === 'open') toggleKeys(true);
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { toggleKeys(false); return; }
+  const t = e.target as HTMLElement | null;
+  const act = keyAction({ key: e.key, ctrlKey: e.ctrlKey, altKey: e.altKey, metaKey: e.metaKey, repeat: e.repeat, targetTag: t?.tagName, editable: !!t?.isContentEditable }, vm.lanes.length);
+  if (!act || !api) return;
+  if (act.type === 'help') { e.preventDefault(); toggleKeys(); return; }
+  if (act.type === 'cycle-mode') { e.preventDefault(); const m = nextMode(chaosCtl.model.mode); chaosCtl.model.choose(m); liveAssertive.textContent = `Chaos mode ${m}`; return; }
+  if (act.type === 'chaos') {
+    e.preventDefault();
+    api.chaos(act.lane === undefined ? {} : { lane: vm.lanes[act.lane]?.lane ?? act.lane }).then(
+      (r) => { liveAssertive.textContent = chaosAnnouncement(act.lane, r.creature); }, showError);
+  }
 });
 async function reconcile() {
   try { reconcileLedger(vm, await api.getLedger()); } catch { /* the event-built cells stay */ }

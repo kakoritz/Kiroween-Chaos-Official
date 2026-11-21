@@ -46,7 +46,7 @@ Lane B owns: A3, the rank board and ledger panel views, B3, the B4 slider UI, th
 - [x] UI-W4. Report viewer with the before and after (wave 1 vs wave 2) side by side.
 - [ ] UI-W5. Kiro Crew app page that hosts the arena (see harness H6.9).
 - [x] UI-W6. Polish pass: consistent palette, sound with a mute button, motion that follows reduced-motion, readable at 1080p video capture.
-- [ ] UI-W7. Accessibility: keyboard Chaos, color-blind safe states (icons plus color).
+- [x] UI-W7. Accessibility: keyboard Chaos, color-blind safe states (icons plus color).
 - [ ] UI-W8. Video capture helper: a "present mode" that hides cursor chrome and shows a clean frame.
 
 
