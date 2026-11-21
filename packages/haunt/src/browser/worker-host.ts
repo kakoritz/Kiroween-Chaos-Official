@@ -20,11 +20,13 @@ export type WorkerToPage =
   | { k: 'effect'; id: number; req: Omit<PageEffectRequest, 'lane'> & { recovery?: boolean } }
   | { k: 'lookup'; id: number; kind: PageEffectRequest['kind']; key: string }
   | { k: 'hook'; id: number; point: string; order?: string; stage?: string }
+  | { k: 'track'; id: number }
   | { k: 'event'; msg: Record<string, unknown> };
 
 /** Messages the page sends to a bot worker. */
 export type PageToWorker =
-  | { k: 'init'; lane: string; replay: JournalRecord[]; generation: number }
+  | { k: 'init'; lane: string; replay: JournalRecord[]; generation: number; seed?: string | number; orders?: number; speed?: number; arms?: Record<string, unknown>[]; settled?: string[] }
+  | { k: 'control'; msg: Record<string, unknown> }
   | { k: 'reply'; id: number; ok: boolean; body?: unknown; error?: string };
 
 export type HookDecision = 'continue' | 'kill';
@@ -37,14 +39,24 @@ export interface WorkerProcessOptions {
   /** Called for each hook. Return 'kill' to terminate the worker right there (the armed crash point). */
   onHook?: (point: string, ctx: { order?: string; stage?: string }) => HookDecision;
   onEvent?: (msg: Record<string, unknown>) => void;
+  /** Pipeline bots: run seed, order count, speed multiplier and the arms to hold from the start. */
+  seed?: string | number;
+  orders?: number;
+  speed?: number;
+  arms?: Record<string, unknown>[];
 }
 
 export class WorkerProcess {
   private worker: WorkerLike | null = null;
   private gen = 0;
   private kills = 0;
+  private pendingArms: Record<string, unknown>[] | undefined;
+  /** Orders that reached a final outcome. A restarted bot skips them, like the node lane's done folder. */
+  private readonly settled = new Set<string>();
 
-  constructor(private readonly o: WorkerProcessOptions) {}
+  constructor(private readonly o: WorkerProcessOptions) {
+    this.pendingArms = o.arms;
+  }
 
   get alive(): boolean {
     return this.worker !== null;
@@ -68,7 +80,11 @@ export class WorkerProcess {
       if (this.worker !== w) return; // a terminated worker can leave late messages in flight
       this.handle(w, ev.data as WorkerToPage);
     };
-    const init: PageToWorker = { k: 'init', lane: this.o.lane, replay: this.o.journal.records(), generation: myGen };
+    const init: PageToWorker = {
+      k: 'init', lane: this.o.lane, replay: this.o.journal.records(), generation: myGen,
+      seed: this.o.seed, orders: this.o.orders, speed: this.o.speed, arms: this.pendingArms, settled: [...this.settled],
+    };
+    this.pendingArms = undefined; // arms belong to one process life; a restart starts unarmed
     w.postMessage(init);
   }
 
@@ -79,6 +95,11 @@ export class WorkerProcess {
     this.worker = null;
     this.kills++;
     w.terminate();
+  }
+
+  /** Forward a runner-style control message (rm, speed) to the live worker. */
+  control(msg: Record<string, unknown>): void {
+    this.worker?.postMessage({ k: 'control', msg } satisfies PageToWorker);
   }
 
   /** Kill then start a new worker that replays the surviving journal. */
@@ -130,9 +151,19 @@ export class WorkerProcess {
         this.reply(w, { id: m.id, ok: true });
         return;
       }
-      case 'event':
-        this.o.onEvent?.(m.msg);
+      case 'track': {
+        const fault = this.o.ledger.matchFault(this.o.lane, 'tracking', false);
+        this.reply(w, { id: m.id, ok: true, body: fault ? { fault } : {} });
         return;
+      }
+      case 'event': {
+        const e = m.msg;
+        if (e.type === 'order_done' || e.type === 'order_failed' || e.type === 'order_quarantined') this.settled.add(String(e.order));
+        this.o.onEvent?.(e);
+        // The bot reached an armed crash point and blocks. The page ends it, like the runner's SIGKILL.
+        if (e.k === 'at_point' && e.fault) this.kill();
+        return;
+      }
     }
   }
 }
