@@ -14,6 +14,7 @@ import { bossReportJson, createLiveBossRunner, planBoss, renderBoss, runBoss } f
 import { compareReportJson, compareReports, renderCompare } from '../../../haunt/src/compare';
 import { ciExitCode, bossTargets, rampTargets, renderTargetLines, soakTargets, stackTargets, sweepTargets } from '../../../haunt/src/report/ci';
 import { parseCommandLine } from '../../../haunt/src/adapters';
+import { writeBadgeFiles } from '../../../haunt/src/share';
 import { startProvider } from '../provider/server';
 
 const argv = process.argv.slice(2);
@@ -290,7 +291,17 @@ function compare(): number {
   if (out) { mkdirSync(resolve(out, '..'), { recursive: true }); writeFileSync(resolve(out), compareReportJson(report)); console.log(`report ${resolve(out)}`); }
   return argv.includes('--no-gate') ? 0 : report.verdict === 'regressed' ? 1 : 0;
 }
-if (cmd === 'sweep') {
+function badge(): number {
+  const id = argv[1];
+  if (!id || id.startsWith('--')) { console.error('usage: npm run haunt -- badge <run-id> [--out dir]'); return 2; }
+  const r = writeBadgeFiles(process.cwd(), id, opt('out', '.')!);
+  if ('error' in r) { console.error(r.error); return 2; }
+  for (const p of r.files) console.log(`wrote ${p}`);
+  return 0;
+}
+if (cmd === 'badge') {
+  process.exitCode = badge();
+} else if (cmd === 'sweep') {
   process.exitCode = await sweep();
 } else if (cmd === 'stack') {
   process.exitCode = await stack();
@@ -305,5 +316,6 @@ if (cmd === 'sweep') {
 } else {
   console.log(`usage: npm run haunt -- ramp|sweep|stack|soak|boss [--boss lich|banshee_queen|horseman] [--tier rookie|retrier|journaler|reconciler|phoenix] [--seed N] [--orders N] [--speed N] [--config path] [--bot path] [--out dir] [--no-gate]`);
   console.log('       npm run haunt -- compare <runA> <runB> [--out file]');
+  console.log('       npm run haunt -- badge <run-id> [--out dir]');
   process.exitCode = cmd ? 2 : 0;
 }

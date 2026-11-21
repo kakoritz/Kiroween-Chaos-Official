@@ -5,6 +5,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import { loadHauntConfig } from '../config';
+import { writeBadgeFiles } from '../share';
 
 export interface McpOptions { root: string; cliEntry?: string; runTimeoutMs?: number }
 type Json = Record<string, unknown>;
@@ -23,6 +24,7 @@ export const TOOLS: Tool[] = [
   { name: 'haunt_sweep', description: 'Run a graded fault sweep (one creature fault per stage) and return the matrix and grade.', inputSchema: { type: 'object', properties: runProps } },
   { name: 'haunt_ramp', description: 'Run a load ramp and return the knee, break point and grade.', inputSchema: { type: 'object', properties: runProps } },
   { name: 'haunt_report', description: 'Read a saved sweep or ramp report JSON (latest in .haunt if no path is given).', inputSchema: { type: 'object', properties: { kind: { type: 'string', enum: ['sweep', 'ramp'] }, path: str('string', 'Report file path') } } },
+  { name: 'haunt_badge', description: 'Write the grade badge and scorecard (SVG and HTML) for a saved run into a local folder.', inputSchema: { type: 'object', properties: { run: str('string', 'Report path or run name under .haunt/sweeps'), out: str('string', 'Output folder (default .)') }, required: ['run'] } },
 ];
 
 const text = (t: string, isError = false): Json => ({ content: [{ type: 'text', text: t }], isError });
@@ -63,6 +65,11 @@ export async function callTool(opts: McpOptions, name: string, a: Json): Promise
     const path = a.path ? resolve(opts.root, String(a.path)) : latestReport(opts.root, kind);
     if (!path || !existsSync(path)) return text('no report found', true);
     try { return text(JSON.stringify(JSON.parse(readFileSync(path, 'utf8')))); } catch (e) { return text(`unreadable report: ${String(e)}`, true); }
+  }
+  if (name === 'haunt_badge') {
+    if (typeof a.run !== 'string' || !a.run) return text('run required', true);
+    const r = writeBadgeFiles(opts.root, a.run, String(a.out ?? '.'));
+    return 'error' in r ? text(r.error, true) : text(JSON.stringify(r));
   }
   return text(`unknown tool: ${name}`, true);
 }
