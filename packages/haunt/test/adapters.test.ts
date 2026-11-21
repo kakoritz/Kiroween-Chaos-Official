@@ -2,7 +2,7 @@ import http from 'node:http';
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ProcessAdapter, parseCommandLine, startFaultProxy, type FaultProxy } from '../src/adapters';
 
 let upstream: http.Server | undefined;
@@ -65,13 +65,20 @@ describe('Proxy adapter', () => {
   it('adds latency then forwards, and honours method filter and clearFaults', async () => {
     const up = await startUpstream();
     proxy = await startFaultProxy({ upstream: up.url });
-    proxy.addFault({ kind: 'latency', ms: 150, method: 'POST' });
+    proxy.addFault({ kind: 'latency', ms: 600, method: 'POST' });
+    // The lower bound is load-safe (a timer never fires early). The "not delayed" side is asserted by ordering, not by a
+    // wall-clock ceiling: a GET started after the delayed POST must finish first, however slow the machine is.
     const t0 = Date.now();
-    expect((await fetch(`${proxy.url}/x`, { method: 'POST' })).status).toBe(200);
-    expect(Date.now() - t0).toBeGreaterThanOrEqual(120);
-    const t1 = Date.now();
-    await fetch(`${proxy.url}/x`);
-    expect(Date.now() - t1).toBeLessThan(120);
+    let postDone = false;
+    const post = fetch(`${proxy.url}/x`, { method: 'POST' }).then((r) => {
+      postDone = true;
+      return r;
+    });
+    const get = await fetch(`${proxy.url}/x`);
+    expect(get.status).toBe(200);
+    expect(postDone).toBe(false);
+    expect((await post).status).toBe(200);
+    expect(Date.now() - t0).toBeGreaterThanOrEqual(500);
     proxy.clearFaults();
     proxy.addFault({ kind: 'status', status: 500, forMs: 0 });
     expect((await fetch(`${proxy.url}/x`)).status).toBe(200); // expired at once
@@ -100,9 +107,10 @@ describe('Process adapter', () => {
     await adapter.restart(10);
     expect(adapter.running).toBe(true);
     expect(adapter.startCount).toBe(2);
-    await new Promise((r) => setTimeout(r, 400));
-    expect(adapter.output().filter((l) => l === 'up').length).toBeGreaterThanOrEqual(1);
-  });
+    // Wait for the child's output instead of sleeping: node start-up time depends entirely on machine load.
+    const a = adapter;
+    await vi.waitFor(() => expect(a.output().filter((l) => l === 'up').length).toBeGreaterThanOrEqual(1), { timeout: 20000, interval: 25 });
+  }, 30000);
 
   it('feeds and removes input files, contained in the input folder', () => {
     const dir = mkdtempSync(join(tmpdir(), 'haunt-in-'));
