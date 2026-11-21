@@ -114,7 +114,7 @@ function details(ctx: CanvasRenderingContext2D, id: PartDef['id'], fr: Frame): v
 }
 
 /** Draw one frame centred on x = 0 with the feet at y = size / 2. */
-export function drawSkeleton(ctx: CanvasRenderingContext2D, fr: Frame, o: DrawOpts, tier?: Tier): void {
+export function drawSkeleton(ctx: CanvasRenderingContext2D, fr: Frame, o: DrawOpts, tier?: Tier, gear?: readonly string[]): void {
   const s = o.size / 100;
   ctx.save();
   ctx.translate(0, o.size / 2);
@@ -138,7 +138,7 @@ export function drawSkeleton(ctx: CanvasRenderingContext2D, fr: Frame, o: DrawOp
     }
     ctx.stroke(path);
     if (!o.silhouette) details(ctx, d.id, fr);
-    if (tier) dressPart(ctx, tier, d.id, fr.face, o.silhouette);
+    if (tier) dressPart(ctx, tier, d.id, fr.face, o.silhouette, gear);
     ctx.restore();
   }
   ctx.restore();

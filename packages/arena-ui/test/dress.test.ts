@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DRESSING, GEAR_ITEMS, TIER_IDS, TIER_LABEL } from '../src/rig/dress';
+import { DRESSING, GEAR_FOR_PART, GEAR_ITEMS, TIER_IDS, TIER_LABEL, itemsFor } from '../src/rig/dress';
 
 describe('tier dressings', () => {
   it('defines the five tiers in ladder order with labels', () => {
@@ -26,5 +26,18 @@ describe('tier dressings', () => {
 
   it('phoenix carries all five gear pieces', () => {
     for (const g of GEAR_ITEMS) expect(DRESSING.phoenix).toContain(g);
+  });
+});
+
+describe('gear from /api/state', () => {
+  it('maps the five resilience parts onto the five gear items', () => {
+    expect(Object.values(GEAR_FOR_PART).sort()).toEqual([...GEAR_ITEMS].sort());
+  });
+
+  it('shows only installed gear, not the tier default', () => {
+    expect(itemsFor('phoenix', [])).not.toContain('crown');
+    expect(itemsFor('rookie', ['retry', 'breaker'])).toEqual(expect.arrayContaining(['lantern', 'scarf']));
+    expect(itemsFor('rookie', ['retry'])).not.toContain('book');
+    expect(itemsFor('retrier')).toEqual(DRESSING.retrier);
   });
 });

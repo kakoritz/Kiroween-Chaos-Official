@@ -539,7 +539,7 @@ export class ArenaScene {
     ctx.scale(flip, 1);
     // soft shadow
     ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.beginPath(); ctx.ellipse(0, size / 2, size * 0.3, 6, 0, 0, Math.PI * 2); ctx.fill();
-    drawSkeleton(ctx, fr, { silhouette: false, size }, tier);
+    drawSkeleton(ctx, fr, { silhouette: false, size }, tier, l.parts);
     ctx.restore();
     ctx.filter = 'none';
 

@@ -267,8 +267,20 @@ function pelvis(ctx: Ctx, items: readonly Item[], sil: boolean): void {
  * Draw the dressing items attached to one part. Call with the context already translated
  * and rotated into that part's local space. The face id selects expression-aware items.
  */
-export function dressPart(ctx: Ctx, tier: Tier, partId: string, face: string, silhouette: boolean): void {
-  const items = DRESSING[tier];
+/** Resilience part ids from /api/state, mapped to the gear piece each one shows. */
+export const GEAR_FOR_PART: Record<string, Item> = {
+  retry: 'lantern', journal: 'book', idempotency: 'medal', breaker: 'scarf', offline_queue: 'crown',
+};
+
+/** Items to draw: the tier's non-gear look plus the gear the lane really has installed. */
+export function itemsFor(tier: Tier, parts?: readonly string[]): readonly Item[] {
+  if (!parts) return DRESSING[tier];
+  const gear = parts.map((p) => GEAR_FOR_PART[p]).filter((i): i is Item => !!i);
+  return [...DRESSING[tier].filter((i) => !GEAR_ITEMS.includes(i)), ...gear];
+}
+
+export function dressPart(ctx: Ctx, tier: Tier, partId: string, face: string, silhouette: boolean, parts?: readonly string[]): void {
+  const items = itemsFor(tier, parts);
   ctx.save();
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
