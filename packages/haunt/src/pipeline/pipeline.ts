@@ -112,6 +112,8 @@ export interface PipelineDeps {
   readOrder(id: string): Promise<OrderData>;
   /** One tracking poll. Resolves to true when delivered. */
   pollTracking(shipment: string): Promise<boolean>;
+  /** Live handoff call (stage 8). Throws when the handoff is blocked. Absent in bots that do not call a provider. */
+  handoff?(shipment: string): Promise<void>;
   hook(point: 'input_read', ctx: { order: string; stage: string }): Promise<void>;
   emit(msg: Record<string, unknown>): void;
 }
@@ -224,6 +226,7 @@ export class Pipeline {
     });
     await sdk.stage('handoff', async (s) => {
       await s.work(this.work(def('handoff'), id));
+      await this.d.handoff?.(shipment);
     });
   }
 

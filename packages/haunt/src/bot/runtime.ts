@@ -232,11 +232,32 @@ export async function runBot(def: BotDef): Promise<void> {
     }
   };
 
-  let curOrder = '';
-  const pipeline = new Pipeline({
+  // Handoff sits outside sdk.effect too; a blocked handoff retries like tracking and then fails the order.
+  const handoff = async (shipment: string): Promise<void> => {
+    const max = hasPart('breaker') ? 5 : hasPart('retry') ? 3 : 1;
+    for (let n = 1; ; n++) {
+      let failure: string;
+      try {
+        const r = await call(`/handoff/${encodeURIComponent(shipment)}?lane=${encodeURIComponent(lane)}`, { method: 'GET' }, 1500);
+        const b = r.body as { status?: string };
+        if (r.status === 200 && b.status === 'delivered') return;
+        failure = r.status === 200 ? `handoff blocked: ${b.status ?? 'unexpected'}` : `status ${r.status}`;
+      } catch (e) {
+        failure = e instanceof Error ? e.message : String(e);
+      }
+      send({ type: 'stage_fail', order: curOrder, stage: 'handoff', detail: { attempt: n, reason: failure } });
+      if (n >= max) throw new Error(failure);
+      send({ type: 'recover_start', order: curOrder, stage: 'handoff', detail: { action: 'retry', attempt: n } });
+      await sleep(500);
+      send({ type: 'recover_done', order: curOrder, stage: 'handoff', detail: { action: 'retry', attempt: n } });
+    }
+  };
+
+  let curOrder = '';  const pipeline = new Pipeline({
     sdk, tier, seed, lane, speed: 1 / workScale, attempt,
     readOrder: () => readOrder(),
     pollTracking,
+    handoff,
     emit: send,
     async hook(point, ctx) {
       await host.hook(point, ctx);

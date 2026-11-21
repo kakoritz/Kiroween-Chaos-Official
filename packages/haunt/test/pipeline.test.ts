@@ -72,6 +72,11 @@ class World {
         const r = await this.provider.handle({ method: 'GET', path: `/tracking/${shipment}`, query: { lane: LANE } });
         return (r.body as { status?: string }).status === 'delivered';
       },
+      handoff: async (shipment) => {
+        const r = await this.provider.handle({ method: 'GET', path: `/handoff/${shipment}`, query: { lane: LANE } });
+        const status = (r.body as { status?: string }).status;
+        if (status !== 'delivered') throw new Error(`handoff blocked: ${status}`);
+      },
       hook: (point, ctx) => this.host.hook(point, ctx),
       emit: (m) => this.host.emit(m),
     });
@@ -199,6 +204,15 @@ describe('acceptance table A through the pipeline', () => {
     retrier.fault({ service: 'charge', value: 404, count: 2 });
     expect(await (await retrier.start(tierById('retrier'))).run(ID)).toBe('done');
     expect(retrier.rows()).toEqual(CLEAN);
+  });
+});
+
+describe('handoff provider call (PT-C7)', () => {
+  it('a handoff_block fault fails the order and a clean handoff delivers it', async () => {
+    const w = new World();
+    w.fault({ service: 'handoff', mode: 'handoff_block', block: 'gated', count: 1 });
+    expect(await (await w.start(tierById('rookie'))).run(ID)).toBe('failed');
+    expect(await (await new World().start(tierById('rookie'))).run(ID)).toBe('done');
   });
 });
 
