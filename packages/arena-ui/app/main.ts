@@ -1,6 +1,6 @@
 import { apiBaseFromQuery, modeBadge, presentFromQuery } from '../src/mode';
 import { autoplayDecision, pickScript } from '../src/demo';
-import { ArenaScene, STAGE_H, STAGE_W } from '../src/arena/scene';
+import { ArenaScene, BOSS_INSET, STAGE_H, STAGE_W } from '../src/arena/scene';
 import { applyEvent, emptyVM, loadSnapshot, reconcileLedger, totalScore } from '../src/arena/model';
 import { LedgerPanel, RankBoard } from '../src/arena/panels';
 import { EventTicker } from '../src/arena/ticker';
@@ -120,14 +120,14 @@ const inspector = new StageInspector($('insp'), {
 canvas.style.cursor = 'default';
 canvas.addEventListener('click', (e) => {
   const r = canvas.getBoundingClientRect();
-  const hit = chipAt(((e.clientX - r.left) / r.width) * STAGE_W, ((e.clientY - r.top) / r.height) * STAGE_H, vm.lanes.length, vm.stages.length);
+  const hit = chipAt(((e.clientX - r.left) / r.width) * STAGE_W, ((e.clientY - r.top) / r.height) * STAGE_H, vm.lanes.length, vm.stages.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET);
   const lane = hit ? vm.lanes[hit.lane] : null;
   const st = hit ? vm.stages[hit.stage] : null;
   if (hit && lane && st) inspector.open(lane.lane, hit.stage, st.id, lane.order);
 });
 canvas.addEventListener('mousemove', (e) => {
   const r = canvas.getBoundingClientRect();
-  canvas.style.cursor = chipAt(((e.clientX - r.left) / r.width) * STAGE_W, ((e.clientY - r.top) / r.height) * STAGE_H, vm.lanes.length, vm.stages.length) ? 'pointer' : 'default';
+  canvas.style.cursor = chipAt(((e.clientX - r.left) / r.width) * STAGE_W, ((e.clientY - r.top) / r.height) * STAGE_H, vm.lanes.length, vm.stages.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET) ? 'pointer' : 'default';
 });
 const keysPop = $('keys-pop');
 const keysBtn = $<HTMLButtonElement>('keys-btn');

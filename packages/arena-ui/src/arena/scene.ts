@@ -32,11 +32,15 @@ type Ctx = CanvasRenderingContext2D;
 
 export interface LaneBox { top: number; h: number }
 
+/** Height of the boss banner. While a boss is announced or active the lanes sit below it (inset). */
+export const BOSS_INSET = 48;
+
 /** Lane geometry: 768/N tall capped at 200, drawn 4 px short of the pitch, group centred. */
-export function laneBoxes(n: number): LaneBox[] {
-  const pitch = Math.min(200, LANES_H / Math.max(1, n));
+export function laneBoxes(n: number, inset = 0): LaneBox[] {
+  const avail = LANES_H - inset;
+  const pitch = Math.min(200, avail / Math.max(1, n));
   const group = pitch * n;
-  const y0 = HEADER + (LANES_H - group) / 2;
+  const y0 = HEADER + inset + (avail - group) / 2;
   return Array.from({ length: n }, (_, i) => ({ top: y0 + i * pitch, h: pitch - 5.6 }));
 }
 
@@ -115,14 +119,15 @@ function cryptLayers(ctx: Ctx, top: number, h: number): void {
 }
 
 /** Everything that never moves, drawn once per lane count. */
-export function renderStatic(n: number): HTMLCanvasElement {
+export function renderStatic(n: number, inset = 0): HTMLCanvasElement {
   const cv = document.createElement('canvas');
   cv.width = STAGE_W; cv.height = STAGE_H;
   const ctx = cv.getContext('2d')!;
   ctx.fillStyle = C.bg; ctx.fillRect(0, 0, STAGE_W, STAGE_H);
   bricks(ctx, 0, 0, STAGE_W, HEADER, 11, '#15112a', 'rgba(8,6,16,0.9)');
   bricks(ctx, 0, HEADER + LANES_H, STAGE_W, STAGE_H - HEADER - LANES_H, 23, '#130f24', 'rgba(8,6,16,0.9)');
-  const boxes = laneBoxes(n);
+  if (inset > 0) bricks(ctx, 0, HEADER, STAGE_W, inset, 12, '#15112a', 'rgba(8,6,16,0.9)');
+  const boxes = laneBoxes(n, inset);
   boxes.forEach((b, i) => {
     bricks(ctx, 0, b.top, TRACK_X0, b.h, 100 + i, '#17132b', 'rgba(8,6,16,0.9)');
     flagstoneFloor(ctx, TRACK_X0, b.top, STAGE_W - TRACK_X0, b.h, 200 + i);
@@ -369,9 +374,10 @@ export class ArenaScene {
 
   constructor(private readonly ctx: Ctx) {}
 
-  private staticFor(n: number): HTMLCanvasElement {
-    let s = this.statics.get(n);
-    if (!s) this.statics.set(n, (s = renderStatic(n)));
+  private staticFor(n: number, inset: number): HTMLCanvasElement {
+    const key = n + (inset > 0 ? 1000 : 0);
+    let s = this.statics.get(key);
+    if (!s) this.statics.set(key, (s = renderStatic(n, inset)));
     return s;
   }
 
@@ -411,9 +417,10 @@ export class ArenaScene {
     const lanes: LaneVM[] = quiet ? [] : vm.lanes;
     const n = quiet ? 5 : lanes.length;
     ctx.setLineDash([]);
-    ctx.drawImage(this.staticFor(n), 0, 0);
-    this.fog(ctx, now, n);
-    const boxes = laneBoxes(n);
+    const inset = vm.boss.phase === 'none' ? 0 : BOSS_INSET;
+    ctx.drawImage(this.staticFor(n, inset), 0, 0);
+    this.fog(ctx, now, n, inset);
+    const boxes = laneBoxes(n, inset);
     const drawn = quiet ? sleepers(vm, now) : lanes;
     drawn.forEach((l, i) => this.drawLane(ctx, vm, l, boxes[i]!, now));
   }
@@ -421,7 +428,7 @@ export class ArenaScene {
   private fogTex: HTMLCanvasElement | null = null;
   private fogTex2: HTMLCanvasElement | null = null;
 
-  private fog(ctx: Ctx, now: number, n: number): void {
+  private fog(ctx: Ctx, now: number, n: number, inset: number): void {
     if (this.lite) return;
     this.fogTex ??= fogTexture(STAGE_W, LANES_H, 7);
     this.fogTex2 ??= fogTexture(STAGE_W, LANES_H, 19);
@@ -431,7 +438,7 @@ export class ArenaScene {
     ctx.globalAlpha = 0.8;
     ctx.drawImage(this.fogTex2, -o2, HEADER); ctx.drawImage(this.fogTex2, STAGE_W - o2, HEADER);
     ctx.globalAlpha = 1;
-    const boxes = laneBoxes(n);
+    const boxes = laneBoxes(n, inset);
     ctx.save();
     for (let i = 0; i < 3; i++) {
       const x = ((now / 60 + i * 700) % 2400) - 300;

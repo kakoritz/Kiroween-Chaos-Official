@@ -13,8 +13,8 @@ const CHIP_W = 150;
 const CHIP_H = 40;
 
 /** Which stage chip sits under a point in design pixels, as zero-based lane and stage indexes. */
-export function chipAt(x: number, y: number, laneCount: number, stageCount: number): { lane: number; stage: number } | null {
-  const boxes = laneBoxes(laneCount);
+export function chipAt(x: number, y: number, laneCount: number, stageCount: number, inset = 0): { lane: number; stage: number } | null {
+  const boxes = laneBoxes(laneCount, inset);
   for (let l = 0; l < boxes.length; l++) {
     const top = boxes[l]!.top + 4;
     if (y < top || y > top + CHIP_H) continue;
