@@ -1,0 +1,23 @@
+name: Hosted demo build
+
+# Build only. This workflow does not deploy and does not enable GitHub Pages. It is manual (workflow_dispatch),
+# and it uploads dist/hosted as a run artifact so the owner can inspect it. Publishing is an owner decision.
+# Policy: CI never runs tests (see ci.yml).
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run build:hosted
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hosted-demo
+          path: dist/hosted

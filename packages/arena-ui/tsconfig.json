@@ -11,7 +11,10 @@
     "isolatedModules": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "types": ["vite/client"]
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": { "@haunt/shared": ["../haunt/src/shared/index.ts"] },
+    "types": ["vite/client", "node"]
   },
   "include": ["src", "app"]
 }

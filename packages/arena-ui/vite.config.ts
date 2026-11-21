@@ -18,12 +18,13 @@ const stubNode = {
 
 export default defineConfig({
   plugins: [stubNode],
+  resolve: { alias: { '@haunt/shared': resolve(__dirname, '../haunt/src/shared/index.ts') } },
   worker: { format: 'es', plugins: () => [stubNode] },
   base: './',
   server: { host: '127.0.0.1', port: 5173, proxy },
   preview: { host: '127.0.0.1', port: 4173, proxy },
   build: { outDir: 'dist', emptyOutDir: true, target: 'es2022', sourcemap: false,
-    rollupOptions: { input: { main: resolve(__dirname, 'index.html'), lab: resolve(__dirname, 'lab.html'), report: resolve(__dirname, 'report.html'), browser: resolve(__dirname, 'browser.html') } } },
+    rollupOptions: { input: { main: resolve(__dirname, 'index.html'), lab: resolve(__dirname, 'lab.html'), report: resolve(__dirname, 'report.html'), browser: resolve(__dirname, 'browser.html'), hosted: resolve(__dirname, 'hosted.html') } } },
 });
 
 

@@ -14,6 +14,7 @@
     "ui:build": "npm run build -w @haunt/arena-ui",
     "build": "node tools/build.mjs",
     "build:browser": "node tools/build-browser.mjs",
+    "build:hosted": "npm run ui:build && node tools/build-hosted.mjs",
     "build:bots": "node tools/build-bots.mjs",
     "demo": "node tools/demo.mjs",
     "test": "vitest run",
