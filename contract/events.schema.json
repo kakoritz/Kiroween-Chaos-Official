@@ -536,7 +536,8 @@
                     "retrier",
                     "journaler",
                     "reconciler",
-                    "phoenix"
+                    "phoenix",
+                    "crew"
                   ]
                 },
                 "label": {

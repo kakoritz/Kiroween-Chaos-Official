@@ -4,12 +4,13 @@
 import { ChaosDirector, type LaneInfo, type ProviderArm } from '../chaos/director';
 import { FAULTS } from '../chaos/catalog';
 import type { HauntEvent } from '../score/score';
+import type { Part } from '../sdk';
 import { tiersForLanes, type TierMode } from './lanes';
 import { postProviderArm, type PostFault } from './provider';
 
 export interface EngineChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string; forMs?: number; source?: 'manual' | 'random' | 'boss' }
 export interface EngineChaosResult { chaosId: string; creature: string; fault: string; depth: number; deferred: boolean }
-export interface EngineWaveSettings { orders: number; seed: number; tiers: TierMode; lanes: number; speed: number; pace: 'normal' | 'show'; app: string }
+export interface EngineWaveSettings { orders: number; seed: number; tiers: TierMode; lanes: number; speed: number; pace: 'normal' | 'show' | 'slow'; app: string; campaign?: { night: number; parts: readonly Part[] } }
 export interface EngineChaosMode { mode: 'off' | 'manual' | 'random'; frequency: number; seed: number }
 
 export interface RunnerEngineOptions {
@@ -43,7 +44,7 @@ export class RunnerEngine {
     this.record = record;
     this.speed = settings.speed;
     this.seq = 0;
-    const tiers = tiersForLanes(settings.lanes, settings.tiers);
+    const tiers = tiersForLanes(settings.lanes, settings.tiers, settings.campaign ? { parts: settings.campaign.parts } : undefined);
     this.lanes = tiers.map((_, i) => String(i + 1));
     tiers.forEach((t, i) => this.director.addLane(String(i + 1), t.use));
     this.opts.onWaveStart?.(wave, settings, this.lanes);

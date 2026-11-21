@@ -13,8 +13,14 @@ const RACE_SETS: Record<number, readonly TierId[]> = {
   5: ['rookie', 'retrier', 'journaler', 'reconciler', 'phoenix'],
 };
 
-/** Tier for each lane, in lane order. */
-export function tiersForLanes(lanes: number, mode: TierMode = 'race'): TierDef[] {
+/** Campaign lane setup (CP-C2): lane 1 is the Crew with exactly these parts, lanes 2 and up are the rival tiers. */
+export interface CrewSpec { parts: TierDef['use']; rivals?: readonly TierId[] }
+
+const DEFAULT_RIVALS: readonly TierId[] = ['retrier', 'journaler', 'reconciler', 'phoenix'];
+
+/** Tier for each lane, in lane order. With `crew`, `lanes` and `mode` are ignored: lane 1 is the Crew, the rest are the rivals. */
+export function tiersForLanes(lanes: number, mode: TierMode = 'race', crew?: CrewSpec): TierDef[] {
+  if (crew) return [{ ...tierById('crew'), use: crew.parts }, ...(crew.rivals ?? DEFAULT_RIVALS).map(tierById)];
   if (!Number.isInteger(lanes) || lanes < 1 || lanes > 5) throw new Error(`lanes must be 1 to 5, got ${lanes}`);
   const ids = mode === 'allPhoenix' ? Array<TierId>(lanes).fill('phoenix') : RACE_SETS[lanes]!;
   return ids.map(tierById);

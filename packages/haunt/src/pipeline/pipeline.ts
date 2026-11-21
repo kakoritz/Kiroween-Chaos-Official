@@ -21,7 +21,7 @@ export const STAGES: readonly StageDef[] = [
   { id: 'handoff', label: 'Handoff', min: 300, max: 600 },
 ];
 
-export type TierId = 'rookie' | 'retrier' | 'journaler' | 'reconciler' | 'phoenix';
+export type TierId = 'rookie' | 'retrier' | 'journaler' | 'reconciler' | 'phoenix' | 'crew';
 
 export interface TierDef {
   id: TierId;
@@ -38,7 +38,11 @@ export const TIERS: readonly TierDef[] = [
   { id: 'phoenix', lane: 5, label: 'Phoenix', use: ['retry', 'journal', 'idempotency', 'breaker', 'offline_queue'] },
 ];
 
+/** The campaign Crew (CP-C2): lane 1, parts chosen per night via `HAUNT_PARTS`. Not one of the five racing tiers, so it is not in `TIERS`. */
+export const CREW_TIER: TierDef = { id: 'crew', lane: 1, label: 'Your Crew', use: [] };
+
 export function tierById(id: string): TierDef {
+  if (id === CREW_TIER.id) return CREW_TIER;
   const t = TIERS.find((x) => x.id === id);
   if (!t) throw new Error(`unknown tier ${id}`);
   return t;

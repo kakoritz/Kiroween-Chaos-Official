@@ -7,10 +7,11 @@ import { extname, join, normalize, resolve, sep } from 'node:path';
 import { EventLog } from '../../../haunt/src/events/eventlog';
 import { WaveManager } from '../../../haunt/src/score/wave';
 import type { HauntEvent } from '../../../haunt/src/score/score';
-import { tiersForLanes, type TierMode } from '../../../haunt/src/runner/lanes';
+import { tiersForLanes, type CrewSpec, type TierMode } from '../../../haunt/src/runner/lanes';
 import { MAX_DEPTH } from '../../../haunt/src/chaos/catalog';
 import { fnv1a32, mulberry32 } from '../../../haunt/src/shared/rng';
 import { loadCampaign } from '../../../haunt/src/campaign/nights';
+import { campaignWaveConfig, parseCampaignRequest, type CampaignRequest } from '../../../haunt/src/campaign/wave-config';
 import { APPS, APP_STAGES, CONTRACT_VERSION, CREATURES, DEMO_SCRIPTS, FAULT_IDS, type AppId } from './catalog';
 import { buildPostmortem, buildReport, waveEvents } from './report';
 import { loadDemo } from './demo';
@@ -26,7 +27,7 @@ const SPEEDS = [0.5, 1, 2, 4];
 
 export interface ChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string }
 export interface ChaosResult { chaosId: string; creature: string; fault: string; depth: number; deferred: boolean }
-export interface WaveSettings { orders: number; seed: number; tiers: TierMode; lanes: number; speed: number; pace: 'normal' | 'show'; app: AppId }
+export interface WaveSettings { orders: number; seed: number; tiers: TierMode; lanes: number; speed: number; pace: 'normal' | 'show' | 'slow'; app: AppId; campaign?: CampaignRequest }
 
 /** What the runner provides. Every hook is optional so the server is usable (read-only) before the runner exists. */
 export interface LiveEngine {
@@ -246,29 +247,42 @@ export class LiveServer {
       if (typeof v !== 'number' || !ok(v)) fail(400, 'bad_request', `bad ${k}`);
       return v as number;
     };
-    const orders = num('orders', 12, (n) => Number.isInteger(n) && n >= 1 && n <= 200);
-    const seed = num('seed', 7, Number.isInteger);
-    const lanes = num('lanes', 5, (n) => Number.isInteger(n) && n >= 1 && n <= 5);
+    let orders = num('orders', 12, (n) => Number.isInteger(n) && n >= 1 && n <= 200);
+    let seed = num('seed', 7, Number.isInteger);
+    let lanes = num('lanes', 5, (n) => Number.isInteger(n) && n >= 1 && n <= 5);
     const speed = num('speed', 1, (n) => SPEEDS.includes(n));
-    const tiers = body.tiers ?? 'race';
+    let tiers = body.tiers ?? 'race';
     if (tiers !== 'race' && tiers !== 'allPhoenix') fail(400, 'bad_request', 'bad tiers');
-    const pace = body.pace ?? 'normal';
-    if (pace !== 'normal' && pace !== 'show') fail(400, 'bad_request', 'bad pace');
-    const app = body.app ?? this.app;
+    let pace = body.pace ?? 'normal';
+    if (pace !== 'normal' && pace !== 'show' && pace !== 'slow') fail(400, 'bad_request', 'bad pace');
+    let app = body.app ?? this.app;
     if (app !== 'orders' && app !== 'inbox') fail(400, 'bad_request', 'bad app');
+    // Campaign night (CP-C2, additive): the night fixes orders, seed, pace, lanes and app. Lane 1 becomes the Crew.
+    let campaign: CampaignRequest | undefined;
+    let crew: CrewSpec | undefined;
+    if (body.campaign !== undefined) {
+      try {
+        const nights = loadCampaign().nights;
+        campaign = parseCampaignRequest(body.campaign, nights);
+        const cfg = campaignWaveConfig(nights.find((n) => n.id === campaign!.night)!, campaign.parts, app);
+        ({ orders, seed, pace, lanes, tiers, app, crew } = cfg);
+      } catch (e) {
+        fail(400, 'bad_request', e instanceof Error ? e.message : 'bad campaign');
+      }
+    }
     if (app !== this.app) this.switchApp(app);
 
-    const defs = tiersForLanes(lanes, tiers);
+    const defs = tiersForLanes(lanes, tiers, crew);
     this.lanes.clear();
     const perLane: Record<string, number> = {};
     defs.forEach((t, i) => {
       this.lanes.set(i + 1, newLane(i + 1, t.id, t.label, t.use, orders));
       perLane[String(i + 1)] = orders;
     });
-    const settings: WaveSettings = { orders, seed, tiers, lanes, speed, pace, app };
+    const settings: WaveSettings = { orders, seed, tiers, lanes, speed, pace, app, ...(campaign ? { campaign } : {}) };
     const prev = this.waves.waves.at(-1)?.n ?? 0;
     if (prev > 0) for (const ev of this.engine.betweenWaves?.(prev, prev + 1, settings) ?? []) this.log.emit({ ...ev, wave: prev });
-    const n = this.waves.start({ lanes: perLane, info: { orders, seed, tiers, lanes, speed, app, pace } });
+    const n = this.waves.start({ lanes: perLane, info: { orders, seed, tiers, lanes, speed, app, pace, ...(campaign ? { campaign } : {}) } });
     this.settings = { ...settings, startedAt: this.waves.waves.at(-1)!.startedAt };
     defs.forEach((t, i) => this.waves.record({ type: 'lane_ready', lane: String(i + 1), detail: { tier: t.id, label: t.label, parts: [...t.use] } }));
     this.engine.startWave?.(n, settings, (ev) => { if (this.waves.active) this.waves.record(ev); }, () => { if (this.waves.active && this.waves.n === n) this.waves.end(); });

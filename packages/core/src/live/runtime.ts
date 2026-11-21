@@ -7,12 +7,15 @@ import { RunnerEngine, type EngineWaveSettings, type RunnerEngineOptions } from 
 import { prepareLane, tiersForLanes } from '../../../haunt/src/runner/lanes';
 import { runLane, type LaneLoopOptions, type LaneLoopResult } from '../../../haunt/src/runner/loop';
 import { BOSS_DURATION_MS, WaveClock } from '../../../haunt/src/runner/live';
-import { RepeatDetector } from '../../../haunt/src/runner/provider';
+import { RepeatDetector, postProviderArm } from '../../../haunt/src/runner/provider';
 import type { BossId } from '../../../haunt/src/chaos/catalog';
 import type { LedgerRow } from '../provider';
 import { DetailNormalizer, SettleGate } from './normalize';
 import { APPS } from '../../../haunt/src/shared/catalog';
 import { LaneTravel, travelAt } from '../../../haunt/src/runner/travel';
+import { crewPartsEnv } from '../../../haunt/src/campaign/crew';
+import { loadCampaign } from '../../../haunt/src/campaign/nights';
+import { planScripts } from '../../../haunt/src/campaign/wave-config';
 import { loadDemo, type DemoScript } from './demo';
 import type { LiveEngine } from './server';
 
@@ -106,7 +109,7 @@ export function makeBotCommand(o: BotCommandOptions): SpawnerOptions['botCommand
       rmSync(waveDir(o.runDir, wave), { recursive: true, force: true });
       o.onWave?.(wave);
     }
-    const tier = tiersForLanes(settings.lanes, settings.tiers)[Number(lane) - 1];
+    const tier = tiersForLanes(settings.lanes, settings.tiers, settings.campaign ? { parts: settings.campaign.parts } : undefined)[Number(lane) - 1];
     if (!tier) return undefined;
     const bundle = o.bundleFor?.(lane, wave, tier.id) ?? tier.id;
     const file = join(botsDir, `${bundle}.js`);
@@ -122,6 +125,7 @@ export function makeBotCommand(o: BotCommandOptions): SpawnerOptions['botCommand
         HAUNT_RUN_DIR: dir, HAUNT_LANE: lane, HAUNT_TIER: tier.id, HAUNT_SEED: String(settings.seed),
         HAUNT_PROVIDER: o.providerUrl, HAUNT_ORDERS_DIR: paths.orders, HAUNT_SPEED: String(settings.speed),
         HAUNT_ATTEMPT: String(attempt), HAUNT_APP: settings.app,
+        ...(tier.id === 'crew' ? { HAUNT_PARTS: crewPartsEnv(tier.use) } : {}),
       },
     };
   };
@@ -299,6 +303,27 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
   let endWave: (() => void) | undefined;
   let clock: WaveClock | undefined;
   let demo: DemoPlayer | undefined;
+  // Campaign night plan (CP-C2): one player per script, started with the wave when `settings.campaign` is set.
+  let night: DemoPlayer[] = [];
+  const stopNight = (): void => { for (const p of night) p.stop(); night = []; laneStage.clear(); };
+  const startNight = (settings: EngineWaveSettings): void => {
+    stopNight();
+    if (!settings.campaign || !record) return;
+    const n = loadCampaign().nights.find((x) => x.id === settings.campaign!.night);
+    if (!n) return;
+    night = planScripts(n).map((s) => new DemoPlayer(engine, record!, s as DemoScript, engine.speed));
+    for (const p of night) p.start();
+  };
+  // Campaign nights press provider faults mid-stage, so the engine must know the stage a lane is in (and release deferred faults).
+  const laneStage = new Map<string, string>();
+  const trackNight = (e: { type?: string; lane?: unknown; stage?: unknown }): void => {
+    if (night.length === 0 || e.lane === undefined) return;
+    const lane = String(e.lane);
+    if (e.type === 'stage_start' && typeof e.stage === 'string') {
+      laneStage.set(lane, e.stage);
+      if (opts.post) for (const arm of engine.director.onStageStart(lane, e.stage)) void postProviderArm(opts.post, lane, e.stage, arm);
+    } else if (e.type === 'stage_done' || e.type === 'order_done' || e.type === 'order_failed' || e.type === 'order_parked') laneStage.delete(lane);
+  };
   let spawner: LaneSpawner | undefined;
   let curApp = 'orders';
   let curPace = 'normal';
@@ -319,6 +344,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
   };
   const engine: RunnerEngine = new RunnerEngine({
     post: opts.post,
+    laneInfo: (lane) => ({ state: 'working', stage: night.length > 0 ? laneStage.get(lane) ?? null : null }),
     sendArm: (lane, arm) => spawner?.send(lane, arm),
     onWaveStart: (wave, settings, lanes) => {
       repeats.reset();
@@ -332,7 +358,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
       }
       spawner?.start(wave, settings, lanes);
     },
-    onWaveStop: () => { clock?.stop(); clock = undefined; demo?.stop(); demo = undefined; spawner?.stop(); },
+    onWaveStop: () => { clock?.stop(); clock = undefined; demo?.stop(); demo = undefined; stopNight(); spawner?.stop(); },
   });
   if (opts.botCommand) {
     // Server-enforced travel gaps (contract rule 40): a per-lane queue holds each bot event until its gap has passed.
@@ -364,7 +390,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
         chains.set(lane, next);
       },
       onWaveDone: () => {
-        void idle().then(() => { clock?.stop(); clock = undefined; demo?.stop(); demo = undefined; gate?.finish(); endWave?.(); });
+        void idle().then(() => { clock?.stop(); clock = undefined; demo?.stop(); demo = undefined; stopNight(); gate?.finish(); endWave?.(); });
       },
     });
     resetTravel = () => { epoch++; chains.clear(); travels.clear(); };
@@ -378,9 +404,10 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
       norm.begin(settings.orders);
       const g = new SettleGate((e) => rec(e as unknown as HauntEvent));
       gate = g;
-      record = (e) => { g.push(e as unknown as Record<string, any>); demo?.observe(e as never); };
+      record = (e) => { g.push(e as unknown as Record<string, any>); demo?.observe(e as never); for (const p of night) p.observe(e as never); trackNight(e as never); };
       endWave = end;
       engine.startWave(wave, settings, record);
+      startNight(settings);
     },
     betweenWaves: opts.betweenWaves,
     stopWave: () => { resetTravel(); engine.stopWave(); },

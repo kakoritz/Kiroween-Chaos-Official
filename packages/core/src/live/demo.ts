@@ -17,7 +17,7 @@ export interface DemoPress {
 }
 export interface DemoBoss { id: string; warnAtMs: number; startAtMs: number }
 export interface DemoScript {
-  name: string; seed: number; pace: 'show'; orders: number; lanes: number; tiers: TierMode;
+  name: string; seed: number; pace: 'show' | 'slow'; orders: number; lanes: number; tiers: TierMode;
   presses: DemoPress[]; boss?: DemoBoss;
 }
 
@@ -30,7 +30,7 @@ export function validateDemo(raw: unknown): DemoScript {
   if (!d || typeof d !== 'object') bad('not an object');
   if (typeof d.name !== 'string' || !d.name) bad('name');
   if (!Number.isInteger(d.seed)) bad('seed');
-  if (d.pace !== 'show') bad('pace must be "show"');
+  if (d.pace !== 'show' && d.pace !== 'slow') bad('pace must be "show" or "slow"');
   if (!Number.isInteger(d.orders) || d.orders < 1) bad('orders');
   if (!Number.isInteger(d.lanes) || d.lanes < 1 || d.lanes > 5) bad('lanes');
   if (d.tiers !== 'race' && d.tiers !== 'allPhoenix') bad('tiers');

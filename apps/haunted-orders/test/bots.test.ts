@@ -34,7 +34,7 @@ describe('bot bundles', () => {
   it('builds one bundle per tier', () => {
     for (const t of TIERS) expect(existsSync(bundle(t.id))).toBe(true);
     const files = readdirSync(join(root, 'apps/haunted-orders/src/bots')).filter((f) => f.endsWith('.ts'));
-    expect(files.filter((f) => !f.endsWith('.hardened.ts')).length).toBe(5);
+    expect(files.filter((f) => !f.endsWith('.hardened.ts')).length).toBe(6);
     expect(files.filter((f) => f.endsWith('.hardened.ts'))).toEqual(['rookie.hardened.ts']);
     expect(existsSync(bundle('rookie.hardened'))).toBe(true);
   });
@@ -44,6 +44,18 @@ describe('bot bundles', () => {
       const out = execFileSync(process.execPath, [bundle(t.id), '--parts'], { encoding: 'utf8' });
       expect(JSON.parse(out)).toEqual({ parts: [...t.use] });
     }
+  });
+
+  it('the crew bundle reads HAUNT_PARTS (CP-C2)', () => {
+    expect(existsSync(bundle('crew'))).toBe(true);
+    const parts = (env: string | undefined) => JSON.parse(execFileSync(process.execPath, [bundle('crew'), '--parts'], {
+      encoding: 'utf8', env: { ...process.env, HAUNT_TIER: undefined, HAUNT_PARTS: env },
+    })).parts;
+    expect(parts('retry,breaker')).toEqual(['retry', 'breaker']);
+    expect(parts('journal idempotency')).toEqual(['journal', 'idempotency']);
+    expect(parts('R J I B Q')).toEqual(['retry', 'journal', 'idempotency', 'breaker', 'offline_queue']);
+    expect(parts('')).toEqual([]);
+    expect(parts(undefined)).toEqual([]);
   });
 });
 
