@@ -14,7 +14,7 @@ import { loadCampaign } from '../../../haunt/src/campaign/nights';
 import { campaignWaveConfig, parseCampaignRequest, type CampaignRequest } from '../../../haunt/src/campaign/wave-config';
 import { APPS, APP_STAGES, CONTRACT_VERSION, CREATURES, DEMO_SCRIPTS, FAULT_IDS, type AppId } from './catalog';
 import { LapTracker } from './lap-tracker';
-import { laneLaps, waveLaps, waveStars } from './laps';
+import { laneLaps, orderRecord, waveLaps, waveStars } from './laps';
 import { PACE_FACTOR } from '../../../haunt/src/runner/travel';
 import { buildPostmortem, buildReport, waveEvents } from './report';
 import { loadDemo } from './demo';
@@ -389,6 +389,10 @@ export class LiveServer {
           const h = w.endedAt ? this.hardening(w.n) : undefined;
           return h ? { json: h } : fail(404, 'not_ready', `no hardening spec for wave ${w.n}`);
         }
+      }
+      if (seg[0] === 'api' && seg[1] === 'lane' && seg[3] === 'order' && seg.length === 5) {
+        const rec = orderRecord(this.log.events, this.laneOf(seg[2]).lane, decodeURIComponent(seg[4]!), this.waves.n);
+        return rec ? { json: rec } : fail(404, 'not_found', `no order ${seg[4]} on lane ${seg[2]}`);
       }
       if (seg[0] === 'api' && seg[1] === 'lane' && seg[3] === 'laps' && seg.length === 4) return { json: laneLaps(this.log.events, this.laneOf(seg[2]).lane, this.waves.n) };
       if (seg[0] === 'api' && seg[1] === 'lane' && seg.length >= 4 && seg[3] === 'orders') return { json: this.laneOrders(this.laneOf(seg[2])) };
