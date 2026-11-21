@@ -1,10 +1,12 @@
 import { apiBaseFromQuery, modeBadge, presentFromQuery } from '../src/mode';
 import { autoplayDecision, pickScript } from '../src/demo';
-import { ArenaScene, BOSS_INSET, STAGE_H, STAGE_W } from '../src/arena/scene';
+import { ArenaScene, BOSS_INSET, STAGE_H, STAGE_W, laneBoxes } from '../src/arena/scene';
 import { applyEvent, emptyVM, loadSnapshot, reconcileLedger, totalScore } from '../src/arena/model';
 import { LedgerPanel, RankBoard } from '../src/arena/panels';
 import { LaneTickerModel, LaneTickerView } from '../src/arena/lanes-ticker';
-import { StageInspector, chipAt } from '../src/arena/inspector';
+import { chipAt } from '../src/arena/inspector';
+import { LanePopup } from '../src/arena/lane-popup';
+import '../src/arena/lane-popup.css';
 import { chipTipAt } from '../src/arena/chiptip';
 import { BossBar, bossAnnouncement } from '../src/arena/boss';
 import { ChaosModeControl, readChaosState } from '../src/arena/chaosmode';
@@ -52,7 +54,7 @@ root.innerHTML = `
       <button class="btn" id="demo-open" type="button">Open in demo mode</button>
     </header>
     <div class="boss" id="boss" aria-hidden="true"></div>
-    <aside class="insp hidden" id="insp"></aside>
+    <div id="insp"></div>
     <div class="keys-pop hidden" id="keys-pop" role="dialog" aria-label="Keyboard and state legend"><h2>Keyboard</h2><ul class="keys-list" id="keys-list"></ul><h2>States</h2><ul class="lg-list" id="legend-list"></ul></div>
     <div class="sr-only" id="live-assertive" aria-live="assertive"></div>
     <div class="present-hint" id="present-hint" aria-hidden="true">Present mode. Press P or Esc to exit.</div>
@@ -138,20 +140,32 @@ const ticker = new LaneTickerView($('ticker-body'), tickerModel, {
 });
 const bossBar = new BossBar($('boss'));
 const liveAssertive = $('live-assertive');
-const inspector = new StageInspector($('insp'), {
+const inspector = new LanePopup($('insp'), {
+  stageIds: () => vm.stages.map((s) => s.id),
   stageLabel: (id) => vm.stages.find((s) => s.id === id)?.label ?? id,
-  chaos: (lane) => api.chaos({ lane }),
-  fetchStage: (lane, stage, order) => api.getLaneStage(lane, stage, order),
-  chipState: (laneIdx, i) => vm.lanes[laneIdx]?.chips[i] ?? 'pending',
+  laneInfo: (n) => { const l = vm.lanes.find((x) => x.lane === n); return l ? { tier: l.tier, order: l.order, running: l.mode !== 'sleep' && l.mode !== 'done' && l.order !== null } : null; },
+  laneBox: (n) => { const i = vm.lanes.findIndex((x) => x.lane === n); return i < 0 ? null : laneBoxes(vm.lanes.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET)[i] ?? null; },
+  chaos: (lane, creature) => api.chaos(creature ? { lane, creature } : { lane }),
+  creatures: () => api.getCreatures(),
+  fetchOrder: (lane, order) => api.getLaneOrder(lane, order),
+  fetchLaps: (lane) => api.getLaneLaps(lane),
   onError: showError,
-});
+}, canvas);
 canvas.style.cursor = 'default';
 canvas.addEventListener('click', (e) => {
   const r = canvas.getBoundingClientRect();
-  const hit = chipAt(((e.clientX - r.left) / r.width) * STAGE_W, ((e.clientY - r.top) / r.height) * STAGE_H, vm.lanes.length, vm.stages.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET);
+  const x = ((e.clientX - r.left) / r.width) * STAGE_W;
+  const y = ((e.clientY - r.top) / r.height) * STAGE_H;
+  const inset = vm.boss.phase === 'none' ? 0 : BOSS_INSET;
+  const hit = chipAt(x, y, vm.lanes.length, vm.stages.length, inset);
   const lane = hit ? vm.lanes[hit.lane] : null;
   const st = hit ? vm.stages[hit.stage] : null;
-  if (hit && lane && st) inspector.open(lane.lane, hit.stage, st.id, lane.order);
+  if (hit && lane && st) { inspector.open(lane.lane, hit.stage, st.id, lane.order); return; }
+  if (x < 260) {
+    const i = laneBoxes(vm.lanes.length, inset).findIndex((b) => y >= b.top && y <= b.top + b.h);
+    const l = i >= 0 ? vm.lanes[i] : null;
+    if (l) inspector.open(l.lane, null, null, l.order);
+  }
 });
 canvas.addEventListener('mousemove', (e) => {
   const r = canvas.getBoundingClientRect();
