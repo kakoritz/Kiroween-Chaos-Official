@@ -9,6 +9,7 @@ import { stationX, type ArenaVM, type ChipState, type LaneVM } from './model';
 import { captionOf, creatureFrame, shown, spriteOf, MAX_SHOWN, type CreatureVM } from './creatures';
 import { drawCreature } from '../creatures/draw';
 import { survivedAge } from './boss';
+import { equipPhase, flightPoint, PART_LABEL, wornParts } from './equip';
 import { cobweb, flagstoneFloor, fogTexture, laneVignette, torchPools } from './crypt';
 
 export const STAGE_W = 1920;
@@ -208,7 +209,7 @@ const GEAR_SLOTS: { id: string; label: string }[] = [
   { id: 'breaker', label: 'B' }, { id: 'offline_queue', label: 'Q' },
 ];
 
-function labelCard(ctx: Ctx, b: LaneBox, l: LaneVM, t: number): void {
+function labelCard(ctx: Ctx, b: LaneBox, l: LaneVM, t: number, worn: string[], speed: number, reduced: boolean): void {
   const h = b.h;
   ctx.save();
   rr(ctx, 8, b.top + 4, 244, h - 8, 12);
@@ -221,13 +222,28 @@ function labelCard(ctx: Ctx, b: LaneBox, l: LaneVM, t: number): void {
   // five gear slots
   GEAR_SLOTS.forEach((g, i) => {
     const gx = 56 + i * 34; const gy = b.top + h * 0.5 + 6;
-    const on = l.parts.includes(g.id);
+    const on = worn.includes(g.id);
+    const eq = l.equips.find((e) => e.part === g.id);
+    const ph = eq ? equipPhase(eq, t, speed, reduced) : null;
+    if (ph && ph.spark >= 0) {
+      ctx.save(); ctx.globalAlpha = 1 - ph.spark; ctx.strokeStyle = C.warn; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(gx, gy, 14 + 16 * ph.spark, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    }
     ctx.beginPath(); ctx.arc(gx, gy, 12, 0, Math.PI * 2);
     ctx.fillStyle = on ? C.warn : 'rgba(10,8,18,0.55)'; ctx.fill();
     ctx.lineWidth = 2.5; ctx.strokeStyle = on ? C.out : C.muted; ctx.setLineDash(on ? [] : [3, 3]); ctx.stroke(); ctx.setLineDash([]);
     txt(ctx, g.label, gx, gy + 1, 13, on ? C.out : C.muted, 'center', MONO, '700');
   });
   txt(ctx, String(l.score), 46, b.top + h - 24, 24, l.score < 0 ? C.fail : C.text, 'left', MONO, '700');
+  if (l.scorePop) {
+    const age = (t - l.scorePop.since) * speed / 1100;
+    if (age >= 0 && age < 1) {
+      const up = l.scorePop.delta > 0;
+      ctx.save(); ctx.globalAlpha = 1 - age;
+      txt(ctx, (up ? '+' : '') + l.scorePop.delta, 130, b.top + h - 24 - (reduced ? 0 : 16 * age), 18, up ? C.ok : C.fail, 'left', MONO, '800');
+      ctx.restore();
+    }
+  }
   if (l.depth > 0) {
     const bx = 224; const by = b.top + 24;
     rr(ctx, bx - 22, by - 14, 44, 28, 8); ctx.fillStyle = 'rgba(155,107,255,0.25)'; ctx.fill();
@@ -410,7 +426,7 @@ export class ArenaScene {
     const n = vm.stages.length;
     ctx.save();
     ctx.beginPath(); ctx.rect(0, b.top, STAGE_W, b.h); ctx.clip();
-    labelCard(ctx, b, l, now);
+    labelCard(ctx, b, l, now, wornParts(l.parts, l.equips, now, this.speed, this.reducedMotion), this.speed, this.reducedMotion);
     stats(ctx, b, l);
     // stage chips and station props
     const chipY = b.top + 4;
@@ -512,6 +528,54 @@ export class ArenaScene {
     }
     ctx.restore();
   }
+  /** Gear in flight from the screen edge, landing spark, and the "Kiro added" caption (UI-S4). */
+  private drawEquips(ctx: Ctx, l: LaneVM, x: number, feetY: number, size: number, headY: number, now: number): void {
+    let row = 0;
+    for (const e of l.equips) {
+      const ph = equipPhase(e, now, this.speed, this.reducedMotion);
+      if (ph.done) continue;
+      const to = { x, y: feetY - size * 0.5 };
+      if (!ph.landed) {
+        const from = { x: x < STAGE_W / 2 ? -30 : STAGE_W + 30, y: headY + 24 };
+        const pt = flightPoint(ph.fly, from, to);
+        ctx.save(); ctx.translate(pt.x, pt.y); ctx.rotate(pt.rot);
+        ctx.shadowColor = C.warn; ctx.shadowBlur = this.lite ? 0 : 18;
+        ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI * 2); ctx.fillStyle = C.warn; ctx.fill();
+        ctx.lineWidth = 3; ctx.strokeStyle = C.out; ctx.stroke(); ctx.shadowBlur = 0;
+        const g = GEAR_SLOTS.find((s) => s.id === e.part);
+        txt(ctx, g?.label ?? '?', 0, 1, 16, C.out, 'center', MONO, '800');
+        ctx.restore();
+        continue;
+      }
+      if (ph.spark >= 0) {
+        const s = ph.spark;
+        ctx.save(); ctx.translate(to.x, to.y); ctx.globalAlpha = 1 - s; ctx.strokeStyle = '#ffe08a'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+        const rays = this.lite ? 6 : 10;
+        for (let i = 0; i < rays; i++) {
+          const a = (i / rays) * Math.PI * 2 + 0.3, r0 = 10 + 10 * s, r1 = 22 + 34 * s;
+          ctx.beginPath(); ctx.moveTo(Math.cos(a) * r0, Math.sin(a) * r0); ctx.lineTo(Math.cos(a) * r1, Math.sin(a) * r1); ctx.stroke();
+        }
+        ctx.restore();
+      }
+      if (ph.caption >= 0) {
+        const label = PART_LABEL[e.part] ?? e.part;
+        const text = 'Kiro added: ' + label + (e.spec ? ' (' + e.spec + ')' : '');
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, (1 - ph.caption) * 2.5, ph.caption * 8 + 0.2);
+        ctx.font = '700 15px ' + SANS;
+        const w = Math.min(380, Math.ceil(ctx.measureText(text).width) + 22);
+        const cy = feetY - 22 - row * 26 - (this.reducedMotion ? 0 : 8 * ph.caption);
+        const left = x - 56 - w >= TRACK_X0 + 4;
+        const cx = left ? x - 56 - w / 2 : x + 70 + w / 2;
+        rr(ctx, cx - w / 2, cy - 12, w, 24, 8); ctx.fillStyle = 'rgba(10,8,18,0.85)'; ctx.fill();
+        ctx.lineWidth = 2; ctx.strokeStyle = C.warn; ctx.stroke();
+        txt(ctx, fit(ctx, text, w - 14), cx, cy + 1, 15, C.text, 'center', SANS, '700');
+        ctx.restore();
+        row++;
+      }
+    }
+  }
+
   private drawSkeleton(ctx: Ctx, vm: ArenaVM, l: LaneVM, b: LaneBox, now: number): void {
     const size = Math.min(88, b.h * 0.5);
     const feetY = b.top + b.h * 0.8 + 4;
@@ -539,7 +603,7 @@ export class ArenaScene {
     ctx.scale(flip, 1);
     // soft shadow
     ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.beginPath(); ctx.ellipse(0, size / 2, size * 0.3, 6, 0, 0, Math.PI * 2); ctx.fill();
-    drawSkeleton(ctx, fr, { silhouette: false, size }, tier, l.parts);
+    drawSkeleton(ctx, fr, { silhouette: false, size }, tier, wornParts(l.parts, l.equips, now, this.speed, this.reducedMotion));
     ctx.restore();
     ctx.filter = 'none';
 
@@ -562,6 +626,7 @@ export class ArenaScene {
       ctx.strokeStyle = 'rgba(143,134,168,0.9)'; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.arc(x, feetY - 10, 22, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * left); ctx.stroke();
     }
+    this.drawEquips(ctx, l, x, feetY, size, headY, now);
     if (l.mode === 'halted') txt(ctx, '⚰ HALTED', x, headY + size * 0.2, 15, C.muted, 'center', SANS, '700');
     if (l.mode === 'fail') txt(ctx, '✕', x, headY + size * 0.22, 26, C.fail, 'center', SANS, '800');
     // scroll in hand
@@ -593,7 +658,7 @@ function sleepers(vm: ArenaVM, now: number): LaneVM[] {
       chips: Array<ChipState>(vm.stages.length).fill('pending'), attempts: Array<number>(vm.stages.length).fill(0),
       stageIndex: 0, progress: 0, progressLabel: '', workAnim: '', order: null, orderIndex: 0, ordersTotal: 0, score: 0,
       counts: { completed: 0, failed: 0, parked: 0, quarantined: 0, repeats: 0 }, depth: 0, action: '', restartInMs: 0, cheer: null, dirty: false, survivedAt: 0,
-      ledger: {}, keyMax: {}, flash: {}, creatures: [],
+      ledger: {}, keyMax: {}, flash: {}, creatures: [], equips: [], scorePop: null,
     } satisfies LaneVM;
     return l;
   });

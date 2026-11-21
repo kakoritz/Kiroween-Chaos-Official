@@ -3,6 +3,7 @@
 // Order, counts, scores and outcomes come from events alone (ui-spec section 5).
 import type { ArenaEvent, ArenaState, StageInfo } from '../api/types';
 import { applyBossEvent, emptyBoss, loadBoss, type BossVM } from './boss';
+import { EQUIP_LIFE_MS, type EquipVM } from './equip';
 import { absorb, actAll, addCreature, exitAll, exitDepth, exitStage, prune, PUFF_MS, type CreatureVM } from './creatures';
 
 export type ChipState = 'pending' | 'active' | 'done' | 'replayed' | 'retrying' | 'failed' | 'dead' | 'parked' | 'quarantined';
@@ -44,6 +45,10 @@ export interface LaneVM {
   creatures: CreatureVM[];
   /** Timestamp of the last boss_end this lane survived (cosmetic flash), or 0. */
   survivedAt: number;
+  /** Gear being equipped (UI-S4), newest last. Cosmetic, not restorable from a snapshot. */
+  equips: EquipVM[];
+  /** Last score change, for the +N pop (cosmetic). */
+  scorePop: { since: number; delta: number } | null;
 }
 
 export interface LedgerCell { rows: number; repeats: number }
@@ -67,7 +72,7 @@ export function newLane(n: number, stageCount: number, now: number): LaneVM {
     stageIndex: 0, progress: 0, progressLabel: '', workAnim: '', order: null, orderIndex: 0, ordersTotal: 0,
     score: 0, counts: { completed: 0, failed: 0, parked: 0, quarantined: 0, repeats: 0 },
     depth: 0, action: '', restartInMs: 0, cheer: null, dirty: false,
-    ledger: {}, keyMax: {}, flash: {}, creatures: [], survivedAt: 0,
+    ledger: {}, keyMax: {}, flash: {}, creatures: [], survivedAt: 0, equips: [], scorePop: null,
   };
 }
 
@@ -222,7 +227,21 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
       l.counts.quarantined += 1; exitAll(l, now, { delay: 600 }); if (si >= 0) l.chips[si] = 'quarantined'; setMode(l, 'idle', now);
       break;
     case 'lane_halted': exitAll(l, now, { delay: 600 }); setMode(l, 'halted', now); break;
-    case 'score': l.score = num(d.total, l.score + num(d.delta)); break;
+    case 'part_added': {
+      const part = str(d.part);
+      if (!part) break;
+      if (!l.parts.includes(part)) l.parts = [...l.parts, part];
+      l.equips = l.equips.filter((e) => now - e.since < EQUIP_LIFE_MS && e.part !== part);
+      l.equips.push({ part, since: now, ...(typeof d.spec === 'string' ? { spec: d.spec } : {}) });
+      break;
+    }
+    case 'score': {
+      const before = l.score;
+      l.score = num(d.total, l.score + num(d.delta));
+      const delta = l.score - before;
+      if (delta !== 0) l.scorePop = { since: now, delta };
+      break;
+    }
     default: break;
   }
 }
