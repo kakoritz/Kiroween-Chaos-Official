@@ -9,7 +9,7 @@ Branches `ui/ON-...`, `core/ON-...`, `docs/ON-...`.
 - [x] **ON-U3 Guided tour.** Six steps with spotlight, `?tour=1`, button, Esc. (Lane B) (done: src/onboarding/tour.ts)
 - [x] **ON-U4 First-impression polish.** No MOCK or "Wave 4" noise on first load (quiet state label), rank board not crowning on zero, larger text for the video, one title and one tagline in the header. (Lane B) (done: src/onboarding/polish.ts)
 - [x] **ON-D1 README front page.** Per spec section 7; architecture diagram (mermaid and SVG); remove stale sections. (docs)
-- [ ] **ON-D2 One story.** Align `docs/DEVPOST-DRAFT.md`, `BLOG-DRAFT.md`, `SOCIAL-DRAFT.md`, `JUDGES.md`, `DEMO-SCRIPT.md` with the story in section 2 and the video v2 structure in section 8. (docs, owner approves wording)
+- [x] **ON-D2 One story.** Align `docs/DEVPOST-DRAFT.md`, `BLOG-DRAFT.md`, `SOCIAL-DRAFT.md`, `JUDGES.md`, `DEMO-SCRIPT.md` with the story in section 2 and the video v2 structure in section 8. (docs, owner approves wording)
 - [ ] **ON-D3 Video.** Record per the v2 script after the hosted demo and the live Kiro fix exist; burned-in captions; upload unlisted first, public at submission. (owner)
 
 ## Cut line

@@ -1,6 +1,12 @@
 # Devpost draft
 
-Draft only. Nothing here is published.
+Draft only. Nothing here is published. Wording is proposed and needs the owner's approval (`docs/OPEN-ITEMS.md` item 11).
+
+The one story used everywhere (video, README, this page, blog, social, judges):
+
+- Hook: "Charged. Charged again."
+- Number: "Rookie: 2 charges. Phoenix: 1."
+- Tagline (proposed): "Break your bots before the world does."
 
 ## Name
 
@@ -8,7 +14,7 @@ Haunt (Kiroween-Chaos)
 
 ## Tagline
 
-Chaos engineering for automation and AI agents, played as a game.
+Break your bots before the world does. Chaos engineering, played as a game.
 
 ## Category
 
@@ -16,31 +22,29 @@ Skeleton Crew: one lean skeleton (the Haunt harness) with two apps built on it. 
 
 ## Inspiration
 
-Automations crash halfway through and then redo work they already did. A bot killed right after charging a customer charges again. Haunt reproduces that failure on purpose, shows it, and grades the result.
+"Charged. Charged again." A bot crashes right after charging a customer, restarts, and does the work twice. Automations and AI agents crash halfway through all the time, and the damage is the repeated side effect: a double charge, a duplicate email, a duplicate ticket. Haunt reproduces that failure on purpose, shows it, and grades the result.
 
 ## What it does
 
 - Hits a workflow with chaos creatures (Reaper, Wraith, Zombie, Ghost and others) that inject crashes, timeouts, duplicates, outages and missing files.
 - Runs five bots through an eight-stage order pipeline, each with more protection than the last (Rookie, Retrier, Journaler, Reconciler, Phoenix).
-- Hero moment: the same crash lands right after the charge. The Rookie charges twice. Phoenix replays its journal, finds its own charge and carries on. The ledger counter shows the difference.
-- Produces a graded stress test report (sweep and ramp runs) in JSON, Markdown and offline HTML.
-- Closes the loop: wave 1 gets a graded report, a rule-based reviewer writes a postmortem and a hardening spec, the hardened Rookie runs in wave 2, and the two reports are compared.
+- Hero moment: the same crash lands right after the charge. Rookie: 2 charges. Phoenix: 1. Phoenix replays its journal, finds its own charge and carries on. The provider's ledger is the truth.
+- Plug in your own process and get a graded stress test report (sweep and ramp runs) in JSON, Markdown and offline HTML.
+- Closes the loop: wave 1 gets a graded report, a reviewer writes a postmortem and a hardening spec, Kiro applies the fix, wave 2 runs, and the two reports are compared.
 
 ## Proof from the repo
 
-From `docs/proof/loop-proof.md` for the orders app:
+From `docs/proof/loop-proof.md` for the orders app. The fix in this recording is hand-written and replayed. A live run where Kiro applies the fix is tracked as task SH-C4 in `.kiro/specs/share/`. Say "F to A" in public only after that live proof exists. Until then say what the recording shows.
 
 | | Wave 1 | Wave 2 |
 |---|---|---|
-| Grade | F | C |
+| Grade | F | A (recorded fix) |
 | Repeated effects | 5 | 0 |
-| Lost orders | 1 | 1 |
-
-Findings F1 to F5 were resolved. Lost orders did not improve, and we say so.
+| Findings F1 to F5 | open | resolved |
 
 ## How we built it with Kiro
 
-- Specs in `.kiro/specs/` (engine, harness, inbox-app, haunted-house, arena). Each has requirements, design, tasks and an acceptance file used as the answer key.
+- Specs in `.kiro/specs/` (engine, harness, inbox-app, haunted-house, arena, playtest-v2, onboarding, share). Each has requirements, design and tasks. Acceptance files are the answer key.
 - Steering in `.kiro/steering/` keeps sessions on the same product rules.
 - Hooks in `.kiro/hooks/` regenerate fixtures when the contract changes, run property tests when the SDK is saved, and run the reviewer at the end of a wave.
 - Agents in `.kiro/agents/`: a chaos director that picks creatures and a reviewer that writes the fix spec after a failed wave.
@@ -49,13 +53,14 @@ Findings F1 to F5 were resolved. Lost orders did not improve, and we say so.
 ## Two apps on one skeleton
 
 - `apps/haunted-orders/`: Node order pipeline with five tier bots.
-- `apps/haunted-inbox/`: Python app (standard library only) run through the Proxy and Process adapters.
+- `apps/haunted-inbox/`: Python app (standard library only) run through the Proxy and Process adapters, shown in the same arena.
 
 ## Challenges
 
 - Keeping the arena honest: the UI reads a stream of real events, and nothing is animated without an event behind it. A validator checks the live stream against the contract.
 - Making crashes replayable: seeded runs and determinism tests.
 - Keeping core and visuals in step through a single contract.
+- Keeping every claim as strong as its evidence, and no stronger.
 
 ## What is not finished
 
@@ -66,6 +71,10 @@ See `docs/KIRO-LOG.md` and `docs/OPEN-ITEMS.md`. Items marked partial there are 
 TypeScript, Node, Python, Vitest, fast-check, Kiro specs, hooks, steering and agents.
 
 ## Try it
+
+Hosted demo (no install): URL to be filled in by a human once the demo is published.
+
+Or locally:
 
 ```
 npm install
