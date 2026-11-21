@@ -1,4 +1,4 @@
-# Tasks: Core lane (Lane A)
+﻿# Tasks: Core lane (Lane A)
 
 Branch prefix `core/`. Each task is one PR. Tags: [C] touches `contract/`.
 
@@ -30,7 +30,7 @@ Branch prefix `core/`. Each task is one PR. Tags: [C] touches `contract/`.
 - [x] H3.5 Soak mode.
 - [x] H3.6 Boss mode and Compare mode.
 - [x] H3.7 Proxy adapter and Process adapter. (Done 2026-11-20: packages/haunt/src/adapters/: startFaultProxy (127.0.0.1 reverse proxy; status, drop, latency faults with method/path filter, count, forMs) and ProcessAdapter (no-shell start from the haunt.yaml start line, real SIGKILL, restart, feedInput/removeInput). Wiring them into the sweep CLI by haunt.yaml adapter is part of H3.8 and H6.2.)
-- [ ] H3.8 Second sample process (non-Node) to prove reuse.
+- [x] H3.8 Second sample process (non-Node) to prove reuse. (Done 2026-11-20: the Python Haunted Inbox runs through the same sweep. `npm run haunt -- sweep --config apps/haunted-inbox/haunt.yaml --feed "python bot/make_inbox.py {dir} {count}"` runs the haunt.yaml start line when adapter is process and no --bot is given; phoenix grades A over the 6 inbox stages. Test: apps/haunted-inbox/test/sweep.test.ts.)
 
 ## H4. Report and loop
 - [x] H4.1 Grading rules and target checks.

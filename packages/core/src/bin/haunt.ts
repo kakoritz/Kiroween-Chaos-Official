@@ -1,8 +1,9 @@
-// `npm run haunt -- sweep [--tier rookie] [--seed 1] [--orders 2] [--speed 4] [--config path] [--bot path] [--out dir]`
+﻿// `npm run haunt -- sweep [--tier rookie] [--seed 1] [--orders 2] [--speed 4] [--config path] [--bot path] [--feed "cmd {dir} {count}"] [--out dir]`
 // Runs one creature fault per stage against a built bot (npm run build:bots) and a local provider on 127.0.0.1,
 // prints the coverage matrix and the grade, and writes a deterministic report JSON.
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { dirname, join, resolve } from 'node:path';
 import { loadHauntConfig } from '../../../haunt/src/config';
 import { CORE_CREATURES, EXTRA_CREATURES } from '../../../haunt/src/creatures';
 import { planSweep, renderMatrix, runSweep, sweepReportJson, createLiveCellRunner, type RunCell } from '../../../haunt/src/sweep';
@@ -12,6 +13,7 @@ import { createLiveSoakRunner, renderSoak, runSoak, soakReportJson } from '../..
 import { bossReportJson, createLiveBossRunner, planBoss, renderBoss, runBoss } from '../../../haunt/src/boss';
 import { compareReportJson, compareReports, renderCompare } from '../../../haunt/src/compare';
 import { ciExitCode, bossTargets, rampTargets, renderTargetLines, soakTargets, stackTargets, sweepTargets } from '../../../haunt/src/report/ci';
+import { parseCommandLine } from '../../../haunt/src/adapters';
 import { startProvider } from '../provider/server';
 
 const argv = process.argv.slice(2);
@@ -38,13 +40,32 @@ async function sweep(): Promise<number> {
   const loaded = loadHauntConfig(configPath);
   if (!loaded.ok) { console.error(`config errors:\n${loaded.errors.join('\n')}`); return 2; }
   const creatures = [...CORE_CREATURES, ...EXTRA_CREATURES];
-  const plan = planSweep(loaded.config, creatures, { catalogStages: true });
+  const ownApp = loaded.config.adapter.includes('process') && opt('bot') === undefined;
+  const plan = planSweep(loaded.config, creatures, { catalogStages: !ownApp });
+
+  // A haunt.yaml with `adapter: process` and no --bot runs its own `start` line (any language, H3.8).
+  let target: { command: string; args: string[] } = { command: process.execPath, args: [bot] };
+  let seedInput: ((dir: string, count: number) => void) | undefined;
+  if (ownApp) {
+    const [command, ...args] = parseCommandLine(loaded.config.start);
+    const appDir = dirname(configPath);
+    target = { command, args: args.map((a) => (existsSync(join(appDir, a)) ? join(appDir, a) : a)) };
+    const feed = opt('feed');
+    if (feed) {
+      const line = parseCommandLine(feed).map((a) => (existsSync(join(appDir, a)) ? join(appDir, a) : a));
+      seedInput = (dir, count) => {
+        const [fc, ...fa] = line.map((a) => a.replace('{dir}', dir).replace('{count}', String(count)));
+        execFileSync(fc, fa, { stdio: 'ignore' });
+      };
+    }
+  }
 
   const prov = await startProvider({ port: 0 });
   const runDir = join(root, '.haunt', 'sweep-run', `${tier}-${process.pid}`);
   try {
     const live = createLiveCellRunner({
-      command: process.execPath, args: [bot], runDir, tier, orders, speed, cellTimeoutMs: Number(opt('cell-timeout', '30000')),
+      ...target, runDir, tier, orders, speed, cellTimeoutMs: Number(opt('cell-timeout', '30000')),
+      app: loaded.config.name, seedInput,
       recoverMs: loaded.config.targets.recoverMs,
       creatures,
       provider: {

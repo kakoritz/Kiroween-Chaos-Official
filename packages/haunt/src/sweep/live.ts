@@ -30,6 +30,10 @@ export interface LiveCellOptions {
   provider: LiveCellProvider;
   creatures: readonly CreaturePlugin[];
   env?: Record<string, string>;
+  /** HAUNT_APP value. Default haunted-orders. */
+  app?: string;
+  /** Rewrites the lane's input folder after it is prepared (a non-Node app brings its own input generator). */
+  seedInput?: (ordersDir: string, count: number) => void;
   tier?: string;
   /** Orders per cell. Default 2. */
   orders?: number;
@@ -67,6 +71,7 @@ export function createLiveCellRunner(o: LiveCellOptions): RunCell {
     if (!creature) throw new Error(`unknown creature "${cell.creature}"`);
     const dir = join(base, `cell-${++cellNo}`);
     const { paths } = prepareLane(dir, 1, seed, orders);
+    o.seedInput?.(paths.orders, orders);
     o.provider.reset();
     const director = new ChaosDirector();
     director.addLane(LANE, []);
@@ -126,7 +131,7 @@ export function createLiveCellRunner(o: LiveCellOptions): RunCell {
         ...o.env,
         HAUNT_RUN_DIR: dir, HAUNT_DIR: paths.root, HAUNT_LANE: LANE, HAUNT_TIER: o.tier ?? '', HAUNT_SEED: String(seed),
         HAUNT_PROVIDER: o.provider.url, HAUNT_ORDERS_DIR: paths.orders, HAUNT_SPEED: String(speed),
-        HAUNT_ATTEMPT: '1', HAUNT_APP: 'haunted-orders',
+        HAUNT_ATTEMPT: '1', HAUNT_APP: o.app ?? 'haunted-orders',
       },
       onProcess: (s) => { send = s; },
       onAtPoint: (point) => { if (atInputRead && point === 'input_read' && !fired) pending.push(inject()); },
