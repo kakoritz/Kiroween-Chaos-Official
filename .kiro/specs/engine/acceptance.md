@@ -40,7 +40,7 @@ Notes:
 - A13 and A14 Phoenix: the breaker opens after 4 failures, the order is parked, and a probe after the open time resumes it. A14 may need a second probe (the fault window starts at the first matching call, runtime.md section 18). No probe count is asserted.
 - A19 Phoenix: 3 poll failures, success on attempt 4. A20 Phoenix: the same with no_driver.
 - All timings here assume the exact rules in `runtime.md` sections 4 and 7.
-- FAILED orders keep their effects done so far (for example A13 Rookie: account x1, charge x0). The score engine charges -50 for the failure.
+- FAILED orders keep their effects done so far (for example A13 Rookie: account x1, charge x0). The score engine charges -300 for the cancelled order (scoring v2).
 - A9 Rookie: the charge happened and no dispatch did, so the order is **paid, not fulfilled**. That is a lost order (grade cap D). A plain FAILED order with no such state is not lost.
 - Tracking faults (A19, A20) leave dispatch done and the order FAILED at stage 7.
 
@@ -73,14 +73,17 @@ Run with at least 200 cases per property in CI and 1000 in a nightly run. A shru
 
 | Case | Expected score for the order |
 |---|---|
-| Clean order, 1.0x time | +100 +20 (speed) = 120 |
+| Clean order, lap within 1.25 x baseline + 600 ms | +100 +20 (speed) = 120 |
 | Clean order after 1 attack at depth 1 | 120 + 25 = 145 |
 | Clean after three stacked attacks (depths 1, 2, 3) | 120 + 25 + 50 + 75 = 270 |
 | Completed with 2 extra ledger rows | 40 - 300 = -260 |
-| Failed | -50 |
+| Cancelled (was Failed -50) | -300 |
 | Parked then resumed clean | 100 + 40 = 140 |
 | Quarantined | +30 |
-| Lane halted | -200 once |
+| Lane halted | -400 once |
+| Abandoned order | -150 |
+| Boss recovered (was Boss survived +100) | +150 and a refund of the lane's downtime penalties since the boss |
+| Downtime, review, refund, discount | see playtest-v2 design section 5 |
 
 ## E. Contract and fixtures
 
