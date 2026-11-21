@@ -4,6 +4,7 @@
 import { APPS, CONTRACT_VERSION, CREATURES, PARTS, TIERS, TIER_ORDER, type AppId, type HauntEvent } from '@haunt/shared';
 import { FIXTURES } from '../sim/fixtures';
 import { Hub } from './hub';
+import { CAPTION_SCRIPTS, loadCaptions } from '../live/captions';
 import { OutcomeTable } from './outcomes';
 import { ChaosSim, DEMO_SCRIPTS, MockError, Player, fixtureFor, scaledWave } from './play';
 import { hardening, laneLaps, laneLog, laneOrderRecord, laneOrders, ledger, postmortem, stageDetail, waveCompare, waveLaps, waveReport, waveStars, wavesList } from './queries';
@@ -117,6 +118,10 @@ export function createInPageMock(outcomeRows: ConstructorParameters<typeof Outco
     }),
     stopDemo: async () => { stopWave(); return {}; },
     getCreatures: async () => CREATURES,
+    getCaptions: async (script: string) => {
+      if (!(CAPTION_SCRIPTS as readonly string[]).includes(script)) throw new MockError(404, 'not_found', 'unknown demo script');
+      return loadCaptions(script);
+    },
     getApps: async () => Object.values(APPS).map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role })) })),
     setApp: async (app: string) => guard(() => {
       if (app !== 'orders' && app !== 'inbox') throw new MockError(400, 'bad_request', 'app must be orders or inbox');

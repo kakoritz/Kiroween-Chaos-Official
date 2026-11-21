@@ -1,4 +1,4 @@
-// Mock server (H0.3): the whole REST surface of contract/PROTOCOL.md plus SSE, driven by fixtures and a small chaos
+﻿// Mock server (H0.3): the whole REST surface of contract/PROTOCOL.md plus SSE, driven by fixtures and a small chaos
 // simulator. It is not an engine. Event sequences come from the lane planner fixtures; outcomes from the outcome table.
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { readFileSync } from 'node:fs';
@@ -7,6 +7,7 @@ import { APPS, CONTRACT_VERSION, CREATURES, PARTS, TIERS, TIER_ORDER, type AppId
 import { findRepoRoot } from '../../../haunt/src/contract/validate';
 import { FIXTURES } from '../sim/fixtures';
 import { Hub, BUFFER_MAX } from './hub';
+import { CAPTION_SCRIPTS, loadCaptions } from '../live/captions';
 import { OutcomeTable } from './outcomes';
 import { ChaosSim, DEMO_SCRIPTS, MockError, Player, fixtureFor, scaledWave } from './play';
 import { hardening, laneLaps, laneLog, laneOrderRecord, laneOrders, ledger, pendingDecision, postmortem, stageDetail, waveCompare, waveLaps, waveReport, waveStars, wavesList } from './queries';
@@ -156,6 +157,11 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
     if (method === 'GET') {
       if (path === '/api/health') return send(res, 200, { ok: true, mode: 'mock', contractVersion: advertised() });
       if (path === '/api/creatures') return send(res, 200, CREATURES);
+      if (path.startsWith('/api/demo/captions/')) {
+        const s = path.slice('/api/demo/captions/'.length);
+        if (!(CAPTION_SCRIPTS as readonly string[]).includes(s)) return fail(res, 404, 'not_found', 'unknown demo script');
+        return send(res, 200, loadCaptions(s));
+      }
       if (path === '/api/campaign') return send(res, 200, campaign ??= loadCampaign());
       if (path === '/api/apps') return send(res, 200, Object.values(APPS).map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role })) })));
       if (path === '/api/state') return send(res, 200, stateBody());

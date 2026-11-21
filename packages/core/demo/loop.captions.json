@@ -1,0 +1,8 @@
+﻿[
+  { "at": { "ms": 0 }, "text": "The loop: crash, report, fix, prove.", "ms": 3500 },
+  { "at": { "ms": 9600 }, "text": "Round 1: the Reaper strikes both lanes.", "ms": 3500 },
+  { "at": { "ms": 15000 }, "text": "The reviewer reads the report and writes a fix spec.", "ms": 4500 },
+  { "at": { "ms": 21600 }, "text": "Round 2: the same crash, after the fix.", "ms": 3500 },
+  { "at": { "ms": 33600 }, "text": "Round 3: the grade improves.", "ms": 3500 }
+]
+

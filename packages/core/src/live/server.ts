@@ -14,6 +14,7 @@ import { loadCampaign } from '../../../haunt/src/campaign/nights';
 import { APPS, APP_STAGES, CONTRACT_VERSION, CREATURES, DEMO_SCRIPTS, FAULT_IDS, type AppId } from './catalog';
 import { buildPostmortem, buildReport, waveEvents } from './report';
 import { loadDemo } from './demo';
+import { CAPTION_SCRIPTS, loadCaptions } from './captions';
 import type { HardeningBody } from './runtime';
 import { applyEvent, logLine, newLane, toWire, type LaneView } from './lanes';
 
@@ -336,6 +337,10 @@ export class LiveServer {
       if (p === '/api/creatures') return { json: CREATURES };
       if (p === '/api/campaign') return { json: loadCampaign() };
       if (p === '/api/apps') return { json: APPS };
+      if (seg[0] === 'api' && seg[1] === 'demo' && seg[2] === 'captions' && seg.length === 4) {
+        if (!(CAPTION_SCRIPTS as readonly string[]).includes(seg[3])) fail(404, 'not_found', 'unknown demo script');
+        return { json: loadCaptions(seg[3]) };
+      }
       if (p === '/api/ledger') return { json: this.ledger() };
       if (p === '/api/waves') return { json: this.wavesView() };
       if (seg[0] === 'api' && seg[1] === 'waves' && seg.length >= 4) {

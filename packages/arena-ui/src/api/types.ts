@@ -72,6 +72,8 @@ export interface ChaosOptions {
 export interface ChaosModeOptions { mode: 'off' | 'manual' | 'random'; frequency?: number; seed?: number }
 export interface ChaosResult { chaosId: string; creature: string; fault: string; depth: number; deferred: boolean }
 
+/** One caption of a demo captions track. `at` is a time offset (ms) or an event trigger. */
+export interface Caption { at: { ms?: number; event?: string; lane?: number; stage?: string; order?: string; attempt?: number }; text: string; ms: number }
 export type DemoScript = 'hero' | 'full' | 'loop' | (string & {});
 
 export interface LogLine { seq: number; ts: number; level: 'info' | 'warn' | 'error' | 'good'; type: string; stage?: string; order?: string; text: string }
@@ -100,6 +102,7 @@ export interface ArenaApi {
   setChaosMode(opts: ChaosModeOptions): Promise<unknown>;
   startDemo(script: DemoScript, speed?: number): Promise<unknown>;
   stopDemo(): Promise<unknown>;
+  getCaptions?(script: DemoScript): Promise<Caption[]>;
   getCreatures(): Promise<Creature[]>;
   getApps(): Promise<AppInfo[]>;
   setApp(app: string): Promise<unknown>;

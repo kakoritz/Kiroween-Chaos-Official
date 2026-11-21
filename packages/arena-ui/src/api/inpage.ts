@@ -15,6 +15,7 @@ export interface HauntInPage {
   setChaosMode(opts: ChaosModeOptions): Promise<any>;
   startDemo(script: DemoScript): Promise<any>;
   stopDemo(): Promise<any>;
+  getCaptions?(script: string): Promise<any>;
   getCreatures(): Promise<any>;
   getApps(): Promise<any>;
   setApp(app: string): Promise<any>;
@@ -56,6 +57,7 @@ export class InPageApi implements ArenaApi {
   setChaosMode(opts: ChaosModeOptions) { return wrap(this.h.setChaosMode(opts)); }
   startDemo(script: DemoScript) { return wrap(this.h.startDemo(script)); }
   stopDemo() { return wrap(this.h.stopDemo()); }
+  getCaptions(script: DemoScript) { return wrap(this.h.getCaptions ? this.h.getCaptions(script) : Promise.reject(new ApiError('not_applicable', 'captions not available'))); }
   getCreatures() { return wrap(this.h.getCreatures()); }
   getApps() { return wrap(this.h.getApps()); }
   setApp(app: string) { return wrap(this.h.setApp(app)); }

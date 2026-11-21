@@ -2,7 +2,7 @@ import { SseParser } from './sse';
 import {
   ApiError, CONTRACT_VERSION,
   type ArenaApi, type ArenaEvent, type ArenaState, type ChaosModeOptions, type ChaosOptions, type ChaosResult,
-  type ConnectionStatus, type Creature, type DemoScript, type Health, type SubscribeHandlers, type Unsubscribe, type WaveOptions,
+  type Caption, type ConnectionStatus, type Creature, type DemoScript, type Health, type SubscribeHandlers, type Unsubscribe, type WaveOptions,
   type AppInfo, type LogLine, type WaveSummary,
 } from './types';
 
@@ -70,6 +70,7 @@ export class HttpApi implements ArenaApi {
   setChaosMode(opts: ChaosModeOptions) { return this.request('POST', '/api/chaos/mode', opts); }
   startDemo(script: DemoScript, speed?: number) { return this.request('POST', '/api/demo/start', speed === undefined ? { script } : { script, speed }); }
   stopDemo() { return this.request('POST', '/api/demo/stop'); }
+  getCaptions(script: DemoScript) { return this.request<Caption[]>('GET', `/api/demo/captions/${encodeURIComponent(script)}`); }
   getCreatures() { return this.request<Creature[]>('GET', '/api/creatures'); }
   getApps() { return this.request<AppInfo[]>('GET', '/api/apps'); }
   setApp(app: string) { return this.request('POST', '/api/app', { app }); }

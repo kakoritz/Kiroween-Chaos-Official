@@ -1,0 +1,8 @@
+﻿[
+  { "at": { "ms": 0 }, "text": "Five lanes. Five orders. One kitchen.", "ms": 3500 },
+  { "at": { "ms": 4000 }, "text": "Rookie lane 1 and Phoenix lane 5 run the same code.", "ms": 4000 },
+  { "at": { "lane": 1, "event": "stage_start", "stage": "payment", "order": "ord-0001", "attempt": 1 }, "text": "The payment stage starts. The Reaper is coming.", "ms": 3000 },
+  { "at": { "lane": 1, "event": "recover_start" }, "text": "Crash after the charge, before the journal entry.", "ms": 4000 },
+  { "at": { "lane": 1, "event": "order_done" }, "text": "Rookie: 2 charges. The customer paid twice.", "ms": 4500 },
+  { "at": { "lane": 5, "event": "order_done" }, "text": "Phoenix: 1 charge. Same crash, resumed from the journal.", "ms": 4500 }
+]
