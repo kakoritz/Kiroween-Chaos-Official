@@ -3,6 +3,7 @@
 // flat bone fill, one shade layer (bottom right), one rim highlight (top left), big head.
 import { ANIMS, PARTS, frameFor, type Face, type Frame, type PartDef } from './skeleton';
 import { registerSprite, type AnimDef, type DrawOpts } from '../lab/registry';
+import { dressPart, type Tier } from './dress';
 
 export const OUT = '#14101f';
 export const BONE = '#efe6d2';
@@ -113,7 +114,7 @@ function details(ctx: CanvasRenderingContext2D, id: PartDef['id'], fr: Frame): v
 }
 
 /** Draw one frame centred on x = 0 with the feet at y = size / 2. */
-export function drawSkeleton(ctx: CanvasRenderingContext2D, fr: Frame, o: DrawOpts): void {
+export function drawSkeleton(ctx: CanvasRenderingContext2D, fr: Frame, o: DrawOpts, tier?: Tier): void {
   const s = o.size / 100;
   ctx.save();
   ctx.translate(0, o.size / 2);
@@ -137,6 +138,7 @@ export function drawSkeleton(ctx: CanvasRenderingContext2D, fr: Frame, o: DrawOp
     }
     ctx.stroke(path);
     if (!o.silhouette) details(ctx, d.id, fr);
+    if (tier) dressPart(ctx, tier, d.id, fr.face, o.silhouette);
     ctx.restore();
   }
   ctx.restore();

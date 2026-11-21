@@ -1,5 +1,6 @@
 import { GROUP_LABEL, animProgress, listSprites, type AnimDef, type SpriteDef } from '../src/lab/registry';
 import '../src/rig/draw';
+import '../src/rig/tiers';
 
 const root = document.getElementById('lab')!;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -125,8 +126,47 @@ function sheet(id: string): void {
   }
 }
 
+// Review lineup: ?lineup=tiers draws the five tiers side by side, large, then as 56 px silhouettes.
+function lineup(): void {
+  const tiers = listSprites().filter((s) => s.group === 'tier');
+  root.append(el('h2', undefined, 'Tier lineup'));
+  for (const [anim, size, title] of [['idle', 260, 'Idle'], ['cheer', 260, 'Cheer']] as const) {
+    root.append(el('h3', undefined, title));
+    const cv = el('canvas', 'strip');
+    cv.width = tiers.length * 360;
+    cv.height = 380;
+    const ctx = cv.getContext('2d')!;
+    tiers.forEach((s, i) => {
+      const a = s.anims.find((x) => x.id === anim)!;
+      ctx.save();
+      ctx.translate(i * 360 + 180, 205);
+      s.draw(ctx, a, anim === 'cheer' ? 0.25 : 0.1, { silhouette: false, size });
+      ctx.restore();
+      ctx.fillStyle = '#f3ecff';
+      ctx.font = '600 22px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(s.name, i * 360 + 180, 370);
+    });
+    root.append(cv);
+  }
+  root.append(el('h3', undefined, 'Silhouette test (56 px, then 112 px)'));
+  const sc = el('canvas', 'strip');
+  sc.width = tiers.length * 360;
+  sc.height = 140;
+  const sctx = sc.getContext('2d')!;
+  tiers.forEach((s, i) => {
+    for (const [dx, size] of [[110, 56], [240, 112]] as const) {
+      sctx.save();
+      sctx.translate(i * 360 + dx, 70);
+      s.draw(sctx, s.anims[0]!, 0.1, { silhouette: true, size });
+      sctx.restore();
+    }
+  });
+  root.append(sc);
+}
 const sheetId = new URLSearchParams(location.search).get('sheet');
-if (sheetId) sheet(sheetId);
+if (new URLSearchParams(location.search).get('lineup') === 'tiers') lineup();
+else if (sheetId) sheet(sheetId);
 else {
   build();
   requestAnimationFrame(frame);
