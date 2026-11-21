@@ -62,7 +62,7 @@ describe('bot bundles', () => {
 interface RunResult { msgs: BotMessage[]; rows: { kind: string; order: string }[]; done: string[]; kills: number }
 
 /** Runs one bot as a real process (speed 8), optionally SIGKILLed once at `after_effect_before_journal`, then restarted. */
-async function run(tier: string, orders: number, crashOnce: boolean): Promise<RunResult> {
+async function run(tier: string, orders: number, crashOnce: boolean, speed = 8): Promise<RunResult> {
   const prov = await startProvider({ port: 0 });
   const runDir = mkdtempSync(join(tmpdir(), 'haunt-bot-'));
   const { paths } = prepareLane(runDir, 1, 'e5', orders);
@@ -72,7 +72,7 @@ async function run(tier: string, orders: number, crashOnce: boolean): Promise<Ru
     for (let attempt = 1; attempt <= 2; attempt++) {
       const proc = new BotProcess(process.execPath, [bundle(tier)], {
         HAUNT_RUN_DIR: runDir, HAUNT_LANE: '1', HAUNT_TIER: tier, HAUNT_SEED: 'e5', HAUNT_PROVIDER: prov.url,
-        HAUNT_ORDERS_DIR: paths.orders, HAUNT_SPEED: '8', HAUNT_ATTEMPT: String(attempt),
+        HAUNT_ORDERS_DIR: paths.orders, HAUNT_SPEED: String(speed), HAUNT_ATTEMPT: String(attempt),
       });
       const idle = new Promise<'idle' | 'killed'>((res) => {
         proc.onMessage((m) => {
@@ -110,7 +110,8 @@ async function run(tier: string, orders: number, crashOnce: boolean): Promise<Ru
 
 describe('real processes against the provider', () => {
   it('rookie processes clean orders end to end', async () => {
-    const r = await run('rookie', 2, false);
+    // Bot request timeouts scale as 1/speed (1500 ms / 8 = 187 ms real), so under CPU load a speed-8 run times out. Speed 2 keeps them at 750 ms.
+    const r = await run('rookie', 2, false, 2);
     expect(r.done.sort()).toEqual(['ord-0001.json', 'ord-0002.json']);
     expect(r.msgs.filter((m) => m.type === 'order_done').length).toBe(2);
     expect(r.rows.filter((x) => x.kind === 'charge').length).toBe(2);
