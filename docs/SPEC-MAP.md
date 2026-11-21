@@ -4,7 +4,7 @@ When two documents disagree, the higher one wins.
 
 | Rank | Document | Owns |
 |---|---|---|
-| 0 | `contract/V1_1.md` | Additive v1.1: pace slow, travel gaps, laps, reviews, decisions, new faults and endpoints |
+| 0 | `contract/V1_1.md` | Additive v1.1: pace slow, travel gaps, laps, reviews, decisions, new faults and endpoints. Mock, fixtures, validator and `window.__haunt` all implement it (PT-C0 done) |
 | 1 | `contract/PROTOCOL.md` | Events, endpoints, ordering, state shapes, mock behavior |
 | 2 | `contract/CONTRACT.md`, `STORYBOARDS.md` | IDs, catalogs, fixtures.  |
 | 2b | `.kiro/specs/playtest-v2/` (design, ui, requirements, tasks) | Laps, reviews, scoring v2, travel, world events, wrong-order decisions, UI v2. **Wins over engine and arena specs where it differs** |

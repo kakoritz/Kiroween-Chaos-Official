@@ -212,7 +212,7 @@ The mock has two modes.
 33. **All millisecond values are real wall-clock ms**, and reports normalize durations to 1x (runtime.md section 17).
 
 ### `window.__haunt` (exact functions; each mirrors the REST call of the same name and returns a Promise of the JSON body, or rejects with `{code, message}`)
-`getHealth()`, `getState()`, `startWave(opts)`, `stopWave()`, `setSpeed(speed)`, `chaos(opts)`, `setChaosMode(opts)`, `startDemo(script)`, `stopDemo()`, `getCreatures()`, `getApps()`, `setApp(app)`, `getLaneStage(lane, stage, order)`, `getLaneLog(lane, opts)`, `getLaneOrders(lane)`, `getLedger()`, `getWaves()`, `getReport(n)`, `getCompare(n, m)`, `getPostmortem(n)`, `getHardening(n)`, and `subscribe(fn, {since}) -> unsubscribe`.
+`getHealth()`, `getState()`, `startWave(opts)`, `stopWave()`, `setSpeed(speed)`, `chaos(opts)`, `setChaosMode(opts)`, `startDemo(script)`, `stopDemo()`, `getCreatures()`, `getApps()`, `setApp(app)`, `getLaneStage(lane, stage, order)`, `getLaneLog(lane, opts)`, `getLaneOrders(lane)`, `getLaneOrder(lane, order)`, `getLaneLaps(lane)`, `getWaveLaps(n)`, `getWaveStars(n)`, `decide(lane, order, choice)`, `getLedger()`, `getWaves()`, `getReport(n)`, `getCompare(n, m)`, `getPostmortem(n)`, `getHardening(n)`, and `subscribe(fn, {since}) -> unsubscribe`.
 
 ### Mock corrections
 - A fresh mock boot streams only `hello` (quiet) until a wave starts, a demo starts, or a fixture is loaded. (This replaces "replays `calm` by default".)

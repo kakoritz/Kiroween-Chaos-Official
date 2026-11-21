@@ -21,6 +21,11 @@ export interface HauntInPage {
   getLaneStage(lane: number, stage: string, order?: string): Promise<any>;
   getLaneLog(lane: number, opts?: { order?: string; since?: number }): Promise<any>;
   getLaneOrders(lane: number): Promise<any>;
+  getLaneOrder(lane: number, order: string): Promise<any>;
+  getLaneLaps(lane: number): Promise<any>;
+  getWaveLaps(n: number): Promise<any>;
+  getWaveStars(n: number): Promise<any>;
+  decide(lane: number, order: string, choice: string): Promise<any>;
   getLedger(): Promise<any>;
   getWaves(): Promise<any>;
   getReport(n: number): Promise<any>;
@@ -57,6 +62,11 @@ export class InPageApi implements ArenaApi {
   getLaneStage(lane: number, stage: string, order?: string) { return wrap(this.h.getLaneStage(lane, stage, order)); }
   getLaneLog(lane: number, opts: { order?: string; since?: number } = {}) { return wrap(this.h.getLaneLog(lane, opts)); }
   getLaneOrders(lane: number) { return wrap(this.h.getLaneOrders(lane)); }
+  getLaneOrder(lane: number, order: string) { return wrap(this.h.getLaneOrder(lane, order)); }
+  getLaneLaps(lane: number) { return wrap(this.h.getLaneLaps(lane)); }
+  getWaveLaps(n: number) { return wrap(this.h.getWaveLaps(n)); }
+  getWaveStars(n: number) { return wrap(this.h.getWaveStars(n)); }
+  decide(lane: number, order: string, choice: string) { return wrap(this.h.decide(lane, order, choice)); }
   getLedger() { return wrap(this.h.getLedger()); }
   getWaves() { return wrap(this.h.getWaves()); }
   getReport(n: number) { return wrap(this.h.getReport(n)); }

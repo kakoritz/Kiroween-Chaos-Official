@@ -80,6 +80,11 @@ export class HttpApi implements ArenaApi {
     return this.request<{ lines: LogLine[] }>('GET', `/api/lane/${lane}/log${q({ order: opts.order, since: opts.since })}`);
   }
   getLaneOrders(lane: number) { return this.request('GET', `/api/lane/${lane}/orders`); }
+  getLaneOrder(lane: number, order: string) { return this.request('GET', `/api/lane/${lane}/order/${encodeURIComponent(order)}`); }
+  getLaneLaps(lane: number) { return this.request('GET', `/api/lane/${lane}/laps`); }
+  getWaveLaps(n: number) { return this.request('GET', `/api/waves/${n}/laps`); }
+  getWaveStars(n: number) { return this.request('GET', `/api/waves/${n}/stars`); }
+  decide(lane: number, order: string, choice: string) { return this.request('POST', '/api/decision', { lane, order, choice }); }
   getLedger() { return this.request('GET', '/api/ledger'); }
   getWaves() { return this.request<WaveSummary[]>('GET', '/api/waves'); }
   getReport(n: number) { return this.request('GET', `/api/waves/${n}/report`); }

@@ -20,6 +20,12 @@ describe('window.__haunt stub', () => {
       expect(Array.isArray(await h.getApps())).toBe(true);
       await expect(h.setSpeed(3)).rejects.toMatchObject({ code: 'bad_request' });
       await expect(h.getLaneOrders(9)).rejects.toMatchObject({ code: 'bad_lane' });
+      await expect(h.getLaneOrder(9, 'o1')).rejects.toMatchObject({ code: 'bad_lane' });
+      await expect(h.getLaneLaps(9)).rejects.toMatchObject({ code: 'bad_lane' });
+      await expect(h.getWaveLaps(99)).rejects.toMatchObject({ code: 'not_ready' });
+      await expect(h.getWaveStars(99)).rejects.toMatchObject({ code: 'not_ready' });
+      await expect(h.decide(9, 'o1', 'x')).rejects.toMatchObject({ code: 'bad_lane' });
+      await expect(h.decide(1, 'o1', 'x')).rejects.toMatchObject({ code: 'no_decision' });
     });
   });
 
