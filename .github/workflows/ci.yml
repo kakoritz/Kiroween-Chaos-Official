@@ -1,10 +1,14 @@
 name: CI
 
+# Manual only until GitHub billing on the kakoritz account is fixed (owner decision 2026-11-21).
+# Jobs on push/pull_request were never starting ("recent account payments have failed"), so every PR showed red.
+# To restore, put back:
+#   push:
+#     branches: [development]
+#   pull_request:
+#     branches: [main]
 on:
-  push:
-    branches: [development]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
 
 # Policy (owner decision, see docs/KIRO-LOG.md): CI never runs tests.
 # Unit tests run locally and are the merge gate. Do not add test steps here.
