@@ -3,8 +3,8 @@
 Do after Phase 1 of [haunted-house tasks](../haunted-house/tasks.md) (hero crash works headless).
 
 ## Phase A: Playable race
-- [x] UI-A1. (done in Lane A, see harness/tasks.md) Pipeline module with eight stages and the five policy tiers. (A1, Lanes)
-- [x] UI-A2. (done in Lane A, see harness/tasks.md) Wave manager and five lane workers with an event log. (A8)
+- [x] UI-A1. (done via H1.3 / PR #103, #108; stage chips come from /api/state) Pipeline module with eight stages and the five policy tiers. (A1, Lanes)
+- [x] UI-A2. (done via H1.5 / PR #34, #103, #122; five lanes and event log shown in the arena) Wave manager and five lane workers with an event log. (A8)
 - [x] UI-A3. Canvas arena: lanes, sprites, work, cheer, fail animations, progress bars. (A1)
 - [x] UI-A4. Rank board, ledger panel, score engine. (A1.5, A7)
 
@@ -20,7 +20,7 @@ Do after Phase 1 of [haunted-house tasks](../haunted-house/tasks.md) (hero crash
 - [x] UI-C1. Stage inspector popup with live stream, Chaos button and replay. (A2)
 - [x] UI-C2. (done in Lane A, see harness/tasks.md) Rule-based reviewer: postmortem and hardening spec writer. (A9)
 - [x] UI-C3. Wave-over-wave score delta view. (A9.4)
-- [x] UI-C4. (done in Lane A, see harness/tasks.md) Optional LLM pass for suggested diffs. (A9.5)
+- [x] UI-C4. (done via H3 / A9.5; optional pass is off by default, no LLM field exists in the report JSON, so the viewer shows none) Optional LLM pass for suggested diffs. (A9.5)
 
 ## Phase D: Show
 - [x] UI-D1. Demo mode 3-minute script. (A10)
