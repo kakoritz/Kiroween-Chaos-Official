@@ -1,4 +1,4 @@
-﻿# Tasks: Arena
+# Tasks: Arena
 
 Do after Phase 1 of [haunted-house tasks](../haunted-house/tasks.md) (hero crash works headless).
 
@@ -24,7 +24,7 @@ Do after Phase 1 of [haunted-house tasks](../haunted-house/tasks.md) (hero crash
 
 ## Phase D: Show
 - [x] UI-D1. Demo mode 3-minute script. (A10)
-- [ ] UI-D2. Sound effects. (A1)
+- [x] UI-D2. Sound effects. (A1)
 - [ ] UI-D3. Perf check at 5 lanes, 60 fps. (Acceptance 1)
 - [ ] UI-D4. Record the video, write the Devpost text.
 
@@ -57,7 +57,7 @@ Lane B owns: A3, the rank board and ledger panel views, B3, the B4 slider UI, th
 - [x] UI-S4. Equip animation when `part_added` arrives: gear flies to the skeleton, score ticks up.
 - [x] UI-S5. Creature sprites and animations from the table in design.md. Start with Reaper, Zombie, Ghost, Wraith, Poltergeist, Doppelganger, plus the Lich boss.
 - [x] UI-S6. Orders as parchment scrolls: queue in the lane stats area, one drops into the hand at `order_start`.
-- [ ] UI-S7. Sound set generated in code: bone rattle, creak, wail, thud, sting.
+- [x] UI-S7. Sound set generated in code: bone rattle, creak, wail, thud, sting.
 
 
 Task ids are prefixed `UI-` (for example `UI-A3`) so they do not collide with requirement ids or acceptance rows. `ui-spec.md` is the visual source of truth.

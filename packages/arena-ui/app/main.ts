@@ -7,6 +7,7 @@ import { EventTicker } from '../src/arena/ticker';
 import { StageInspector, chipAt } from '../src/arena/inspector';
 import { BossBar, bossAnnouncement } from '../src/arena/boss';
 import { ChaosModeControl, readChaosState } from '../src/arena/chaosmode';
+import { ArenaSound } from '../src/sound';
 import { ApiError, createApi, resolveHttpBase, type ArenaApi, type ArenaEvent, type ConnectionStatus, type HauntInPage } from '../src/api';
 
 // W1/W2 shell plus the A3 canvas arena: the client connects the same way for mock, live and\n// browser. Events feed a pure reducer; the canvas redraws every animation frame from that state.
@@ -21,6 +22,7 @@ root.innerHTML = `
       <div id="chaos-mode"></div>
       <span class="spacer"></span>
       <span class="total" id="total" title="Total score"></span>
+      <button class="btn btn--ghost" id="mute" type="button" aria-pressed="true" title="Sound is off until you turn it on">&#128263; Sound off</button>
       <span class="pill hidden" id="demo-pill">DEMO</span>
       <span class="badge badge--offline" id="badge" role="status"></span>
       <button class="btn btn--ghost hidden" id="demo-stop" type="button">Stop demo</button>
@@ -123,8 +125,17 @@ async function reconcile() {
   try { reconcileLedger(vm, await api.getLedger()); } catch { /* the event-built cells stay */ }
 }
 
+const sound = new ArenaSound();
+const muteBtn = $<HTMLButtonElement>('mute');
+muteBtn.addEventListener('click', () => {
+  const muted = sound.toggle();
+  muteBtn.setAttribute('aria-pressed', String(muted));
+  muteBtn.textContent = muted ? '\u{1F507} Sound off' : '\u{1F50A} Sound on';
+});
+
 function onEvent(ev: ArenaEvent) {
   queue.push(ev);
+  sound.onEvent(ev, performance.now());
   inspector.record(ev);
   ticker.push(ev);
   events++;
