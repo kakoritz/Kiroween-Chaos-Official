@@ -1,4 +1,4 @@
-# Campaign tasks
+﻿# Campaign tasks
 
 Depends on `playtest-v2` P0 to P2 (laps, scoring, reviews). Branches `core/CP-...` and `ui/CP-...`.
 
@@ -17,7 +17,7 @@ Depends on `playtest-v2` P0 to P2 (laps, scoring, reviews). Branches `core/CP-..
 - [ ] **CP-U3 Results, medals, persistence.** Medal computation, credit awards, "what happened" explainer, unlock rules, localStorage and export/import.
 - [ ] **CP-U4 Sandbox.** Toggle parts on lane 1 before a wave, run, see the grade and the issue changes; "Reset" and "Compare to last run".
 - [ ] **CP-U5 Campaign visuals.** Rivals ghosted, "Your Crew" label and gear badge, medal and credit animations, sounds.
-- [ ] **CP-ART Art.** Tombstone-door map, medals, shop background, paper-doll gear icons (reuse the gear art).
+- [x] **CP-ART Art.** Tombstone-door map, medals, shop background, paper-doll gear icons (reuse the gear art). Done: `packages/arena-ui/src/campaign/art.ts` (code-drawn SVG, no image assets), used by hub and shop; tests in `campaign-art.test.ts`; screenshots `docs/screens/camp-cp-art-hub.png` and `camp-cp-art-shop.png`. Partial: the doll body stays the CP-U2 SVG, not an animated rig.
 
 ## Cut line
 Ship nights 1, 2 and 5 with the shop and results first. Add 3 and 4, then the Sandbox, then night 6 and the finale.

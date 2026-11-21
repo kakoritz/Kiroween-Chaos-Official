@@ -1,5 +1,6 @@
 // Campaign hub and briefing (CP-U1): crypt map with seven tombstone doors, locks, medals and credits.
 // Mounted on the `haunt:splash` window event (action 'campaign'). Starting a night is handled by the shop (CP-U2) through `onStart`.
+import { doorSvg, lockSvg, medalSvg } from './art';
 import { buildDoors, loadProgress, moveFocus, type HubNight, type CampaignProgress } from './hub-model';
 
 export interface HubHandlers { onStart?: (night: HubNight) => void; onClose?: () => void }
@@ -39,9 +40,10 @@ export class CampaignHub {
       <p class="cphub__sub">Pick a tombstone door. Beat a night with a bronze medal to open the next one.</p>
       <div class="cphub__map" role="list">${doors.map((d, i) => `
         <button class="cpdoor cpdoor--${d.state}" type="button" role="listitem" data-i="${i}" tabindex="${i === this.focus ? 0 : -1}" aria-label="${esc(d.label)}" ${d.locked ? 'aria-disabled="true"' : ''}>
+          <span class="cpdoor__art">${doorSvg(d.state, d.id, d.finale)}</span>
           <span class="cpdoor__n">${d.finale ? 'Finale' : `Night ${d.id}`}</span>
           <span class="cpdoor__t">${esc(d.title)}</span>
-          ${d.locked ? '<span class="cpdoor__lock" aria-hidden="true">&#128274;</span>' : `<span class="cpdoor__medal cpdoor__medal--${d.medal ?? 'none'}" aria-hidden="true"></span>`}
+          ${d.locked ? `<span class="cpdoor__lock" aria-hidden="true">${lockSvg(36)}</span>` : `<span class="cpdoor__medal cpdoor__medal--${d.medal ?? 'none'}" aria-hidden="true">${medalSvg(d.medal, 40)}</span>`}
           ${d.best ? `<span class="cpdoor__best">Best ${d.best}</span>` : ''}
         </button>`).join('')}</div>`;
     this.el.querySelector('[data-act=close]')!.addEventListener('click', () => this.close());

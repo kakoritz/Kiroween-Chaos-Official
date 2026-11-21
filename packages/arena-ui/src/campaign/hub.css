@@ -16,9 +16,12 @@
 .cpdoor__n { font-size: 22px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
 .cpdoor__t { margin: 6px 0; font-size: 24px; line-height: 1.15; color: var(--bone); }
 .cpdoor__lock { font-size: 40px; }
-.cpdoor__medal { width: 44px; height: 44px; border-radius: 50%; border: 3px solid rgba(0, 0, 0, 0.5); }
-.cpdoor__medal--bronze { background: #c98a4b; } .cpdoor__medal--silver { background: #cfd6e6; } .cpdoor__medal--gold { background: #ffd34d; }
-.cpdoor__medal--none { background: transparent; border: 3px dashed #4a4268; }
+.cphub__map .cpdoor { height: 640px; }
+.cpdoor__art { flex: 1; min-height: 0; width: 100%; display: flex; justify-content: center; align-items: center; margin-top: 30px; }
+.cpdoor__art .cpart--door { width: 100%; height: 100%; }
+.cpdoor__medal { display: flex; justify-content: center; }
+.cpdoor__medal .cpart { filter: drop-shadow(0 0 6px rgba(255, 211, 77, 0.35)); }
+.cpdoor__medal--none .cpart { filter: none; }
 .cpdoor__best { font-size: 18px; color: var(--muted); margin-top: 4px; }
 .cpbrief { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; background: rgba(8, 6, 16, 0.82); }
 .cpbrief__card { width: 980px; box-sizing: border-box; padding: 28px 36px; border: 3px solid var(--torch); border-radius: 14px; background: rgba(28, 24, 48, 0.98); }

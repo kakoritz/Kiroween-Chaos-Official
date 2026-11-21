@@ -1,5 +1,6 @@
 // Gear shop (CP-U2): a paper-doll skeleton with one slot per part. Owned gear drags (or keyboard-moves) onto a slot; unowned gear shows its price.
 // Opened from the night briefing's "Choose gear and start" button through `gearShopStarter`.
+import { gearIconSvg, shopBackdropSvg } from './art';
 import { buy, equip, equipAll, equippedParts, loadShop, nextSlot, reset, saveShop, slotsFor, tooltip, unequip, type ShopGear, type ShopState } from './shop-model';
 
 export interface ShopNight { id: number; title: string; finale?: boolean; hint?: string; gearHint?: string[] }
@@ -56,6 +57,7 @@ export class GearShop {
     const s = this.state;
     const hint = this.night.gearHint ?? [];
     this.el.innerHTML = `
+      <div class="cpshop__bg" aria-hidden="true">${shopBackdropSvg()}</div>
       <div class="cpshop__top"><h1 class="cpshop__title">Gear shop</h1>
         <span class="cpshop__night">${this.night.finale ? 'Finale' : `Night ${this.night.id}`}: ${esc(this.night.title)}</span>
         <span class="cpshop__credits">Credits <b>${s.credits}</b></span></div>
@@ -66,7 +68,7 @@ export class GearShop {
           const tip = tooltip(g, owned);
           return `<li><button type="button" class="cpgear${owned ? ' cpgear--owned' : ''}${on ? ' cpgear--on' : ''}${this.grab === g.id ? ' cpgear--held' : ''}${hint.includes(g.part) ? ' cpgear--hint' : ''}"
             data-gear="${g.id}" draggable="${owned}" title="${esc(tip)}" aria-label="${esc(tip)}${on ? ' Equipped.' : ''}${hint.includes(g.part) ? ' Suggested for this night.' : ''}">
-            <span class="cpgear__badge" aria-hidden="true">${esc(g.badge)}</span>
+            <span class="cpgear__badge" aria-hidden="true">${gearIconSvg(g, 44)}</span>
             <span class="cpgear__name">${esc(g.label)}</span>
             <span class="cpgear__price">${owned ? (on ? 'Equipped' : 'Owned') : `${g.cost} credits`}</span>
             <span class="cpgear__fx">${esc(g.effect)}</span></button></li>`;
@@ -76,7 +78,7 @@ export class GearShop {
           const cur = s.equipped[g.part] ? this.gear.find((x2) => x2.id === s.equipped[g.part]) : undefined;
           const label = `${g.label} slot, ${g.part}. ${cur ? `Holds ${cur.label}. Activate to take it off.` : 'Empty.'}`;
           return `<button type="button" class="cpslot${cur ? ' cpslot--full' : ''}${this.grab && this.gear.find((q) => q.id === this.grab)?.part === g.part ? ' cpslot--ok' : ''}" data-slot="${g.part}"
-            style="left:${x}%;top:${y}%" aria-label="${esc(label)}" title="${esc(label)}">${cur ? esc(cur.badge) : '+'}<span class="cpslot__name">${esc(g.part)}</span></button>`;
+            style="left:${x}%;top:${y}%" aria-label="${esc(label)}" title="${esc(label)}">${cur ? gearIconSvg(cur, 48) : '+'}<span class="cpslot__name">${esc(g.part)}</span></button>`;
         }).join('')}</div>
         <aside class="cpshop__side"><h2>This night</h2><p>${esc(this.night.hint ?? 'Pick the gear that blocks tonight\'s faults.')}</p>
           <p class="cpshop__worn">Wearing: ${equippedParts(s, this.gear).join(', ') || 'nothing (the Rookie)'}</p></aside>
