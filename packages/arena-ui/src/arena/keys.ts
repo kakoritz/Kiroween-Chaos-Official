@@ -7,7 +7,8 @@ export type KeyAction =
   | { type: 'chaos'; lane?: number }
   | { type: 'mode'; mode: ChaosMode }
   | { type: 'cycle-mode' }
-  | { type: 'help' };
+  | { type: 'help' }
+  | { type: 'present' };
 
 export interface KeyLike {
   key: string;
@@ -23,6 +24,7 @@ export const KEY_HELP: readonly { keys: string; does: string }[] = [
   { keys: 'C', does: 'Chaos on a random lane' },
   { keys: 'M', does: 'Cycle Off, Manual, Random' },
   { keys: '?', does: 'Show these keys' },
+  { keys: 'P', does: 'Present mode (clean frame, Esc exits)' },
 ];
 
 const TYPING = new Set(['INPUT', 'TEXTAREA', 'SELECT']);
@@ -39,6 +41,7 @@ export function keyAction(e: KeyLike, laneCount: number): KeyAction | null {
     case 'c': return { type: 'chaos' };
     case 'm': return { type: 'cycle-mode' };
     case '?': return { type: 'help' };
+    case 'p': return { type: 'present' };
     default: return null;
   }
 }

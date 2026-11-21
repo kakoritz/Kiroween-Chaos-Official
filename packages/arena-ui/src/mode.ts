@@ -54,3 +54,9 @@ export function apiBaseFromQuery(search: string): string {
     return '';
   }
 }
+
+/** `?present=1` starts in present mode (clean big-screen frame for video capture). */
+export function presentFromQuery(search: string): boolean {
+  const v = new URLSearchParams(search).get('present');
+  return v === '1' || v === 'true';
+}

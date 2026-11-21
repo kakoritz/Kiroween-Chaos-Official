@@ -1,4 +1,4 @@
-import { apiBaseFromQuery, modeBadge } from '../src/mode';
+import { apiBaseFromQuery, modeBadge, presentFromQuery } from '../src/mode';
 import { autoplayDecision, pickScript } from '../src/demo';
 import { ArenaScene, STAGE_H, STAGE_W } from '../src/arena/scene';
 import { applyEvent, emptyVM, loadSnapshot, reconcileLedger, totalScore } from '../src/arena/model';
@@ -36,6 +36,7 @@ root.innerHTML = `
     <aside class="insp hidden" id="insp"></aside>
     <div class="keys-pop hidden" id="keys-pop" role="dialog" aria-label="Keyboard and state legend"><h2>Keyboard</h2><ul class="keys-list" id="keys-list"></ul><h2>States</h2><ul class="lg-list" id="legend-list"></ul></div>
     <div class="sr-only" id="live-assertive" aria-live="assertive"></div>
+    <div class="present-hint" id="present-hint" aria-hidden="true">Present mode. Press P or Esc to exit.</div>
     <section class="panel panel--rank hidden" id="rank" aria-label="Rank board"><h2>Rank board</h2><div class="rb-body" id="rank-body"></div></section>
     <section class="panel panel--ledger hidden" id="ledger" aria-label="Ledger"><h2>Ledger</h2><div id="ledger-body"></div></section>
     <section class="panel panel--ticker hidden" id="ticker" aria-label="Event ticker"><h2>Event log</h2><div class="tk-body" id="ticker-body"></div></section>
@@ -137,13 +138,24 @@ function toggleKeys(force?: boolean) {
   keysBtn.setAttribute('aria-expanded', String(open));
 }
 keysBtn.addEventListener('click', () => toggleKeys());
+const presentHint = $('present-hint');
+let hintTimer: number | undefined;
+function setPresent(on: boolean, hint = true) {
+  document.body.classList.toggle('present', on);
+  if (on) toggleKeys(false);
+  presentHint.classList.toggle('on', on && hint);
+  window.clearTimeout(hintTimer);
+  if (on && hint) hintTimer = window.setTimeout(() => presentHint.classList.remove('on'), 2500);
+}
+if (presentFromQuery(window.location.search)) setPresent(true, false);
 if (new URLSearchParams(window.location.search).get('keys') === 'open') toggleKeys(true);
 window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') { toggleKeys(false); return; }
+  if (e.key === 'Escape') { toggleKeys(false); setPresent(false); return; }
   const t = e.target as HTMLElement | null;
   const act = keyAction({ key: e.key, ctrlKey: e.ctrlKey, altKey: e.altKey, metaKey: e.metaKey, repeat: e.repeat, targetTag: t?.tagName, editable: !!t?.isContentEditable }, vm.lanes.length);
   if (!act || !api) return;
   if (act.type === 'help') { e.preventDefault(); toggleKeys(); return; }
+  if (act.type === 'present') { e.preventDefault(); setPresent(!document.body.classList.contains('present')); return; }
   if (act.type === 'cycle-mode') { e.preventDefault(); const m = nextMode(chaosCtl.model.mode); chaosCtl.model.choose(m); liveAssertive.textContent = `Chaos mode ${m}`; return; }
   if (act.type === 'chaos') {
     e.preventDefault();

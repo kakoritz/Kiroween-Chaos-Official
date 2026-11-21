@@ -158,3 +158,11 @@ kbd { display: inline-block; min-width: 28px; padding: 0 6px; margin-right: 6px;
 .lg-done span, .lg-replayed span { color: var(--ok); } .lg-failed span, .lg-dead span { color: var(--fail); }
 .lg-retrying span { color: var(--warn); } .lg-active span { color: var(--torch); } .lg-parked span { color: var(--ghost); }
 .lg-quarantined span { color: var(--hex); } .lg-pending span { color: var(--muted); }
+
+/* Present mode (UI-W8): hides controls and the cursor, keeps the scene, scores and badge. */
+body.present, body.present * { cursor: none !important; }
+body.present #app-switch, body.present #chaos-mode, body.present #keys-btn, body.present #mute,
+body.present #demo-open, body.present #demo-big, body.present #demo-stop, body.present #demo-pill,
+body.present #keys-pop, body.present #insp, body.present #err, body.present #stats { display: none !important; }
+.present-hint { position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 30; padding: 8px 18px; border-radius: 10px; background: rgba(28,24,48,0.92); border: 2px solid var(--stone-2); color: var(--text); font-size: 16px; opacity: 0; pointer-events: none; transition: opacity 0.4s; }
+.present-hint.on { opacity: 1; }

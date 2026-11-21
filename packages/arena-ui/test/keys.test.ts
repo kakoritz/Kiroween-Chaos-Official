@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { STATE_LEGEND, chaosAnnouncement, keyAction, nextMode } from '../src/arena/keys';
+import { presentFromQuery } from '../src/mode';
 
 describe('keyboard chaos', () => {
   it('maps digits to lanes inside the lane count', () => {
@@ -7,6 +8,17 @@ describe('keyboard chaos', () => {
     expect(keyAction({ key: '5' }, 5)).toEqual({ type: 'chaos', lane: 4 });
     expect(keyAction({ key: '6' }, 5)).toBeNull();
     expect(keyAction({ key: '0' }, 5)).toBeNull();
+  });
+  it('reads present mode from the query string', () => {
+    expect(presentFromQuery('?present=1')).toBe(true);
+    expect(presentFromQuery('?present=0')).toBe(false);
+    expect(presentFromQuery('')).toBe(false);
+  });
+  it('maps p to present mode and ignores it with modifiers', () => {
+    expect(keyAction({ key: 'p' }, 5)).toEqual({ type: 'present' });
+    expect(keyAction({ key: 'P' }, 5)).toEqual({ type: 'present' });
+    expect(keyAction({ key: 'p', ctrlKey: true }, 5)).toBeNull();
+    expect(keyAction({ key: 'p', targetTag: 'INPUT' }, 5)).toBeNull();
   });
   it('maps c, m and ? and ignores other keys', () => {
     expect(keyAction({ key: 'c' }, 5)).toEqual({ type: 'chaos' });
