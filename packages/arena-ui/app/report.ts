@@ -1,6 +1,7 @@
 import { compareReports, parseReport, postmortemScore, renderMarkdown, gradeColor, signed, type Comparison, type HarnessReport } from '../src/report/model';
 import { renderHeatRow, renderLapTable, renderStarChart } from '../src/arena/laps-view';
 import { heatOf, issuesByStageOf, laneLapsOf, laneStarsOf, ratingFor, ratingsOf, ratingTone, starNum, waveAvgStars } from '../src/arena/laps-model';
+import { sharePanel } from '../src/share/share-panel';
 import w1 from '../../../docs/proof/wave1-report.json';
 import w2 from '../../../docs/proof/wave2-report.json';
 import pm1 from '../../../docs/proof/wave1-postmortem.md?raw';
@@ -54,6 +55,8 @@ async function load(): Promise<void> {
   selB = Math.min(1, waves.length - 1);
   const m = /#\/report\/(\d+)/.exec(location.hash);
   if (m) { tab = 'summary'; selA = Math.max(0, waves.findIndex((w) => w.n === Number(m[1]))); }
+  const sh = /#\/share\/(\d+)/.exec(location.hash);
+  if (sh) { tab = 'share'; selA = Math.max(0, waves.findIndex((w) => w.n === Number(sh[1]))); }
 }
 
 function scoreOf(w: Wave): number | null { return postmortemScore(w.postmortem); }
@@ -239,12 +242,24 @@ function lapsView(): HTMLElement {
   return wrap;
 }
 
+function shareView(): HTMLElement {
+  const w = waves[selA]!;
+  const wrap = el('div', 'shareview');
+  const pick = el('div', 'pickers');
+  const s = el('select'); s.setAttribute('aria-label', 'Wave');
+  waves.forEach((x, i) => { const o = el('option', undefined, `Wave ${x.n}`); o.value = String(i); o.selected = i === selA; s.append(o); });
+  s.onchange = () => { selA = Number(s.value); render(); };
+  pick.append(s);
+  wrap.append(pick, gradeRing(w.report.grade), sharePanel(w.report, w.report.app));
+  return wrap;
+}
+
 function render(): void {
   root.replaceChildren();
   const bar = el('header', 'bar');
   bar.append(el('strong', undefined, 'HAUNT'), el('span', 'muted', 'Report viewer'));
   const tabs = el('nav', 'tabs'); tabs.setAttribute('role', 'tablist');
-  for (const [id, label] of [['compare', 'Compare'], ['summary', 'Summary'], ['laps', 'Laps & stars']]) {
+  for (const [id, label] of [['compare', 'Compare'], ['summary', 'Summary'], ['laps', 'Laps & stars'], ['share', 'Share']]) {
     const b = el('button', 'tab', label); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(tab === id));
     b.onclick = () => { tab = id; render(); };
     tabs.append(b);
@@ -257,7 +272,7 @@ function render(): void {
   };
   bar.append(el('span', 'spacer'), file);
   root.append(bar);
-  const main = el('main'); main.append(tab === 'summary' ? summaryView() : tab === 'laps' ? lapsView() : compareView());
+  const main = el('main'); main.append(tab === 'summary' ? summaryView() : tab === 'laps' ? lapsView() : tab === 'share' ? shareView() : compareView());
   root.append(main);
   root.dataset.ready = '1';
 }

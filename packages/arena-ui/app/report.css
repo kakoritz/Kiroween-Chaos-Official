@@ -44,3 +44,11 @@ th { color: var(--muted); font-weight: 600; }
 .lapsview h4 { margin: 10px 0 4px; color: #9a93b8; font-size: 12px; text-transform: uppercase; }
 .rating { padding: 1px 10px; border-radius: 10px; font-size: 13px; font-weight: 800; border: 1px solid currentColor; }
 .rating--gold { color: #ffd24a; } .rating--good { color: #5ee08a; } .rating--amber { color: #ff9a3c; } .rating--red { color: #ff4d5e; }
+.shareview { display: grid; gap: 16px; justify-items: start; }
+.share { background: var(--stone); border: 2px solid var(--stone-2); border-radius: 12px; padding: 8px 20px 16px; width: 100%; max-width: 720px; }
+.share-preview { margin: 8px 0 12px; } .share-preview svg { height: 20px; width: auto; }
+.share-actions, .share-snippet { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 8px 0; }
+.share-btn { background: var(--stone-2); color: var(--text); border: 2px solid var(--muted); border-radius: 8px; padding: 6px 14px; font: inherit; cursor: pointer; }
+.share-btn:hover { border-color: var(--torch); } .share-btn:focus-visible { outline: 3px solid var(--ghost); outline-offset: 2px; }
+.share-snippet code { background: #14101f; border-radius: 6px; padding: 6px 10px; color: var(--bone); }
+.share-status { color: var(--ok); font-weight: 700; } .share-note { font-size: 14px; margin: 4px 0 0; }
