@@ -19,6 +19,10 @@ export const imp = providerCreature('imp', 'Imp', 'http', ['http_500', 'app_down
 export const werewolf = providerCreature('werewolf', 'Werewolf', 'world', ['hazard_event']);
 export const willOWisp = providerCreature('will_o_wisp', "Will-o'-Wisp", 'world', ['driver_unreachable']);
 
+export const scarecrow = providerCreature('scarecrow', 'Scarecrow', 'world', ['wrong_address']);
+export const blackCat = providerCreature('black_cat', 'Black Cat', 'world', ['no_answer', 'gated_house']);
+export const phantomCar = providerCreature('phantom_car', 'Phantom Car', 'world', ['car_accident']);
+
 export const witch: CreaturePlugin = {
   id: 'witch', label: 'Witch', family: 'data', faults: ['malformed_payload'],
   appliesTo: { stages: ['intake'] },
@@ -34,4 +38,4 @@ export const mummy: CreaturePlugin = {
   },
 };
 
-export const EXTRA_CREATURES: readonly CreaturePlugin[] = [banshee, gargoyle, goblin, imp, witch, mummy, werewolf, willOWisp];
+export const EXTRA_CREATURES: readonly CreaturePlugin[] = [banshee, gargoyle, goblin, imp, witch, mummy, werewolf, willOWisp, scarecrow, blackCat, phantomCar];

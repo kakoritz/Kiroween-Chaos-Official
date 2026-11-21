@@ -12,6 +12,7 @@ const STAGE_SERVICE: Record<string, Service> = {
   dispatch: 'dispatch',
   updates: 'notify',
   tracking: 'tracking',
+  handoff: 'handoff',
 };
 
 /** Fault ids that act on every service of the lane, whatever the stage. */
@@ -32,10 +33,14 @@ export function faultBody(lane: string, stage: string | null, arm: ProviderArm):
     case 'http_429': base = { mode: 'status', value: 429, count: 3, headers: { 'Retry-After': '2' } }; break;
     case 'http_500': base = { mode: 'status', value: 500, count: 2 }; break;
     case 'hazard_event': base = { mode: 'stall', value: 5000, forMs: 5000 }; break;
+    case 'wrong_address': base = { mode: 'stall', value: 5000, forMs: 5000 }; break;
+    case 'no_answer': base = { mode: 'handoff_block', block: 'no_answer', forMs: 3000 }; break;
+    case 'gated_house': base = { mode: 'handoff_block', block: 'gated', forMs: 3000 }; break;
+    case 'car_accident': base = { mode: 'handoff_block', block: 'accident', forMs: 7000 }; break;
     case 'driver_unreachable': base = { mode: 'no_driver', forMs: 3000 }; break;
     default: return null;
   }
-  const body: FaultSpec = { lane, service: arm.fault === 'hazard_event' || arm.fault === 'driver_unreachable' ? 'tracking' : service, ...base };
+  const body: FaultSpec = { lane, service: arm.fault === 'hazard_event' || arm.fault === 'driver_unreachable' || arm.fault === 'wrong_address' ? 'tracking' : arm.fault === 'no_answer' || arm.fault === 'gated_house' || arm.fault === 'car_accident' ? 'handoff' : service, ...base };
   // The arm carries the (possibly speed-scaled) window or count and wins over the defaults.
   if (arm.forMs !== undefined) { body.forMs = arm.forMs; delete body.count; }
   else if (arm.count !== undefined) { body.count = arm.count; delete body.forMs; }

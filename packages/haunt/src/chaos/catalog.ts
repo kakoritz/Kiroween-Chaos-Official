@@ -52,6 +52,10 @@ export const FAULTS: readonly FaultDef[] = [
   def({ id: 'sms_down', creature: 'gargoyle', family: 'network', kind: 'provider', stages: ['confirmation'], forMs: 8000 }),
   def({ id: 'app_down', creature: 'imp', family: 'http', kind: 'provider', stages: ['dispatch'], forMs: 8000 }),
   def({ id: 'updates_down', creature: 'goblin', family: 'http', kind: 'provider', stages: ['updates'], forMs: 8000 }),
+  def({ id: 'wrong_address', creature: 'scarecrow', family: 'world', kind: 'provider', stages: ['tracking'], forMs: 5000 }),
+  def({ id: 'no_answer', creature: 'black_cat', family: 'world', kind: 'provider', stages: ['handoff'], forMs: 3000 }),
+  def({ id: 'gated_house', creature: 'black_cat', family: 'world', kind: 'provider', stages: ['handoff'], forMs: 3000 }),
+  def({ id: 'car_accident', creature: 'phantom_car', family: 'world', kind: 'provider', stages: ['handoff'], forMs: 7000 }),
   def({ id: 'driver_unreachable', creature: 'will_o_wisp', family: 'world', kind: 'provider', stages: ['tracking'], forMs: 3000 }),
 ];
 

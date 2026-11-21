@@ -1319,6 +1319,16 @@
  {
   "app": "orders",
   "tier": "rookie",
+  "fault": "wrong_address",
+  "stage": "tracking",
+  "role": "poll",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
   "fault": "crash",
   "stage": "handoff",
   "role": "final",
@@ -1376,6 +1386,36 @@
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "no_answer",
+  "stage": "handoff",
+  "role": "final",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "gated_house",
+  "stage": "handoff",
+  "role": "final",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "car_accident",
+  "stage": "handoff",
+  "role": "final",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
  },
  {
   "app": "orders",
@@ -2717,6 +2757,16 @@
  {
   "app": "orders",
   "tier": "retrier",
+  "fault": "wrong_address",
+  "stage": "tracking",
+  "role": "poll",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
   "fault": "crash",
   "stage": "handoff",
   "role": "final",
@@ -2774,6 +2824,36 @@
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "no_answer",
+  "stage": "handoff",
+  "role": "final",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "gated_house",
+  "stage": "handoff",
+  "role": "final",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "car_accident",
+  "stage": "handoff",
+  "role": "final",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
  },
  {
   "app": "orders",
@@ -3959,6 +4039,16 @@
  {
   "app": "orders",
   "tier": "journaler",
+  "fault": "wrong_address",
+  "stage": "tracking",
+  "role": "poll",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
   "fault": "crash",
   "stage": "handoff",
   "role": "final",
@@ -3998,6 +4088,36 @@
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "no_answer",
+  "stage": "handoff",
+  "role": "final",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "gated_house",
+  "stage": "handoff",
+  "role": "final",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "car_accident",
+  "stage": "handoff",
+  "role": "final",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
  },
  {
   "app": "orders",
@@ -5133,6 +5253,16 @@
  {
   "app": "orders",
   "tier": "reconciler",
+  "fault": "wrong_address",
+  "stage": "tracking",
+  "role": "poll",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
   "fault": "crash",
   "stage": "handoff",
   "role": "final",
@@ -5172,6 +5302,36 @@
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "no_answer",
+  "stage": "handoff",
+  "role": "final",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "gated_house",
+  "stage": "handoff",
+  "role": "final",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "car_accident",
+  "stage": "handoff",
+  "role": "final",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
  },
  {
   "app": "orders",
@@ -6307,6 +6467,16 @@
  {
   "app": "orders",
   "tier": "phoenix",
+  "fault": "wrong_address",
+  "stage": "tracking",
+  "role": "poll",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
   "fault": "crash",
   "stage": "handoff",
   "role": "final",
@@ -6346,6 +6516,36 @@
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "no_answer",
+  "stage": "handoff",
+  "role": "final",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "gated_house",
+  "stage": "handoff",
+  "role": "final",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "car_accident",
+  "stage": "handoff",
+  "role": "final",
+  "outcome": "PARKED_OK",
+  "extraRows": {},
+  "template": "T_PARKED_OK"
  },
  {
   "app": "inbox",

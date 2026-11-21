@@ -32,11 +32,14 @@ export interface LedgerRow {
   ts: number;
 }
 
-export type FaultMode = 'latency' | 'status' | 'drop' | 'stall' | 'no_driver';
+export type FaultMode = 'latency' | 'status' | 'drop' | 'stall' | 'no_driver' | 'handoff_block';
+export type HandoffBlock = 'no_answer' | 'gated' | 'accident' | 'wrong_order';
 
 export interface FaultSpec {
   lane: string;
-  service: Kind | 'tracking' | '*';
+  service: Kind | 'tracking' | 'handoff' | '*';
+  /** For handoff_block: the status the handoff call answers with (design.md section 2). */
+  block?: HandoffBlock;
   mode: FaultMode;
   value?: number;
   /** Apply to the next N matching calls. */
@@ -176,6 +179,10 @@ export class Provider {
       if (req.method === 'GET' && t) {
         return await this.tracking(decodeURIComponent(t[1]!), q.lane ?? '', h);
       }
+      const hd = /^\/handoff\/([^/]+)$/.exec(req.path);
+      if (req.method === 'GET' && hd) {
+        return await this.handoff(decodeURIComponent(hd[1]!), q.lane ?? '', h);
+      }
       return json(404, { error: 'no route' });
     } catch (e) {
       return json(500, { error: String((e as Error).message) });
@@ -229,10 +236,19 @@ export class Provider {
     });
   }
 
+  private async handoff(shipment: string, lane: string, h: Record<string, string>): Promise<ProviderResponse> {
+    const recovery = h['x-haunt-phase'] === 'recovery';
+    return this.gate(lane, 'handoff', shipment, recovery, async (extraMs, fault) => {
+      if (extraMs > 0) await this.clock.sleep(extraMs);
+      if (fault?.mode === 'handoff_block') return json(200, { status: fault.block ?? 'no_answer' });
+      return json(200, { status: 'delivered' });
+    });
+  }
+
   /** Capacity model, then fault matching, then the handler. Rows are only written inside run(). */
   private async gate(
     lane: string,
-    service: Kind | 'tracking',
+    service: Kind | 'tracking' | 'handoff',
     order: string,
     recovery: boolean,
     run: (extraMs: number, fault: FaultSpec | null) => Promise<ProviderResponse>,
@@ -257,6 +273,7 @@ export class Provider {
           return json(v, { error: `fault ${v}` }, { ...(fault.headers ?? {}) });
         }
         if (fault.mode === 'latency') return await run(baseMs + v, fault);
+        if (fault.mode === 'handoff_block') return service === 'handoff' ? await run(baseMs, fault) : await run(baseMs, null);
         if (service !== 'tracking') return await run(baseMs, null);
         return await run(baseMs + (fault.mode === 'stall' ? v : 0), fault);
       }
@@ -266,7 +283,7 @@ export class Provider {
     }
   }
 
-  private matchFault(lane: string, service: Kind | 'tracking', recovery: boolean): FaultSpec | null {
+  private matchFault(lane: string, service: Kind | 'tracking' | 'handoff', recovery: boolean): FaultSpec | null {
     const now = this.clock.now();
     this.faults = this.faults.filter((f) => (f.remaining === null || f.remaining > 0) && (f.until === null || f.until > now));
     for (const f of this.faults) {

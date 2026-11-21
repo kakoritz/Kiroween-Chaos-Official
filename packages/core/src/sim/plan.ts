@@ -93,8 +93,9 @@ type StageRes =
 interface Sub {
   fault: string;
   /** Which calls it matches. */
-  match: 'effect' | 'all' | 'tracking' | 'dispatch';
-  mode: 'latency' | 'status' | 'drop' | 'stall' | 'no_driver' | 'slow';
+  match: 'effect' | 'all' | 'tracking' | 'dispatch' | 'handoff';
+  mode: 'latency' | 'status' | 'drop' | 'stall' | 'no_driver' | 'slow' | 'handoff_block';
+  block?: string;
   count?: number;
   forMs?: number;
   latency?: number;
@@ -209,6 +210,10 @@ class Planner {
       case 'slow_link': add(spec.fault, 'all', 'slow'); break;
       case 'hazard_event': add(spec.fault, 'tracking', 'stall'); break;
       case 'driver_unreachable': add(spec.fault, 'tracking', 'no_driver'); break;
+      case 'wrong_address': add(spec.fault, 'tracking', 'stall'); break;
+      case 'no_answer': add(spec.fault, 'handoff', 'handoff_block', { block: 'no_answer' }); break;
+      case 'gated_house': add(spec.fault, 'handoff', 'handoff_block', { block: 'gated' }); break;
+      case 'car_accident': add(spec.fault, 'handoff', 'handoff_block', { block: 'accident' }); break;
       case 'boss_hazard_storm':
         add('hazard_event', 'tracking', 'stall', { forMs: 6000 });
         add('http_429', 'dispatch', 'status');
@@ -370,6 +375,7 @@ class Planner {
         if (sub.match === 'effect' && role !== 'effect') continue;
         if (sub.match === 'tracking' && service !== 'tracking') continue;
         if (sub.match === 'dispatch' && service !== 'dispatch') continue;
+        if ((sub.match === 'handoff') !== (service === 'handoff')) continue;
         if (arm.scope === 'inner' && !recovery) continue;
         if (sub.lockedService && sub.lockedService !== service) continue;
         if (sub.count !== undefined) { if (sub.used >= sub.count) continue; }
@@ -399,6 +405,8 @@ class Planner {
         return { ok: false, processed: false, respMs: lat, writeMs: lat, error: 'connection dropped', retryAfter: 0, arm };
       case 'stall':
         return { ok: false, processed: false, respMs: TIMING.pollTimeoutMs, writeMs: lat, error: `poll timeout after ${TIMING.pollTimeoutMs} ms`, retryAfter: 0, arm };
+      case 'handoff_block':
+        return { ok: false, processed: false, respMs: lat, writeMs: lat, error: `handoff blocked: ${sub.block ?? 'no_answer'}`, retryAfter: 0, arm };
       case 'no_driver':
         return { ok: false, processed: false, respMs: lat, writeMs: lat, error: 'no driver available', retryAfter: 0, arm };
       case 'slow':
@@ -406,6 +414,11 @@ class Planner {
       default:
         return { ok: true, processed: true, respMs: lat, writeMs: lat, error: '', retryAfter: 0 };
     }
+  }
+
+  /** True while an activated arm carries a handoff block (the handoff call only exists then, so other runs are unchanged). */
+  private handoffArmed(): boolean {
+    return this.arms.some((a) => a.activated && !a.invalid && a.subs.some((s) => s.match === 'handoff'));
   }
 
   private brkSync(service: string, t: number): 'closed' | 'open' | 'half_open' {
@@ -685,6 +698,19 @@ class Planner {
     // work and final
     const r = this.work(order, def, D, true, 100);
     if (r) return r;
+    if (def.role === 'final' && this.handoffArmed()) {
+      let attemptNo = 1;
+      for (;;) {
+        const callT = this.t;
+        const res = this.providerCall(order, 'handoff', 'poll', attemptNo > 1, callT);
+        this.t = callT + res.respMs;
+        if (res.ok) break;
+        this.sleep(order, def, callT, this.t, 100, 100, 'Handing off');
+        const f = this.afterFailure(order, def, 'handoff', attemptNo, res.error, 0);
+        if (f === 'retry') { attemptNo++; continue; }
+        return f;
+      }
+    }
     return this.finishStage(order, def, t0, false);
   }
 

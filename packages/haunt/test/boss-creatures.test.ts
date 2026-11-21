@@ -17,10 +17,10 @@ function ctx(): { c: BossContext; pressed: { lane: string; req: ArmRequest }[] }
 }
 
 describe('boss creatures', () => {
-  it('register next to the other 14 and cover every boss id once', () => {
+  it('register next to the other 17 and cover every boss id once', () => {
     const r = new CreatureRegistry();
     for (const p of [...CORE_CREATURES, ...EXTRA_CREATURES, ...BOSS_CREATURES]) r.register(p);
-    expect(r.list()).toHaveLength(17);
+    expect(r.list()).toHaveLength(20);
     for (const b of BOSSES) expect(r.forFault(b)?.faults).toEqual([b]);
     expect(r.get('lich')?.label).toBe('Lich');
     expect(r.get('banshee_queen')?.label).toBe('Banshee Queen');

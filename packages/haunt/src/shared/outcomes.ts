@@ -95,6 +95,13 @@ export function resolveOutcome(app: AppId, tierId: TierId, fault: string, stageI
     return phoenix ? done('OK') : done('FAILED');
   }
 
+  if (stage.role === 'final') {
+    // Handoff faults (table L5 to L7): only Phoenix survives; an accident outlasts the retries and parks.
+    if (fault === 'no_answer' || fault === 'gated_house') return phoenix ? done('OK') : done('FAILED');
+    if (fault === 'car_accident') return phoenix ? done('PARKED_OK') : done('FAILED');
+    return null;
+  }
+
   // effect stage with a provider fault
   if (stageId === 'updates' && fault !== 'internet_outage') {
     // Non-critical stage: failures are degraded, the order continues (runtime.md section 33).
