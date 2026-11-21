@@ -1,0 +1,95 @@
+﻿{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://haunt.local/campaign/nights.schema.json",
+  "title": "Haunted Nights: nights.json",
+  "description": "Array of seven entries: nights 1 to 6 and the finale (id 7). Contract v1.1 section 12.",
+  "type": "array",
+  "minItems": 7,
+  "maxItems": 7,
+  "items": { "$ref": "#/$defs/night" },
+  "$defs": {
+    "when": {
+      "type": "object",
+      "required": ["lane", "event"],
+      "additionalProperties": false,
+      "properties": {
+        "lane": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "event": { "type": "string", "minLength": 1 },
+        "stage": { "type": "string" },
+        "order": { "type": "string" },
+        "attempt": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "press": {
+      "type": "object",
+      "required": ["lane", "fault", "creature"],
+      "additionalProperties": false,
+      "properties": {
+        "when": { "$ref": "#/$defs/when" },
+        "atMs": { "type": "number", "minimum": 0 },
+        "afterPrevMs": { "type": "number", "minimum": 0 },
+        "delayMs": { "type": "number", "minimum": 0 },
+        "forEachOrder": { "type": "boolean" },
+        "lane": { "const": 1 },
+        "fault": { "type": "string", "minLength": 1 },
+        "creature": { "type": "string", "minLength": 1 },
+        "point": { "type": "string" },
+        "scope": { "enum": ["inner", "outer"] },
+        "detect": { "enum": ["confirmation", "handoff"] }
+      }
+    },
+    "boss": {
+      "type": "object",
+      "required": ["boss", "warnAtMs", "startAtMs"],
+      "additionalProperties": false,
+      "properties": {
+        "boss": { "enum": ["boss_power_outage", "boss_internet_outage", "boss_hazard_storm"] },
+        "warnAtMs": { "type": "number", "minimum": 0 },
+        "startAtMs": { "type": "number", "minimum": 0 }
+      }
+    },
+    "credits": { "type": "integer", "minimum": 0 },
+    "night": {
+      "type": "object",
+      "required": ["id", "title", "briefing", "lesson", "hint", "orders", "pace", "seed", "plan", "rivals", "medals", "gearHint"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "integer", "minimum": 1, "maximum": 7 },
+        "title": { "type": "string", "minLength": 1 },
+        "briefing": { "type": "string", "minLength": 1 },
+        "lesson": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 3, "maxItems": 3 },
+        "hint": { "type": "string", "minLength": 1 },
+        "orders": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "pace": { "const": "slow" },
+        "seed": { "type": "integer" },
+        "app": { "enum": ["orders", "inbox"] },
+        "finale": { "type": "boolean" },
+        "plan": { "type": "array", "items": { "oneOf": [{ "$ref": "#/$defs/press" }, { "$ref": "#/$defs/boss" }] } },
+        "rivals": { "const": ["retrier", "journaler", "reconciler", "phoenix"] },
+        "medals": {
+          "type": "object",
+          "required": ["bronze", "silver", "gold"],
+          "additionalProperties": false,
+          "properties": {
+            "bronze": { "type": "object", "required": ["credits"], "additionalProperties": false, "properties": { "credits": { "$ref": "#/$defs/credits" } } },
+            "silver": { "type": "object", "required": ["credits", "repeats"], "additionalProperties": false, "properties": { "credits": { "$ref": "#/$defs/credits" }, "repeats": { "type": "integer", "minimum": 0 } } },
+            "gold": {
+              "type": "object",
+              "required": ["credits", "repeats"],
+              "additionalProperties": false,
+              "properties": {
+                "credits": { "$ref": "#/$defs/credits" },
+                "repeats": { "type": "integer", "minimum": 0 },
+                "avgStars": { "type": "number", "minimum": 0, "maximum": 5 },
+                "cancelled": { "type": "integer", "minimum": 0 },
+                "abandoned": { "type": "integer", "minimum": 0 },
+                "maxDowntimeMsPerOrder": { "type": "number", "minimum": 0 }
+              }
+            }
+          }
+        },
+        "gearHint": { "type": "array", "items": { "enum": ["retry", "journal", "idempotency", "breaker", "offline_queue"] }, "uniqueItems": true }
+      }
+    }
+  }
+}
