@@ -11,6 +11,7 @@ export interface HauntEvent {
   detail?: Record<string, any>;
   // hello only
   contractVersion?: number;
+  contractMinor?: number;
   mode?: string;
   app?: string;
   [extra: string]: unknown;
@@ -24,6 +25,7 @@ export const LANE_TYPES = [
   'lane_ready', 'order_start', 'stage_start', 'stage_progress', 'stage_done', 'stage_fail', 'chaos', 'chaos_absorbed',
   'process_dead', 'process_up', 'recover_start', 'recover_done', 'effect', 'repeat', 'breaker', 'order_done', 'order_failed',
   'order_parked', 'order_resumed', 'order_quarantined', 'order_abandoned', 'lane_halted', 'part_added', 'score',
+  'review', 'decision_needed', 'decision_made',
 ] as const;
 
 export const ALL_TYPES: string[] = [...GLOBAL_TYPES, ...LANE_TYPES];

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://haunt.local/contract/events.schema.json",
   "title": "Haunt contract v1 event",
-  "description": "One event of the Haunt contract (contract/PROTOCOL.md). Ordering rules are checked by tools/validate-events.ts, not by this schema.",
+  "description": "One event of the Haunt contract (contract/PROTOCOL.md, plus the additive v1.1 in contract/V1_1.md). Ordering rules are checked by tools/validate-events.ts, not by this schema.",
   "oneOf": [
     {
       "$ref": "#/$defs/hello"
@@ -66,6 +66,15 @@
     },
     {
       "$ref": "#/$defs/order_failed"
+    },
+    {
+      "$ref": "#/$defs/review"
+    },
+    {
+      "$ref": "#/$defs/decision_needed"
+    },
+    {
+      "$ref": "#/$defs/decision_made"
     },
     {
       "$ref": "#/$defs/order_parked"
@@ -214,7 +223,11 @@
                 "inbox"
               ]
             },
-            "lane": false
+            "lane": false,
+            "contractMinor": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         }
       ]
@@ -303,7 +316,8 @@
                 "pace": {
                   "enum": [
                     "normal",
-                    "show"
+                    "show",
+                    "slow"
                   ]
                 }
               }
@@ -379,6 +393,104 @@
                       "repeats": {
                         "type": "integer",
                         "minimum": 0
+                      },
+                      "orders": {
+                        "type": "object",
+                        "required": [
+                          "done",
+                          "cancelled",
+                          "parked",
+                          "quarantined",
+                          "abandoned"
+                        ],
+                        "properties": {
+                          "done": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "cancelled": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "parked": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "quarantined": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "abandoned": {
+                            "type": "integer",
+                            "minimum": 0
+                          }
+                        }
+                      },
+                      "bestMs": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "slowestMs": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "avgMs": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "totalMs": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "downtimeMs": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "retries": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "issuesByStage": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "stars": {
+                        "type": "object",
+                        "required": [
+                          "sum",
+                          "max",
+                          "count",
+                          "avg"
+                        ],
+                        "properties": {
+                          "sum": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "max": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "count": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "avg": {
+                            "type": "number",
+                            "minimum": 0
+                          }
+                        }
+                      },
+                      "rating": {
+                        "enum": [
+                          "Five-Star Crypt",
+                          "Respectable",
+                          "Spooky Service",
+                          "Cursed"
+                        ]
                       }
                     }
                   }
@@ -481,6 +593,13 @@
                 "total": {
                   "type": "integer",
                   "minimum": 1
+                },
+                "grabMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "redo": {
+                  "type": "boolean"
                 }
               }
             }
@@ -598,6 +717,10 @@
                 },
                 "reconciled": {
                   "type": "boolean"
+                },
+                "walkMs": {
+                  "type": "number",
+                  "minimum": 0
                 }
               }
             }
@@ -718,6 +841,12 @@
                 },
                 "point": {
                   "type": "string"
+                },
+                "detect": {
+                  "enum": [
+                    "confirmation",
+                    "handoff"
+                  ]
                 }
               }
             }
@@ -959,7 +1088,9 @@
                     "email",
                     "dispatch",
                     "notify",
-                    "ticket"
+                    "ticket",
+                    "refund",
+                    "discount"
                   ]
                 },
                 "key": {
@@ -1103,6 +1234,17 @@
                 "repeats": {
                   "type": "integer",
                   "minimum": 0
+                },
+                "ceremonyMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "returnMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "lap": {
+                  "$ref": "#/$defs/lap"
                 }
               }
             }
@@ -1139,6 +1281,23 @@
                   "type": "string"
                 },
                 "error": {
+                  "type": "string"
+                },
+                "cancelMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "returnMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "lap": {
+                  "$ref": "#/$defs/lap"
+                },
+                "outcome": {
+                  "type": "string"
+                },
+                "reason": {
                   "type": "string"
                 }
               }
@@ -1630,6 +1789,318 @@
               }
             },
             "lane": false
+          }
+        }
+      ]
+    },
+    "lap": {
+      "type": "object",
+      "required": [
+        "ms",
+        "workMs",
+        "attempts",
+        "retries",
+        "downtimeMs",
+        "issues",
+        "recoveries"
+      ],
+      "properties": {
+        "ms": {
+          "type": "number",
+          "minimum": 0
+        },
+        "workMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "attempts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "retries": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "downtimeMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "stage",
+              "count"
+            ],
+            "properties": {
+              "stage": {
+                "$ref": "#/$defs/stageId"
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        },
+        "recoveries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "stage",
+              "action",
+              "ms"
+            ],
+            "properties": {
+              "stage": {
+                "$ref": "#/$defs/stageId"
+              },
+              "action": {
+                "type": "string"
+              },
+              "ms": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "review": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "order",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "review"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "order",
+                "stars",
+                "sub",
+                "reasons",
+                "text",
+                "cum"
+              ],
+              "properties": {
+                "order": {
+                  "$ref": "#/$defs/orderId"
+                },
+                "stars": {
+                  "type": "number",
+                  "minimum": 1,
+                  "maximum": 5,
+                  "multipleOf": 0.5
+                },
+                "sub": {
+                  "type": "object",
+                  "required": [
+                    "timeliness",
+                    "delays",
+                    "issues",
+                    "delivery",
+                    "ease"
+                  ],
+                  "properties": {
+                    "timeliness": {
+                      "type": "number",
+                      "minimum": 1,
+                      "maximum": 5,
+                      "multipleOf": 0.5
+                    },
+                    "delays": {
+                      "type": "number",
+                      "minimum": 1,
+                      "maximum": 5,
+                      "multipleOf": 0.5
+                    },
+                    "issues": {
+                      "type": "number",
+                      "minimum": 1,
+                      "maximum": 5,
+                      "multipleOf": 0.5
+                    },
+                    "delivery": {
+                      "type": "number",
+                      "minimum": 1,
+                      "maximum": 5,
+                      "multipleOf": 0.5
+                    },
+                    "ease": {
+                      "type": "number",
+                      "minimum": 1,
+                      "maximum": 5,
+                      "multipleOf": 0.5
+                    }
+                  }
+                },
+                "reasons": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "text": {
+                  "type": "string"
+                },
+                "cum": {
+                  "type": "object",
+                  "required": [
+                    "stars",
+                    "max",
+                    "count"
+                  ],
+                  "properties": {
+                    "stars": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "max": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "count": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "decision_needed": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "order",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "decision_needed"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "order",
+                "kind",
+                "detectedAt",
+                "options",
+                "defaultChoice",
+                "timeoutMs"
+              ],
+              "properties": {
+                "order": {
+                  "$ref": "#/$defs/orderId"
+                },
+                "kind": {
+                  "const": "wrong_order"
+                },
+                "detectedAt": {
+                  "enum": [
+                    "confirmation",
+                    "handoff"
+                  ]
+                },
+                "options": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "refund",
+                      "discount",
+                      "redo"
+                    ]
+                  },
+                  "minItems": 1,
+                  "uniqueItems": true
+                },
+                "defaultChoice": {
+                  "enum": [
+                    "refund",
+                    "discount",
+                    "redo"
+                  ]
+                },
+                "timeoutMs": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "decision_made": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "order",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "decision_made"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "order",
+                "choice",
+                "source"
+              ],
+              "properties": {
+                "order": {
+                  "$ref": "#/$defs/orderId"
+                },
+                "choice": {
+                  "enum": [
+                    "refund",
+                    "discount",
+                    "redo"
+                  ]
+                },
+                "source": {
+                  "enum": [
+                    "user",
+                    "default",
+                    "timeout"
+                  ]
+                }
+              }
+            }
           }
         }
       ]
