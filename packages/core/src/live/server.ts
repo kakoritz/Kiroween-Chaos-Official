@@ -13,6 +13,9 @@ import { fnv1a32, mulberry32 } from '../../../haunt/src/shared/rng';
 import { loadCampaign } from '../../../haunt/src/campaign/nights';
 import { campaignWaveConfig, parseCampaignRequest, type CampaignRequest } from '../../../haunt/src/campaign/wave-config';
 import { APPS, APP_STAGES, CONTRACT_VERSION, CREATURES, DEMO_SCRIPTS, FAULT_IDS, type AppId } from './catalog';
+import { LapTracker } from './lap-tracker';
+import { laneLaps, waveLaps, waveStars } from './laps';
+import { PACE_FACTOR } from '../../../haunt/src/runner/travel';
 import { buildPostmortem, buildReport, waveEvents } from './report';
 import { loadDemo } from './demo';
 import { CAPTION_SCRIPTS, loadCaptions } from './captions';
@@ -81,6 +84,7 @@ export class LiveServer {
   private readonly ledger: () => { lanes: unknown[] };
   private readonly pingMs: number;
   private readonly hardening: (wave: number) => HardeningBody | undefined;
+  private tracker?: LapTracker;
   private readonly clients = new Set<ServerResponse>();
   private http?: Server;
 
@@ -285,8 +289,15 @@ export class LiveServer {
     const n = this.waves.start({ lanes: perLane, info: { orders, seed, tiers, lanes, speed, app, pace, ...(campaign ? { campaign } : {}) } });
     this.settings = { ...settings, startedAt: this.waves.waves.at(-1)!.startedAt };
     defs.forEach((t, i) => this.waves.record({ type: 'lane_ready', lane: String(i + 1), detail: { tier: t.id, label: t.label, parts: [...t.use] } }));
-    this.engine.startWave?.(n, settings, (ev) => { if (this.waves.active) this.waves.record(ev); }, () => { if (this.waves.active && this.waves.n === n) this.waves.end(); });
+    const tracker = new LapTracker({ app, pace: PACE_FACTOR[pace] ?? 1, speed });
+    this.tracker = tracker;
+    this.engine.startWave?.(n, settings, (ev) => { if (this.waves.active) for (const e of tracker.process(ev)) this.waves.record(e); }, () => { if (this.waves.active && this.waves.n === n) this.endWave(); });
     return { wave: n };
+  }
+
+  private endWave(stopped = false) {
+    const t = this.tracker;
+    this.waves.end(stopped, t ? (lane, row) => ({ ...t.summary(lane), orders: { ...(t.summary(lane).orders as object), parked: row.parked } }) : undefined);
   }
 
   private switchApp(app: AppId) {
@@ -359,6 +370,11 @@ export class LiveServer {
       if (p === '/api/waves') return { json: this.wavesView() };
       if (seg[0] === 'api' && seg[1] === 'waves' && seg.length >= 4) {
         this.waveRecord(seg[2]);
+        if ((seg[3] === 'laps' || seg[3] === 'stars') && seg.length === 4) {
+          const w = this.waveRecord(seg[2]);
+          const tiers = new Map([...this.lanes.values()].map((l) => [l.lane, l.tier]));
+          return { json: seg[3] === 'laps' ? waveLaps(waveEvents(this.log.events, w.n), tiers) : waveStars(waveEvents(this.log.events, w.n)) };
+        }
         if (seg[3] === 'compare' && seg[4]) return { json: this.compare(seg[2], seg[4]) };
         if (seg[3] === 'report' || seg[3] === 'postmortem') {
           const w = this.waveRecord(seg[2]);
@@ -374,6 +390,7 @@ export class LiveServer {
           return h ? { json: h } : fail(404, 'not_ready', `no hardening spec for wave ${w.n}`);
         }
       }
+      if (seg[0] === 'api' && seg[1] === 'lane' && seg[3] === 'laps' && seg.length === 4) return { json: laneLaps(this.log.events, this.laneOf(seg[2]).lane, this.waves.n) };
       if (seg[0] === 'api' && seg[1] === 'lane' && seg.length >= 4 && seg[3] === 'orders') return { json: this.laneOrders(this.laneOf(seg[2])) };
       if (seg[0] === 'api' && seg[1] === 'lane' && seg[3] === 'log' && seg.length === 4) return { json: this.laneLog(this.laneOf(seg[2]), q) };
       if (seg[0] === 'api' && seg[1] === 'lane' && seg[3] === 'stage' && seg[4]) return { json: this.stageInspector(this.laneOf(seg[2]), seg[4], q.get('order') ?? undefined) };
@@ -385,7 +402,7 @@ export class LiveServer {
       case '/api/wave/stop':
         if (!this.waves.active) fail(409, 'no_wave', 'no wave is running');
         this.engine.stopWave?.();
-        if (this.waves.active) this.waves.end(true);
+        if (this.waves.active) this.endWave(true);
         return { json: {} };
       case '/api/speed': {
         if (!SPEEDS.includes(body.speed)) fail(400, 'bad_request', 'bad speed');

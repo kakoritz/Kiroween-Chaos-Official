@@ -74,10 +74,12 @@ export class WaveManager {
     return res;
   }
 
-  end(stopped = false): WaveRecord {
+  /** `extend` adds fields to each lane's summary row (the v1.1 lap fields, contract section 6). */
+  end(stopped = false, extend?: (lane: string, row: Record<string, any>) => Record<string, unknown>): WaveRecord {
     const cur = this.current;
     if (!cur) throw new Error('no wave running');
-    const summary = this.summary();
+    const base = this.summary();
+    const summary = extend ? (Object.fromEntries(Object.entries(base).map(([k, v]) => [k, { ...v, ...extend(k, v) }])) as typeof base) : base;
     const ev = this.log.emit({ type: 'wave_end', wave: cur.rec.n, detail: { summary, ...(stopped ? { stopped: true } : {}) } });
     cur.rec.endedAt = ev.ts;
     cur.rec.score = Object.values(summary).reduce((a, s) => a + s.score, 0);
