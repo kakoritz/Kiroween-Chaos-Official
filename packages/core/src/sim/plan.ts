@@ -8,7 +8,7 @@
 // All times are plan time: milliseconds at speed 1x since the lane started.
 import {
   APPS, TIERS, TIMING, FAULT_PARAMS, RESTART_MS, RESTART_CAP_MS, creatureForFault, isCrashFault, isBossFault,
-  faultApplies, gradeFor, capGrade, orderId, unit,
+  faultApplies, TIER_DECISION_DEFAULT, DECISION_TIMEOUT_MS, gradeFor, capGrade, orderId, unit,
   type AppId, type TierId, type StageDef, type EffectDef, type Grade, type PartId,
 } from '@haunt/shared';
 
@@ -33,6 +33,9 @@ export interface ArmSpec {
   source: 'user' | 'random' | 'boss' | 'demo' | 'sweep';
   scope?: 'inner' | 'outer';
   point?: string;
+  /** order_typo: the stage that finds the wrong order (default confirmation) and the decision (default: tier policy). */
+  detect?: 'confirmation' | 'handoff';
+  choice?: 'refund' | 'discount' | 'redo';
   /** Press time, plan ms since the lane started. */
   at?: number;
   /** Press when a stage starts: `delay` ms after the first stage_start with that attempt number. */
@@ -161,6 +164,7 @@ class Planner {
   score = 0;
   procAttempt = 1;
   workDone = new Set<string>();
+  redoN = new Map<string, number>();
   localRun = new Map<string, number>();
   starts = new Map<string, number>();
   rows = new Map<string, number>();
@@ -441,9 +445,70 @@ class Planner {
   }
 
   // ---------------------------------------------------------------- effects
+  /** Key suffix of a redone order (':r1', ':r2'), empty for the first run. */
+  private sfx(order: string): string {
+    const n = this.redoN.get(order) ?? 0;
+    return n > 0 ? `:r${n}` : '';
+  }
+
+  /** The armed order_typo that finds the wrong order at stage `s` of order `i`, if any. */
+  private typoPending(i: number, s: number): ArmRt | undefined {
+    this.catchUp(this.t);
+    return this.arms.find((a) => a.spec.fault === 'order_typo' && a.activated && !a.invalid && !a.fired && !a.deferred && a.order === i
+      && this.stages[s].id === (a.spec.detect ?? 'confirmation'));
+  }
+
+  /** Wrong-order decision flow (design section 8, contract V1_1 section 7). */
+  private wrongOrder(i: number, order: string, s: number, a: ArmRt): 'continue' | 'redo' | 'cancelled' {
+    a.fired = true; a.closed = true;
+    const def = this.stages[s];
+    const choice = a.spec.choice ?? TIER_DECISION_DEFAULT[this.cfg.tier] ?? 'refund';
+    const sk = `${order}|${def.id}`;
+    const attempt = (this.starts.get(sk) ?? 0) + 1;
+    this.starts.set(sk, attempt);
+    this.emit('stage_start', order, def.id, { attempt });
+    this.t += 700;
+    this.emit('stage_fail', order, def.id, { error: 'wrong_order', retryable: false, attempt });
+    this.emit('decision_needed', order, undefined, { order, kind: 'wrong_order', detectedAt: def.id, options: ['refund', 'discount', 'redo'], defaultChoice: choice, timeoutMs: DECISION_TIMEOUT_MS });
+    this.t += DECISION_TIMEOUT_MS / this.cfg.pace;
+    this.emit('decision_made', order, undefined, { order, choice, source: 'timeout' });
+    const refund = (): void => {
+      this.t += 150;
+      this.emit('effect', order, undefined, { kind: 'refund', key: `${order}:refund${this.sfx(order)}`, replayed: false, amount: 1200 + Math.floor(unit(this.cfg.seed, 'amount', order) * 8800) });
+      this.t += 150;
+    };
+    if (choice === 'refund') {
+      refund();
+      this.scoreEv(-150, 'refund');
+      this.emit('order_failed', order, undefined, { stage: def.id, error: 'wrong_order', outcome: 'cancelled', reason: 'refunded' });
+      this.stats.failed++;
+      this.orderOutcome.set(i, 'failed');
+      return 'cancelled';
+    }
+    if (choice === 'discount') {
+      this.t += 150;
+      this.emit('effect', order, undefined, { kind: 'discount', key: `${order}:discount${this.sfx(order)}`, replayed: false, amount: 600 });
+      this.t += 150;
+      this.scoreEv(-60, 'discount');
+      this.extra.set(order, (this.extra.get(order) ?? 0) + 1);
+      for (const e of def.effects) this.recordEffect(order, e, this.t, false);
+      this.finishStage(order, def, this.t - 1000, false);
+      return 'continue';
+    }
+    refund();
+    this.redoN.set(order, (this.redoN.get(order) ?? 0) + 1);
+    for (const k of [...this.workDone]) if (k.startsWith(`${order}|`)) this.workDone.delete(k);
+    for (const k of [...this.starts.keys()]) if (k.startsWith(`${order}|`)) this.starts.delete(k);
+    for (const k of [...this.localRun.keys()]) if (k.startsWith(`${order}|`)) this.localRun.delete(k);
+    this.journals.delete(order);
+    this.t += 300;
+    this.emit('order_start', order, undefined, { index: i, total: this.cfg.orders, redo: true });
+    return 'redo';
+  }
+
   private recordEffect(order: string, e: EffectDef, writeT: number, replayed: boolean): void {
-    const full = `${order}:${e.key}`;
-    const rk = `${order}|${e.key}`;
+    const full = `${order}:${e.key}${this.sfx(order)}`;
+    const rk = `${order}|${e.key}${this.sfx(order)}`;
     const useKey = this.parts.has('idempotency');
     let isReplay = false;
     if (replayed || (useKey && this.keyed.has(rk))) isReplay = true;
@@ -517,7 +582,7 @@ class Planner {
 
   /** One effect with the tier's retry, backoff and breaker policy. `lookup` first checks the provider by key (reconcile). */
   private callEffect(order: string, def: StageDef, e: EffectDef, lookup: boolean): { k: 'ok' } | StageRes {
-    const rk = `${order}|${e.key}`;
+    const rk = `${order}|${e.key}${this.sfx(order)}`;
     let attemptNo = 1;
     for (;;) {
       const callT = this.t;
@@ -811,6 +876,23 @@ class Planner {
     let s = kind === 'resume' ? item!.idx : 0;
     let effFrom = 0;
     for (;;) {
+      if (kind !== 'resume') {
+        const ty = this.typoPending(i, s);
+        if (ty) {
+          const r = this.wrongOrder(i, order, s, ty);
+          if (r === 'redo') { s = 0; effFrom = 0; continue; }
+          if (r === 'continue') {
+            s++;
+            if (s >= this.stages.length) { this.completeOrder(i, order, tStart, kind); return; }
+            continue;
+          }
+          if (r === 'cancelled') {
+            this.cur = undefined; this.depth = 0; this.deaths = 0; this.attacks = [];
+            this.expireArms(i); this.curOrder = 0;
+            return;
+          }
+        }
+      }
       let res: StageRes = this.execStage(order, s, { effFrom });
       effFrom = 0;
       while (res.k === 'killed') res = this.afterKill(order, res);

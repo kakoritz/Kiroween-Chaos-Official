@@ -97,7 +97,8 @@ export type FaultId =
   | 'missing_file' | 'duplicate_request' | 'malformed_payload' | 'disk_full'
   | 'hazard_event' | 'driver_unreachable'
   | 'sms_down' | 'app_down' | 'updates_down'
-  | 'wrong_address' | 'no_answer' | 'gated_house' | 'car_accident';
+  | 'wrong_address' | 'no_answer' | 'gated_house' | 'car_accident'
+  | 'order_typo';
 export type BossFaultId = 'boss_power_outage' | 'boss_internet_outage' | 'boss_hazard_storm';
 
 export const FAULTS: FaultId[] = [
@@ -105,6 +106,7 @@ export const FAULTS: FaultId[] = [
   'http_404', 'http_429', 'http_500', 'missing_file', 'duplicate_request', 'malformed_payload', 'disk_full',
   'hazard_event', 'driver_unreachable', 'sms_down', 'app_down', 'updates_down',
   'wrong_address', 'no_answer', 'gated_house', 'car_accident',
+  'order_typo',
 ];
 export const BOSS_FAULTS: BossFaultId[] = ['boss_power_outage', 'boss_internet_outage', 'boss_hazard_storm'];
 
@@ -149,6 +151,7 @@ export const CREATURES: CreatureDef[] = [
   { id: 'scarecrow', label: 'Scarecrow', family: 'world', sprite: 'scarecrow', causes: ['wrong_address'], boss: false, apps: ['orders'], description: 'Points the scooter down the wrong road.' },
   { id: 'black_cat', label: 'Black Cat', family: 'world', sprite: 'black_cat', causes: ['no_answer', 'gated_house'], boss: false, apps: ['orders'], description: 'Sits on the doorstep so nobody answers, or shuts the gate.' },
   { id: 'phantom_car', label: 'Phantom Car', family: 'world', sprite: 'phantom_car', causes: ['car_accident'], boss: false, apps: ['orders'], description: 'Crashes at the door and blocks the road.' },
+  { id: 'prankster', label: 'Prankster', family: 'world', sprite: 'prankster', causes: ['order_typo'], boss: false, apps: ['orders'], description: 'Swaps the items on the order so the wrong thing is made.' },
   { id: 'lich', label: 'Lich', family: 'world', sprite: 'lich', causes: ['boss_power_outage'], boss: true, apps: both, description: 'Boss. Cuts the power on every lane at once.' },
   { id: 'banshee_queen', label: 'Banshee Queen', family: 'network', sprite: 'banshee_queen', causes: ['boss_internet_outage'], boss: true, apps: both, description: 'Boss. A twelve second internet outage on every lane.' },
   { id: 'headless_horseman', label: 'Headless Horseman', family: 'world', sprite: 'headless_horseman', causes: ['boss_hazard_storm'], boss: true, apps: both, description: 'Boss. A hazard storm and rate limits on every lane.' },
@@ -160,8 +163,8 @@ export function creatureForFault(fault: string): CreatureDef | undefined {
 
 /** Which roles a fault can hit (runtime.md section 9). A fault that cannot hit the current stage is deferred. */
 /** World faults that only land on one orders stage (design.md section 7). Others defer to it. */
-export const WORLD_FAULT_STAGE: Record<string, string> = { sms_down: 'confirmation', app_down: 'dispatch', updates_down: 'updates', wrong_address: 'tracking', no_answer: 'handoff', gated_house: 'handoff', car_accident: 'handoff' };
-const WORLD_STAGE_ROLE: Record<string, StageRole> = { tracking: 'poll', handoff: 'final' } as Record<string, StageRole>;
+export const WORLD_FAULT_STAGE: Record<string, string> = { sms_down: 'confirmation', app_down: 'dispatch', updates_down: 'updates', wrong_address: 'tracking', no_answer: 'handoff', gated_house: 'handoff', car_accident: 'handoff', order_typo: 'intake' };
+const WORLD_STAGE_ROLE: Record<string, StageRole> = { tracking: 'poll', handoff: 'final', intake: 'input' } as Record<string, StageRole>;
 
 export function faultApplies(fault: string, role: StageRole, stageId?: string): boolean {
   if (WORLD_FAULT_STAGE[fault]) return role === (WORLD_STAGE_ROLE[WORLD_FAULT_STAGE[fault]!] ?? 'effect') && (stageId === undefined || stageId === WORLD_FAULT_STAGE[fault]);
@@ -219,6 +222,7 @@ export const FAULT_PARAMS: Record<string, { count?: number; forMs?: number; late
   no_answer: { forMs: 3000 },
   gated_house: { forMs: 3000 },
   car_accident: { forMs: 7000 },
+  order_typo: {},
   hazard_event: { forMs: 5000 },
   driver_unreachable: { forMs: 3000 },
 };
@@ -234,3 +238,9 @@ export function worseGrade(a: Grade, b: Grade): Grade {
 export function capGrade(g: Grade, cap: Grade): Grade {
   return worseGrade(g, cap);
 }
+
+/** Wrong-order decisions (design.md section 8) and each tier's default policy. */
+export type DecisionChoice = 'refund' | 'discount' | 'redo';
+export const DECISION_CHOICES: DecisionChoice[] = ['refund', 'discount', 'redo'];
+export const TIER_DECISION_DEFAULT: Record<string, DecisionChoice> = { rookie: 'refund', retrier: 'refund', journaler: 'discount', reconciler: 'discount', phoenix: 'redo' };
+export const DECISION_TIMEOUT_MS = 6000;

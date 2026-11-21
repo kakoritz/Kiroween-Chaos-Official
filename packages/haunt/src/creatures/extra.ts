@@ -21,6 +21,7 @@ export const willOWisp = providerCreature('will_o_wisp', "Will-o'-Wisp", 'world'
 
 export const scarecrow = providerCreature('scarecrow', 'Scarecrow', 'world', ['wrong_address']);
 export const blackCat = providerCreature('black_cat', 'Black Cat', 'world', ['no_answer', 'gated_house']);
+export const prankster = providerCreature('prankster', 'Prankster', 'world', ['order_typo']);
 export const phantomCar = providerCreature('phantom_car', 'Phantom Car', 'world', ['car_accident']);
 
 export const witch: CreaturePlugin = {
@@ -38,4 +39,4 @@ export const mummy: CreaturePlugin = {
   },
 };
 
-export const EXTRA_CREATURES: readonly CreaturePlugin[] = [banshee, gargoyle, goblin, imp, witch, mummy, werewolf, willOWisp, scarecrow, blackCat, phantomCar];
+export const EXTRA_CREATURES: readonly CreaturePlugin[] = [banshee, gargoyle, goblin, imp, witch, mummy, werewolf, willOWisp, scarecrow, blackCat, phantomCar, prankster];

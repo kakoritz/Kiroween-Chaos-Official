@@ -50,7 +50,7 @@ describe('live server: reads', () => {
   it('creature catalog covers every fault and the three bosses', async () => {
     const { get } = await boot();
     const cs = (await get('/api/creatures')).body as any[];
-    expect(cs).toHaveLength(20);
+    expect(cs).toHaveLength(21);
     expect(cs.filter((c) => c.boss).map((c) => c.id).sort()).toEqual(['banshee_queen', 'headless_horseman', 'lich']);
     expect(cs.find((c) => c.id === 'zombie').causes).toEqual(['timeout', 'comm_timeout', 'slow_link']);
     for (const c of cs) expect(c.sprite).toBe(c.id);

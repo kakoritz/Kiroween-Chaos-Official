@@ -2,10 +2,11 @@
 // One function, `resolveOutcome`, answers: what happens to one order when this fault hits this stage
 // of this tier? The mock simulator, the mock's sample reports and the acceptance tests all use it, so
 // they cannot drift apart. `packages/core/mock/outcomes.json` is this table written out as data.
-import { APPS, TIERS, TIER_ORDER, FAULTS, CRASH_POINTS, faultApplies, isCrashFault, type AppId, type EffectKind, type TierId } from './catalog';
+import { TIER_DECISION_DEFAULT, APPS, TIERS, TIER_ORDER, FAULTS, CRASH_POINTS, faultApplies, isCrashFault, type AppId, type EffectKind, type TierId } from './catalog';
 
-export type OutcomeCode = 'OK' | 'REPEAT' | 'FAILED' | 'HALT' | 'PARKED_OK' | 'QUAR';
-export type Template = 'T_OK' | 'T_REPEAT' | 'T_FAILED' | 'T_HALT' | 'T_PARKED_OK' | 'T_QUAR' | 'T_ABSORBED' | 'T_DEGRADED';
+export type OutcomeCode = 'OK' | 'REPEAT' | 'FAILED' | 'HALT' | 'PARKED_OK' | 'QUAR' | 'CANCELLED';
+export type Template = 'T_OK' | 'T_REPEAT' | 'T_FAILED' | 'T_HALT' | 'T_PARKED_OK' | 'T_QUAR' | 'T_ABSORBED' | 'T_DEGRADED'
+  | 'T_CANCELLED' | 'T_DECISION_REFUND' | 'T_DECISION_DISCOUNT' | 'T_DECISION_REDO';
 
 export interface Outcome {
   outcome: OutcomeCode;
@@ -80,6 +81,13 @@ export function resolveOutcome(app: AppId, tierId: TierId, fault: string, stageI
 
   if (fault === 'disk_full') return done('OK');
   if (fault === 'slow_link') return done('OK');
+
+  if (fault === 'order_typo') {
+    // Table L8: the wrong order is found later; the tier's default policy decides. Ledger rows come from the decision, not from repeats.
+    const choice = TIER_DECISION_DEFAULT[tierId] ?? 'refund';
+    if (choice === 'refund') return { outcome: 'CANCELLED', extraRows: {}, template: 'T_DECISION_REFUND' };
+    return { outcome: 'OK', extraRows: {}, template: choice === 'discount' ? 'T_DECISION_DISCOUNT' : 'T_DECISION_REDO' };
+  }
 
   if (stage.role === 'input') {
     const all = (): Rows => { const r: Rows = {}; stages.forEach((s) => s.effects.forEach((e) => add(r, e.kind))); return r; };

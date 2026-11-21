@@ -81,6 +81,16 @@
  {
   "app": "orders",
   "tier": "rookie",
+  "fault": "order_typo",
+  "stage": "intake",
+  "role": "input",
+  "outcome": "CANCELLED",
+  "extraRows": {},
+  "template": "T_DECISION_REFUND"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
   "fault": "crash",
   "stage": "account",
   "role": "effect",
@@ -1499,6 +1509,16 @@
  {
   "app": "orders",
   "tier": "retrier",
+  "fault": "order_typo",
+  "stage": "intake",
+  "role": "input",
+  "outcome": "CANCELLED",
+  "extraRows": {},
+  "template": "T_DECISION_REFUND"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
   "fault": "crash",
   "stage": "account",
   "role": "effect",
@@ -2931,6 +2951,16 @@
  {
   "app": "orders",
   "tier": "journaler",
+  "fault": "order_typo",
+  "stage": "intake",
+  "role": "input",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_DECISION_DISCOUNT"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
   "fault": "crash",
   "stage": "account",
   "role": "effect",
@@ -4191,6 +4221,16 @@
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "order_typo",
+  "stage": "intake",
+  "role": "input",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_DECISION_DISCOUNT"
  },
  {
   "app": "orders",
@@ -5405,6 +5445,16 @@
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "order_typo",
+  "stage": "intake",
+  "role": "input",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_DECISION_REDO"
  },
  {
   "app": "orders",

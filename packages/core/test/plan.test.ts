@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { allOutcomeRows, resolveOutcome, TIER_ORDER, type AppId, type EffectKind, type TierId } from '@haunt/shared';
 import { planLane, type ArmSpec, type LanePlan } from '../src/sim/plan';
 import { validateEvents } from '../../haunt/src/contract/validate';
-import { toHauntEvents } from '../src/sim/wave';
+import { assignSeq, toHauntEvents } from '../src/sim/wave';
+import { decorateV11 } from '../src/sim/v11';
 
-type Code = 'OK' | 'REPEAT' | 'FAILED' | 'HALT' | 'PARKED_OK' | 'QUAR';
+type Code = 'OK' | 'REPEAT' | 'FAILED' | 'HALT' | 'PARKED_OK' | 'QUAR' | 'CANCELLED';
 
 function runOne(app: AppId, tier: TierId, fault: string, stage: string, point?: string, orders = 1): LanePlan {
   const arm: ArmSpec = { id: 'x', fault, source: 'sweep', point, when: { order: 1, stage, delay: 5 } };
@@ -19,6 +20,7 @@ function classify(plan: LanePlan): { outcome: Code; extraRows: Partial<Record<Ef
   let outcome: Code;
   if (types.includes('lane_halted')) outcome = 'HALT';
   else if (types.includes('order_quarantined')) outcome = 'QUAR';
+  else if (plan.events.some((e) => e.type === 'order_failed' && e.detail.outcome === 'cancelled')) outcome = 'CANCELLED';
   else if (!types.includes('order_done')) outcome = 'FAILED';
   else if (types.includes('order_parked')) outcome = 'PARKED_OK';
   else outcome = total > 0 ? 'REPEAT' : 'OK';
@@ -95,7 +97,9 @@ describe('every planned stream is a valid contract stream', () => {
       for (const r of allOutcomeRows('orders')) {
         if (r.tier !== tier) continue;
         const plan = runOne('orders', tier, r.fault, r.stage, r.point, 2);
-        const events = toHauntEvents(plan, { app: 'orders', tier, lane: 1 });
+        const raw = toHauntEvents(plan, { app: 'orders', tier, lane: 1 });
+        // Decision events exist only in contract v1.1, so that stream is checked as v1.1.
+        const events = r.fault === 'order_typo' ? assignSeq(decorateV11(raw, { pace: 2 })) : raw;
         const v = validateEvents(events);
         if (v.length) problems.push(`${r.fault}@${r.stage}/${r.point ?? '-'}: [${v[0].rule}] seq ${v[0].seq} ${v[0].type}: ${v[0].message}`);
       }

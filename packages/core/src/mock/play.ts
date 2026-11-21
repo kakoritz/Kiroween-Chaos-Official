@@ -196,6 +196,27 @@ export class ChaosSim {
       case 'T_QUAR':
         at(100, () => { emit('stage_fail', failDetail(false)); emit('order_quarantined', { stage, reason: fault }); });
         break;
+      case 'T_CANCELLED':
+      case 'T_DECISION_REFUND':
+      case 'T_DECISION_DISCOUNT':
+      case 'T_DECISION_REDO': {
+        const choice = row.template === 'T_DECISION_DISCOUNT' ? 'discount' : row.template === 'T_DECISION_REDO' ? 'redo' : 'refund';
+        const wait = 6000;
+        const amount = 1200 + (order.length * 937) % 8800;
+        at(100, () => {
+          emit('stage_fail', { error: 'wrong_order', retryable: false, attempt: 1 });
+          emit('decision_needed', { order, kind: 'wrong_order', detectedAt: stage, options: ['refund', 'discount', 'redo'], defaultChoice: choice, timeoutMs: wait }, false);
+        });
+        at(100 + wait, () => emit('decision_made', { order, choice, source: 'timeout' }, false));
+        if (choice === 'discount') {
+          at(100 + wait + 150, () => emit('effect', { kind: 'discount', key: `${order}:discount`, replayed: false, amount: 600 }, false));
+        } else {
+          at(100 + wait + 150, () => emit('effect', { kind: 'refund', key: `${order}:refund`, replayed: false, amount }, false));
+        }
+        if (choice === 'refund') at(100 + wait + 300, () => emit('order_failed', { stage, error: 'wrong_order', outcome: 'cancelled', reason: 'refunded' }));
+        if (choice === 'redo') at(100 + wait + 600, () => emit('order_start', { index: 1, total: 1, redo: true }, false));
+        break;
+      }
       case 'T_DEGRADED':
         at(100, () => emit('stage_fail', failDetail(true, true)));
         break;

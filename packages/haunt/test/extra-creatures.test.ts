@@ -9,7 +9,7 @@ describe('extra creatures', () => {
   it('core plus extra cover every catalog fault with a matching creature and family', () => {
     const r = new CreatureRegistry();
     for (const c of [...CORE_CREATURES, ...EXTRA_CREATURES]) r.register(c);
-    expect(r.list()).toHaveLength(17);
+    expect(r.list()).toHaveLength(18);
     for (const f of FAULTS) {
       const c = r.forFault(f.id);
       expect(c?.id, f.id).toBe(f.creature);
