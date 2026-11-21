@@ -1,35 +1,41 @@
 import { apiBaseFromQuery, demoFromQuery, modeBadge } from '../src/mode';
+import { ArenaScene, STAGE_H, STAGE_W } from '../src/arena/scene';
+import { applyEvent, emptyVM, loadSnapshot, totalScore } from '../src/arena/model';
 import { ApiError, createApi, resolveHttpBase, type ArenaApi, type ArenaEvent, type ConnectionStatus, type HauntInPage } from '../src/api';
 
-// W1/W2 shell: the client connects the same way for mock, live and browser, and the
-// header shows the mode badge and the demo control. Scene and panels come in later tasks.
+// W1/W2 shell plus the A3 canvas arena: the client connects the same way for mock, live and\n// browser. Events feed a pure reducer; the canvas redraws every animation frame from that state.
 
 const root = document.getElementById('app')!;
 root.innerHTML = `
-  <header class="hdr">
-    <span class="logo">HAUNT</span>
-    <span class="wave" id="wave">Wave -</span>
-    <span class="spacer"></span>
-    <span class="pill hidden" id="demo-pill">DEMO</span>
-    <span class="badge badge--offline" id="badge" role="status"></span>
-    <button class="btn btn--ghost hidden" id="demo-stop" type="button">Stop demo</button>
-    <button class="btn" id="demo-open" type="button">Open in demo mode</button>
-  </header>
-  <main class="stage">
-    <div>
+  <div class="stage-root" id="stage">
+    <canvas id="arena" width="1920" height="1080" aria-label="The haunted arena" role="img"></canvas>
+    <header class="hdr">
+      <span class="logo">HAUNT</span>
+      <span class="wave" id="wave">Wave -</span>
+      <span class="spacer"></span>
+      <span class="total" id="total" title="Total score"></span>
+      <span class="pill hidden" id="demo-pill">DEMO</span>
+      <span class="badge badge--offline" id="badge" role="status"></span>
+      <button class="btn btn--ghost hidden" id="demo-stop" type="button">Stop demo</button>
+      <button class="btn" id="demo-open" type="button">Open in demo mode</button>
+    </header>
+    <section class="quiet" id="quiet">
       <h1>The crypt is quiet</h1>
       <p>Five skeletons are asleep. Start the show.</p>
       <button class="btn btn--big" id="demo-big" type="button">Open in demo mode</button>
       <div class="err" id="err" role="alert"></div>
       <div class="stats" id="stats"></div>
-    </div>
-  </main>`;
-
+    </section>
+  </div>`;
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const badgeEl = $('badge');
 const errEl = $('err');
 const statsEl = $('stats');
 const waveEl = $('wave');
+const totalEl = $('total');
+const quietEl = $('quiet');
+const stageEl = $('stage');
+const canvas = $<HTMLCanvasElement>('arena');
 const demoPill = $('demo-pill');
 const demoStop = $('demo-stop');
 const demoBtns = [$<HTMLButtonElement>('demo-open'), $<HTMLButtonElement>('demo-big')];
@@ -60,7 +66,14 @@ function showError(e: unknown) {
   errEl.textContent = e instanceof ApiError ? `${e.code}: ${e.message}` : String(e);
 }
 
+// Arena state: a pure reducer fed from a queue and drained once per animation frame, so a burst
+// of events (200 per second in the stress stream) never stutters. Events are never dropped.
+const vm = emptyVM();
+const queue: ArenaEvent[] = [];
+const scene = new ArenaScene(canvas.getContext('2d')!);
+
 function onEvent(ev: ArenaEvent) {
+  queue.push(ev);
   events++;
   if (typeof ev.seq === 'number') lastSeq = ev.seq;
   if (ev.type === 'hello') {
@@ -89,6 +102,8 @@ async function loadState() {
     waveRunning = !!s.wave?.running;
     demoRunning = !!s.demo?.running;
     waveEl.textContent = waveNo ? `Wave ${waveNo}` : 'Wave -';
+    queue.length = 0;
+    loadSnapshot(vm, s, performance.now());
   } catch (e) { showError(e); }
   paintBadge();
   paintDemo();
@@ -129,3 +144,42 @@ async function boot() {
 }
 
 void boot();
+
+// Fixed 1920x1080 design stage, scaled uniformly to fit and centred (letterboxed). The canvas
+// backing store follows the scale and DPR so lines stay crisp; all drawing uses design pixels.
+let lastFit = '';
+function fit() {
+  const s = Math.min(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H);
+  const left = (window.innerWidth - STAGE_W * s) / 2;
+  const top = (window.innerHeight - STAGE_H * s) / 2;
+  stageEl.style.transform = `translate(${left}px, ${top}px) scale(${s})`;
+  const dpr = window.devicePixelRatio || 1;
+  const w = Math.round(STAGE_W * s * dpr);
+  const key = ``;
+  if (key !== lastFit) {
+    lastFit = key;
+    canvas.width = w;
+    canvas.height = Math.round(STAGE_H * s * dpr);
+    canvas.getContext('2d')!.setTransform(w / STAGE_W, 0, 0, w / STAGE_W, 0, 0);
+  }
+}
+window.addEventListener('resize', fit);
+fit();
+
+let slow = 0;
+let prev = performance.now();
+function frame(now: number) {
+  const dt = now - prev; prev = now;
+  // Lite mode (fewer particles, no fog) if frames stay above 24 ms for 2 seconds.
+  slow = dt > 24 ? slow + dt : 0;
+  scene.setLite(slow > 2000);
+  while (queue.length) applyEvent(vm, queue.shift()!, now);
+  scene.speed = vm.speed || 1;
+  totalEl.textContent = vm.lanes.length ? `Score ${totalScore(vm)}` : '';
+  quietEl.classList.toggle('hidden', vm.lanes.length > 0);
+  scene.draw(vm, now);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+(window as unknown as { __arena?: unknown }).__arena = { vm };

@@ -141,6 +141,77 @@ export function poseFor(anim: string, p: number): Pose {
       o.face = 'happy';
       break;
     }
+    case 'work': {
+      // Bones rattle, both hands busy in front of the ribcage.
+      const k = sw(p * 4);
+      o.body.y = Math.abs(k) * -1.2;
+      o.body.rot = 0.04;
+      r.ribcage = 0.07 + 0.03 * k;
+      r.skull = -0.1 + 0.05 * sw(p * 2);
+      sym(r, 'upperArm', -0.9 + 0.12 * k, -(0.9 + 0.12 * k));
+      sym(r, 'lowerArm', 1.5 - 0.2 * k, -(1.5 + 0.2 * k));
+      sym(r, 'upperLeg', 0.04, -0.04);
+      o.look = -0.6;
+      o.blink = p > 0.8 && p < 0.84 ? 1 : 0;
+      o.off.jaw = [0, 0.6 + 0.6 * Math.abs(k)];
+      break;
+    }
+    case 'slump': {
+      // Failed: head down, shoulders rolled forward, arms hanging, knees soft.
+      const b = sw(p, 0.1);
+      o.body.y = 5 + b * 0.5;
+      o.body.rot = 0.1;
+      r.ribcage = 0.28;
+      r.skull = 0.42 + 0.02 * b;
+      sym(r, 'upperArm', 0.3, -0.12);
+      sym(r, 'lowerArm', 0.2, -0.1);
+      sym(r, 'upperLeg', 0.2, -0.12);
+      sym(r, 'lowerLeg', 0.38, 0.3);
+      o.face = 'dead';
+      o.off.jaw = [0, 3];
+      break;
+    }
+    case 'recover': {
+      // Bandaged and wobbling, one hand on the head.
+      const k = sw(p);
+      o.body.y = 2;
+      o.body.rot = 0.06 * k;
+      r.ribcage = 0.12 * k;
+      r.skull = 0.2 + 0.08 * sw(p * 2);
+      sym(r, 'upperArm', 0.1, 2.5);
+      sym(r, 'lowerArm', 0.15, -2.2);
+      sym(r, 'upperLeg', 0.08, -0.08);
+      sym(r, 'lowerLeg', 0.15, 0.15);
+      o.face = 'worry';
+      o.look = k;
+      break;
+    }
+    case 'halted': {
+      // Sitting on the floor, slumped.
+      o.body.y = 20;
+      o.body.rot = 0.04;
+      r.ribcage = 0.42;
+      r.skull = 0.55;
+      sym(r, 'upperArm', 0.5, -0.25);
+      sym(r, 'lowerArm', 0.3, -0.2);
+      sym(r, 'upperLeg', 1.35, -1.25);
+      sym(r, 'lowerLeg', -1.3, 1.3);
+      o.face = 'dead';
+      break;
+    }
+    case 'sleep': {
+      // Quiet crypt: slow breathing, head resting forward, eyes shut.
+      const b = sw(p);
+      o.body.y = 8 + b * 0.8;
+      r.ribcage = 0.2;
+      r.skull = 0.5;
+      sym(r, 'upperArm', 0.2, -0.2);
+      sym(r, 'lowerArm', 0.2, -0.2);
+      sym(r, 'upperLeg', 0.1, -0.1);
+      sym(r, 'lowerLeg', 0.25, 0.25);
+      o.blink = 1;
+      break;
+    }
     default: {
       // idle: breathe, sway, blink, look around
       const b = sw(p);
@@ -234,6 +305,11 @@ export const ANIMS = [
   { id: 'idle', label: 'Idle', loop: true, duration: 1800 },
   { id: 'walk', label: 'Walk', loop: true, duration: 900 },
   { id: 'cheer', label: 'Cheer', loop: true, duration: 800 },
+  { id: 'work', label: 'Work', loop: true, duration: 700 },
+  { id: 'slump', label: 'Fail slump', loop: true, duration: 1800 },
+  { id: 'recover', label: 'Recovering', loop: true, duration: 1200 },
+  { id: 'halted', label: 'Halted', loop: true, duration: 2400 },
+  { id: 'sleep', label: 'Asleep', loop: true, duration: 3200 },
   { id: 'collapse', label: 'Collapse', loop: false, duration: 1400 },
   { id: 'reassemble', label: 'Reassemble', loop: false, duration: 1600 },
 ] as const;
