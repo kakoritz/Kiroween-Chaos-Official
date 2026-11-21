@@ -20,3 +20,8 @@ Captured 2026-11-21 on 127.0.0.1 with `npm run live -- --loop`, then `POST /api/
 ## Comparison
 
 `loop-proof.md` is `renderProofMarkdown(compareWaves(wave1, wave2))`: grade F to A, repeats 5 to 0, findings F1 to F5 all resolved, no new findings. The Rookie lane goes F to A and the wave grade is A.
+
+## Honesty label
+
+The fix is a **Recorded fix**. See live-fix.md for the stated plan and what is still to be done live.
+
