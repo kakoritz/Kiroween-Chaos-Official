@@ -73,12 +73,12 @@ html, body { overflow: hidden; }
 .rb-recovering .rb-state, .rb-reassembling .rb-state { color: var(--warn); }
 .lg { width: 100%; border-collapse: collapse; font-size: 16px; }
 .lg th, .lg td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--stone-2); font-variant-numeric: tabular-nums; }
-.lg thead th { color: var(--muted); font-size: 13px; letter-spacing: 0.06em; font-weight: 700; text-transform: uppercase; }
+.lg thead th { color: var(--muted); font-size: 14px; letter-spacing: 0.06em; font-weight: 700; text-transform: uppercase; }
 .lg tbody th { text-align: left; color: var(--bone); font-weight: 600; }
 .lg th:first-child { text-align: left; }
 .lg th i { color: var(--muted); font-style: normal; }
 .lg td.dup { color: var(--fail); }
-.lg td.dup em { font-style: normal; font-size: 13px; }
+.lg td.dup em { font-style: normal; font-size: 14px; }
 .lg td.flash { animation: lgflash 600ms 2; }
 .lg-exp-c { color: var(--muted); }
 @keyframes lgflash { 50% { background: rgba(255,77,94,0.28); } }
@@ -94,7 +94,7 @@ html, body { overflow: hidden; }
 .seg-b--on { background: var(--hex); color: #fff; }
 .seg-b[disabled] { opacity: 0.5; cursor: default; }
 .cm-pop { position: absolute; left: 0; top: 60px; width: 380px; padding: 14px 16px; background: var(--stone); border: 2px solid var(--hex); border-radius: 12px; z-index: 20; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-.cm-row { display: flex; justify-content: space-between; align-items: baseline; color: var(--muted); font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; margin: 2px 0 6px; }
+.cm-row { display: flex; justify-content: space-between; align-items: baseline; color: var(--muted); font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; margin: 2px 0 6px; }
 .cm-row output { color: var(--bone); font: 700 16px ui-monospace, 'Cascadia Code', Menlo, monospace; text-transform: none; letter-spacing: 0; }
 .cm-slide { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 .cm-end { color: var(--muted); font-size: 14px; font-weight: 700; }

@@ -175,7 +175,7 @@ export function wrapLabel(ctx: Ctx, label: string, w: number, px: number): strin
 function chip(ctx: Ctx, x: number, y: number, label: string, state: ChipState, attempt: number, t: number): void {
   const w = 150; const h = 40;
   const s = CHIP[state];
-  const pulse = state === 'active' ? 0.55 + 0.45 * Math.sin(t / 220) : 1;
+  const pulse = state === 'active' && t !== 0 ? 0.55 + 0.45 * Math.sin(t / 220) : 1;
   ctx.save();
   rr(ctx, x - w / 2, y, w, h, 9);
   ctx.fillStyle = s.fill; ctx.fill();
@@ -216,10 +216,10 @@ function labelCard(ctx: Ctx, b: LaneBox, l: LaneVM, t: number, worn: string[], s
   rr(ctx, 8, b.top + 4, 244, h - 8, 12);
   ctx.fillStyle = C.stone2; ctx.fill();
   ctx.lineWidth = 3; ctx.strokeStyle = C.out; ctx.stroke();
-  torch(ctx, 24, b.top + h / 2 - 14, t, l.mode !== 'dead' && l.mode !== 'halted', l.lane);
+  torch(ctx, 24, b.top + h / 2 - 14, reduced ? 0 : t, l.mode !== 'dead' && l.mode !== 'halted', l.lane);
   const name = l.label || (TIER_IDS.includes(l.tier as Tier) ? TIER_LABEL[l.tier as Tier] : l.tier);
   txt(ctx, name, 46, b.top + 24, 22, C.bone, 'left', SANS, '700');
-  txt(ctx, `LANE ${l.lane}`, 46, b.top + 46, 13, C.muted, 'left', MONO, '600');
+  txt(ctx, `LANE ${l.lane}`, 46, b.top + 46, 14, C.muted, 'left', MONO, '600');
   // five gear slots
   GEAR_SLOTS.forEach((g, i) => {
     const gx = 56 + i * 34; const gy = b.top + h * 0.5 + 6;
@@ -233,7 +233,7 @@ function labelCard(ctx: Ctx, b: LaneBox, l: LaneVM, t: number, worn: string[], s
     ctx.beginPath(); ctx.arc(gx, gy, 12, 0, Math.PI * 2);
     ctx.fillStyle = on ? C.warn : 'rgba(10,8,18,0.55)'; ctx.fill();
     ctx.lineWidth = 2.5; ctx.strokeStyle = on ? C.out : C.muted; ctx.setLineDash(on ? [] : [3, 3]); ctx.stroke(); ctx.setLineDash([]);
-    txt(ctx, g.label, gx, gy + 1, 13, on ? C.out : C.muted, 'center', MONO, '700');
+    txt(ctx, g.label, gx, gy + 1, 14, on ? C.out : C.muted, 'center', MONO, '700');
   });
   txt(ctx, String(l.score), 46, b.top + h - 24, 24, l.score < 0 ? C.fail : C.text, 'left', MONO, '700');
   if (l.scorePop) {
@@ -269,7 +269,7 @@ function stats(ctx: Ctx, b: LaneBox, l: LaneVM): void {
   txt(ctx, `⚰ parked ${l.counts.parked}`, x, y + 92, 16, l.counts.parked > 0 ? C.ghost : C.muted, 'left', MONO, '600');
   // order queue: parchment scrolls waiting to be picked up, max 4 plus +n (UI-S6)
   const q = queueShape(queueLeft(l.orderIndex, l.ordersTotal));
-  txt(ctx, 'QUEUE ' + (q.shown + q.more), x + 200, y + 4, 12, C.muted, 'left', MONO, '700');
+  txt(ctx, 'QUEUE ' + (q.shown + q.more), x + 200, y + 4, 14, C.muted, 'left', MONO, '700');
   for (let i = q.shown - 1; i >= 0; i--) scroll(ctx, x + QUEUE_X + i * 20, y + 14, 0.5, l.lane + '' + i, false);
   if (q.more > 0) txt(ctx, `+${q.more}`, x + QUEUE_X + 4 * 20 + 6, y + 56, 14, C.muted, 'left', MONO, '700');
 }
@@ -418,7 +418,7 @@ export class ArenaScene {
       ctx.fillStyle = g; ctx.fillRect(x - 360, HEADER, 720, LANES_H);
     }
     boxes.forEach((b) => {
-      const f = 0.85 + 0.15 * Math.sin(now / 130 + b.top);
+      const f = this.reducedMotion ? 1 : 0.85 + 0.15 * Math.sin(now / 130 + b.top);
       const g = ctx.createRadialGradient(24, b.top + b.h / 2, 4, 24, b.top + b.h / 2, 190);
       g.addColorStop(0, `rgba(255,154,60,${0.22 * f})`); g.addColorStop(1, 'rgba(255,154,60,0)');
       ctx.fillStyle = g; ctx.fillRect(0, b.top, 420, b.h);
@@ -437,7 +437,7 @@ export class ArenaScene {
     vm.stages.forEach((s, i) => {
       const x = stationX(i, n);
       ctx.fillStyle = 'rgba(10,8,18,0.5)'; ctx.beginPath(); ctx.ellipse(x, b.top + b.h * 0.8 + 2, 22, 6, 0, 0, Math.PI * 2); ctx.fill();
-      chip(ctx, x, chipY, s.label, l.chips[i] ?? 'pending', l.attempts[i] ?? 0, now);
+      chip(ctx, x, chipY, s.label, l.chips[i] ?? 'pending', l.attempts[i] ?? 0, this.reducedMotion ? 0 : now);
     });
     // progress bar under the active chip
     const wi = vm.stages.length ? Math.min(l.stageIndex, n - 1) : 0;
@@ -518,7 +518,7 @@ export class ArenaScene {
     const w = Math.ceil(ctx.measureText(cap).width) + 10;
     rr(ctx, x - w / 2, y + size / 2 + 6, w, 15, 4); ctx.fillStyle = 'rgba(10,8,18,0.82)'; ctx.fill();
     ctx.lineWidth = 1.5; ctx.strokeStyle = C.out; ctx.stroke();
-    txt(ctx, cap, x, y + size / 2 + 14, 11, C.warn, 'center', MONO, '700');
+    txt(ctx, cap, x, y + size / 2 + 14, 13, C.warn, 'center', MONO, '700');
     if (c.random) {
       const dx = x + size * 0.38, dy = y - size * 0.42;
       rr(ctx, dx - 7, dy - 7, 14, 14, 3); ctx.fillStyle = C.bone; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = C.out; ctx.stroke();
