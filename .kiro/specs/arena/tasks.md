@@ -25,7 +25,7 @@ Do after Phase 1 of [haunted-house tasks](../haunted-house/tasks.md) (hero crash
 ## Phase D: Show
 - [x] UI-D1. Demo mode 3-minute script. (A10)
 - [x] UI-D2. Sound effects. (A1)
-- [ ] UI-D3. Perf check at 5 lanes, 60 fps. (Acceptance 1)
+- [x] UI-D3. Perf check at 5 lanes, 60 fps. (Acceptance 1)
 - [ ] UI-D4. Record the video, write the Devpost text.
 
 ## Cut line

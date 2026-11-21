@@ -9,6 +9,7 @@ import { BossBar, bossAnnouncement } from '../src/arena/boss';
 import { ChaosModeControl, readChaosState } from '../src/arena/chaosmode';
 import { AppSwitcher, currentApp } from '../src/arena/appswitch';
 import { ArenaSound } from '../src/sound';
+import { FrameSampler, perfSecondsFromQuery } from '../src/perf';
 import { KEY_HELP, chaosAnnouncement, keyAction, nextMode, renderLegend } from '../src/arena/keys';
 import { ApiError, createApi, resolveHttpBase, type ArenaApi, type ArenaEvent, type ConnectionStatus, type HauntInPage } from '../src/api';
 
@@ -312,7 +313,12 @@ fit();
 
 let slow = 0;
 let prev = performance.now();
+// ?perf=<seconds> samples frame times in-page and reports them (UI-D3); ?perfsink=<http://127.0.0.1:port/> receives the JSON.
+const perfSeconds = perfSecondsFromQuery(window.location.search);
+const sampler = perfSeconds ? new FrameSampler() : null;
+let perfStart = -1;
 function frame(now: number) {
+  const t0 = sampler ? performance.now() : 0;
   const dt = now - prev; prev = now;
   // Lite mode (fewer particles, no fog) if frames stay above 24 ms for 2 seconds.
   slow = dt > 24 ? slow + dt : 0;
@@ -342,7 +348,19 @@ function frame(now: number) {
   ledgerPanel.update(vm, now);
   scene.draw(vm, now);
   bossBar.update(vm.boss, now, reduceMotion.matches);
+  if (sampler) {
+    sampler.frame(now, performance.now() - t0, vm.lanes.length);
+    if (perfStart < 0) perfStart = now;
+    if (now - perfStart >= perfSeconds * 1000) { reportPerf(sampler.summary()); return; }
+  }
   requestAnimationFrame(frame);
+}
+
+function reportPerf(summary: unknown) {
+  (window as unknown as { __perf?: unknown }).__perf = summary;
+  document.title = 'perf-done';
+  const sink = new URLSearchParams(window.location.search).get('perfsink');
+  if (sink && /^http:\/\/127\.0\.0\.1:\d+\//.test(sink)) void fetch(sink, { method: 'POST', body: JSON.stringify(summary) }).catch(() => {});
 }
 requestAnimationFrame(frame);
 
