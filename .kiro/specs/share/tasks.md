@@ -7,7 +7,7 @@ Branches `core/SH-...`, `ui/SH-...`, `docs/SH-...`.
 - [x] **SH-C2 GitHub Action.** Composite action, example workflow, optional demo repo; PR comment with the Markdown report and badge; exit codes. Decision on CI policy in `docs/DECISIONS.md`.
 - [x] **SH-C3 Workflow Lab engine.** Generic bot built from declared stages and parts; in-page sweep (browser engine); suggestions from reviewer rules; `inpage` functions `labRun(model)`.
 - [x] **SH-C4 Real loop proof.** Run the live loop, get wave 2 to A on the stated plan, fix the Phoenix lost-order and `updates` crash cases if they appear, save everything in `docs/proof/`; label recorded fixes.
-- [ ] **SH-C5 LLM reviewer and hook.** `reviewer --llm`, fallback to rules, hook at wave end.
+- [x] **SH-C5 LLM reviewer and hook.** `reviewer --llm`, fallback to rules, hook at wave end.
 - [ ] **SH-C6 Inbox live in the arena.** Spawn the Python inbox through the runner for real (not only the CLI sweep) so Night 6 and the app switcher use a live second app. (Judge panel noted this was not done.)
 - [ ] **SH-K1 Trace generator and hook.** `tools/trace.ts`, `docs/TRACE.md`, `.kiro/hooks/trace-on-merge`, `// covers:` comments in tests.
 - [ ] **SH-K3 Install proof.** Install the Power and the Crew app, capture screenshots and clips, update docs.

@@ -8,6 +8,6 @@
              },
     "then":  {
                  "type":  "askAgent",
-                 "prompt":  "A wave just ended. Act as the reviewer agent: find the newest run in .haunt/runs/, apply rules R1 to R8 from .kiro/specs/engine/design.md section 11, write postmortem.md and a hardening spec in .kiro/specs/hardening-\u003crun\u003e/. Do not change bot or source code."
+                 "prompt":  "A wave just ended. Act as the reviewer agent: find the newest run in .haunt/runs/, apply rules R1 to R8 from .kiro/specs/engine/design.md section 11, write postmortem.md and a hardening spec in .kiro/specs/hardening-\u003crun\u003e/. Then run `npm run review -- <run> --llm` to add an optional LLM draft diff to the spec (falls back to rules when no Kiro CLI or API key is set). Do not change bot or source code."
              }
 }
