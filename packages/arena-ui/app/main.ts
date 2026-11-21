@@ -25,6 +25,8 @@ import { mountCampaignHub } from '../src/campaign/hub';
 import '../src/campaign/hub.css';
 import { gearShopStarter } from '../src/campaign/shop';
 import '../src/campaign/shop.css';
+import { mountCampaignResults } from '../src/campaign/results';
+import '../src/campaign/results.css';
 import { ApiError, createApi, resolveHttpBase, type ArenaApi, type ArenaEvent, type ConnectionStatus, type HauntInPage } from '../src/api';
 
 // W1/W2 shell plus the A3 canvas arena: the client connects the same way for mock, live and\n// browser. Events feed a pure reducer; the canvas redraws every animation frame from that state.
@@ -206,7 +208,11 @@ muteBtn.addEventListener('click', () => {
 const captionPlayer = new CaptionPlayer(freezeFromQuery(window.location.search));
 const captionOverlay = new CaptionOverlay(stageEl, captionPlayer, { demoRunning: new URLSearchParams(window.location.search).get('demo') !== 'off' });
 
+const shopStart = gearShopStarter(stageEl, { getCampaign: () => api.getCampaign(), startWave: (o) => { campaignResults.begin(o.campaign.night); return api.startWave(o); } });
+const campaignResults = mountCampaignResults(stageEl, { getCampaign: () => api.getCampaign() }, { onNight: (n) => shopStart(n), onHub: () => window.dispatchEvent(new CustomEvent('haunt:splash', { detail: { action: 'campaign' } })) }); // CP-U3
+
 function onEvent(ev: ArenaEvent) {
+  campaignResults.onEvent(ev);
   queue.push(ev);
   captionPlayer.event(ev, performance.now());
   sound.onEvent(ev, performance.now());
@@ -342,7 +348,7 @@ void boot();
   }
 }
 
-mountCampaignHub(stageEl, { getCampaign: () => api.getCampaign() }, { onStart: gearShopStarter(stageEl, { getCampaign: () => api.getCampaign(), startWave: (o) => api.startWave(o) }) }); // CP-U1/U2: hub on the splash, gear shop on "Choose gear and start"
+mountCampaignHub(stageEl, { getCampaign: () => api.getCampaign() }, { onStart: shopStart }); // CP-U1/U2: hub on the splash, gear shop on "Choose gear and start"
 
 // Guided tour (ON-U3): header button, ?tour=1, and the splash "Take the tour" button.
 {
