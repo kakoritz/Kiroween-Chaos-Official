@@ -40,7 +40,7 @@ Order: P0, then P1 (the visible fixes the owner asked for first), then P2, P3, P
 - [x] **PT-U7 Reviews.** Door stars, review card, customer ghost, live tracker in the label card, rating titles (ui.md sections 6 and 7).
 - [x] **PT-U8 Score visuals.** Downtime chip, cancel slam, boss recovered banner, score explainer popover, rank board fixes (ui.md section 8).
 - [x] **PT-U9 Header, gear menu, legend, pace.** Gear menu that closes, Play and Stop demo buttons, badge tooltip, legend modal and gear badge tooltips, Slow default pace control (ui.md sections 9 and 12).
-- [ ] **PT-U10 World creature choreographies.** Scarecrow, black cat, phantom car, prankster, plus captions on gargoyle, imp, goblin (ui.md section 11).
+- [x] **PT-U10 World creature choreographies.** Scarecrow, black cat, phantom car, prankster, plus captions on gargoyle, imp, goblin (ui.md section 11).
 - [ ] **PT-U11 Decision popup.** Modal, countdown, keyboard, outcome animations (ui.md section 10).
 - [ ] **PT-U12 Sound additions and a11y.** Ui.md sections 13 and 14.
 - [ ] **PT-ART Art for new creatures.** Scarecrow, black cat, phantom car, prankster, door sprite with open and closed states, customer ghost, star and review card art. Lab page entries and silhouette check. CC0 allowed for props only if listed in `docs/ASSETS.md`.

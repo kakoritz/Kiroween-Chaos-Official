@@ -9,6 +9,7 @@ import { stationX, type ArenaVM, type ChipState, type LaneVM } from './model';
 import { CHIP_ICON, fromLegacy, heatAlpha, heatAt, type ChipInfo, type ChipV2State } from './chips';
 import { captionOf, creatureFrame, shown, spriteOf, MAX_SHOWN, type CreatureVM } from './creatures';
 import { drawCreature } from '../creatures/draw';
+import { drawWorldCreature, drawWorldProp, isWorld, worldPhase, worldProp } from './world-events';
 import { archWall, drawProp, pillar } from '../props/draw';
 import { survivedAge } from './boss';
 import { equipPhase, flightPoint, PART_LABEL, wornParts } from './equip';
@@ -571,7 +572,10 @@ export class ArenaScene {
       ctx.translate(x + shake, y);
       ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(0, size / 2 + 3, size * 0.28, 4, 0, 0, Math.PI * 2); ctx.fill();
       const id = spriteOf(c.id);
-      if (id) {
+      if (isWorld(c.id)) {
+        const wp = worldPhase(c.shrug ? null : c.actAt, now, this.speed);
+        drawWorldCreature(ctx, c.id, this.reducedMotion ? 0 : wp.p, wp.acted, size);
+      } else if (id) {
         if (c.shrug && !this.reducedMotion) ctx.rotate(Math.sin(((now - (c.actAt ?? now)) / 500) * Math.PI * 4) * 0.12);
         drawCreature(ctx, id, fr.anim, fr.p, { silhouette: false, size });
       } else {
@@ -580,6 +584,7 @@ export class ArenaScene {
         ctx.filter = 'none';
       }
       ctx.restore();
+      if (isWorld(c.id) && !c.shrug && fr.exit === 0) drawWorldProp(ctx, worldProp(c.id, c.fault, c.actAt, now, this.speed), x, y + size * 0.9, size);
       this.creatureTags(ctx, c, x, y, size, now, fr.exit);
     });
     if (l.creatures.length > MAX_SHOWN) txt(ctx, '+' + (l.creatures.length - MAX_SHOWN), baseX - 40, b.top + 74, 13, C.muted, 'center', MONO, '700');

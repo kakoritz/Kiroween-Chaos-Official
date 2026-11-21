@@ -1,6 +1,7 @@
 // Creature stack logic (UI-B3). Pure: no DOM, no clock. `now` is passed in by the caller.
 // Implements ui-spec section 7 (enter, loom, act, exit, stack) and the depth rules of section 8.
 import { CREATURES, type CreatureId } from '../creatures/defs';
+import { WORLD_CAPTION } from './world-events';
 
 export interface CreatureVM {
   /** Creature id from the chaos event. Unknown ids draw as a generic specter. */
@@ -40,7 +41,7 @@ export const FAULT_CAPTION: Record<string, string> = {
   hazard_event: 'STORM', driver_unreachable: 'NO DRIVER', boss_power_outage: 'OUTAGE', boss_internet_outage: 'OUTAGE', boss_hazard_storm: 'STORM',
 };
 
-export const captionOf = (fault: string): string => FAULT_CAPTION[fault] ?? fault.replace(/_/g, ' ').toUpperCase();
+export const captionOf = (fault: string): string => FAULT_CAPTION[fault] ?? WORLD_CAPTION[fault] ?? fault.replace(/_/g, ' ').toUpperCase();
 
 /** Sprite id to draw: a known creature, or null for the generic specter. */
 export const spriteOf = (id: string): CreatureId | null => (CREATURES.some((c) => c.id === id) ? (id as CreatureId) : null);
