@@ -63,7 +63,7 @@ The earlier `Boss survived +100` is replaced by `boss recovered`. A lane that lo
 |---|---|
 | Perfect order, lap 11 s, 5 stars | +100 clean, +20 speed, +80 review = **+200** |
 | Clean order after a depth-1 attack, 4 s downtime, lap 16 s (ratio 1.5, 4 stars) | +100, +25 survival, -8 downtime, +40 review = **+157** (no speed bonus) |
-| Completed with 2 extra rows (charge and account), 2 stars | +40, -300, -80 (review) = **-340** |
+| Completed with 2 extra rows (charge and account), 2 stars | +40, -300, -40 (review) = **-300** |
 | Cancelled order (1 star) | -300, -80 = **-380** |
 | Boss hit, 10 s downtime (-20), order completes, 4 stars | +100, -20, +150, +20 (refund of the -20), +40 = **+290** |
 | Refund decision (cancelled, 2 stars) | -150, -40 = **-190** |
