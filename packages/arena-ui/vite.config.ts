@@ -1,4 +1,4 @@
-import { resolve } from 'node:path';
+﻿import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 
 // The UI always calls same-origin /api/* so it has no mode-specific code.
@@ -11,6 +11,7 @@ export default defineConfig({
   server: { host: '127.0.0.1', port: 5173, proxy },
   preview: { host: '127.0.0.1', port: 4173, proxy },
   build: { outDir: 'dist', emptyOutDir: true, target: 'es2022', sourcemap: false,
-    rollupOptions: { input: { main: resolve(__dirname, 'index.html'), lab: resolve(__dirname, 'lab.html') } } },
+    rollupOptions: { input: { main: resolve(__dirname, 'index.html'), lab: resolve(__dirname, 'lab.html'), report: resolve(__dirname, 'report.html') } } },
 });
+
 
