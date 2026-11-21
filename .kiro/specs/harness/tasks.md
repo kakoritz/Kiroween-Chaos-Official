@@ -65,7 +65,7 @@ Never cut: H0, H1, H2.2, H3.1, H3.2, H4.1, H4.2, H6.3, H6.4, H6.10, H6.11. Cut f
 
 
 ## Skeleton Crew theme for Lane A
-- [ ] S-A1. Express the five tiers as sets of resilience parts (`journal`, `idempotency`, `retry`, `breaker`, `offline_queue`). Adding a part changes behavior.
+- [x] S-A1. Express the five tiers as sets of resilience parts (`journal`, `idempotency`, `retry`, `breaker`, `offline_queue`). Adding a part changes behavior.
 - [ ] S-A2. Emit `part_added` when a hardening spec lands and a policy gains a part.
 - [ ] S-A3. Keep the creature display names (Reaper, Zombie, ...) in the creature catalog data, served by `/api/creatures`.
 
