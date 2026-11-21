@@ -8,6 +8,7 @@ import { TIER_IDS, TIER_LABEL, type Tier } from '../rig/dress';
 import { stationX, type ArenaVM, type ChipState, type LaneVM } from './model';
 import { captionOf, creatureFrame, shown, spriteOf, MAX_SHOWN, type CreatureVM } from './creatures';
 import { drawCreature } from '../creatures/draw';
+import { survivedAge } from './boss';
 
 export const STAGE_W = 1920;
 export const STAGE_H = 1080;
@@ -448,6 +449,22 @@ export class ArenaScene {
     }
     this.drawSkeleton(ctx, vm, l, b, now);
     this.drawCreatures(ctx, l, b, now);
+    this.drawSurvived(ctx, l, b, now);
+    ctx.restore();
+  }
+
+  /** "Survived" flash after boss_end (ui-spec section 5). Reduced motion: no rise, static for the same time. */
+  private drawSurvived(ctx: Ctx, l: LaneVM, b: LaneBox, now: number): void {
+    const age = survivedAge(l, now);
+    if (age === null) return;
+    const rise = this.reducedMotion ? 0 : age * 18;
+    const a = Math.min(1, (1 - age) * 2.2);
+    ctx.save();
+    ctx.globalAlpha = a;
+    const cx = 1000, cy = b.top + b.h / 2 - rise;
+    rr(ctx, cx - 92, cy - 18, 184, 36, 10); ctx.fillStyle = 'rgba(10,8,18,0.8)'; ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = C.ok; ctx.stroke();
+    txt(ctx, 'SURVIVED', cx, cy + 1, 20, C.ok, 'center', SANS, '800');
     ctx.restore();
   }
 
@@ -589,7 +606,7 @@ function sleepers(vm: ArenaVM, now: number): LaneVM[] {
       lane: i + 1, tier: t, label: TIER_LABEL[t], parts: [] as string[], mode: 'sleep' as const, since: now,
       chips: Array<ChipState>(vm.stages.length).fill('pending'), attempts: Array<number>(vm.stages.length).fill(0),
       stageIndex: 0, progress: 0, progressLabel: '', workAnim: '', order: null, orderIndex: 0, ordersTotal: 0, score: 0,
-      counts: { completed: 0, failed: 0, parked: 0, quarantined: 0, repeats: 0 }, depth: 0, action: '', restartInMs: 0, cheer: null, dirty: false,
+      counts: { completed: 0, failed: 0, parked: 0, quarantined: 0, repeats: 0 }, depth: 0, action: '', restartInMs: 0, cheer: null, dirty: false, survivedAt: 0,
       ledger: {}, keyMax: {}, flash: {}, creatures: [],
     } satisfies LaneVM;
     return l;

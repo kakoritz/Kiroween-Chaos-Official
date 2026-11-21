@@ -1,7 +1,8 @@
-﻿import { apiBaseFromQuery, demoFromQuery, modeBadge } from '../src/mode';
+import { apiBaseFromQuery, demoFromQuery, modeBadge } from '../src/mode';
 import { ArenaScene, STAGE_H, STAGE_W } from '../src/arena/scene';
 import { applyEvent, emptyVM, loadSnapshot, reconcileLedger, totalScore } from '../src/arena/model';
 import { LedgerPanel, RankBoard } from '../src/arena/panels';
+import { BossBar, bossAnnouncement } from '../src/arena/boss';
 import { ChaosModeControl, readChaosState } from '../src/arena/chaosmode';
 import { ApiError, createApi, resolveHttpBase, type ArenaApi, type ArenaEvent, type ConnectionStatus, type HauntInPage } from '../src/api';
 
@@ -22,6 +23,8 @@ root.innerHTML = `
       <button class="btn btn--ghost hidden" id="demo-stop" type="button">Stop demo</button>
       <button class="btn" id="demo-open" type="button">Open in demo mode</button>
     </header>
+    <div class="boss" id="boss" aria-hidden="true"></div>
+    <div class="sr-only" id="live-assertive" aria-live="assertive"></div>
     <section class="panel panel--rank hidden" id="rank" aria-label="Rank board"><h2>Rank board</h2><div class="rb-body" id="rank-body"></div></section>
     <section class="panel panel--ledger hidden" id="ledger" aria-label="Ledger"><h2>Ledger</h2><div id="ledger-body"></div></section>
     <section class="quiet" id="quiet">
@@ -84,6 +87,8 @@ const rankBoard = new RankBoard($('rank-body'));
 const ledgerPanel = new LedgerPanel($('ledger-body'));
 const rankEl = $('rank');
 const ledgerEl = $('ledger');
+const bossBar = new BossBar($('boss'));
+const liveAssertive = $('live-assertive');
 async function reconcile() {
   try { reconcileLedger(vm, await api.getLedger()); } catch { /* the event-built cells stay */ }
 }
@@ -194,7 +199,13 @@ function frame(now: number) {
   // Lite mode (fewer particles, no fog) if frames stay above 24 ms for 2 seconds.
   slow = dt > 24 ? slow + dt : 0;
   scene.setLite(slow > 2000);
-  while (queue.length) applyEvent(vm, queue.shift()!, now);
+  while (queue.length) {
+    const ev = queue.shift()!;
+    const before = vm.boss.phase;
+    applyEvent(vm, ev, now);
+    const kind = ev.type === 'boss_warning' ? 'warning' : ev.type === 'boss_start' ? 'start' : ev.type === 'boss_end' ? 'end' : null;
+    if (kind && (kind !== 'end' || before !== 'none')) liveAssertive.textContent = bossAnnouncement(kind, vm.boss);
+  }
   scene.speed = vm.speed || 1;
   totalEl.textContent = vm.lanes.length ? `Score ${totalScore(vm)}` : '';
   quietEl.classList.toggle('hidden', vm.lanes.length > 0);
@@ -203,6 +214,7 @@ function frame(now: number) {
   rankBoard.update(vm);
   ledgerPanel.update(vm, now);
   scene.draw(vm, now);
+  bossBar.update(vm.boss, now, reduceMotion.matches);
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

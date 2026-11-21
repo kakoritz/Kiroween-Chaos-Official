@@ -98,3 +98,20 @@ html, body { overflow: hidden; }
 .cm-seed input:focus-visible { outline: 3px solid var(--bone); outline-offset: 2px; }
 .cm-dice { padding: 4px 12px; font-size: 22px; line-height: 1; }
 .cm-err { color: var(--fail); font-size: 14px; font-weight: 600; min-height: 1.3em; margin-top: 6px; }
+
+/* Boss banner (UI-B5): slides in under the header, only while a boss is announced or active. */
+.boss { position: absolute; left: 0; top: 72px; width: 1920px; height: 48px; display: flex; align-items: center; gap: 16px; padding: 0 24px 0 96px; z-index: 6; pointer-events: none;
+  background: linear-gradient(90deg, rgb(60,30,110), rgb(28,24,48) 70%); border-bottom: 3px solid var(--hex); color: var(--bone);
+  transform: translateY(-110%); opacity: 0; transition: transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.3s; }
+.boss.boss--in { transform: translateY(0); opacity: 1; }
+.boss.boss--still { transition: none; }
+.boss-sprite { position: absolute; left: 14px; top: -8px; width: 72px; height: 72px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
+.boss-tag { font-weight: 800; font-size: 14px; letter-spacing: 0.22em; color: #fff; background: var(--hex); padding: 3px 10px; border-radius: 6px; }
+.boss-name { font-weight: 800; font-size: 24px; letter-spacing: 0.04em; }
+.boss-line { color: var(--muted); font-size: 18px; text-transform: uppercase; letter-spacing: 0.12em; }
+.boss-status { margin-left: auto; font: 800 24px ui-monospace, 'Cascadia Code', Menlo, monospace; color: var(--warn); font-variant-numeric: tabular-nums; }
+.boss--active { border-bottom-color: var(--fail); background: linear-gradient(90deg, rgb(110,20,40), rgb(28,24,48) 70%); }
+.boss--active .boss-status { color: var(--fail); }
+.boss:not(.boss--still):not(.boss--active).boss--in .boss-status { animation: bosspulse 1s ease-in-out infinite; }
+@keyframes bosspulse { 50% { opacity: 0.45; } }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }

@@ -2,6 +2,7 @@
 // `now` is passed in by the caller and only stamps cosmetic timers (pose changes, cheer length).
 // Order, counts, scores and outcomes come from events alone (ui-spec section 5).
 import type { ArenaEvent, ArenaState, StageInfo } from '../api/types';
+import { applyBossEvent, emptyBoss, loadBoss, type BossVM } from './boss';
 import { absorb, actAll, addCreature, exitAll, exitDepth, exitStage, prune, PUFF_MS, type CreatureVM } from './creatures';
 
 export type ChipState = 'pending' | 'active' | 'done' | 'replayed' | 'retrying' | 'failed' | 'dead' | 'parked' | 'quarantined';
@@ -41,6 +42,8 @@ export interface LaneVM {
   flash: Record<string, number>;
   /** Creature stack (UI-B3), oldest first. Not restorable from a snapshot. */
   creatures: CreatureVM[];
+  /** Timestamp of the last boss_end this lane survived (cosmetic flash), or 0. */
+  survivedAt: number;
 }
 
 export interface LedgerCell { rows: number; repeats: number }
@@ -51,9 +54,11 @@ export interface ArenaVM {
   wave: number;
   running: boolean;
   speed: number;
+  /** Boss banner state (UI-B5). */
+  boss: BossVM;
 }
 
-export const emptyVM = (): ArenaVM => ({ stages: [], lanes: [], wave: 0, running: false, speed: 1 });
+export const emptyVM = (): ArenaVM => ({ stages: [], lanes: [], wave: 0, running: false, speed: 1, boss: emptyBoss() });
 
 export function newLane(n: number, stageCount: number, now: number): LaneVM {
   return {
@@ -62,7 +67,7 @@ export function newLane(n: number, stageCount: number, now: number): LaneVM {
     stageIndex: 0, progress: 0, progressLabel: '', workAnim: '', order: null, orderIndex: 0, ordersTotal: 0,
     score: 0, counts: { completed: 0, failed: 0, parked: 0, quarantined: 0, repeats: 0 },
     depth: 0, action: '', restartInMs: 0, cheer: null, dirty: false,
-    ledger: {}, keyMax: {}, flash: {}, creatures: [],
+    ledger: {}, keyMax: {}, flash: {}, creatures: [], survivedAt: 0,
   };
 }
 
@@ -79,6 +84,7 @@ export function loadSnapshot(vm: ArenaVM, s: ArenaState, now: number): void {
   vm.wave = s.wave?.n ?? 0;
   vm.running = !!s.wave?.running;
   vm.speed = s.wave?.speed ?? 1;
+  loadBoss(vm.boss, s, now, vm.speed);
   vm.lanes = (s.lanes ?? []).map((ls) => {
     const l = newLane(ls.lane, vm.stages.length, now);
     l.tier = ls.tier; l.label = ls.label; l.parts = ls.parts.filter((p) => p.installed).map((p) => p.id);
@@ -109,7 +115,13 @@ function resetChips(l: LaneVM): void {
 /** Apply one event. Unknown types are ignored (protocol rule 17). */
 export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
   const d = (ev.detail ?? {}) as Record<string, unknown>;
-  if (ev.type === 'reset') { vm.lanes = []; vm.wave = 0; vm.running = false; return; }
+  if (ev.type === 'reset') { vm.lanes = []; vm.wave = 0; vm.running = false; vm.boss = emptyBoss(); return; }
+  if (ev.type === 'boss_warning' || ev.type === 'boss_start' || ev.type === 'boss_end') {
+    const k = applyBossEvent(vm.boss, ev, now, vm.speed);
+    // Survived flash on every lane that is not dead or halted (ui-spec section 5).
+    if (k === 'end') for (const l of vm.lanes) if (l.mode !== 'dead' && l.mode !== 'halted') l.survivedAt = now;
+    return;
+  }
   if (ev.type === 'wave_start') {
     vm.wave = num(ev.wave, vm.wave + 1);
     vm.running = true;
@@ -118,7 +130,7 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
     vm.lanes = Array.from({ length: n }, (_, i) => newLane(i + 1, vm.stages.length, now));
     return;
   }
-  if (ev.type === 'wave_end') { vm.running = false; return; }
+  if (ev.type === 'wave_end') { vm.running = false; vm.boss = emptyBoss(); return; }
   const l = laneOf(vm, ev);
   if (!l) return;
   const si = ev.stage ? vm.stages.findIndex((s) => s.id === ev.stage) : -1;

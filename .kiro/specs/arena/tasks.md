@@ -1,4 +1,4 @@
-﻿# Tasks: Arena
+# Tasks: Arena
 
 Do after Phase 1 of [haunted-house tasks](../haunted-house/tasks.md) (hero crash works headless).
 
@@ -13,7 +13,7 @@ Do after Phase 1 of [haunted-house tasks](../haunted-house/tasks.md) (hero crash
 - [ ] UI-B2. Six creatures end to end: Crash, Timeout, 404, Missing file, Duplicate, Power outage. (A4)
 - [x] UI-B3. Creature animations and the stack badge. (A3)
 - [x] UI-B4. Random chaos mode with frequency slider and seed. (A6)
-- [ ] UI-B5. Mini boss schedule and warning banner. (A5)
+- [x] UI-B5. Mini boss schedule and warning banner. (A5)
 - [ ] UI-B6. Remaining creatures from the catalog. (A4)
 
 ## Phase C: Inspect and learn
