@@ -1,10 +1,10 @@
 # Loop proof (H6.10)
 
-Captured 2026-11-21 on 127.0.0.1 with `npm run live -- --loop`, then `POST /api/demo/start {"script":"loop","speed":4}` twice on one server (2 lanes, 3 orders, seed 7, one Reaper crash at `after_effect_before_journal` per order per lane).
+Re-recorded 2026-11-21 with scoring v2 on 127.0.0.1 with `npm run live -- --loop`, then `POST /api/demo/start {"script":"loop","speed":4}` twice on one server (2 lanes, 3 orders, seed 7, one Reaper crash at `after_effect_before_journal` per order per lane).
 
 ## Wave 1 (before the fix)
 
-- `wave1-report.json`: `GET /api/waves/1/report`. Lane 1 (Rookie, no parts) F, lane 2 (Phoenix) A. Wave grade F, score -130.
+- `wave1-report.json`: `GET /api/waves/1/report`. Lane 1 (Rookie, no parts) F, lane 2 (Phoenix) A. Wave grade F, score -229 (scoring v2).
 - `wave1-postmortem.md`: `GET /api/waves/1/postmortem`. 6 chaos presses, 5 repeated effects, 0 lost orders.
 - Hardening spec written by the reviewer (`runReviewer` + `writeReview`, packages/haunt/src/reviewer) from lane 1's wave 1 events: `.kiro/specs/hardening-loop-w1/` (requirements, design, tasks). Served at `GET /api/waves/1/hardening`. Every finding asks for the SDK `idempotency` part.
 
@@ -14,7 +14,7 @@ Captured 2026-11-21 on 127.0.0.1 with `npm run live -- --loop`, then `POST /api/
 
 ## Wave 2 (after the fix)
 
-- `wave2-report.json`: `GET /api/waves/2/report`. Lane 1 (hardened Rookie) A, lane 2 (Phoenix) A. Wave grade A, score 700. All 6 chaos presses pass, 0 lost orders (ord-0002 completes).
+- `wave2-report.json`: `GET /api/waves/2/report`. Lane 1 (hardened Rookie) A, lane 2 (Phoenix) A. Wave grade A, score 702 (scoring v2). All 6 chaos presses pass, 0 lost orders (ord-0002 completes).
 - `wave2-postmortem.md`: 6 chaos presses, 0 repeated effects, no findings.
 
 ## Comparison

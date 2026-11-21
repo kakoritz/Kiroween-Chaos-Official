@@ -1,6 +1,6 @@
 # Wave 2 postmortem
 
-Grade A, score 700.
+Grade A, score 702.
 
 ## Lanes
 

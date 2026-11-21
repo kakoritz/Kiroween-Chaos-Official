@@ -1,1 +1,86 @@
-{"run":2,"mode":"wave","seed":7,"app":"orders","generatedAt":1795266934333,"grade":"A","reliability":"A","matrix":[{"stage":"","fault":"crash","result":"pass","repeats":[],"evidenceSeq":[660]},{"stage":"","fault":"crash","result":"pass","repeats":[],"evidenceSeq":[663]},{"stage":"","fault":"crash","result":"pass","repeats":[],"evidenceSeq":[772]},{"stage":"","fault":"crash","result":"pass","repeats":[],"evidenceSeq":[775]},{"stage":"","fault":"crash","result":"pass","repeats":[],"evidenceSeq":[840]},{"stage":"","fault":"crash","result":"pass","repeats":[],"evidenceSeq":[841]}],"recovery":{"p50":5,"p95":35,"max":35},"repeats":[],"lost":[],"targets":[],"findings":[],"tiers":[{"tier":"1","grade":"A","score":0},{"tier":"2","grade":"A","score":0}]}
+{
+  "run": 2,
+  "mode": "wave",
+  "seed": 7,
+  "app": "orders",
+  "generatedAt": 1795297409502,
+  "grade": "A",
+  "reliability": "A",
+  "matrix": [
+    {
+      "stage": "",
+      "fault": "crash",
+      "result": "pass",
+      "repeats": [],
+      "evidenceSeq": [
+        526
+      ]
+    },
+    {
+      "stage": "",
+      "fault": "crash",
+      "result": "pass",
+      "repeats": [],
+      "evidenceSeq": [
+        528
+      ]
+    },
+    {
+      "stage": "",
+      "fault": "crash",
+      "result": "pass",
+      "repeats": [],
+      "evidenceSeq": [
+        581
+      ]
+    },
+    {
+      "stage": "",
+      "fault": "crash",
+      "result": "pass",
+      "repeats": [],
+      "evidenceSeq": [
+        583
+      ]
+    },
+    {
+      "stage": "",
+      "fault": "crash",
+      "result": "pass",
+      "repeats": [],
+      "evidenceSeq": [
+        686
+      ]
+    },
+    {
+      "stage": "",
+      "fault": "crash",
+      "result": "pass",
+      "repeats": [],
+      "evidenceSeq": [
+        687
+      ]
+    }
+  ],
+  "recovery": {
+    "p50": 7,
+    "p95": 39,
+    "max": 39
+  },
+  "repeats": [],
+  "lost": [],
+  "targets": [],
+  "findings": [],
+  "tiers": [
+    {
+      "tier": "1",
+      "grade": "A",
+      "score": 0
+    },
+    {
+      "tier": "2",
+      "grade": "A",
+      "score": 0
+    }
+  ]
+}

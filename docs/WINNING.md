@@ -58,7 +58,7 @@ Both run in the same arena, with the same creatures, the same report. Two unrela
 
 1. **A real problem everyone has felt.** Double charges, duplicate emails, agents that redo work after a crash. Stage One framing: "Chaos engineering for automation and AI agents, as a game".
 2. **A single unforgettable moment.** The process is killed right after the charge. Rookie charges twice. Phoenix charges once. The ledger flashes. Same crash, side by side.
-3. **A closed loop with proof.** Run a wave. The reviewer writes a hardening spec. **Kiro implements the spec.** Run the wave again. The score goes from F to A on screen. Nobody else will show Kiro improving the code from chaos evidence.
+3. **A closed loop with proof.** Run a wave. The reviewer writes a hardening spec. **Kiro implements the spec.** Run the wave again. The score goes from F to A on screen (recorded proof, scoring v2: wave 1 grade F, score -229; wave 2 grade A, score 702; crash-only plan, see `docs/proof/`). Nobody else will show Kiro improving the code from chaos evidence.
 4. **Real, not fake.** Real kills, real ledger, real numbers. Every animation is driven by an event.
 5. **Reusable in 60 seconds.** `haunt.yaml` plus one command on a second app.
 6. **No install to judge.** A hosted browser version (see below).

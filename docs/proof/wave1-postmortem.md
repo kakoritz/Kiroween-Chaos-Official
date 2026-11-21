@@ -1,6 +1,6 @@
 # Wave 1 postmortem
 
-Grade F, score -130.
+Grade F, score -229.
 
 ## Lanes
 

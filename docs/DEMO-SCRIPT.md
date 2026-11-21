@@ -4,7 +4,7 @@ Structure source: `.kiro/specs/onboarding/spec.md` section 8. Story source: sect
 
 One story: hook "Charged. Charged again.", number "Rookie: 2 charges. Phoenix: 1.", tagline "Break your bots before the world does."
 
-Rules: no copyrighted music, no trademarks (do not show payment or shop brand logos). Music is generated in code or none. Record on the real device. Captions burned in (the same captions the hosted demo shows). Every claim says exactly what the evidence shows. Say "F to A" only if the live Kiro fix is real (`.kiro/specs/share/spec.md` section 5). Otherwise say "recorded fix".
+Rules: no copyrighted music, no trademarks (do not show payment or shop brand logos). Music is generated in code or none. Record on the real device. Captions burned in (the same captions the hosted demo shows). Every claim says exactly what the evidence shows. Say "F to A" only if the live Kiro fix is real (`.kiro/specs/share/spec.md` section 5). Otherwise say "recorded fix". Recorded numbers (scoring v2, crash-only plan): wave 1 grade F, score -229; wave 2 grade A, score 702 (`docs/proof/`).
 
 | Time | On screen | Voice and captions |
 |---|---|---|

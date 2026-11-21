@@ -1,1 +1,173 @@
-{"run":1,"mode":"wave","seed":7,"app":"orders","generatedAt":1795266871077,"grade":"F","reliability":"F","matrix":[{"stage":"","fault":"crash","result":"repeat","repeats":[],"evidenceSeq":[106]},{"stage":"","fault":"crash","result":"pass","repeats":[],"evidenceSeq":[107]},{"stage":"","fault":"crash","result":"repeat","repeats":[],"evidenceSeq":[214]},{"stage":"","fault":"crash","result":"pass","repeats":[],"evidenceSeq":[215]},{"stage":"","fault":"crash","result":"repeat","repeats":[],"evidenceSeq":[269]},{"stage":"","fault":"crash","result":"pass","repeats":[],"evidenceSeq":[276]}],"recovery":{"p50":5,"p95":37,"max":37},"repeats":[{"order":"ord-0002","kind":"account_create","extra":1,"stage":"","fault":""},{"order":"ord-0002","kind":"account_create","extra":2,"stage":"","fault":""},{"order":"ord-0002","kind":"charge","extra":1,"stage":"","fault":""},{"order":"ord-0002","kind":"account_create","extra":3,"stage":"","fault":""},{"order":"ord-0002","kind":"charge","extra":2,"stage":"","fault":""}],"lost":[],"targets":[],"findings":[{"id":"F1","rule":"R1","severity":"high","stage":"","fault":"","summary":"account_create repeated on order ord-0002","evidenceSeq":[],"suggestedPart":"idempotency"},{"id":"F2","rule":"R1","severity":"high","stage":"","fault":"","summary":"account_create repeated on order ord-0002","evidenceSeq":[],"suggestedPart":"idempotency"},{"id":"F3","rule":"R1","severity":"high","stage":"","fault":"","summary":"charge repeated on order ord-0002","evidenceSeq":[],"suggestedPart":"idempotency"},{"id":"F4","rule":"R1","severity":"high","stage":"","fault":"","summary":"account_create repeated on order ord-0002","evidenceSeq":[],"suggestedPart":"idempotency"},{"id":"F5","rule":"R1","severity":"high","stage":"","fault":"","summary":"charge repeated on order ord-0002","evidenceSeq":[],"suggestedPart":"idempotency"}],"tiers":[{"tier":"1","grade":"F","score":0},{"tier":"2","grade":"A","score":0}]}
+{
+  "run": 1,
+  "mode": "wave",
+  "seed": 7,
+  "app": "orders",
+  "generatedAt": 1795297390697,
+  "grade": "F",
+  "reliability": "F",
+  "matrix": [
+    {
+      "stage": "",
+      "fault": "crash",
+      "result": "repeat",
+      "repeats": [],
+      "evidenceSeq": [
+        106
+      ]
+    },
+    {
+      "stage": "",
+      "fault": "crash",
+      "result": "pass",
+      "repeats": [],
+      "evidenceSeq": [
+        108
+      ]
+    },
+    {
+      "stage": "",
+      "fault": "crash",
+      "result": "repeat",
+      "repeats": [],
+      "evidenceSeq": [
+        158
+      ]
+    },
+    {
+      "stage": "",
+      "fault": "crash",
+      "result": "pass",
+      "repeats": [],
+      "evidenceSeq": [
+        159
+      ]
+    },
+    {
+      "stage": "",
+      "fault": "crash",
+      "result": "repeat",
+      "repeats": [],
+      "evidenceSeq": [
+        269
+      ]
+    },
+    {
+      "stage": "",
+      "fault": "crash",
+      "result": "pass",
+      "repeats": [],
+      "evidenceSeq": [
+        270
+      ]
+    }
+  ],
+  "recovery": {
+    "p50": 1,
+    "p95": 40,
+    "max": 40
+  },
+  "repeats": [
+    {
+      "order": "ord-0002",
+      "kind": "account_create",
+      "extra": 1,
+      "stage": "",
+      "fault": ""
+    },
+    {
+      "order": "ord-0002",
+      "kind": "account_create",
+      "extra": 2,
+      "stage": "",
+      "fault": ""
+    },
+    {
+      "order": "ord-0002",
+      "kind": "charge",
+      "extra": 1,
+      "stage": "",
+      "fault": ""
+    },
+    {
+      "order": "ord-0002",
+      "kind": "account_create",
+      "extra": 3,
+      "stage": "",
+      "fault": ""
+    },
+    {
+      "order": "ord-0002",
+      "kind": "charge",
+      "extra": 2,
+      "stage": "",
+      "fault": ""
+    }
+  ],
+  "lost": [],
+  "targets": [],
+  "findings": [
+    {
+      "id": "F1",
+      "rule": "R1",
+      "severity": "high",
+      "stage": "",
+      "fault": "",
+      "summary": "account_create repeated on order ord-0002",
+      "evidenceSeq": [],
+      "suggestedPart": "idempotency"
+    },
+    {
+      "id": "F2",
+      "rule": "R1",
+      "severity": "high",
+      "stage": "",
+      "fault": "",
+      "summary": "account_create repeated on order ord-0002",
+      "evidenceSeq": [],
+      "suggestedPart": "idempotency"
+    },
+    {
+      "id": "F3",
+      "rule": "R1",
+      "severity": "high",
+      "stage": "",
+      "fault": "",
+      "summary": "charge repeated on order ord-0002",
+      "evidenceSeq": [],
+      "suggestedPart": "idempotency"
+    },
+    {
+      "id": "F4",
+      "rule": "R1",
+      "severity": "high",
+      "stage": "",
+      "fault": "",
+      "summary": "account_create repeated on order ord-0002",
+      "evidenceSeq": [],
+      "suggestedPart": "idempotency"
+    },
+    {
+      "id": "F5",
+      "rule": "R1",
+      "severity": "high",
+      "stage": "",
+      "fault": "",
+      "summary": "charge repeated on order ord-0002",
+      "evidenceSeq": [],
+      "suggestedPart": "idempotency"
+    }
+  ],
+  "tiers": [
+    {
+      "tier": "1",
+      "grade": "F",
+      "score": 0
+    },
+    {
+      "tier": "2",
+      "grade": "A",
+      "score": 0
+    }
+  ]
+}

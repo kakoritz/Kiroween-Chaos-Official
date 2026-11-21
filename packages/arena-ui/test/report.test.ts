@@ -12,15 +12,15 @@ describe('report viewer model', () => {
     expect(() => parseReport({ grade: 'A' })).toThrow();
   });
   it('reads wave scores from the postmortem header', () => {
-    expect(postmortemScore(proof('wave1-postmortem.md'))).toBe(-130);
-    expect(postmortemScore(proof('wave2-postmortem.md'))).toBe(700);
+    expect(postmortemScore(proof('wave1-postmortem.md'))).toBe(-229);
+    expect(postmortemScore(proof('wave2-postmortem.md'))).toBe(702);
     expect(postmortemScore('no score')).toBeNull();
   });
   it('compares wave 1 to wave 2 like the loop proof', () => {
-    const c = compareReports(w1, w2, -130, 700);
+    const c = compareReports(w1, w2, -229, 702);
     expect([c.gradeBefore, c.gradeAfter, c.gradeTrend]).toEqual(['F', 'A', 'improved']);
     expect([c.repeatsBefore, c.repeatsAfter, c.lostBefore, c.lostAfter]).toEqual([5, 0, 0, 0]);
-    expect(c.scoreDelta).toBe(830);
+    expect(c.scoreDelta).toBe(931);
     expect(c.findings.resolved.map((f) => f.id)).toEqual(['F1', 'F2', 'F3', 'F4', 'F5']);
     expect(c.findings.remaining).toEqual([]);
     expect(c.findings.added).toEqual([]);

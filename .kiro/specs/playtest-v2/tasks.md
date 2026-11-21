@@ -48,7 +48,7 @@ Order: P0, then P1 (the visible fixes the owner asked for first), then P2, P3, P
 
 ## Shared
 
-- [ ] **PT-X1 Regression.** `npm run demo`, `npm run fresh-clone`, hero crash, loop proof and all existing property tests still pass after the scoring and pace changes. Update screenshots in `docs/proof/`.
+- [x] **PT-X1 Regression.** (done for the loop proof: docs/proof re-recorded with scoring v2, wave 1 F -229, wave 2 A 702) `npm run demo`, `npm run fresh-clone`, hero crash, loop proof and all existing property tests still pass after the scoring and pace changes. Update screenshots in `docs/proof/`.
 - [x] **PT-X2 Docs.** `docs/SPEC-MAP.md` row, `docs/DEMO-SCRIPT.md` timings (3 min video is edited from the slower demos), `docs/KIRO-LOG.md` entries.
 
 ## Cut line inside this spec
