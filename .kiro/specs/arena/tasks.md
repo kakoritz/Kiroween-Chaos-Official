@@ -9,12 +9,12 @@ Do after Phase 1 of [haunted-house tasks](../haunted-house/tasks.md) (hero crash
 - [x] UI-A4. Rank board, ledger panel, score engine. (A1.5, A7)
 
 ## Phase B: Chaos
-- [x] UI-B1. (done in Lane A, see harness/tasks.md) Chaos director and SDK hook points, nested fault stack. (A3)
-- [x] UI-B2. (done in Lane A, see harness/tasks.md) Six creatures end to end: Crash, Timeout, 404, Missing file, Duplicate, Power outage. (A4)
+- [x] UI-B1. (done via H1.4 / PR #11, #19; stack drawn by arena/creatures.ts and scene.ts, UI-B3 / PR #105) Chaos director and SDK hook points, nested fault stack. (A3)
+- [x] UI-B2. (done via H2.2 / PR #23; the six creatures have art and act poses, UI-ART3 / PR #102, UI-B3 / PR #105) Six creatures end to end: Crash, Timeout, 404, Missing file, Duplicate, Power outage. (A4)
 - [x] UI-B3. Creature animations and the stack badge. (A3)
 - [x] UI-B4. Random chaos mode with frequency slider and seed. (A6)
 - [x] UI-B5. Mini boss schedule and warning banner. (A5)
-- [x] UI-B6. (done in Lane A, see harness/tasks.md) Remaining creatures from the catalog. (A4)
+- [x] UI-B6. (done via H2.3 / PR #24, #36; all 17 creatures and bosses drawn in creatures/draw.ts, UI-S2 / PR #110, UI-ART4 / PR #139) Remaining creatures from the catalog. (A4)
 
 ## Phase C: Inspect and learn
 - [x] UI-C1. Stage inspector popup with live stream, Chaos button and replay. (A2)
