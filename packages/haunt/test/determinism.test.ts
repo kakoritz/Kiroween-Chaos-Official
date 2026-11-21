@@ -114,6 +114,18 @@ describe('determinism: sweep', () => {
     const json = sweepReportJson(await runSweep(plan(), seededRunner, 11));
     expect(json).not.toMatch(/generatedAt|timestamp/i);
   });
+
+  it('wall-clock noise from a live runner (durations, times) never reaches the report JSON', async () => {
+    const noisy: RunCell = (cell, seed) => {
+      const base = seededRunner(cell, seed) as { outcome: CellOutcome; repeatedKinds?: string[] };
+      return { ...base, durationMs: Math.random() * 1000, finishedAt: Date.now() } as never;
+    };
+    const a = sweepReportJson(await runSweep(plan(), noisy, 11));
+    const b = sweepReportJson(await runSweep(plan(), noisy, 11));
+    expect(a).toBe(b);
+    expect(a).toBe(sweepReportJson(await runSweep(plan(), seededRunner, 11)));
+    expect(a).not.toMatch(/durationMs|finishedAt/);
+  });
 });
 
 describe('determinism: ramp', () => {
