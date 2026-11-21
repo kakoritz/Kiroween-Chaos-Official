@@ -18,7 +18,7 @@ Do after Phase 1 of [haunted-house tasks](../haunted-house/tasks.md) (hero crash
 
 ## Phase C: Inspect and learn
 - [x] UI-C1. Stage inspector popup with live stream, Chaos button and replay. (A2)
-- [x] UI-C2. (done in Lane A, see harness/tasks.md) Rule-based reviewer: postmortem and hardening spec writer. (A9)
+- [x] UI-C2. (done via A9 in Lane A, see harness/tasks.md; UI side confirmed: app/report.ts fetches /api/waves/n/postmortem and renders it with renderMarkdown, hardening parts arrive as part_added events with source hardening_spec) Rule-based reviewer: postmortem and hardening spec writer. (A9)
 - [x] UI-C3. Wave-over-wave score delta view. (A9.4)
 - [x] UI-C4. (done via H3 / A9.5; optional pass is off by default, no LLM field exists in the report JSON, so the viewer shows none) Optional LLM pass for suggested diffs. (A9.5)
 
