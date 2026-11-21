@@ -40,8 +40,8 @@ Backend items in this file belong to **Lane A** and are tracked in `.kiro/specs/
 Lane B owns: A3, the rank board and ledger panel views, B3, the B4 slider UI, the B5 banner, C1, C3 views, D1, D2, D3, D4, plus a report viewer for the harness HTML report.
 
 ## Win-the-hackathon items for Lane B (see docs/WINNING.md)
-- [ ] UI-W1. UI works in all three contract modes: `mock`, `live`, `browser`. No mode-specific code.
-- [ ] UI-W2. A mode badge and an "Open in demo mode" button so judges land on a running show in under 5 seconds.
+- [x] UI-W1. UI works in all three contract modes: `mock`, `live`, `browser`. No mode-specific code.
+- [x] UI-W2. A mode badge and an "Open in demo mode" button so judges land on a running show in under 5 seconds.
 - [ ] UI-W3. App switcher: Haunted Orders and Haunted Inbox, same arena, different stage names and sprites. Stage names come from `/api/state`, not hard-coded.
 - [ ] UI-W4. Report viewer with the before and after (wave 1 vs wave 2) side by side.
 - [ ] UI-W5. Kiro Crew app page that hosts the arena (see harness H6.9).

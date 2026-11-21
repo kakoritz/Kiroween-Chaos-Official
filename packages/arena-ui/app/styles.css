@@ -1,0 +1,37 @@
+:root {
+  --bg: #0d0b14; --stone: #1c1830; --stone-2: #2a2446; --torch: #ff9a3c; --bone: #efe6d2;
+  --text: #f3ecff; --muted: #8f86a8; --ok: #5ee08a; --fail: #ff4d5e; --warn: #ffc247;
+  --ghost: #7ab8ff; --hex: #9b6bff;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-family: system-ui, "Segoe UI", sans-serif; }
+#app { display: flex; flex-direction: column; min-height: 100%; }
+
+.hdr { display: flex; align-items: center; gap: 16px; height: 72px; padding: 0 24px; background: var(--stone); border-bottom: 2px solid var(--stone-2); }
+.logo { font-size: 28px; font-weight: 800; letter-spacing: 0.18em; color: var(--torch); }
+.wave { color: var(--muted); font-size: 18px; }
+.spacer { flex: 1; }
+
+.badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; font-weight: 700; font-size: 16px; letter-spacing: 0.08em; border: 2px solid currentColor; background: var(--stone-2); }
+.badge--mock { color: var(--warn); }
+.badge--live { color: var(--ok); }
+.badge--browser { color: var(--ghost); }
+.badge--warn { color: var(--warn); }
+.badge--offline { color: var(--muted); }
+
+.btn { font: inherit; font-weight: 700; font-size: 16px; padding: 10px 18px; border-radius: 10px; border: 2px solid var(--torch); background: var(--torch); color: #1a1020; cursor: pointer; }
+.btn:hover { filter: brightness(1.1); }
+.btn:focus-visible { outline: 3px solid var(--bone); outline-offset: 2px; }
+.btn[disabled] { opacity: 0.5; cursor: default; }
+.btn--ghost { background: transparent; color: var(--torch); }
+.pill { padding: 4px 10px; border-radius: 6px; background: var(--hex); color: #fff; font-weight: 700; font-size: 14px; letter-spacing: 0.1em; }
+.hidden { display: none !important; }
+
+.stage { flex: 1; display: grid; place-items: center; text-align: center; padding: 32px; }
+.stage h1 { margin: 0 0 8px; font-size: 44px; color: var(--bone); }
+.stage p { margin: 0 0 24px; color: var(--muted); font-size: 20px; }
+.btn--big { font-size: 24px; padding: 16px 32px; border-radius: 14px; }
+.err { margin-top: 16px; color: var(--fail); font-weight: 600; min-height: 1.5em; }
+.stats { margin-top: 24px; color: var(--muted); font-size: 16px; font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
