@@ -1,4 +1,4 @@
-﻿# Kiro log
+# Kiro log
 
 Dated notes on what Kiro did and decided while building Haunt. Newest last.
 
@@ -218,6 +218,7 @@ pm run live). SSE with hello, since replay (exclusive), 410 gone beyond 5000 eve
 - 2026-11-21 PT-U9 ui/pt-u9: header v2. New `src/arena/gearmenu.ts` (gear popover with chaos, Pace Normal/Show/Slow default Slow, Speed, sound, reduced motion; closes on radio/button, outside click and Esc; SLOW tag) and `legend-modal.ts` (? button, R J I B Q legend plus chip states, gear tip text). Buttons now read Play demo and Stop demo, the mode badge tooltip explains MOCK/LIVE/BROWSER, and startWave defaults pace to slow. Pure logic tested in `gearmenu.test.ts`. No screenshot: skipped to stay inside the time budget.
 - 2026-11-21 SH-U1 ui/share-sh-u1: Workflow Lab page (workflow-lab.html, app/workflow-lab.ts, src/workflow-lab/model.ts and panel.ts). Preset and stage form, pasted haunt.yaml, five protection toggles, run via window.__hauntLab.labRun, revealing coverage matrix, worst findings, add-this-part suggestions, downloads for haunt.yaml, badge and scorecards, copyable real-run commands, honest model-based label. Local only. ?preset=orders&run=1 autoruns. Screenshots in packages/arena-ui/docs/screens/share-workflow-lab-*.png.
 - 2026-11-21 CP-E2E ui/camp-e2e-fixes: campaign "Start night" stops the attract demo and any running wave before POST /api/wave/start (was 409 wave_running, so results scored the demo wave); gear-shop slots moved beside the doll with backed labels (no limb overlap, campaign-shop-slots.test.ts); camp-e2e-*.png re-taken in headless Edge. Open: night 1 is not winnable from a fresh save (Seal 400 > 300 start credits).
+- 2026-11-21 SH-K1 ui/share-sh-k1: traceability generator `tools/trace.ts` (`npm run trace`, `--check` for staleness) writes `docs/TRACE.md` from spec IDs, `git log` PR numbers and `// covers:` comments; requirements inherit PRs and tests from tasks that name them. Hook `.kiro/hooks/trace-on-merge.kiro.hook` regenerates it on spec or test edits. Few tests carry `// covers:` yet, so requirement-to-test coverage is low and honest; comments are added as tests are touched.
 
 - 2026-11-21 CP-NIGHT-4-WORLD core/camp-night-4-world: nights 4 to 7 world faults. New `packages/haunt/src/campaign/world-faults.ts` (fault to part map merged into `FAULT_PART`, boss part map, `checkWorldNights`) and `packages/haunt/test/campaign-night-4-world.test.ts`. Data-level only; no live runner replay.
 

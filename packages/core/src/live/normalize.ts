@@ -44,6 +44,8 @@ export class DetailNormalizer {
         if (w.afterUp && ev.order === w.inFlight) return [];
         w.afterUp = false;
         w.inFlight = ev.order;
+        // A wrong-order redo runs every stage again from attempt 1.
+        if (ev.detail?.redo === true) for (const k of [...w.attempts.keys()]) if (k.startsWith(`${ev.order}|`)) w.attempts.delete(k);
         break;
       case 'recover_start': w.afterUp = false; w.recover.push(String(ev.detail?.action ?? 'replay')); break;
       case 'recover_done': {

@@ -8,7 +8,7 @@ import type { Part } from '../sdk';
 import { tiersForLanes, type TierMode } from './lanes';
 import { postProviderArm, type PostFault } from './provider';
 
-export interface EngineChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string; forMs?: number; source?: 'manual' | 'random' | 'boss' }
+export interface EngineChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string; forMs?: number; detect?: 'confirmation' | 'handoff'; source?: 'manual' | 'random' | 'boss' }
 export interface EngineChaosResult { chaosId: string; creature: string; fault: string; depth: number; deferred: boolean }
 export interface EngineWaveSettings { orders: number; seed: number; tiers: TierMode; lanes: number; speed: number; pace: 'normal' | 'show' | 'slow'; app: string; campaign?: { night: number; parts: readonly Part[] } }
 export interface EngineChaosMode { mode: 'off' | 'manual' | 'random'; frequency: number; seed: number }
@@ -63,7 +63,7 @@ export class RunnerEngine {
     const lane = String(req.lane ?? this.lanes[0] ?? '1');
     if (!this.lanes.includes(lane)) throw new Error(`lane ${lane} is not in the current wave`);
     const info = this.opts.laneInfo?.(lane) ?? { state: 'working' as const, stage: null };
-    const r = this.director.arm(lane, { fault: req.fault, scope: req.scope, point: req.point as never, forMs: req.forMs }, info);
+    const r = this.director.arm(lane, { fault: req.fault, scope: req.scope, point: req.point as never, forMs: req.forMs, detect: req.detect }, info);
     if (!r.ok) throw new Error(r.error);
     const chaosId = `c${this.wave}-${++this.seq}`;
     const creature = req.creature ?? FAULTS.find((f) => f.id === req.fault)?.creature ?? req.fault;

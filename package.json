@@ -20,6 +20,7 @@
     "test": "vitest run",
     "test:contract": "vitest run --config vitest.contract.config.ts",
     "validate:events": "node tools/run-ts.mjs tools/validate-events.ts",
+    "trace": "node tools/run-ts.mjs tools/trace.ts",
     "review": "node tools/run-ts.mjs tools/haunt-review.ts",
     "make:fixtures": "node tools/run-ts.mjs tools/make-fixtures.ts",
     "make:outcomes": "node tools/run-ts.mjs tools/make-outcomes.ts",

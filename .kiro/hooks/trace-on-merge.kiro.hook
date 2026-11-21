@@ -1,0 +1,18 @@
+{
+    "enabled":  true,
+    "name":  "Trace on merge",
+    "description":  "Regenerate docs/TRACE.md when specs or tests change.",
+    "version":  "1",
+    "when":  {
+                 "type":  "fileEdited",
+                 "patterns":  [
+                                  ".kiro/specs/**/*.md",
+                                  "packages/**/test/**/*.test.ts",
+                                  "apps/**/test/**/*.test.ts"
+                              ]
+             },
+    "then":  {
+                 "type":  "runCommand",
+                 "command":  "npm run trace"
+             }
+}

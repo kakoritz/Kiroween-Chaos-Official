@@ -6,11 +6,14 @@ import { join } from 'node:path';
 import { createInterface } from 'node:readline';
 import { ChaosHost } from '../chaos';
 import { InputError, LaneHalted, Pipeline, STAGES, tierById, type OrderData, type TierDef } from '../pipeline';
-import { PARTS, ParkSignal, Sdk, type Part, type Transport } from '../sdk';
+import { PARTS, ParkSignal, Sdk, WrongOrder, type DecisionQuestion, type DecisionSource, type Part, type Transport } from '../sdk';
+import { DECISION_CHOICES, type DecisionChoice } from '../shared/catalog';
 
 export interface BotDef {
   tier: TierDef['id'];
   use: readonly Part[];
+  /** What the bot does with a wrong order when nobody answers in time. Defaults to the tier policy. */
+  onWrongOrder?: DecisionChoice;
 }
 
 /**
@@ -19,7 +22,7 @@ export interface BotDef {
  * `HAUNT_TIER`, or `--parts` is passed) it starts running; importing it in a test does nothing.
  */
 export function defineBot(def: BotDef): BotDef {
-  const frozen: BotDef = { tier: def.tier, use: PARTS.filter((p) => def.use.includes(p)) };
+  const frozen: BotDef = { tier: def.tier, use: PARTS.filter((p) => def.use.includes(p)), ...(def.onWrongOrder ? { onWrongOrder: def.onWrongOrder } : {}) };
   if (process.argv.includes('--parts') || process.env.HAUNT_TIER !== undefined) {
     runBot(frozen).catch((e) => {
       process.stderr.write(`bot ${def.tier} crashed: ${e instanceof Error ? e.stack ?? e.message : String(e)}\n`);
@@ -31,7 +34,7 @@ export function defineBot(def: BotDef): BotDef {
 
 const PATHS: Record<string, string> = {
   account: '/accounts', charge: '/charges', email: '/emails', dispatch: '/shipments',
-  notify: '/notifications', ticket: '/tickets', reply: '/replies',
+  notify: '/notifications', ticket: '/tickets', reply: '/replies', refund: '/refunds', discount: '/discounts',
 };
 const ORDER_FILE = /^ord-(\d{4})(\.dup)?\.json$/;
 const SERVICES = ['account', 'charge', 'email', 'dispatch', 'notify', 'tracking'];
@@ -110,7 +113,23 @@ export async function runBot(def: BotDef): Promise<void> {
   heartbeat.unref();
 
   // ---- stdin channel ----
-  const host = new ChaosHost({ parts: use, now, sleep, send, mode: 'child' });
+  // Wrong-order decision (design.md section 8): the bot asks, the runner answers once, and a restart asks again.
+  let pendingDecision: { order: string; resolve: (r: { choice: DecisionChoice; source: DecisionSource }) => void } | null = null;
+  const askRunner = async (q: DecisionQuestion): Promise<{ choice: DecisionChoice; source: DecisionSource }> => {
+    const answer = new Promise<{ choice: DecisionChoice; source: DecisionSource }>((resolve) => { pendingDecision = { order: q.order, resolve }; });
+    send({ k: 'decision_needed', order: q.order, kind: 'wrong_order', stage: q.stage, detectedAt: q.detectedAt, defaultChoice: q.defaultChoice });
+    // A crash armed for this point lands here, while the decision is pending in the runner.
+    await host.hook('mid_stage', { order: q.order, stage: q.stage });
+    // Safety net for a harness that never answers: fall back to the bot's own policy.
+    const net = setTimeout(() => pendingDecision?.resolve({ choice: q.defaultChoice, source: 'default' }), 30000);
+    try {
+      return await answer;
+    } finally {
+      clearTimeout(net);
+      pendingDecision = null;
+    }
+  };
+  const host = new ChaosHost({ parts: use, now, sleep, send, mode: 'child', decide: askRunner });
   let stdinClosed = false;
   let onGo: (() => void) | null = null;
   let onProceed: (() => void) | null = null;
@@ -128,6 +147,12 @@ export async function runBot(def: BotDef): Promise<void> {
       anchorReal = Date.now();
       speed = m.speed;
     } else if (m.k === 'proceed') onProceed?.();
+    else if (m.k === 'decision') {
+      const choice = DECISION_CHOICES.find((c) => c === m.choice);
+      if (choice && pendingDecision && (m.order === undefined || m.order === pendingDecision.order)) {
+        pendingDecision.resolve({ choice, source: m.source === 'user' || m.source === 'timeout' ? m.source : 'default' });
+      }
+    }
     else if (m.k === 'shutdown') onShutdown?.();
     else host.control(m);
     if (m.k === 'go') onGo?.();
@@ -180,7 +205,7 @@ export async function runBot(def: BotDef): Promise<void> {
     },
   };
 
-  const sdk = new Sdk({ tier: def.tier, lane, use, host, transport, journalPath: join(scratch, 'journal.jsonl') });
+  const sdk = new Sdk({ tier: def.tier, lane, use, host, transport, journalPath: join(scratch, 'journal.jsonl'), ...(def.onWrongOrder ? { onWrongOrder: def.onWrongOrder } : {}) });
   host.bind(sdk);
 
   // ---- input handling ----
@@ -237,14 +262,18 @@ export async function runBot(def: BotDef): Promise<void> {
     const max = hasPart('breaker') ? 5 : hasPart('retry') ? 3 : 1;
     for (let n = 1; ; n++) {
       let failure: string;
+      let wrong = false;
       try {
         const r = await call(`/handoff/${encodeURIComponent(shipment)}?lane=${encodeURIComponent(lane)}`, { method: 'GET' }, 1500);
         const b = r.body as { status?: string };
         if (r.status === 200 && b.status === 'delivered') return;
+        wrong = r.status === 200 && b.status === 'wrong_order';
         failure = r.status === 200 ? `handoff blocked: ${b.status ?? 'unexpected'}` : `status ${r.status}`;
       } catch (e) {
         failure = e instanceof Error ? e.message : String(e);
       }
+      // The customer got the wrong order (detect: handoff): the SDK asks for a decision, it is not a transient block.
+      if (wrong) throw new WrongOrder('handoff');
       send({ type: 'stage_fail', order: curOrder, stage: 'handoff', detail: { attempt: n, reason: failure } });
       if (n >= max) throw new Error(failure);
       send({ type: 'recover_start', order: curOrder, stage: 'handoff', detail: { action: 'retry', attempt: n } });

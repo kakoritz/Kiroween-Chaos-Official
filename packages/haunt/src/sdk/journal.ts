@@ -8,9 +8,14 @@ export type JournalRecord =
   | { t: 'result'; order: string; stage: string; kind: string; key: string | null; eid: string; payload: unknown; ts: number }
   | { t: 'stage_done'; order: string; stage: string; ts: number }
   | { t: 'order_done'; order: string; ts: number }
-  | { t: 'order_end'; order: string; outcome: OrderOutcome; ts: number };
+  | { t: 'order_end'; order: string; outcome: OrderOutcome; ts: number }
+  /** Wrong-order redo (playtest-v2 design.md section 8): generation `n` starts from intake with `:rN` keys. */
+  | { t: 'order_redo'; order: string; n: number; ts: number }
+  /** The wrong-order decision that was made, so a restart applies it instead of asking again. */
+  | { t: 'decision'; order: string; choice: DecisionChoice; ts: number };
 
 export type OrderOutcome = 'done' | 'failed' | 'parked' | 'quarantined';
+export type DecisionChoice = 'refund' | 'discount' | 'redo';
 
 export interface EffectState {
   intent: boolean;
@@ -28,6 +33,10 @@ export interface OrderState {
   /** Set only by an `order_end` record (or `order_done`, which means done). */
   outcome: OrderOutcome | null;
   stages: Map<string, StageState>;
+  /** Redo generation: 0 for the first run, n after the nth `order_redo`. */
+  redo: number;
+  /** The wrong-order decision made in the current generation, if any. */
+  decision: DecisionChoice | null;
 }
 
 export type JournalState = Map<string, OrderState>;
@@ -55,7 +64,7 @@ export function readJournal(path: string): JournalRecord[] {
 export function applyRecord(state: JournalState, r: JournalRecord): void {
   const order = (id: string): OrderState => {
     let o = state.get(id);
-    if (!o) state.set(id, (o = { outcome: null, stages: new Map() }));
+    if (!o) state.set(id, (o = { outcome: null, stages: new Map(), redo: 0, decision: null }));
     return o;
   };
   const stage = (id: string, name: string): StageState => {
@@ -90,6 +99,17 @@ export function applyRecord(state: JournalState, r: JournalRecord): void {
       break;
     case 'order_end':
       order(r.order).outcome = r.outcome;
+      break;
+    case 'order_redo': {
+      // A redo starts the order again from intake: nothing of the wrong generation may be replayed.
+      const o = order(r.order);
+      o.stages = new Map();
+      o.redo = r.n;
+      o.decision = null;
+      break;
+    }
+    case 'decision':
+      order(r.order).decision = r.choice;
       break;
   }
 }

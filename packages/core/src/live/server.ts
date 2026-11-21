@@ -28,7 +28,7 @@ export const RETAINED_EVENTS = 5000;
 export const PING_MS = 15000;
 const SPEEDS = [0.5, 1, 2, 4];
 
-export interface ChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string }
+export interface ChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string; detect?: 'confirmation' | 'handoff' }
 export interface ChaosResult { chaosId: string; creature: string; fault: string; depth: number; deferred: boolean }
 export interface WaveSettings { orders: number; seed: number; tiers: TierMode; lanes: number; speed: number; pace: 'normal' | 'show' | 'slow'; app: AppId; campaign?: CampaignRequest }
 
@@ -40,6 +40,9 @@ export interface LiveEngine {
   stopWave?(): void;
   setSpeed?(speed: number): void;
   chaos?(req: ChaosRequest): ChaosResult;
+  /** POST /api/decision: the user answered a wrong order. 
+o_decision when nothing is pending for that order. */
+  decide?(lane: number, order: string, choice: string): 'ok' | 'no_decision' | 'bad_choice';
   setChaosMode?(mode: ChaosMode): void;
   startDemo?(script: string, speed?: number): void;
   stopDemo?(): void;
@@ -325,6 +328,10 @@ export class LiveServer {
     }
     const f = fault!;
     const req: ChaosRequest = { fault: f, creature: creature!.id, scope: body.scope, point: body.point };
+    if (body.detect !== undefined) {
+      if (body.detect !== 'confirmation' && body.detect !== 'handoff') fail(400, 'bad_request', 'detect must be confirmation or handoff');
+      if (f === 'order_typo') req.detect = body.detect;
+    }
     if (body.lane === undefined) {
       if (!isBoss(f)) fail(400, 'bad_lane', 'lane is required unless the fault is a boss fault');
     } else {
@@ -337,6 +344,29 @@ export class LiveServer {
     if (!this.engine.chaos) fail(409, 'not_applicable', 'no engine is attached');
     this.chaosCount++;
     return this.engine.chaos!(req);
+  }
+
+  /** `POST /api/decision {lane, order, choice}` (V1_1 section 7): answers the wrong order the lane is waiting on. */
+  private decision(body: Record<string, any>) {
+    if (typeof body.lane !== 'number') fail(400, 'bad_lane', 'lane must be 1 to 5');
+    const lane = this.laneOf(String(body.lane));
+    if (typeof body.order !== 'string' || typeof body.choice !== 'string') fail(400, 'bad_request', 'order and choice are required');
+    const order: string = body.order;
+    const choice: string = body.choice;
+    // Open decision: the last decision_needed of this order with no decision_made after it.
+    let open: HauntEvent | undefined;
+    for (const e of this.laneEvents(lane.lane)) {
+      if (e.order !== order) continue;
+      if (e.type === 'decision_needed') open = e;
+      else if (e.type === 'decision_made') open = undefined;
+    }
+    if (!open) fail(409, 'no_decision', 'no decision is pending for that order');
+    const options = ((open!.detail ?? {}) as { options?: string[] }).options ?? [];
+    if (!options.includes(choice)) fail(400, 'bad_request', 'choice is not one of the options');
+    const r = this.engine.decide?.(lane.lane, order, choice) ?? 'no_decision';
+    if (r === 'bad_choice') fail(400, 'bad_request', 'choice is not one of the options');
+    if (r !== 'ok') fail(409, 'no_decision', 'no decision is pending for that order');
+    return {};
   }
 
   private setChaosMode(body: Record<string, any>) {
@@ -416,6 +446,7 @@ export class LiveServer {
       }
       case '/api/chaos': return { json: this.chaos(body) };
       case '/api/chaos/mode': return { json: this.setChaosMode(body) };
+      case '/api/decision': return { json: this.decision(body) };
       case '/api/demo/start':
         if (!(DEMO_SCRIPTS as readonly string[]).includes(body.script)) fail(400, 'bad_request', 'bad script');
         if (!this.engine.startDemo) fail(409, 'not_applicable', 'demo needs the engine');

@@ -37,6 +37,7 @@ export class CampaignHub {
     this.el.innerHTML = `
       <div class="cphub__top"><h1 class="cphub__title">The Crypt</h1>
         <span class="cphub__credits">Credits <b>${this.progress.credits}</b></span>
+        <button class="btn btn--ghost cphub__close" type="button" data-act="sandbox">Sandbox</button>
         <button class="btn btn--ghost cphub__close" type="button" data-act="save">Save data</button>
         <button class="btn btn--ghost cphub__close" type="button" data-act="close">Close (Esc)</button></div>
       <p class="cphub__sub">Pick a tombstone door. Beat a night with a bronze medal to open the next one.</p>
@@ -49,6 +50,7 @@ export class CampaignHub {
           ${d.best ? `<span class="cpdoor__best">Best ${d.best}</span>` : ''}
         </button>`).join('')}</div>`;
     this.el.querySelector('[data-act=close]')!.addEventListener('click', () => this.close());
+    this.el.querySelector('[data-act=sandbox]')!.addEventListener('click', () => window.dispatchEvent(new CustomEvent('haunt:sandbox')));
     this.el.querySelector('[data-act=save]')!.addEventListener('click', () => openSaveDialog(this.el, window.localStorage, () => this.refresh()));
     this.el.querySelectorAll<HTMLButtonElement>('.cpdoor').forEach((b) => b.addEventListener('click', () => this.open(Number(b.dataset.i))));
     (this.el.querySelector(`.cpdoor[data-i="${this.focus}"]`) as HTMLElement | null)?.focus();

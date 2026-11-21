@@ -209,10 +209,10 @@ export class Provider {
         this.onReplay?.({ id: String(k.id), lane, kind, order, key, amount, index: null, ts: this.clock.now() });
       } else {
         const id = `${ID_PREFIX[kind]}_${this.next(`${lane}|${kind}`)}`;
-        const amount = kind === 'charge' && typeof body.amount === 'number' ? body.amount : null;
+        const amount = (kind === 'charge' || kind === 'refund' || kind === 'discount') && typeof body.amount === 'number' ? body.amount : null;
         const index = kind === 'notify' && typeof body.index === 'number' ? body.index : null;
         const payload: Record<string, unknown> = { id };
-        if (kind === 'charge') payload.amount = amount;
+        if (kind === 'charge' || kind === 'refund' || kind === 'discount') payload.amount = amount;
         if (kind === 'notify') payload.index = index;
         const row: LedgerRow = { id, lane, kind, order, key, amount, index, ts: this.clock.now() };
         this.rows.push(row);

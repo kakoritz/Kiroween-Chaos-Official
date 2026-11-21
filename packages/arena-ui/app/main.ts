@@ -37,6 +37,8 @@ import { gearShopStarter } from '../src/campaign/shop';
 import '../src/campaign/shop.css';
 import { mountCampaignResults } from '../src/campaign/results';
 import '../src/campaign/results.css';
+import { mountCampaignSandbox } from '../src/campaign/sandbox';
+import '../src/campaign/sandbox.css';
 import { ApiError, createApi, resolveHttpBase, type ArenaApi, type ArenaEvent, type ConnectionStatus, type HauntInPage } from '../src/api';
 
 // W1/W2 shell plus the A3 canvas arena: the client connects the same way for mock, live and\n// browser. Events feed a pure reducer; the canvas redraws every animation frame from that state.
@@ -255,10 +257,20 @@ const shopStart = gearShopStarter(stageEl, { getCampaign: () => api.getCampaign(
   waveSummary.suppressNext();
   return api.startWave(o);
 } });
+const campaignSandbox = mountCampaignSandbox(stageEl, { getCampaign: () => api.getCampaign(), startWave: async (o) => {
+  // CP-U4: practice run. Same clean start as a night, but results are NOT begun, so no credits or unlocks are recorded.
+  chainDemo = false; captionPlayer.stop();
+  if (demoRunning) { await api.stopDemo(); demoRunning = false; paintDemo(); }
+  try { await api.stopWave(); } catch { /* no wave running */ }
+  waveRunning = false;
+  waveSummary.suppressNext();
+  return api.startWave(o);
+} });
 const campaignResults = mountCampaignResults(stageEl, { getCampaign: () => api.getCampaign() }, { onNight: (n) => shopStart(n), onHub: () => window.dispatchEvent(new CustomEvent('haunt:splash', { detail: { action: 'campaign' } })) }); // CP-U3
 
 function onEvent(ev: ArenaEvent) {
   campaignResults.onEvent(ev);
+  campaignSandbox.onEvent(ev);
   waveSummary.onEvent(ev);
   queue.push(ev);
   captionPlayer.event(ev, performance.now());

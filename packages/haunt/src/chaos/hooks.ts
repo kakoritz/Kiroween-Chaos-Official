@@ -1,6 +1,6 @@
 // Bot-side chaos: the armed list, hook matching and the kill rendezvous host.
 // Spec: runtime.md section 3 (rendezvous) and section 19 (arming handshake).
-import type { HookPoint, Host, Part, Sdk } from '../sdk';
+import type { DecisionQuestion, HookPoint, Host, Part, Sdk } from '../sdk';
 import { ProcessKilled } from '../sdk';
 import { CRASH_POINTS, RECOVERY_POINTS, faultById } from './catalog';
 
@@ -60,6 +60,8 @@ export interface ChaosHostOptions {
   send(msg: Record<string, unknown>): void;
   /** `child`: send `at_point` and block forever, the runner SIGKILLs us. `throw`: in-process stand-in. */
   mode: 'child' | 'throw';
+  /** Wrong-order decision: ask the runner and wait. Without it the bot's own policy applies at once. */
+  decide?: Host['decide'];
 }
 
 /**
@@ -88,6 +90,10 @@ export class ChaosHost implements Host {
 
   emit(msg: Record<string, unknown>): void {
     this.o.send(msg);
+  }
+
+  decide(q: DecisionQuestion): ReturnType<NonNullable<Host['decide']>> {
+    return this.o.decide ? this.o.decide(q) : Promise.resolve({ choice: q.defaultChoice, source: 'default' });
   }
 
   control(msg: Record<string, unknown>): void {

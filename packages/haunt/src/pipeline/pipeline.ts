@@ -1,7 +1,7 @@
 // The eight-stage order pipeline and the five policy tiers.
 // Spec: .kiro/specs/engine/design.md sections 1 and 4; runtime.md sections 5, 7, 21 and 28.
 import { fnv1a32, mulberry32, unit } from '../shared';
-import { ParkSignal, ProcessKilled, QuarantineError, type Part, type Sdk } from '../sdk';
+import { ParkSignal, ProcessKilled, QuarantineError, WrongOrder, type Part, type Sdk } from '../sdk';
 
 export interface StageDef {
   id: string;
@@ -78,6 +78,20 @@ export function generateOrders(seed: string | number, n: number): OrderData[] {
     out.push({ id: orderId(i), email: `user${i}@example.test`, items, total: items.reduce((a, b) => a + b.qty * b.price, 0) });
   }
   return out;
+}
+
+/**
+ * `order_typo` (design.md section 8): the same customer and id, but every line is a different product. The file is still
+ * valid JSON, so intake passes and the wrong cart is charged. Deterministic from the seed.
+ */
+export function swapItems(order: OrderData, seed: string | number): OrderData {
+  const rng = mulberry32(fnv1a32(`${seed}|typo|${order.id}`));
+  const items = order.items.map((it) => {
+    const pool = SKUS.filter((s) => s.sku !== it.sku && s.price !== it.price);
+    const pick = pool[Math.floor(rng() * pool.length)]!;
+    return { sku: pick.sku, qty: it.qty, price: pick.price };
+  });
+  return { ...order, items, total: items.reduce((a, b) => a + b.qty * b.price, 0) };
 }
 
 /** Work duration in ms before the speed divisor: `min + u * (max - min)`. */
@@ -226,7 +240,16 @@ export class Pipeline {
     });
     await sdk.stage('handoff', async (s) => {
       await s.work(this.work(def('handoff'), id));
-      await this.d.handoff?.(shipment);
+      // A wrong order found at handoff (detect: 'handoff'): after a discount the handoff call is made again.
+      for (;;) {
+        try {
+          await this.d.handoff?.(shipment);
+          return;
+        } catch (e) {
+          if (!(e instanceof WrongOrder)) throw e;
+          await s.wrongOrder(e.detectedAt);
+        }
+      }
     });
   }
 

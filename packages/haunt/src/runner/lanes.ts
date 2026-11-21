@@ -1,7 +1,7 @@
 // Runner lane setup: lane to tier mapping (runtime.md section 11) and per-lane order input layout (section 5).
-import { copyFileSync, existsSync, mkdirSync, readdirSync, renameSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { generateOrders, orderId, tierById, type OrderData, type TierDef, type TierId } from '../pipeline/pipeline';
+import { generateOrders, orderId, swapItems, tierById, type OrderData, type TierDef, type TierId } from '../pipeline/pipeline';
 
 export type TierMode = 'race' | 'allPhoenix';
 
@@ -39,7 +39,11 @@ export interface LanePaths {
 }
 
 export function lanePaths(runDir: string, lane: number): LanePaths {
-  const root = join(runDir, `lane-${lane}`);
+  return lanePathsAt(join(runDir, `lane-${lane}`));
+}
+
+/** Paths of a lane from its root folder (the parent of `orders/`). */
+export function lanePathsAt(root: string): LanePaths {
   return {
     root,
     orders: join(root, 'orders'),
@@ -100,3 +104,34 @@ export function corruptNext(paths: LanePaths): string | undefined {
 }
 
 export { orderId };
+
+/**
+ * `order_typo` (design.md section 8): swap the items of the order file for different products, keeping the original in
+ * `orig/`. The file stays valid JSON, so intake passes. Returns false when the file is missing or not an order.
+ */
+export function typoOrder(paths: LanePaths, order: string, seed: string | number): boolean {
+  const file = `${order}.json`;
+  const path = join(paths.orders, file);
+  if (!existsSync(path)) return false;
+  let data: OrderData;
+  try {
+    data = JSON.parse(readFileSync(path, 'utf8')) as OrderData;
+  } catch {
+    return false;
+  }
+  if (!Array.isArray(data.items) || typeof data.id !== 'string') return false;
+  mkdirSync(paths.orig, { recursive: true });
+  const saved = join(paths.orig, file);
+  if (!existsSync(saved)) copyFileSync(path, saved);
+  writeFileSync(path, JSON.stringify(swapItems(data, seed)));
+  return true;
+}
+
+/** A redo: put the original order file back from `orig/`. Returns false when no original was saved. */
+export function restoreOrder(paths: LanePaths, order: string): boolean {
+  const file = `${order}.json`;
+  const saved = join(paths.orig, file);
+  if (!existsSync(saved)) return false;
+  copyFileSync(saved, join(paths.orders, file));
+  return true;
+}

@@ -37,3 +37,4 @@ describe('sprite lab registry', () => {
     }
   });
 });
+// covers: SH-U1

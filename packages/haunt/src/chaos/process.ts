@@ -44,6 +44,11 @@ export class BotProcess {
     this.listeners.push(fn);
   }
 
+  /** The process is still running, so a message sent now can be heard. */
+  get alive(): boolean {
+    return this.child.exitCode === null && this.child.signalCode === null;
+  }
+
   send(msg: BotMessage): void {
     if (this.child.exitCode === null && this.child.signalCode === null) this.child.stdin!.write(`${JSON.stringify(msg)}\n`);
   }

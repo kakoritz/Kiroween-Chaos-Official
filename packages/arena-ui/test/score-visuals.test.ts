@@ -37,3 +37,4 @@ describe('PT-U8 score visuals model', () => {
     expect(avgStarsText(vm.lanes[1]!)).toBe('-');
   });
 });
+// covers: PT-U8

@@ -18,6 +18,8 @@ const botCommand = makeBotCommand({
 const specsDir = join(process.cwd(), '.kiro', 'specs');
 const rt = createLiveRuntime({
   botCommand,
+  // Provider faults (http_500, order_typo, ...) land on the provider the bots call.
+  post: async (body) => { provider.provider.addFault(body); },
   ledgerRows: (lane) => provider.provider.ledger(lane),
   // Loop: when lane 1 swaps to the hardened bundle, emit the reviewer spec, the recorded fix and the new parts before wave_start (runtime.md section 32).
   betweenWaves: loop

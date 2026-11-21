@@ -9,7 +9,7 @@ Branches `core/SH-...`, `ui/SH-...`, `docs/SH-...`.
 - [x] **SH-C4 Real loop proof.** Run the live loop, get wave 2 to A on the stated plan, fix the Phoenix lost-order and `updates` crash cases if they appear, save everything in `docs/proof/`; label recorded fixes.
 - [x] **SH-C5 LLM reviewer and hook.** `reviewer --llm`, fallback to rules, hook at wave end.
 - [x] **SH-C6 Inbox live in the arena.** Spawn the Python inbox through the runner for real (not only the CLI sweep) so Night 6 and the app switcher use a live second app. (Judge panel noted this was not done.)
-- [ ] **SH-K1 Trace generator and hook.** `tools/trace.ts`, `docs/TRACE.md`, `.kiro/hooks/trace-on-merge`, `// covers:` comments in tests.
+- [x] **SH-K1 Trace generator and hook.** `tools/trace.ts`, `docs/TRACE.md`, `.kiro/hooks/trace-on-merge`, `// covers:` comments in tests.
 - [x] **SH-K3 Install proof.** (local handshake and screenshots done; IDE and Crew installs are the owner-only, see `docs/proof/installed/README.md`) Install the Power and the Crew app, capture screenshots and clips, update docs.
 - [ ] **SH-K4 MCP scene.** Script and recording notes in `docs/proof/mcp-scene.md`.
 - [ ] **SH-K5 Steering files.** `tech.md`, `contract.md`, `art.md` in `.kiro/steering/`.

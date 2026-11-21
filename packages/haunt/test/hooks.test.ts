@@ -8,12 +8,19 @@ const dir = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '.ki
 const hooks = readdirSync(dir).filter((f) => f.endsWith('.kiro.hook')).map((f) => ({ f, h: JSON.parse(readFileSync(join(dir, f), 'utf8')) }));
 
 describe('kiro hooks', () => {
-  it('has the three required hooks', () => {
+  it('has the required hooks', () => {
     expect(hooks.map((x) => x.f).sort()).toEqual([
       'fixtures-on-contract-save.kiro.hook',
       'pbt-on-sdk-save.kiro.hook',
       'reviewer-on-wave-end.kiro.hook',
+      'trace-on-merge.kiro.hook',
     ]);
+  });
+  it('the trace hook runs an existing npm script', () => {
+    const h = hooks.find((x) => x.f.startsWith('trace'))!.h;
+    const pkg = JSON.parse(readFileSync(join(dir, '..', '..', 'package.json'), 'utf8'));
+    expect(h.then.command).toBe('npm run trace');
+    expect(pkg.scripts.trace).toBeTruthy();
   });
   it('each hook is enabled with a trigger and an action', () => {
     for (const { h } of hooks) {

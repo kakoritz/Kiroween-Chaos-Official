@@ -1,8 +1,9 @@
 // SDK: order(), stage(), effect(), journal replay and reconcile.
 // Semantics: .kiro/specs/engine/runtime.md sections 1, 3, 6, 7, 28 (they win over design.md).
+import { TIER_DECISION_DEFAULT } from '../shared/catalog';
 import {
   Journal, JournalWriteError, applyRecord, readJournal, replay,
-  type EffectState, type JournalRecord, type JournalState, type OrderOutcome,
+  type DecisionChoice, type EffectState, type JournalRecord, type JournalState, type OrderOutcome,
 } from './journal';
 
 export type Part = 'retry' | 'journal' | 'idempotency' | 'breaker' | 'offline_queue';
@@ -23,6 +24,23 @@ export interface Host {
   hook(point: HookPoint, ctx: { order?: string; stage?: string }): Promise<void>;
   /** Contract events (`type`) and control messages (`k`). */
   emit(msg: Record<string, unknown>): void;
+  /**
+   * Wrong order found (design.md section 8): ask who decides and wait. A host without `decide` (in-process runs, tests)
+   * gets the bot's own policy at once with source `default`. The bot runtime sends `{k:'decision_needed'}` and waits
+   * for the runner's `{k:'decision'}`.
+   */
+  decide?(q: DecisionQuestion): Promise<{ choice: DecisionChoice; source: DecisionSource }>;
+}
+
+export type DecisionSource = 'user' | 'default' | 'timeout';
+export type DetectedAt = 'confirmation' | 'handoff';
+
+export interface DecisionQuestion {
+  order: string;
+  stage: string;
+  detectedAt: DetectedAt;
+  /** The bot's own policy (`onWrongOrder`): what happens if nobody answers. */
+  defaultChoice: DecisionChoice;
 }
 
 export interface TransportResponse {
@@ -50,6 +68,29 @@ export class ProcessKilled extends Error {}
 /** Poison input. Never retried. */
 export class QuarantineError extends Error {}
 
+/**
+ * The order the customer got is not the order that was placed. Raised by the SDK when the confirmation email answers
+ * with a complaint, and by a bot's handoff call that sees `wrong_order`. The SDK resolves it (refund, discount or
+ * redo) from the decision; a bot only throws it itself from a call the SDK does not make.
+ */
+export class WrongOrder extends Error {
+  constructor(readonly detectedAt: DetectedAt) {
+    super(`wrong order detected at ${detectedAt}`);
+  }
+}
+
+/** The wrong order was refunded: the order is cancelled. Unwinds to `order()`. */
+class OrderCancelled extends Error {
+  constructor(readonly stage: string) {
+    super('wrong order refunded');
+  }
+}
+/** The wrong order was refunded and starts again from intake. Unwinds to `order()`. */
+class OrderRedo extends Error {}
+
+/** Journal home of the refund and discount effects: they belong to no pipeline stage. */
+const RESOLUTION_STAGE = 'wrong_order';
+
 export class CallError extends Error {
   constructor(readonly status: number | null, readonly retryAfterMs: number | null, msg: string) {
     super(msg);
@@ -70,6 +111,8 @@ export interface SdkOptions {
   initialRecords?: readonly JournalRecord[];
   /** Process id for the hello message. Defaults to process.pid when available. */
   pid?: number;
+  /** What the bot does when nobody answers a wrong order (`defineBot` option). Defaults to the tier policy. */
+  onWrongOrder?: DecisionChoice;
 }
 
 /** Append-only record sink. The node Journal and the browser worker store both fit. */
@@ -101,6 +144,10 @@ export class Sdk {
   private keyUsed = false;
   private order_: string | null = null;
   private replaying = false;
+  /** Redo generation of the order in flight: 0 first, n after the nth redo. Drives the `:rN` key suffix. */
+  private gen = 0;
+  /** Amount of the last charge per order, for the refund. */
+  private readonly charged = new Map<string, number>();
 
   constructor(private readonly o: SdkOptions) {
     this.use = new Set(o.use);
@@ -152,29 +199,41 @@ export class Sdk {
     }
     this.order_ = id;
     this.replaying = false;
+    this.gen = this.state.get(id)?.redo ?? 0;
     this.ev('order_start', id);
     let outcome: OrderOutcome;
     let result: OrderResult;
-    try {
-      await fn(this);
-      outcome = 'done';
-      result = 'done';
-      this.ev('order_done', id);
-    } catch (e) {
-      if (e instanceof ProcessKilled) throw e;
-      if (e instanceof ParkSignal) {
-        outcome = 'parked';
-        result = 'parked';
-        this.ev('order_parked', id, undefined, { reason: e.reason });
-      } else if (e instanceof QuarantineError) {
-        outcome = 'quarantined';
-        result = 'quarantined';
-        this.ev('order_quarantined', id, undefined, { reason: e.message });
-      } else {
-        outcome = 'failed';
-        result = 'failed';
-        this.ev('order_failed', id, undefined, { reason: e instanceof Error ? e.message : String(e) });
+    for (;;) {
+      try {
+        // A wrong order found before a restart is settled first: a decision already made is applied, an unanswered one is asked again.
+        const w = this.pendingWrong(id);
+        if (w) await this.wrongOrder(id, w.stage, w.detectedAt);
+        await fn(this);
+        outcome = 'done';
+        result = 'done';
+        this.ev('order_done', id);
+      } catch (e) {
+        if (e instanceof ProcessKilled) throw e;
+        if (e instanceof OrderRedo) continue;
+        if (e instanceof OrderCancelled) {
+          outcome = 'failed';
+          result = 'failed';
+          this.ev('order_failed', id, undefined, { stage: e.stage, error: 'wrong_order', outcome: 'cancelled', reason: 'refunded' });
+        } else if (e instanceof ParkSignal) {
+          outcome = 'parked';
+          result = 'parked';
+          this.ev('order_parked', id, undefined, { reason: e.reason });
+        } else if (e instanceof QuarantineError) {
+          outcome = 'quarantined';
+          result = 'quarantined';
+          this.ev('order_quarantined', id, undefined, { reason: e.message });
+        } else {
+          outcome = 'failed';
+          result = 'failed';
+          this.ev('order_failed', id, undefined, { reason: e instanceof Error ? e.message : String(e) });
+        }
       }
+      break;
     }
     this.write({ t: 'order_end', order: id, outcome, ts: this.o.host.now() });
     this.order_ = null;
@@ -233,7 +292,7 @@ export class Sdk {
     if (prior?.result) {
       await host.hook('during_replay', { order, stage });
       seen.replayed++;
-      return prior.payload;
+      return this.checked(order, stage, kind, prior.payload);
     }
     seen.ran++;
     await host.hook('before_effect', { order, stage });
@@ -257,7 +316,83 @@ export class Sdk {
     await host.hook('after_effect_before_journal', { order, stage });
     this.write({ t: 'result', order, stage, kind, key, eid, payload, ts: host.now() });
     await host.hook('after_journal', { order, stage });
+    return this.checked(order, stage, kind, payload);
+  }
+
+  /** Settles what a finished effect reports: a confirmation email that carries a wrong-order complaint raises `WrongOrder`. */
+  private async checked(order: string, stage: string, kind: string, payload: unknown): Promise<unknown> {
+    const p = payload as { amount?: unknown; complaint?: unknown } | null | undefined;
+    if (kind === 'charge' && typeof p?.amount === 'number') this.charged.set(order, p.amount);
+    if (kind === 'email' && p?.complaint === 'wrong_order') await this.wrongOrder(order, stage, 'confirmation');
     return payload;
+  }
+
+  /** Key suffix of the current redo generation (`:r1`, `:r2`, ...), empty for the first run. */
+  suffix(): string {
+    return this.gen > 0 ? `:r${this.gen}` : '';
+  }
+
+  /** The detection already journaled for an order whose decision is not fully applied yet (restart in the middle). */
+  private pendingWrong(order: string): { stage: string; detectedAt: DetectedAt } | null {
+    if (!this.journal) return null;
+    const st = this.state.get(order);
+    if (!st || this.discounted(order)) return null;
+    for (const [stage, s] of st.stages) {
+      const c = s.effects.get('complaint');
+      if (c?.result) return { stage, detectedAt: (c.payload as { detectedAt?: DetectedAt } | undefined)?.detectedAt ?? 'confirmation' };
+    }
+    return null;
+  }
+
+  private discounted(order: string): boolean {
+    const st = this.state.get(order);
+    return st?.decision === 'discount' && st.stages.get(RESOLUTION_STAGE)?.effects.get('discount')?.result === true;
+  }
+
+  /**
+   * Wrong order found (design.md section 8): journal the detection, ask for the decision once, journal it, then apply it.
+   * `discount` returns so the stage carries on; `refund` and `redo` unwind to `order()`. Calling it again for an order
+   * whose discount is already applied does nothing, so a replayed stage does not ask twice.
+   */
+  async wrongOrder(order: string, stage: string, detectedAt: DetectedAt): Promise<void> {
+    const { host } = this.o;
+    if (this.discounted(order)) return;
+    const st = this.state.get(order);
+    const logged = st?.stages.get(stage)?.effects.get('complaint')?.result === true;
+    if (!logged) {
+      this.write({ t: 'result', order, stage, kind: 'complaint', key: null, eid: 'complaint', payload: { detectedAt }, ts: host.now() });
+      this.ev('stage_fail', order, stage, { error: 'wrong_order', retryable: false });
+    }
+    let choice: DecisionChoice | null = st?.decision ?? null;
+    if (choice === null) {
+      const defaultChoice = this.o.onWrongOrder ?? TIER_DECISION_DEFAULT[this.o.tier] ?? 'refund';
+      const answer = host.decide ? await host.decide({ order, stage, detectedAt, defaultChoice }) : { choice: defaultChoice };
+      choice = answer.choice;
+      this.write({ t: 'decision', order, choice, ts: host.now() });
+    }
+    if (choice === 'discount') {
+      await this.resolution(order, 'discount');
+      return;
+    }
+    await this.resolution(order, 'refund');
+    if (choice === 'refund') throw new OrderCancelled(stage);
+    const n = this.gen + 1;
+    this.write({ t: 'order_redo', order, n, ts: host.now() });
+    this.gen = n;
+    for (const k of [...this.slept]) if (k.startsWith(`${order}|`)) this.slept.delete(k);
+    for (const k of [...this.runs.keys()]) if (k.startsWith(`${order}|`)) this.runs.delete(k);
+    this.replaying = false;
+    this.ev('order_start', order, undefined, { redo: true });
+    throw new OrderRedo();
+  }
+
+  /** The refund or discount for the wrong order, keyed `<order>:refund` / `<order>:discount` (plus `:rN` in a redo). */
+  private resolution(order: string, kind: 'refund' | 'discount'): Promise<unknown> {
+    const journaled = (this.state.get(order)?.stages.get('payment')?.effects.get('charge')?.payload as { amount?: unknown } | undefined)?.amount;
+    const charge = this.charged.get(order) ?? (typeof journaled === 'number' ? journaled : 0);
+    const amount = kind === 'refund' ? charge : Math.round(charge / 5);
+    const key = this.use.has('idempotency') ? `${order}:${kind}${this.suffix()}` : undefined;
+    return this.effect(order, RESOLUTION_STAGE, kind, { ...(key !== undefined ? { key } : {}), body: { amount } }, { replayed: 0, ran: 0 });
   }
 
   private async reconcile(order: string, stage: string, kind: string, key: string): Promise<Record<string, unknown> | undefined> {
@@ -273,7 +408,7 @@ export class Sdk {
     this.ev('recover_done', order, stage, { action: 'reconciled' });
     const row = r.row;
     const payload: Record<string, unknown> = { id: row.id };
-    if (kind === 'charge') payload.amount = row.amount;
+    if (kind === 'charge' || kind === 'refund' || kind === 'discount') payload.amount = row.amount;
     if (kind === 'notify') payload.index = row.index;
     return payload;
   }
@@ -385,9 +520,14 @@ export class StageCtx {
 
   constructor(private readonly sdk: Sdk, readonly order: string, readonly stage: string) {}
 
-  /** Idempotency key `<order>:<name>`. */
+  /** Idempotency key `<order>:<name>`, with `:rN` after a wrong-order redo. */
   key(name: string): string {
-    return `${this.order}:${name}`;
+    return `${this.order}:${name}${this.sdk.suffix()}`;
+  }
+
+  /** The bot found a wrong order itself (the handoff call). Returns after a discount; refund and redo unwind the order. */
+  wrongOrder(detectedAt: DetectedAt): Promise<void> {
+    return this.sdk.wrongOrder(this.order, this.stage, detectedAt);
   }
 
   work(ms: number): Promise<void> {

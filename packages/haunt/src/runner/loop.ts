@@ -1,6 +1,7 @@
 // Runner process loop for one lane: start the bot, serve the kill rendezvous, restart after the
 // director's delay until the bot exits on its own. Spec: runtime.md sections 1 and 3.
 import { BotProcess, serveRendezvous, type ChaosDirector, type Exit, type Killed } from '../chaos';
+import { DecisionBroker, parseAsk, type DecisionAnswer, type DecisionAsk } from './decisions';
 
 export interface LaneLoopOptions {
   lane: string;
@@ -22,6 +23,12 @@ export interface LaneLoopOptions {
   onProcess?: (send: (m: Record<string, unknown>) => void) => void;
   /** The bot reached a hook (`at_point`). Runs before the rendezvous replies, so a file fault lands before the bot's next read. */
   onAtPoint?: (point: string, ctx: Record<string, unknown>) => void;
+  /**
+   * The bot found a wrong order and asks what to do (`{k:'decision_needed'}`). Resolve with the answer; the loop sends it
+   * back as `{k:'decision'}`. Without it the loop decides at once with the bot's own default (source `default`), which is
+   * what headless runs and sweeps do. `alive` tells whether the asking process can still hear the answer.
+   */
+  onDecision?: (ask: DecisionAsk, alive: () => boolean) => Promise<DecisionAnswer>;
 }
 
 export interface LaneLoopResult {
@@ -39,6 +46,8 @@ export async function runLane(o: LaneLoopOptions): Promise<LaneLoopResult> {
   const sleep = o.sleep ?? defaultSleep;
   const max = o.maxStarts ?? 10;
   const kills: Killed[] = [];
+  // Headless decisions: nobody to ask, so the bot's own default applies at once (source `default`), once per wrong order.
+  const headless = new DecisionBroker({ emit: (_lane, ev) => o.onEvent?.(ev as unknown as Record<string, unknown>), timeoutMs: () => 0 });
   for (let n = 1; ; n++) {
     if (o.signal?.aborted) return { starts: n - 1, kills, exit: { code: null, signal: null }, clean: false };
     const proc = new BotProcess(o.command, o.args, o.env);
@@ -52,6 +61,14 @@ export async function runLane(o: LaneLoopOptions): Promise<LaneLoopResult> {
       const msg = m as Record<string, unknown>;
       if (typeof msg.type === 'string') o.onEvent?.(msg);
       else if (msg.k === 'idle') proc.send({ k: 'shutdown' });
+      else if (msg.k === 'decision_needed') {
+        const ask = parseAsk(msg);
+        if (!ask) return;
+        const answer: Promise<DecisionAnswer> = o.onDecision
+          ? o.onDecision(ask, () => proc.alive)
+          : headless.ask(o.lane, ask, () => proc.alive);
+        void answer.then((a) => proc.send({ k: 'decision', order: ask.order, choice: a.choice, source: a.source }));
+      }
     });
     await proc.waitFor('ready');
     proc.send({ k: 'go', arms: o.director.pendingArms(o.lane) });

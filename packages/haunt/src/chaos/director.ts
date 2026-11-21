@@ -22,6 +22,8 @@ export interface ArmRequest {
   scope?: Scope;
   /** Overrides the catalog window (the Banshee Queen's 12000 ms). */
   forMs?: number;
+  /** order_typo: where the wrong order is found, `confirmation` (default) or `handoff`. */
+  detect?: 'confirmation' | 'handoff';
 }
 
 /** The `chaos` event detail. It is emitted at the press, never at the kill. */
@@ -60,6 +62,8 @@ interface Entry {
   point: HookPoint | null;
   fired: boolean;
   forMs: number | null;
+  /** order_typo: where the wrong order is found. */
+  detect: 'confirmation' | 'handoff' | null;
   /** Waiting for this stage (deferral). Null when ready. */
   waitStage: string | null;
 }
@@ -117,7 +121,7 @@ export class ChaosDirector {
     const scope: Scope = req.scope ?? (recovering ? 'inner' : 'outer');
     // A dead lane has no stage hook to reach: whatever is armed lands in recovery.
     const eff: Scope = info.state === 'dead' ? 'inner' : scope;
-    const entry: Entry = { id: this.nextId++, def, scope: eff, point: req.point ?? null, fired: false, forMs: req.forMs ?? null, waitStage: null };
+    const entry: Entry = { id: this.nextId++, def, scope: eff, point: req.point ?? null, fired: false, forMs: req.forMs ?? null, detect: req.detect ?? null, waitStage: null };
 
     const detail: ChaosDetail = {
       fault: def.id, scope: eff, depth: L.entries.length + 1,
@@ -126,7 +130,15 @@ export class ChaosDirector {
     if (entry.point) detail.point = entry.point;
 
     let provider: ProviderArm | null = null;
-    if (def.kind !== 'process') {
+    if (def.id === 'order_typo') {
+      // The wrong order needs the file swapped first: it waits for the bot's next `input_read` hook (`onInputRead`),
+      // which also names the order the provider complains about.
+      entry.waitStage = INPUT_READ;
+      if (info.stage !== null && info.stage !== 'intake') {
+        detail.deferred = true;
+        detail.deferredTo = 'intake';
+      }
+    } else if (def.kind !== 'process') {
       const applies = info.stage !== null && def.stages.includes(info.stage);
       // Inner provider faults go to the next call made by recovery code, whatever the stage.
       if (!applies && eff === 'outer') {
@@ -155,6 +167,19 @@ export class ChaosDirector {
       }
     }
     return out;
+  }
+
+  /**
+   * The bot reached its `input_read` hook for `order`. Returns the armed wrong-order fault (order_typo) that now acts, for
+   * the runner to swap the file and post to the provider, or null when none is waiting.
+   */
+  onInputRead(lane: string, order: string): ProviderArm | null {
+    const e = this.lane(lane).entries.find((x) => x.def.id === 'order_typo' && x.waitStage === INPUT_READ && !x.fired);
+    if (!e) return null;
+    e.fired = true;
+    e.waitStage = null;
+    const { nextCaller: _recovery, ...arm } = providerArm(e);
+    return { ...arm, order };
   }
 
   /**
@@ -226,5 +251,9 @@ function providerArm(e: Entry): ProviderArm {
   if (forMs !== undefined) a.forMs = forMs;
   if (e.def.count !== undefined) a.count = e.scope === 'inner' ? 1 : e.def.count;
   if (e.scope === 'inner') a.nextCaller = 'recovery';
+  if (e.detect !== null) a.detect = e.detect;
   return a;
 }
+
+/** Marker for a fault that waits for the bot's `input_read` hook instead of a stage. */
+const INPUT_READ = 'input_read';

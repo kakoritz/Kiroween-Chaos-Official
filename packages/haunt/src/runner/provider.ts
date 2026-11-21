@@ -75,10 +75,10 @@ export class RepeatDetector {
     // Ledger exemption P15 (playtest-v2 design.md section 8): refund and discount rows are legitimate, and a charge
     // keyed :rN after a refund row of the same order is the redo's new charge, not a repeat.
     if (row.kind === 'refund' || row.kind === 'discount') {
-      if (row.kind === 'refund') this.refunded.add(`|`);
+      if (row.kind === 'refund') this.refunded.add(`${row.lane}|${row.order}`);
       return null;
     }
-    if (row.kind === 'charge' && typeof row.key === 'string' && /:r\d+$/.test(row.key) && this.refunded.has(`|`)) return null;
+    if (row.kind === 'charge' && typeof row.key === 'string' && /:r\d+$/.test(row.key) && this.refunded.has(`${row.lane}|${row.order}`)) return null;
     const key = row.index === null || row.index === undefined ? `${row.order}:${row.kind}` : `${row.order}:${row.kind}:${row.index}`;
     const id = `${row.lane}|${row.kind}|${key}`;
     const n = (this.counts.get(id) ?? 0) + 1;

@@ -16,3 +16,4 @@ describe('gear shop slot anchors', () => {
     for (const ys of cols.values()) { ys.sort((a, b) => a - b); for (let i = 1; i < ys.length; i++) expect(ys[i]! - ys[i - 1]!).toBeGreaterThanOrEqual(20); }
   });
 });
+// covers: CP-E2E

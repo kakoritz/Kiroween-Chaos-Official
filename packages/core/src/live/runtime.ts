@@ -1,13 +1,15 @@
 // Live runtime: ties the runner pieces to the live server. Per-lane bot spawning, demo script playback, the wave
 // clock, the ledger endpoint payload and the hardening spec reader. Spec: runtime.md sections 4, 16, 19; PROTOCOL.md.
 import { existsSync, readdirSync, readFileSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import type { HauntEvent } from '../../../haunt/src/score/score';
 import { RunnerEngine, type EngineWaveSettings, type RunnerEngineOptions } from '../../../haunt/src/runner/engine';
-import { prepareLane, tiersForLanes } from '../../../haunt/src/runner/lanes';
+import { lanePathsAt, prepareLane, restoreOrder, tiersForLanes, typoOrder } from '../../../haunt/src/runner/lanes';
 import { runLane, type LaneLoopOptions, type LaneLoopResult } from '../../../haunt/src/runner/loop';
 import { BOSS_DURATION_MS, WaveClock } from '../../../haunt/src/runner/live';
 import { RepeatDetector, postProviderArm } from '../../../haunt/src/runner/provider';
+import { DecisionBroker, type DecisionAnswer, type DecisionAsk } from '../../../haunt/src/runner/decisions';
+import { DECISION_TIMEOUT_MS } from '../../../haunt/src/shared/catalog';
 import type { BossId } from '../../../haunt/src/chaos/catalog';
 import type { LedgerRow } from '../provider';
 import { DetailNormalizer, SettleGate } from './normalize';
@@ -36,6 +38,10 @@ export interface SpawnerOptions {
   onWaveDone?: (wave: number) => void;
   /** Bot event lines and runner process events for a lane, before the envelope. */
   onEvent?: (lane: string, ev: Record<string, unknown>) => void;
+  /** The lane's bot reached a hook. `env` is the bot's environment (`HAUNT_ORDERS_DIR`, `HAUNT_SEED`). Runs before the bot is released. */
+  onAtPoint?: (lane: string, point: string, ctx: Record<string, unknown>, env: Record<string, string>) => void;
+  /** The lane's bot found a wrong order and asks for a decision. Without it each lane decides at once with the bot's default. */
+  onDecision?: (lane: string, ask: DecisionAsk, alive: () => boolean, env: Record<string, string>) => Promise<DecisionAnswer>;
 }
 
 /** Starts `runLane` for every lane of a wave and aborts them all on stop. */
@@ -64,6 +70,8 @@ export class LaneSpawner {
         run({
           lane, director: this.o.engine.director, command: cmd.command, args: cmd.args, env: cmd.env, signal: ctl.signal,
           onEvent: (ev) => this.o.onEvent?.(lane, ev),
+          ...(this.o.onAtPoint ? { onAtPoint: (point: string, ctx: Record<string, unknown>) => this.o.onAtPoint!(lane, point, ctx, cmd.env ?? {}) } : {}),
+          ...(this.o.onDecision ? { onDecision: (ask: DecisionAsk, alive: () => boolean) => this.o.onDecision!(lane, ask, alive, cmd.env ?? {}) } : {}),
           onProcess: (send) => { this.senders.set(lane, send); },
           onKilled: (k) => this.o.onEvent?.(lane, { type: 'process_dead', detail: { reason: k.fired.fault, restartInMs: k.fired.restartMs } }),
           onStart: (n) => { if (n > 1) this.o.onEvent?.(lane, { type: 'process_up', detail: { attempt: n } }); },
@@ -332,6 +340,18 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
   let resetTravel: () => void = () => {};
   const norm = new DetailNormalizer();
   let gate: SettleGate | undefined;
+  // Wrong order (design.md section 8): the broker owns each decision from `decision_needed` to `decision_made`.
+  let botEvent: (lane: string, ev: Record<string, unknown>) => void = () => {};
+  const laneEnv = new Map<string, Record<string, string>>();
+  const decisions = new DecisionBroker({
+    emit: (lane, ev) => botEvent(lane, ev as unknown as Record<string, unknown>),
+    timeoutMs: () => Math.max(1, Math.round(DECISION_TIMEOUT_MS / (engine.speed || 1))),
+    onResolved: (lane, order, a) => {
+      // A redo runs the order again from the file the customer actually sent.
+      const env = laneEnv.get(lane);
+      if (a.choice === 'redo' && env?.HAUNT_ORDERS_DIR) restoreOrder(lanePathsAt(dirname(env.HAUNT_ORDERS_DIR)), order);
+    },
+  });
   // Ledger rows become `repeat` events for the running wave (design.md section 8: repeats feed the wave grade).
   const repeats = new RepeatDetector();
   const ledgerRow = (row: LedgerRow, replayed = false): void => {
@@ -379,7 +399,23 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
     const idle = (): Promise<unknown> => Promise.all([...chains.values()]);
     spawner = new LaneSpawner({
       engine, botCommand: opts.botCommand, run: opts.run,
-      onEvent: (lane, ev) => {
+      // order_typo (design.md section 8): at the bot's `input_read` the next order file is swapped for a different cart,
+      // and the provider is told to complain about that order, before the bot reads it.
+      onAtPoint: (lane, point, ctx, env) => {
+        laneEnv.set(lane, env);
+        if (point !== 'input_read' || typeof ctx.order !== 'string' || !env.HAUNT_ORDERS_DIR) return;
+        const paths = lanePathsAt(dirname(env.HAUNT_ORDERS_DIR));
+        if (!existsSync(join(paths.orders, `${ctx.order}.json`))) return;
+        const arm = engine.director.onInputRead(lane, ctx.order);
+        if (!arm) return;
+        typoOrder(paths, ctx.order, env.HAUNT_SEED ?? '1');
+        if (opts.post) void postProviderArm(opts.post, lane, 'intake', arm);
+      },
+      onDecision: (lane, ask, alive, env) => {
+        laneEnv.set(lane, env);
+        return decisions.ask(lane, ask, alive);
+      },
+      onEvent: botEvent = (lane, ev) => {
         if (opts.travel === false) { for (const e of norm.shape(lane, { detail: {}, ...ev, lane })) record?.({ ...e, lane } as unknown as HauntEvent); return; }
         const my = epoch;
         const lt = travelOf(lane);
@@ -401,6 +437,8 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
   const live: LiveEngine = {
     startWave(wave, settings, rec, end) {
       resetTravel();
+      decisions.clear();
+      laneEnv.clear();
       curApp = settings.app;
       curPace = settings.pace;
       norm.begin(settings.orders);
@@ -412,9 +450,10 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
       startNight(settings);
     },
     betweenWaves: opts.betweenWaves,
-    stopWave: () => { resetTravel(); engine.stopWave(); },
+    stopWave: () => { resetTravel(); decisions.clear(); engine.stopWave(); },
     setSpeed: (s) => engine.setSpeed(s),
     chaos: (req) => engine.chaos(req),
+    decide: (lane, order, choice) => decisions.answer(String(lane), order, choice),
     setChaosMode: (m) => engine.setChaosMode(m),
     startDemo(script, speed) {
       if (!record) throw new Error('start a wave before the demo');
