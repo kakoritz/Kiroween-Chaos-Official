@@ -5,6 +5,7 @@
 // Falls back to the mock server when live is missing. Binds 127.0.0.1 only; Ctrl+C stops everything.
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
+import { createServer } from 'node:net';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -17,7 +18,9 @@ if (!['hero', 'full', 'loop'].includes(scriptArg)) {
   console.error(`unknown demo script "${scriptArg}" (use hero, full or loop)`);
   process.exit(2);
 }
-const port = process.env.HAUNT_PORT || '7070';
+// --check picks a free port unless HAUNT_PORT is set, so a foreign server on 7070 cannot answer in place of ours.
+const freePort = () => new Promise((ok, bad) => { const s = createServer(); s.once('error', bad); s.listen(0, '127.0.0.1', () => { const { port: p } = s.address(); s.close(() => ok(String(p))); }); });
+const port = process.env.HAUNT_PORT || (check ? await freePort() : '7070');
 const base = `http://127.0.0.1:${port}`;
 const liveSrc = resolve(root, 'packages/core/src/bin/live.ts');
 const mockSrc = resolve(root, 'packages/core/src/bin/mock.ts');
@@ -44,10 +47,12 @@ const child = run(resolve(root, 'tools/run-ts.mjs'), [entry, ...(useLive && scri
 const stop = () => { if (!child.killed) child.kill(); };
 process.on('SIGINT', () => { stop(); process.exit(0); });
 process.on('SIGTERM', () => { stop(); process.exit(0); });
-child.on('exit', (code) => { if (!check) process.exit(code ?? 0); });
+let childExit = null;
+child.on('exit', (code) => { childExit = code ?? 1; if (!check) process.exit(code ?? 0); });
 
 async function waitHealth() {
   for (let i = 0; i < 100; i++) {
+    if (childExit !== null) throw new Error(`server exited with code ${childExit} before answering (is port ${port} already in use?)`);
     try {
       const r = await fetch(`${base}/api/health`);
       if (r.ok) return await r.json();
