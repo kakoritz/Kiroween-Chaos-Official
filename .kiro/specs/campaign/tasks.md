@@ -12,7 +12,7 @@ Depends on `playtest-v2` P0 to P2 (laps, scoring, reviews). Branches `core/CP-..
 - [ ] **CP-C5 Inbox night.** Night 6 on the Python app with the Crew parts (depends on the live inbox runner in the arena).
 
 ## Lane B
-- [ ] **CP-U1 Hub and briefing.** Crypt map of nights, locks, medals, briefing card with lesson and hint.
+- [x] **CP-U1 Hub and briefing.** Crypt map of nights, locks, medals, briefing card with lesson and hint. Done: `packages/arena-ui/src/campaign/hub.ts`, `hub-model.ts`, `hub.css`, mounted on `haunt:splash`; tests in `campaign-hub.test.ts`. Partial: reads progress only (CP-U3 writes it); the start button waits for the shop (CP-U2); no screenshot yet.
 - [ ] **CP-U2 Gear shop.** Paper-doll skeleton, drag and drop (and keyboard), prices, tooltips in plain words, equip and reset.
 - [ ] **CP-U3 Results, medals, persistence.** Medal computation, credit awards, "what happened" explainer, unlock rules, localStorage and export/import.
 - [ ] **CP-U4 Sandbox.** Toggle parts on lane 1 before a wave, run, see the grade and the issue changes; "Reset" and "Compare to last run".

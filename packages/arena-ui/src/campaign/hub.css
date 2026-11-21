@@ -1,0 +1,32 @@
+.cphub { position: absolute; inset: 0; z-index: 45; display: flex; flex-direction: column; padding: 40px 64px; box-sizing: border-box; background: radial-gradient(ellipse at 50% 20%, #2a2446 0%, #0d0b14 75%); color: var(--text); font-family: inherit; }
+.cphub__top { display: flex; align-items: center; gap: 24px; }
+.cphub__title { margin: 0; font-size: 56px; color: var(--torch); letter-spacing: 0.04em; }
+.cphub__credits { margin-left: auto; font-size: 30px; color: var(--bone); }
+.cphub__credits b { color: var(--warn); }
+.cphub__close { font-size: 22px; padding: 8px 20px; }
+.cphub__sub { margin: 4px 0 20px; font-size: 24px; color: var(--muted); }
+.cphub__map { flex: 1; display: grid; grid-template-columns: repeat(7, 1fr); gap: 18px; align-items: end; padding-bottom: 12px; }
+.cpdoor { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 340px; padding: 16px 8px 14px; border: 4px solid #4a4268; border-radius: 120px 120px 10px 10px; background: linear-gradient(#34305a, #1c1830); color: var(--text); font: inherit; cursor: pointer; text-align: center; }
+.cpdoor:focus-visible { outline: 4px solid var(--torch); outline-offset: 4px; }
+.cpdoor:hover:not(.cpdoor--locked) { border-color: var(--torch); box-shadow: 0 0 24px rgba(255, 154, 60, 0.45); }
+.cpdoor--locked { cursor: not-allowed; filter: grayscale(0.8); opacity: 0.7; }
+.cpdoor--bronze { border-color: #c98a4b; }
+.cpdoor--silver { border-color: #cfd6e6; }
+.cpdoor--gold { border-color: #ffd34d; }
+.cpdoor__n { font-size: 22px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.cpdoor__t { margin: 6px 0; font-size: 24px; line-height: 1.15; color: var(--bone); }
+.cpdoor__lock { font-size: 40px; }
+.cpdoor__medal { width: 44px; height: 44px; border-radius: 50%; border: 3px solid rgba(0, 0, 0, 0.5); }
+.cpdoor__medal--bronze { background: #c98a4b; } .cpdoor__medal--silver { background: #cfd6e6; } .cpdoor__medal--gold { background: #ffd34d; }
+.cpdoor__medal--none { background: transparent; border: 3px dashed #4a4268; }
+.cpdoor__best { font-size: 18px; color: var(--muted); margin-top: 4px; }
+.cpbrief { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; background: rgba(8, 6, 16, 0.82); }
+.cpbrief__card { width: 980px; box-sizing: border-box; padding: 28px 36px; border: 3px solid var(--torch); border-radius: 14px; background: rgba(28, 24, 48, 0.98); }
+.cpbrief__card h2 { margin: 0 0 8px; font-size: 40px; color: var(--torch); }
+.cpbrief__card p { margin: 0 0 14px; font-size: 26px; line-height: 1.3; color: var(--bone); }
+.cpbrief__lesson { margin: 0 0 14px; padding-left: 28px; font-size: 24px; line-height: 1.35; }
+.cpbrief__hint { padding: 10px 16px; border-left: 6px solid var(--ghost); background: rgba(122, 184, 255, 0.1); font-size: 24px; }
+.cpbrief__medals { font-size: 20px; color: var(--muted); margin: 12px 0; }
+.cpbrief__btns { display: flex; gap: 14px; margin-top: 8px; }
+.cpbrief__btns .btn { font-size: 24px; padding: 10px 28px; }
+@media (prefers-reduced-motion: reduce) { .cpdoor { transition: none; } }

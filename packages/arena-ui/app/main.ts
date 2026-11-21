@@ -20,6 +20,8 @@ import { quietBadge, waveLabel } from '../src/onboarding/polish';
 import { SPLASH_TAGLINE } from '../src/onboarding/splash';
 import { Tour, tourRequested } from '../src/onboarding/tour';
 import '../src/onboarding/tour.css';
+import { mountCampaignHub } from '../src/campaign/hub';
+import '../src/campaign/hub.css';
 import { ApiError, createApi, resolveHttpBase, type ArenaApi, type ArenaEvent, type ConnectionStatus, type HauntInPage } from '../src/api';
 
 // W1/W2 shell plus the A3 canvas arena: the client connects the same way for mock, live and\n// browser. Events feed a pure reducer; the canvas redraws every animation frame from that state.
@@ -326,6 +328,8 @@ void boot();
     }, { reduced, autoDismissMs: sd.autoDismissMs });
   }
 }
+
+mountCampaignHub(stageEl, { getCampaign: () => api.getCampaign() }); // CP-U1: opens on the splash "Play the Campaign" button
 
 // Guided tour (ON-U3): header button, ?tour=1, and the splash "Take the tour" button.
 {
