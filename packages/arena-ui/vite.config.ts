@@ -1,4 +1,4 @@
-﻿import { resolve } from 'node:path';
+import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 
 // The UI always calls same-origin /api/* so it has no mode-specific code.
@@ -6,12 +6,24 @@ import { defineConfig } from 'vite';
 const core = { target: 'http://127.0.0.1:7070', changeOrigin: false };
 const proxy = { '/api': core, '/_mock': core };
 
+// The haunt browser sources import node:fs for the file journal; the browser never calls it (the page injects a store).
+const stubNode = {
+  name: 'stub-node-builtins',
+  enforce: 'pre' as const,
+  resolveId: (id: string) => (id.startsWith('node:') && id !== 'node:path' ? '\0node-stub' : null),
+  load: (id: string) => (id === '\0node-stub'
+    ? 'const f = () => { throw new Error("node builtin used in the browser"); }; export const closeSync = f, existsSync = f, fsyncSync = f, openSync = f, readFileSync = f, writeSync = f; export default {};'
+    : null),
+};
+
 export default defineConfig({
+  plugins: [stubNode],
+  worker: { format: 'es', plugins: () => [stubNode] },
   base: './',
   server: { host: '127.0.0.1', port: 5173, proxy },
   preview: { host: '127.0.0.1', port: 4173, proxy },
   build: { outDir: 'dist', emptyOutDir: true, target: 'es2022', sourcemap: false,
-    rollupOptions: { input: { main: resolve(__dirname, 'index.html'), lab: resolve(__dirname, 'lab.html'), report: resolve(__dirname, 'report.html') } } },
+    rollupOptions: { input: { main: resolve(__dirname, 'index.html'), lab: resolve(__dirname, 'lab.html'), report: resolve(__dirname, 'report.html'), browser: resolve(__dirname, 'browser.html') } } },
 });
 
 
