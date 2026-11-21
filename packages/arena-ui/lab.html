@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Haunt sprite lab</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin: 0; background: #0d0b14; color: #f3ecff; font: 15px/1.4 system-ui, sans-serif; padding: 0 20px 40px; }
+    .bar { position: sticky; top: 0; display: flex; gap: 10px; align-items: center; padding: 12px 0; background: #0d0b14; z-index: 1; border-bottom: 2px solid #2a2446; }
+    .bar strong { color: #ff9a3c; font-size: 18px; margin-right: 8px; }
+    h2 { color: #ff9a3c; margin: 22px 0 8px; }
+    h3 { margin: 0 0 6px; font-size: 15px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
+    .card { position: relative; background: #1c1830; border: 2px solid #2a2446; border-radius: 12px; padding: 12px; }
+    .card canvas:not(.sil) { width: 100%; max-width: 320px; background: #2a2446; border-radius: 8px; display: block; }
+    .sil { position: absolute; right: 16px; top: 44px; background: #efe6d2; border-radius: 6px; }
+    .meta { color: #8f86a8; margin: 6px 0; font-size: 13px; }
+    .btns { display: flex; flex-wrap: wrap; gap: 6px; }
+    .btn, select { background: #2a2446; color: #f3ecff; border: 2px solid #8f86a8; border-radius: 8px; padding: 6px 12px; font: inherit; cursor: pointer; }
+    .btn:hover, .btn:focus-visible, select:focus-visible { border-color: #ff9a3c; outline: none; }
+    .btn[aria-pressed="true"] { background: #ff9a3c; color: #14101f; }
+    .note { color: #8f86a8; }
+  </style>
+</head>
+<body>
+  <main id="lab"></main>
+  <noscript>The sprite lab needs JavaScript.</noscript>
+  <script type="module" src="./app/lab.ts"></script>
+</body>
+</html>

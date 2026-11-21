@@ -69,7 +69,7 @@ Task ids are prefixed `UI-` (for example `UI-A3`) so they do not collide with re
 4. Sprites for creatures: see the creature table in `ui-spec.md` section 7. Start with Reaper, Zombie, Ghost, Wraith, Poltergeist, Doppelganger, Lich.
 
 ## Art tasks (do first, see docs/ART-DIRECTION.md)
-- [ ] UI-ART0. Sprite lab page `packages/arena-ui/lab.html` showing every character, pose and creature animation with play buttons.
+- [x] UI-ART0. Sprite lab page `packages/arena-ui/lab.html` showing every character, pose and creature animation with play buttons.
 - [ ] UI-ART1. Skeleton rig (SVG, pivots) with idle, walk, cheer, collapse, reassemble. Screenshot review gate.
 - [ ] UI-ART2. Five tier dressings. Screenshot review gate.
 - [ ] UI-ART3. Reaper, Zombie, Ghost, Wraith, Poltergeist, Doppelganger, Lich. Screenshot review gate.
