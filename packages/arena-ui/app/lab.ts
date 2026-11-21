@@ -1,6 +1,7 @@
 import { GROUP_LABEL, animProgress, listSprites, type AnimDef, type SpriteDef } from '../src/lab/registry';
 import '../src/rig/draw';
 import '../src/rig/tiers';
+import '../src/creatures/draw';
 
 const root = document.getElementById('lab')!;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -164,8 +165,47 @@ function lineup(): void {
   });
   root.append(sc);
 }
-const sheetId = new URLSearchParams(location.search).get('sheet');
+
+// Review lineup: ?lineup=creatures draws the seven creatures idle, mid action, then as 56 px silhouettes.
+function creatureLineup(): void {
+  const list = listSprites().filter((s) => s.id.startsWith('creature-'));
+  root.append(el('h2', undefined, 'Creature lineup'));
+  const W = 300;
+  for (const [idx, title, p] of [[0, 'Idle', 0.25], [1, 'Acting', 0.55]] as const) {
+    root.append(el('h3', undefined, title));
+    const cv = el('canvas', 'strip');
+    cv.width = list.length * W;
+    cv.height = 380;
+    const ctx = cv.getContext('2d')!;
+    list.forEach((s, i) => {
+      ctx.save();
+      ctx.translate(i * W + W / 2, 195);
+      s.draw(ctx, s.anims[idx]!, p, { silhouette: false, size: 250 });
+      ctx.restore();
+      ctx.fillStyle = '#f3ecff';
+      ctx.font = '600 22px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${s.name}: ${s.anims[idx]!.label}`, i * W + W / 2, 370);
+    });
+    root.append(cv);
+  }
+  root.append(el('h3', undefined, 'Silhouette test (56 px, then 112 px)'));
+  const sc = el('canvas', 'strip');
+  sc.width = list.length * W;
+  sc.height = 140;
+  const sctx = sc.getContext('2d')!;
+  list.forEach((s, i) => {
+    for (const [dx, size] of [[80, 56], [200, 112]] as const) {
+      sctx.save();
+      sctx.translate(i * W + dx, 70);
+      s.draw(sctx, s.anims[1]!, 0.55, { silhouette: true, size });
+      sctx.restore();
+    }
+  });
+  root.append(sc);
+}const sheetId = new URLSearchParams(location.search).get('sheet');
 if (new URLSearchParams(location.search).get('lineup') === 'tiers') lineup();
+else if (new URLSearchParams(location.search).get('lineup') === 'creatures') creatureLineup();
 else if (sheetId) sheet(sheetId);
 else {
   build();
