@@ -1,5 +1,5 @@
 import { GROUP_LABEL, animProgress, listSprites, type AnimDef, type SpriteDef } from '../src/lab/registry';
-import '../src/lab/selftest';
+import '../src/rig/draw';
 
 const root = document.getElementById('lab')!;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -102,5 +102,32 @@ function frame(now: number): void {
   requestAnimationFrame(frame);
 }
 
-build();
-requestAnimationFrame(frame);
+// Review sheet: ?sheet=<sprite id> draws every animation as a strip of still frames.
+function sheet(id: string): void {
+  const sprite = listSprites().find((s) => s.id === id);
+  if (!sprite) { root.append(el('p', 'note', `No sprite ${id}`)); return; }
+  root.append(el('h2', undefined, `${sprite.name} contact sheet`));
+  const frames = 8;
+  for (const anim of sprite.anims) {
+    root.append(el('h3', undefined, `${anim.label} (${anim.loop ? 'loop' : 'once'})`));
+    const cv = el('canvas', 'strip');
+    cv.width = frames * 220;
+    cv.height = 290;
+    const ctx = cv.getContext('2d')!;
+    for (let i = 0; i < frames; i++) {
+      const p = anim.loop ? i / frames : i / (frames - 1);
+      ctx.save();
+      ctx.translate(i * 220 + 110, 150);
+      sprite.draw(ctx, anim, p, { silhouette: false, size: 200 });
+      ctx.restore();
+    }
+    root.append(cv);
+  }
+}
+
+const sheetId = new URLSearchParams(location.search).get('sheet');
+if (sheetId) sheet(sheetId);
+else {
+  build();
+  requestAnimationFrame(frame);
+}
