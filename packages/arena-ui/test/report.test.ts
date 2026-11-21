@@ -1,4 +1,4 @@
-﻿import { readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { compareReports, parseReport, postmortemScore, renderMarkdown, signed } from '../src/report/model';
 
@@ -12,15 +12,15 @@ describe('report viewer model', () => {
     expect(() => parseReport({ grade: 'A' })).toThrow();
   });
   it('reads wave scores from the postmortem header', () => {
-    expect(postmortemScore(proof('wave1-postmortem.md'))).toBe(-360);
-    expect(postmortemScore(proof('wave2-postmortem.md'))).toBe(450);
+    expect(postmortemScore(proof('wave1-postmortem.md'))).toBe(-130);
+    expect(postmortemScore(proof('wave2-postmortem.md'))).toBe(700);
     expect(postmortemScore('no score')).toBeNull();
   });
   it('compares wave 1 to wave 2 like the loop proof', () => {
-    const c = compareReports(w1, w2, -360, 450);
-    expect([c.gradeBefore, c.gradeAfter, c.gradeTrend]).toEqual(['F', 'C', 'improved']);
-    expect([c.repeatsBefore, c.repeatsAfter, c.lostBefore, c.lostAfter]).toEqual([5, 0, 1, 1]);
-    expect(c.scoreDelta).toBe(810);
+    const c = compareReports(w1, w2, -130, 700);
+    expect([c.gradeBefore, c.gradeAfter, c.gradeTrend]).toEqual(['F', 'A', 'improved']);
+    expect([c.repeatsBefore, c.repeatsAfter, c.lostBefore, c.lostAfter]).toEqual([5, 0, 0, 0]);
+    expect(c.scoreDelta).toBe(830);
     expect(c.findings.resolved.map((f) => f.id)).toEqual(['F1', 'F2', 'F3', 'F4', 'F5']);
     expect(c.findings.remaining).toEqual([]);
     expect(c.findings.added).toEqual([]);

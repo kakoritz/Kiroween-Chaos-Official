@@ -17,14 +17,17 @@ export function waveEvents(all: HauntEvent[], n: number): HauntEvent[] {
 export function buildReport(rec: WaveRecord, evs: HauntEvent[], info: WaveInfo) {
   const d = (e: HauntEvent) => (e.detail ?? {}) as Record<string, any>;
   const repeats = evs.filter((e) => e.type === 'repeat').map((e) => ({ order: e.order!, kind: d(e).kind, extra: Math.max(0, (d(e).count ?? 2) - 1), stage: e.stage ?? '', fault: '' }));
-  const lost = evs.filter((e) => e.type === 'order_failed' || e.type === 'order_abandoned')
+  // runtime.md section 8: a plain failed order is not lost; only abandoned orders are.
+  const lost = evs.filter((e) => e.type === 'order_abandoned')
     .map((e) => ({ order: e.order!, reason: 'abandoned' as const }));
   const rec_ms = evs.filter((e) => e.type === 'recover_done').map((e) => Number(d(e).ms)).filter((x) => Number.isFinite(x));
   const chaos = evs.filter((e) => e.type === 'chaos');
   const matrix = chaos.map((e) => {
     const lane = e.lane;
     const rp = repeats.some((r) => evs.some((x) => x.type === 'repeat' && x.lane === lane && x.order === r.order));
-    const failed = evs.some((x) => x.type === 'order_failed' && x.lane === lane);
+    // Per press: a failure counts only between this chaos event and the next one on the same lane.
+    const nextSeq = chaos.filter((c) => c.lane === lane && (c.seq ?? 0) > (e.seq ?? 0)).reduce((m, c) => Math.min(m, c.seq ?? Infinity), Infinity);
+    const failed = evs.some((x) => x.type === 'order_failed' && x.lane === lane && (x.seq ?? 0) > (e.seq ?? 0) && (x.seq ?? 0) < nextSeq);
     return { stage: e.stage ?? '', fault: String(d(e).fault), result: failed ? 'fail' : rp ? 'repeat' : 'pass', repeats: [], evidenceSeq: [e.seq!] };
   });
   const findings = repeats.map((r, i) => ({
