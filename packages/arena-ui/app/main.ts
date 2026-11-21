@@ -5,6 +5,7 @@ import { applyEvent, emptyVM, loadSnapshot, reconcileLedger, totalScore } from '
 import { LedgerPanel, RankBoard } from '../src/arena/panels';
 import { EventTicker } from '../src/arena/ticker';
 import { StageInspector, chipAt } from '../src/arena/inspector';
+import { chipTipAt } from '../src/arena/chiptip';
 import { BossBar, bossAnnouncement } from '../src/arena/boss';
 import { ChaosModeControl, readChaosState } from '../src/arena/chaosmode';
 import { AppSwitcher, currentApp } from '../src/arena/appswitch';
@@ -138,6 +139,7 @@ canvas.addEventListener('click', (e) => {
 canvas.addEventListener('mousemove', (e) => {
   const r = canvas.getBoundingClientRect();
   canvas.style.cursor = chipAt(((e.clientX - r.left) / r.width) * STAGE_W, ((e.clientY - r.top) / r.height) * STAGE_H, vm.lanes.length, vm.stages.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET) ? 'pointer' : 'default';
+  canvas.title = chipTipAt(vm, ((e.clientX - r.left) / r.width) * STAGE_W, ((e.clientY - r.top) / r.height) * STAGE_H, vm.boss.phase === 'none' ? 0 : BOSS_INSET);
 });
 const keysPop = $('keys-pop');
 const keysBtn = $<HTMLButtonElement>('keys-btn');

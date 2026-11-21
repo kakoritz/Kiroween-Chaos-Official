@@ -6,6 +6,7 @@ import { frameFor } from '../rig/skeleton';
 import { drawSkeleton } from '../rig/draw';
 import { TIER_IDS, TIER_LABEL, type Tier } from '../rig/dress';
 import { stationX, type ArenaVM, type ChipState, type LaneVM } from './model';
+import { CHIP_ICON, fromLegacy, heatAlpha, heatAt, type ChipInfo, type ChipV2State } from './chips';
 import { captionOf, creatureFrame, shown, spriteOf, MAX_SHOWN, type CreatureVM } from './creatures';
 import { drawCreature } from '../creatures/draw';
 import { archWall, drawProp, pillar } from '../props/draw';
@@ -177,17 +178,21 @@ function fit(ctx: Ctx, s: string, w: number): string {
   return t + '…';
 }
 
-const CHIP: Record<ChipState, { icon: string; color: string; fill: string; name: string }> = {
-  pending: { icon: '○', color: C.muted, fill: 'rgba(28,24,48,0.9)', name: 'pending' },
-  active: { icon: '●', color: C.torch, fill: 'rgba(60,40,24,0.95)', name: 'active' },
-  done: { icon: '✓', color: C.ok, fill: 'rgba(24,52,40,0.95)', name: 'done' },
-  replayed: { icon: '↻', color: 'rgba(94,224,138,0.6)', fill: 'rgba(24,44,38,0.9)', name: 'replayed' },
-  retrying: { icon: '↻', color: C.warn, fill: 'rgba(66,52,20,0.95)', name: 'retrying' },
-  failed: { icon: '✕', color: C.fail, fill: 'rgba(70,24,34,0.95)', name: 'failed' },
-  dead: { icon: '☠', color: C.muted, fill: 'rgba(20,18,30,0.95)', name: 'dead' },
-  parked: { icon: '⚰', color: C.ghost, fill: 'rgba(24,40,66,0.95)', name: 'parked' },
-  quarantined: { icon: '⚗', color: C.hex, fill: 'rgba(44,28,72,0.95)', name: 'quarantined' },
+const AMBER = '#ffb020';
+const CHIP2: Record<ChipV2State, { color: string; fill: string }> = {
+  pending: { color: C.muted, fill: 'rgba(28,24,48,0.9)' },
+  next: { color: C.torch, fill: 'rgba(28,24,48,0.9)' },
+  active: { color: C.torch, fill: 'rgba(86,52,20,0.95)' },
+  trouble: { color: C.warn, fill: 'rgba(96,78,12,0.97)' },
+  passed: { color: C.ok, fill: 'rgba(24,52,40,0.95)' },
+  healed: { color: C.ok, fill: 'rgba(24,52,40,0.95)' },
+  failed: { color: C.fail, fill: 'rgba(70,24,34,0.95)' },
+  replayed: { color: 'rgba(94,224,138,0.6)', fill: 'rgba(24,44,38,0.9)' },
+  parked: { color: C.ghost, fill: 'rgba(24,40,66,0.95)' },
+  quarantined: { color: C.hex, fill: 'rgba(44,28,72,0.95)' },
+  dead: { color: C.muted, fill: 'rgba(20,18,30,0.95)' },
 };
+
 
 /** Wrap a stage label onto at most two lines of `w` px; the second line ends with an ellipsis if it still overflows. */
 export function wrapLabel(ctx: Ctx, label: string, w: number, px: number): string[] {
@@ -209,19 +214,38 @@ function nextMark(ctx: Ctx, x: number, y: number): void {
   txt(ctx, '\u25B6', x - w / 2 - 14, y + h / 2 + 1, 14, C.torch, 'center', SANS, '800');
 }
 
-function chip(ctx: Ctx, x: number, y: number, label: string, state: ChipState, attempt: number, t: number): void {
+/** Chip v2 (PT-U3): state is icon plus colour plus label; an amber flag shows the issue count at this stage. */
+function chipV2(ctx: Ctx, x: number, y: number, label: string, info: ChipInfo, t: number): void {
   const w = 150; const h = 40;
-  const s = CHIP[state];
-  const pulse = state === 'active' && t !== 0 ? 0.55 + 0.45 * Math.sin(t / 220) : 1;
+  const s = CHIP2[info.state];
+  const hot = info.state === 'active' || info.state === 'trouble';
+  const pulse = hot && t !== 0 ? 0.55 + 0.45 * Math.sin(t / (info.state === 'trouble' ? 140 : 220)) : 1;
   ctx.save();
   rr(ctx, x - w / 2, y, w, h, 9);
   ctx.fillStyle = s.fill; ctx.fill();
-  ctx.lineWidth = 3; ctx.strokeStyle = s.color; ctx.globalAlpha = pulse; ctx.stroke();
+  ctx.lineWidth = 3; ctx.strokeStyle = s.color; ctx.globalAlpha = pulse;
+  if (info.state === 'next') ctx.setLineDash([7, 5]);
+  ctx.stroke(); ctx.setLineDash([]);
   ctx.globalAlpha = 1;
-  txt(ctx, state === 'retrying' ? `${s.icon}${attempt}` : s.icon, x - w / 2 + 16, y + h / 2 + 1, 18, s.color, 'center', SANS, '700');
-  const lines = wrapLabel(ctx, label, w - 42, 15);
-  const col = state === 'pending' ? C.muted : C.text;
+  const icon = info.state === 'trouble' && info.attempts > 1 ? `${CHIP_ICON.trouble}${info.attempts}` : CHIP_ICON[info.state];
+  txt(ctx, icon, x - w / 2 + 16, y + h / 2 + 1, 18, s.color, 'center', SANS, '700');
+  const lines = wrapLabel(ctx, label, w - (info.issues > 0 ? 68 : 42), 15);
+  const col = info.state === 'pending' || info.state === 'dead' ? C.muted : C.text;
   lines.forEach((ln, i) => txt(ctx, ln, x - w / 2 + 31, y + h / 2 + 1 + (i - (lines.length - 1) / 2) * 16, 15, col));
+  if (info.issues > 0) {
+    const fx = x + w / 2 - 14, fy = y + 14;
+    ctx.beginPath(); ctx.arc(fx, fy, 13, 0, Math.PI * 2); ctx.fillStyle = AMBER; ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = C.out; ctx.stroke();
+    txt(ctx, `\u2691${info.issues > 9 ? '9+' : info.issues}`, fx, fy + 1, 14, C.out, 'center', SANS, '800');
+  }
+  ctx.restore();
+}
+
+/** One heat strip segment under a chip: opacity follows the wave's issue count at the stage. */
+function heatSegment(ctx: Ctx, x: number, y: number, alpha: number): void {
+  ctx.save();
+  rr(ctx, x - 75, y, 150, 4, 2); ctx.fillStyle = 'rgba(90,80,120,0.25)'; ctx.fill();
+  if (alpha > 0) { ctx.globalAlpha = alpha; ctx.fillStyle = AMBER; ctx.fill(); }
   ctx.restore();
 }
 
@@ -478,8 +502,10 @@ export class ArenaScene {
     vm.stages.forEach((s, i) => {
       const x = stationX(i, n);
       ctx.fillStyle = 'rgba(10,8,18,0.5)'; ctx.beginPath(); ctx.ellipse(x, b.top + b.h * 0.8 + 2, 22, 6, 0, 0, Math.PI * 2); ctx.fill();
-      chip(ctx, x, chipY, s.label, l.chips[i] ?? 'pending', l.attempts[i] ?? 0, this.reducedMotion ? 0 : now);
-      if (l.lap?.next === i && (l.chips[i] ?? 'pending') === 'pending') nextMark(ctx, x, chipY);
+      const info = l.v2?.[i] ?? fromLegacy(l.chips[i] ?? 'pending', l.attempts[i] ?? 0);
+      chipV2(ctx, x, chipY, s.label, info, this.reducedMotion ? 0 : now);
+      heatSegment(ctx, x, chipY + 44, heatAlpha(heatAt(l.heat, l.v2, l.heatFolded, i).issues));
+      if (l.lap?.next === i && info.state === 'pending') nextMark(ctx, x, chipY);
     });
     // progress bar under the active chip
     const wi = vm.stages.length ? Math.min(l.stageIndex, n - 1) : 0;

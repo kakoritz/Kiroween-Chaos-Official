@@ -6,6 +6,7 @@ import { applyBossEvent, emptyBoss, loadBoss, type BossVM } from './boss';
 import { EQUIP_LIFE_MS, type EquipVM } from './equip';
 import type { OrderDropVM } from './order';
 import { applyLap, lapMotion, newLap, START_X, type LapVM } from './lap';
+import { foldHeat, newHeat, chipState, type ChipInfo, type Heat } from './chips';
 import { absorb, actAll, addCreature, exitAll, exitDepth, exitStage, prune, PUFF_MS, type CreatureVM } from './creatures';
 
 export type ChipState = 'pending' | 'active' | 'done' | 'replayed' | 'retrying' | 'failed' | 'dead' | 'parked' | 'quarantined';
@@ -55,6 +56,11 @@ export interface LaneVM {
   orderDrop?: OrderDropVM | null;
   /** Lap choreography (PT-U1): skeleton anchor, walks, grab. Cosmetic. */
   lap?: LapVM;
+  /** Chips v2 (PT-U3): this order's events, derived chip info, wave-wide heat. Not restorable from a snapshot. */
+  chipEv?: ArenaEvent[];
+  v2?: ChipInfo[];
+  heat?: Heat;
+  heatFolded?: boolean;
 }
 
 export interface LedgerCell { rows: number; repeats: number }
@@ -126,6 +132,24 @@ function resetChips(l: LaneVM): void {
 
 const LAP_EVENTS = new Set(['order_start', 'stage_start', 'stage_done', 'order_done', 'order_failed', 'order_parked', 'process_dead', 'process_up', 'review']);
 
+const ORDER_END = new Set(['order_done', 'order_failed', 'order_parked', 'order_quarantined']);
+const MAX_ORDER_EVENTS = 300;
+
+/** Keep this order's events and derive chips v2 (PT-U3). Wave heat folds in once per finished order. */
+function trackChips(l: LaneVM, vm: ArenaVM, ev: ArenaEvent): void {
+  const ids = vm.stages.map((s) => s.id);
+  if (!l.heat || l.heat.issues.length !== ids.length) l.heat = newHeat(ids.length);
+  if (ev.type === 'order_start') {
+    if (l.v2 && l.chipEv?.length && !l.heatFolded) foldHeat(l.heat, l.v2);
+    l.chipEv = []; l.heatFolded = false;
+  }
+  const buf = (l.chipEv ??= []);
+  buf.push(ev);
+  if (buf.length > MAX_ORDER_EVENTS) buf.splice(0, buf.length - MAX_ORDER_EVENTS);
+  l.v2 = chipState(buf, ids);
+  if (ORDER_END.has(ev.type) && !l.heatFolded) { foldHeat(l.heat, l.v2); l.heatFolded = true; }
+}
+
 /** Apply one event. Unknown types are ignored (protocol rule 17). */
 export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
   const d = (ev.detail ?? {}) as Record<string, unknown>;
@@ -149,6 +173,7 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
   if (!l) return;
   const si = ev.stage ? vm.stages.findIndex((s) => s.id === ev.stage) : -1;
   prune(l, now);
+  trackChips(l, vm, ev);
   if (LAP_EVENTS.has(ev.type)) {
     const n = vm.stages.length;
     const open = l.chips.some((c) => c === 'done' || c === 'replayed') ? l.stageIndex : -1;
