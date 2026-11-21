@@ -1,0 +1,33 @@
+.cpshop { position: absolute; inset: 0; z-index: 46; display: flex; flex-direction: column; padding: 32px 56px; box-sizing: border-box; background: radial-gradient(ellipse at 50% 30%, #2a2446 0%, #0d0b14 78%); color: var(--text); font-family: inherit; }
+.cpshop__top { display: flex; align-items: baseline; gap: 28px; }
+.cpshop__title { margin: 0; font-size: 48px; color: var(--torch); letter-spacing: 0.04em; }
+.cpshop__night { font-size: 26px; color: var(--muted); }
+.cpshop__credits { margin-left: auto; font-size: 30px; color: var(--bone); }
+.cpshop__credits b { color: var(--warn); }
+.cpshop__body { flex: 1; display: grid; grid-template-columns: 1.1fr 0.9fr 0.8fr; gap: 28px; align-items: center; min-height: 0; }
+.cpshop__shelf { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.cpgear { display: grid; grid-template-columns: 56px 1fr auto; grid-template-areas: "b n p" "b f f"; gap: 2px 14px; align-items: center; width: 100%; padding: 10px 16px; border: 3px solid #4a4268; border-radius: 12px; background: linear-gradient(#34305a, #1c1830); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.cpgear:focus-visible, .cpslot:focus-visible { outline: 4px solid var(--torch); outline-offset: 3px; }
+.cpgear:hover { border-color: var(--torch); }
+.cpgear--owned { border-color: #6aa66a; cursor: grab; }
+.cpgear--on { border-color: #ffd34d; }
+.cpgear--held { box-shadow: 0 0 0 4px var(--torch); }
+.cpgear--hint .cpgear__name::after { content: ' (suggested)'; font-size: 18px; color: var(--torch); }
+.cpgear__badge { grid-area: b; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: #14101f; color: var(--torch); font-size: 28px; font-weight: 700; border: 3px solid #4a4268; }
+.cpgear__name { grid-area: n; font-size: 26px; color: var(--bone); }
+.cpgear__price { grid-area: p; font-size: 22px; color: var(--warn); }
+.cpgear--owned .cpgear__price { color: #8fd18f; }
+.cpgear__fx { grid-area: f; font-size: 18px; color: var(--muted); }
+.cpshop__dollbox { position: relative; height: 100%; max-height: 560px; aspect-ratio: 2 / 3; justify-self: center; }
+.cpshop__doll { width: 100%; height: 100%; }
+.cpslot { position: absolute; transform: translate(-50%, -50%); width: 72px; height: 72px; border-radius: 50%; border: 4px dashed #8a82b4; background: rgba(20, 16, 31, 0.85); color: var(--torch); font: inherit; font-size: 32px; font-weight: 700; cursor: pointer; display: grid; place-items: center; }
+.cpslot--full { border-style: solid; border-color: #ffd34d; }
+.cpslot--ok { border-color: var(--torch); box-shadow: 0 0 18px rgba(255, 154, 60, 0.7); }
+.cpslot__name { position: absolute; top: 100%; font-size: 14px; font-weight: 400; color: var(--muted); white-space: nowrap; }
+.cpshop__side { font-size: 22px; color: var(--bone); }
+.cpshop__side h2 { margin: 0 0 8px; color: var(--torch); }
+.cpshop__worn { color: var(--muted); }
+.cpshop__msg { min-height: 30px; margin: 8px 0; font-size: 22px; color: var(--bone); }
+.cpshop__btns { display: flex; gap: 16px; }
+.cpshop__btns .btn { font-size: 24px; padding: 10px 24px; }
+@media (prefers-reduced-motion: reduce) { .cpgear, .cpslot { transition: none; } }

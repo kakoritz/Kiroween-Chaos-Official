@@ -22,6 +22,8 @@ import { Tour, tourRequested } from '../src/onboarding/tour';
 import '../src/onboarding/tour.css';
 import { mountCampaignHub } from '../src/campaign/hub';
 import '../src/campaign/hub.css';
+import { gearShopStarter } from '../src/campaign/shop';
+import '../src/campaign/shop.css';
 import { ApiError, createApi, resolveHttpBase, type ArenaApi, type ArenaEvent, type ConnectionStatus, type HauntInPage } from '../src/api';
 
 // W1/W2 shell plus the A3 canvas arena: the client connects the same way for mock, live and\n// browser. Events feed a pure reducer; the canvas redraws every animation frame from that state.
@@ -329,7 +331,7 @@ void boot();
   }
 }
 
-mountCampaignHub(stageEl, { getCampaign: () => api.getCampaign() }); // CP-U1: opens on the splash "Play the Campaign" button
+mountCampaignHub(stageEl, { getCampaign: () => api.getCampaign() }, { onStart: gearShopStarter(stageEl, { getCampaign: () => api.getCampaign(), startWave: (o) => api.startWave(o) }) }); // CP-U1/U2: hub on the splash, gear shop on "Choose gear and start"
 
 // Guided tour (ON-U3): header button, ?tour=1, and the splash "Take the tour" button.
 {
