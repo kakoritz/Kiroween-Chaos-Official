@@ -13,6 +13,8 @@ import { FrameSampler, perfSecondsFromQuery } from '../src/perf';
 import { KEY_HELP, chaosAnnouncement, keyAction, nextMode, renderLegend } from '../src/arena/keys';
 import { Splash, splashDecision, splashTarget } from '../src/onboarding/splash';
 import '../src/onboarding/splash.css';
+import { CaptionOverlay, CaptionPlayer, freezeFromQuery } from '../src/onboarding/captions';
+import '../src/onboarding/captions.css';
 import { ApiError, createApi, resolveHttpBase, type ArenaApi, type ArenaEvent, type ConnectionStatus, type HauntInPage } from '../src/api';
 
 // W1/W2 shell plus the A3 canvas arena: the client connects the same way for mock, live and\n// browser. Events feed a pure reducer; the canvas redraws every animation frame from that state.
@@ -178,8 +180,12 @@ muteBtn.addEventListener('click', () => {
   muteBtn.textContent = muted ? '\u{1F507} Sound off' : '\u{1F50A} Sound on';
 });
 
+const captionPlayer = new CaptionPlayer(freezeFromQuery(window.location.search));
+const captionOverlay = new CaptionOverlay(stageEl, captionPlayer, { demoRunning: new URLSearchParams(window.location.search).get('demo') !== 'off' });
+
 function onEvent(ev: ArenaEvent) {
   queue.push(ev);
+  captionPlayer.event(ev, performance.now());
   sound.onEvent(ev, performance.now());
   inspector.record(ev);
   ticker.push(ev);
@@ -224,12 +230,17 @@ async function loadState() {
   paintDemo();
 }
 
+async function startCaptions(script: string) {
+  try { captionPlayer.start(script, (await api.getCaptions?.(script)) ?? [], performance.now()); } catch { captionPlayer.stop(); }
+}
+
 async function startDemo(script: string) {
   errEl.textContent = '';
   try {
     if (waveRunning) await api.stopWave();
     currentScript = script;
     lastDemoStart = performance.now();
+    void startCaptions(script);
     await api.startDemo(script);
     demoRunning = true;
     paintDemo();
@@ -247,7 +258,7 @@ async function boot() {
 
   for (const b of demoBtns) b.addEventListener('click', () => { chainDemo = true; void startDemo('hero'); });
   demoStop.addEventListener('click', async () => {
-    try { chainDemo = false; await api.stopDemo(); demoRunning = false; paintDemo(); } catch (e) { showError(e); }
+    try { chainDemo = false; captionPlayer.stop(); await api.stopDemo(); demoRunning = false; paintDemo(); } catch (e) { showError(e); }
   });
 
   appSwitch = new AppSwitcher($('app-switch'), {
@@ -341,6 +352,8 @@ function frame(now: number) {
   // Lite mode (fewer particles, no fog) if frames stay above 24 ms for 2 seconds.
   slow = dt > 24 ? slow + dt : 0;
   scene.setLite(slow > 2000);
+  captionOverlay.update(now);
+  if (captionPlayer.frozen(now)) { requestAnimationFrame(frame); return; }
   while (queue.length) {
     const ev = queue.shift()!;
     const before = vm.boss.phase;
