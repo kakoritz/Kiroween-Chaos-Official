@@ -12,6 +12,9 @@ import { chipTipAt } from '../src/arena/chiptip';
 import { BossBar, bossAnnouncement } from '../src/arena/boss';
 import { ChaosModeControl, readChaosState } from '../src/arena/chaosmode';
 import { AppSwitcher, currentApp } from '../src/arena/appswitch';
+import { GearMenu, DEFAULT_PACE, badgeTitle, type Pace } from '../src/arena/gearmenu';
+import '../src/arena/gearmenu.css';
+import { LegendModal } from '../src/arena/legend-modal';
 import { ArenaSound } from '../src/sound';
 import { FrameSampler, perfSecondsFromQuery } from '../src/perf';
 import { KEY_HELP, chaosAnnouncement, keyAction, nextMode, renderLegend } from '../src/arena/keys';
@@ -52,12 +55,16 @@ root.innerHTML = `
       <span class="total" id="total" title="Total score"></span>
       <button class="btn btn--ghost" id="tour-open" type="button" title="Six-step guided tour">Tour</button>
       <button class="btn btn--ghost" id="keys-btn" type="button" aria-expanded="false" aria-controls="keys-pop" title="Keyboard and state legend (?)">&#9000; Keys</button>
+      <button class="btn btn--ghost" id="legend-btn" type="button" aria-expanded="false" title="What do R J I B Q mean?">?</button>
+      <span class="gear-wrap" id="gear-wrap"><button class="btn btn--ghost" id="gear-btn" type="button" title="Settings: chaos, pace, speed, sound, motion" aria-label="Settings">&#9881;</button></span>
+      <span class="pace-tag" id="pace-tag" title="Slow pace is on"></span>
       <button class="btn btn--ghost" id="mute" type="button" aria-pressed="true" title="Sound is off until you turn it on">&#128263; Sound off</button>
       <span class="pill hidden" id="demo-pill">DEMO</span>
       <span class="badge badge--offline" id="badge" role="status"></span>
-      <button class="btn btn--ghost hidden" id="demo-stop" type="button">Stop demo</button>
-      <button class="btn" id="demo-open" type="button">Open in demo mode</button>
+      <button class="btn btn--ghost hidden" id="demo-stop" type="button">&#9632; Stop demo</button>
+      <button class="btn" id="demo-open" type="button">&#9654; Play demo</button>
     </header>
+    <div id="chaos-mode"></div>
     <div class="boss" id="boss" aria-hidden="true"></div>
     <div id="insp"></div>
     <div class="keys-pop hidden" id="keys-pop" role="dialog" aria-label="Keyboard and state legend"><h2>Keyboard</h2><ul class="keys-list" id="keys-list"></ul><h2>States</h2><ul class="lg-list" id="legend-list"></ul></div>
@@ -69,7 +76,7 @@ root.innerHTML = `
     <section class="quiet" id="quiet">
       <h1>The crypt is quiet</h1>
       <p>Five skeletons are asleep. Start the show.</p>
-      <button class="btn btn--big" id="demo-big" type="button">Open in demo mode</button>
+      <button class="btn btn--big" id="demo-big" type="button">&#9654; Play demo</button>
       <div class="err" id="err" role="alert"></div>
       <div class="stats" id="stats"></div>
     </section>
@@ -106,7 +113,7 @@ function paintBadge() {
   const b = quietBadge(modeBadge(mode, status), { waveNo, demoRunning });
   badgeEl.className = `badge badge--${b.tone}`;
   badgeEl.textContent = `${b.icon} ${b.label}`;
-  badgeEl.title = b.title;
+  badgeEl.title = badgeTitle(b.title);
 }
 
 function paintDemo() {
@@ -325,7 +332,18 @@ async function boot() {
   const inpage = (window as unknown as { __haunt?: HauntInPage }).__haunt ?? null;
   const base = inpage ? '' : await resolveHttpBase(apiBaseFromQuery(search));
   api = createApi({ inpage, baseUrl: base });
+  let pace: Pace = DEFAULT_PACE;
+  const startWave0 = api.startWave.bind(api);
+  api.startWave = (o) => startWave0({ pace, ...o });
   chaosCtl = new ChaosModeControl($('chaos-mode'), { setChaosMode: (o) => api.setChaosMode(o), onError: showError });
+
+  new GearMenu($<HTMLButtonElement>('gear-btn'), $('gear-wrap'), $('pace-tag'), {
+    setPace: (p) => { pace = p; },
+    setSpeed: (s) => { void api.setSpeed(s).catch(showError); },
+    toggleSound: () => muteBtn.click(),
+    setReducedMotion: (on) => { scene.reducedMotion = on || reduceMotion.matches; },
+  }, $('chaos-mode'));
+  new LegendModal(stageEl, $<HTMLButtonElement>('legend-btn'));
 
   for (const b of demoBtns) b.addEventListener('click', () => { chainDemo = true; void startDemo('hero'); });
   demoStop.addEventListener('click', async () => {

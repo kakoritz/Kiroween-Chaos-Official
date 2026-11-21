@@ -1,14 +1,14 @@
-# Play-test v2: tasks
+﻿# Play-test v2: tasks
 
 Branches: `core/PT-...` (Lane A), `ui/PT-...` (Lane B). One PR per task. Contract changes (`contract/V1_1.md`) are one PR with the `contract` label. Record every ambiguity decision in `docs/DECISIONS.md`. Tick the box in this file in the same PR.
 
 ## Phases and dependencies
 
 ```
-P0  PT-C0 contract+schema+fixtures+mock  Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€Â¬Ã¢â€â‚¬> P1 UX (PT-U1..U5, U9)  needs PT-C2 travel, PT-C5 order records
-                                           Ã¢â€Å“Ã¢â€â‚¬> P2 laps/score/reviews (PT-C3,C4,C6, PT-U3,U6,U7,U8)
-                                           Ã¢â€Å“Ã¢â€â‚¬> P3 world events (PT-C7, PT-U10, PT-ART)
-                                           Ã¢â€â€Ã¢â€â‚¬> P4 wrong order (PT-C8, PT-U11)
+P0  PT-C0 contract+schema+fixtures+mock  ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ‚Â¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬> P1 UX (PT-U1..U5, U9)  needs PT-C2 travel, PT-C5 order records
+                                           ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬> P2 laps/score/reviews (PT-C3,C4,C6, PT-U3,U6,U7,U8)
+                                           ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬> P3 world events (PT-C7, PT-U10, PT-ART)
+                                           ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬ÂÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬> P4 wrong order (PT-C8, PT-U11)
 ```
 Order: P0, then P1 (the visible fixes the owner asked for first), then P2, P3, P4. Lane B can build P1, P2, P3 against the mock as soon as PT-C0 merges.
 
@@ -39,7 +39,7 @@ Order: P0, then P1 (the visible fixes the owner asked for first), then P2, P3, P
 - [x] **PT-U6 Laps and wave summary.** Lap table with best and slowest tags, wave end card v2, star progression chart, report tab "Laps & stars" (ui.md section 6).
 - [x] **PT-U7 Reviews.** Door stars, review card, customer ghost, live tracker in the label card, rating titles (ui.md sections 6 and 7).
 - [x] **PT-U8 Score visuals.** Downtime chip, cancel slam, boss recovered banner, score explainer popover, rank board fixes (ui.md section 8).
-- [ ] **PT-U9 Header, gear menu, legend, pace.** Gear menu that closes, Play and Stop demo buttons, badge tooltip, legend modal and gear badge tooltips, Slow default pace control (ui.md sections 9 and 12).
+- [x] **PT-U9 Header, gear menu, legend, pace.** Gear menu that closes, Play and Stop demo buttons, badge tooltip, legend modal and gear badge tooltips, Slow default pace control (ui.md sections 9 and 12).
 - [ ] **PT-U10 World creature choreographies.** Scarecrow, black cat, phantom car, prankster, plus captions on gargoyle, imp, goblin (ui.md section 11).
 - [ ] **PT-U11 Decision popup.** Modal, countdown, keyboard, outcome animations (ui.md section 10).
 - [ ] **PT-U12 Sound additions and a11y.** Ui.md sections 13 and 14.
