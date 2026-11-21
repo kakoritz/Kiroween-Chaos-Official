@@ -85,9 +85,9 @@ Engine detail tasks (map to engine/design.md sections):
 - [x] E3 Journal JSONL with fsync, torn-line tolerance, replay (3). (done via H1.2, PR #9; audited 2026-11-20)
 - [x] E4 SDK `step()` and `effect()` with the four crash points and parts instrumentation (3, 4). (done via H1.2, PR #9; audited 2026-11-20)
 - [x] E5 Five bot files `apps/haunted-orders/src/bots/<tier>.ts` (4).
-- [ ] E6 Fault catalog with deferral, nesting stack, restart delays (5).
-- [ ] E7 Random mode and boss schedule (5).
-- [ ] E8 Scoring engine as a pure function of events (7).
+- [x] E6 Fault catalog with deferral, nesting stack, restart delays (5). (done via H1.4, PR #11; audited 2026-11-20)
+- [x] E7 Random mode and boss schedule (5). (done via H1.5-b, PR #17; audited 2026-11-20)
+- [x] E8 Scoring engine as a pure function of events (7). (done via H1.5, PR #12; audited 2026-11-20)
 - [ ] E9 Grading, caps, coverage matrix, recovery stats, ramp knee detection (8).
 - [ ] E10 Reviewer rules R1 to R8, postmortem, hardening spec writer (11).
 - [ ] E11 All property tests P1 to P8 and acceptance table A as tests (acceptance.md).
