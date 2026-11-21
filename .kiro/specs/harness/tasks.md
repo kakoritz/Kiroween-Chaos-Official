@@ -28,7 +28,7 @@ Branch prefix `core/`. Each task is one PR. Tags: [C] touches `contract/`.
 - [x] H3.3 Stack mode and depth curve. (`npm run haunt -- stack` nests the Reaper crash 1..5 deep per stage; packages/haunt/src/stack.)
 - [x] H3.4 Ramp mode, knee and break detection. (`npm run haunt -- ramp` runs the live ramp on a built bot.)
 - [x] H3.5 Soak mode.
-- [ ] H3.6 Boss mode and Compare mode.
+- [x] H3.6 Boss mode and Compare mode.
 - [x] H3.7 Proxy adapter and Process adapter. (Done 2026-11-20: packages/haunt/src/adapters/: startFaultProxy (127.0.0.1 reverse proxy; status, drop, latency faults with method/path filter, count, forMs) and ProcessAdapter (no-shell start from the haunt.yaml start line, real SIGKILL, restart, feedInput/removeInput). Wiring them into the sweep CLI by haunt.yaml adapter is part of H3.8 and H6.2.)
 - [ ] H3.8 Second sample process (non-Node) to prove reuse.
 

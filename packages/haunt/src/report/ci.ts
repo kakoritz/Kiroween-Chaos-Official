@@ -2,6 +2,7 @@
 // Exit codes: 0 all targets pass, 1 a target failed, 2 usage or config error (set by the CLI).
 // Spec: harness requirements H5.7 (the CLI exits non-zero when targets fail), tasks.md H4.4.
 import type { RampReport } from '../ramp/executor';
+import type { BossReport } from '../boss';
 import type { SoakReport } from '../soak';
 import type { StackReport } from '../stack';
 import type { SweepReport } from '../sweep/executor';
@@ -25,6 +26,13 @@ export function stackTargets(spec: TargetSpec, r: StackReport): TargetResult[] {
 export function soakTargets(spec: TargetSpec, r: SoakReport): TargetResult[] {
   const base = checkTargets(spec, { recoveryMs: [], repeats: r.disagreements }).filter((t) => t.name === 'repeats');
   return [...base, { name: 'soakDrift', value: r.throughputRatio, target: 0.8, pass: r.noDrift && r.reliability >= 90 }];
+}
+
+/** Boss: a boss that repeats a side effect counts against repeats; a boss the app did not survive fails bossSurvived. */
+export function bossTargets(spec: TargetSpec, r: BossReport): TargetResult[] {
+  const base = checkTargets(spec, { recoveryMs: [], repeats: r.results.filter((x) => x.outcome === 'repeat' || (x.repeatedKinds?.length ?? 0) > 0).length }).filter((t) => t.name === 'repeats');
+  const survived = r.results.filter((x) => x.survived && !x.lost).length;
+  return [...base, { name: 'bossSurvived', value: survived, target: r.results.length, pass: survived === r.results.length }];
 }
 
 /** Ramp: the knee must reach the concurrency target. No knee up to the last step counts as the last step. */

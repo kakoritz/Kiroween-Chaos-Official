@@ -1,7 +1,7 @@
 // `npm run haunt -- sweep [--tier rookie] [--seed 1] [--orders 2] [--speed 4] [--config path] [--bot path] [--out dir]`
 // Runs one creature fault per stage against a built bot (npm run build:bots) and a local provider on 127.0.0.1,
 // prints the coverage matrix and the grade, and writes a deterministic report JSON.
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { loadHauntConfig } from '../../../haunt/src/config';
 import { CORE_CREATURES, EXTRA_CREATURES } from '../../../haunt/src/creatures';
@@ -9,7 +9,9 @@ import { planSweep, renderMatrix, runSweep, sweepReportJson, createLiveCellRunne
 import { createLiveRampRunner, runRamp } from '../../../haunt/src/ramp';
 import { createLiveStackRunner, planStack, renderStackCurve, runStack, stackReportJson } from '../../../haunt/src/stack';
 import { createLiveSoakRunner, renderSoak, runSoak, soakReportJson } from '../../../haunt/src/soak';
-import { ciExitCode, rampTargets, renderTargetLines, soakTargets, stackTargets, sweepTargets } from '../../../haunt/src/report/ci';
+import { bossReportJson, createLiveBossRunner, planBoss, renderBoss, runBoss } from '../../../haunt/src/boss';
+import { compareReportJson, compareReports, renderCompare } from '../../../haunt/src/compare';
+import { ciExitCode, bossTargets, rampTargets, renderTargetLines, soakTargets, stackTargets, sweepTargets } from '../../../haunt/src/report/ci';
 import { startProvider } from '../provider/server';
 
 const argv = process.argv.slice(2);
@@ -203,15 +205,84 @@ async function soak(): Promise<number> {
     rmSync(runDir, { recursive: true, force: true });
   }
 }
+async function boss(): Promise<number> {
+  const tier = opt('tier', 'phoenix')!;
+  const seed = Number(opt('seed', '1'));
+  const orders = Number(opt('orders', '2'));
+  const speed = Number(opt('speed', '8'));
+  if (![seed, orders, speed].every((n) => Number.isFinite(n) && n > 0)) { console.error('seed, orders and speed must be positive numbers'); return 2; }
+  const only = opt('boss');
+  let plan: ReturnType<typeof planBoss>;
+  try { plan = planBoss(only ? [only] : undefined); } catch (e) { console.error(e instanceof Error ? e.message : String(e)); return 2; }
+  const root = process.cwd();
+  const configPath = resolve(opt('config', join(root, 'apps', 'haunted-orders', 'haunt.yaml'))!);
+  const bot = resolve(opt('bot', join(root, 'dist', 'bots', `${tier}.js`))!);
+  const outDir = resolve(opt('out', join(root, '.haunt', 'bosses'))!);
+  const loaded = loadHauntConfig(configPath);
+  if (!loaded.ok) { console.error(`config errors:\n${loaded.errors.join('\n')}`); return 2; }
+  const creatures = [...CORE_CREATURES, ...EXTRA_CREATURES];
+
+  const prov = await startProvider({ port: 0 });
+  const runDir = join(root, '.haunt', 'boss-run', `${tier}-${process.pid}`);
+  try {
+    const live = createLiveBossRunner({
+      command: process.execPath, args: [bot], runDir, tier, orders, speed, cellTimeoutMs: Number(opt('cell-timeout', '30000')),
+      recoverMs: loaded.config.targets.recoverMs, creatures,
+      provider: {
+        url: prov.url,
+        reset: () => prov.provider.reset(),
+        ledger: (lane) => prov.provider.ledger(lane),
+        post: async (body) => { prov.provider.addFault(body); },
+      },
+    });
+    const report = await runBoss(plan, live, seed);
+    console.log(renderBoss(report));
+    mkdirSync(outDir, { recursive: true });
+    const file = join(outDir, `boss-${tier}-seed${seed}.json`);
+    writeFileSync(file, bossReportJson(report));
+    console.log(`report ${file}`);
+    return gate(bossTargets(loaded.config.targets, report));
+  } finally {
+    await prov.close();
+    rmSync(runDir, { recursive: true, force: true });
+  }
+}
+
+/** A run is a report file path, or a name under .haunt/sweeps (with or without .json). */
+function findRun(id: string): string | null {
+  const root = process.cwd();
+  for (const p of [resolve(id), join(root, '.haunt', 'sweeps', id), join(root, '.haunt', 'sweeps', `${id}.json`)]) {
+    if (existsSync(p) && p.endsWith('.json')) return p;
+  }
+  return null;
+}
+
+function compare(): number {
+  const [a, b] = [argv[1], argv[2]];
+  if (!a || !b || a.startsWith('--') || b.startsWith('--')) { console.error('usage: npm run haunt -- compare <runA> <runB> [--out file]'); return 2; }
+  const fa = findRun(a);
+  const fb = findRun(b);
+  if (!fa || !fb) { console.error(`run not found: ${!fa ? a : b}`); return 2; }
+  const report = compareReports(JSON.parse(readFileSync(fa, 'utf8')), JSON.parse(readFileSync(fb, 'utf8')));
+  console.log(renderCompare(report));
+  const out = opt('out');
+  if (out) { mkdirSync(resolve(out, '..'), { recursive: true }); writeFileSync(resolve(out), compareReportJson(report)); console.log(`report ${resolve(out)}`); }
+  return argv.includes('--no-gate') ? 0 : report.verdict === 'regressed' ? 1 : 0;
+}
 if (cmd === 'sweep') {
   process.exitCode = await sweep();
 } else if (cmd === 'stack') {
   process.exitCode = await stack();
 } else if (cmd === 'soak') {
   process.exitCode = await soak();
+} else if (cmd === 'boss') {
+  process.exitCode = await boss();
+} else if (cmd === 'compare') {
+  process.exitCode = compare();
 } else if (cmd === 'ramp') {
   process.exitCode = await ramp();
 } else {
-  console.log(`usage: npm run haunt -- ramp|sweep|stack|soak [--tier rookie|retrier|journaler|reconciler|phoenix] [--seed N] [--orders N] [--speed N] [--config path] [--bot path] [--out dir] [--no-gate]`);
+  console.log(`usage: npm run haunt -- ramp|sweep|stack|soak|boss [--boss lich|banshee_queen|horseman] [--tier rookie|retrier|journaler|reconciler|phoenix] [--seed N] [--orders N] [--speed N] [--config path] [--bot path] [--out dir] [--no-gate]`);
+  console.log('       npm run haunt -- compare <runA> <runB> [--out file]');
   process.exitCode = cmd ? 2 : 0;
 }
