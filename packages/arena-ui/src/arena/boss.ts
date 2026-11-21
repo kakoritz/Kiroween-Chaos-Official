@@ -20,8 +20,8 @@ export const emptyBoss = (): BossVM => ({ phase: 'none', fault: '', warnedAt: 0,
 export interface BossInfo { name: string; sprite: CreatureId | null; line: string }
 const BOSSES: Record<string, BossInfo> = {
   boss_power_outage: { name: 'Lich', sprite: 'lich', line: 'Power Outage' },
-  boss_internet_outage: { name: 'Banshee Queen', sprite: null, line: 'Internet Outage' },
-  boss_hazard_storm: { name: 'Headless Horseman', sprite: null, line: 'Hazard Storm' },
+  boss_internet_outage: { name: 'Banshee Queen', sprite: 'banshee_queen', line: 'Internet Outage' },
+  boss_hazard_storm: { name: 'Headless Horseman', sprite: 'horseman', line: 'Hazard Storm' },
 };
 export const bossInfo = (fault: string): BossInfo =>
   BOSSES[fault] ?? { name: fault.replace(/^boss_/, '').replace(/_/g, ' ') || 'Boss', sprite: null, line: 'Boss' };

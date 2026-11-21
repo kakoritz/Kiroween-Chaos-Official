@@ -18,18 +18,19 @@ const chain = (): CanvasRenderingContext2D => {
 };
 
 describe('creature art', () => {
-  it('lists the fifteen creatures with at least two animations each', () => {
+  it('lists the seventeen creatures with at least two animations each', () => {
     expect(CREATURES.map((c) => c.id)).toEqual(['reaper', 'zombie', 'ghost', 'wraith', 'poltergeist', 'doppelganger', 'lich',
-      'banshee', 'goblin', 'imp', 'gargoyle', 'mummy', 'werewolf', 'wisp', 'witch']);
+      'banshee', 'goblin', 'imp', 'gargoyle', 'mummy', 'werewolf', 'wisp', 'witch', 'banshee_queen', 'horseman']);
     for (const c of CREATURES) expect(c.anims.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('registers every creature in the lab, with the Lich as a boss', async () => {
+  it('registers every creature in the lab, with the three bosses', async () => {
     const { listSprites } = await import('../src/lab/registry');
     await import('../src/creatures/draw');
     const ids = listSprites().map((s) => s.id);
     for (const c of CREATURES) expect(ids).toContain(`creature-${c.id}`);
     expect(listSprites().find((s) => s.id === 'creature-lich')!.group).toBe('boss');
+    for (const b of ['banshee_queen', 'horseman']) expect(listSprites().find((s) => s.id === `creature-${b}`)!.group).toBe('boss');
   });
 
   it('draws every animation at several progress values, in colour and silhouette', async () => {

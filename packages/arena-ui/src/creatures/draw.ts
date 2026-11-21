@@ -836,9 +836,91 @@ function witch(ctx: Ctx, o: DrawOpts, a: string, p: number): void {
   blob(ctx, o, 'M-12,-80L12,-80L12,-76L-12,-76Z', '#ffc247', '#c98f1c');
 }
 
+// ---------------------------------------------------------------- Banshee Queen
+function bansheeQueen(ctx: Ctx, o: DrawOpts, a: string, p: number): void {
+  const t = p * TAU;
+  const wail = a === 'wail';
+  const open = wail ? ease.inOutCubic(seg(p, 0, 0.3)) * (1 - seg(p, 0.85, 1)) : 0;
+  ctx.translate(0, Math.sin(t) * 3 - 6);
+  glow(ctx, o, 0, -58, 80, '#b48cff', 0.28 + open * 0.3);
+  if (wail && !o.silhouette) {
+    ctx.strokeStyle = '#d9c6ff';
+    ctx.lineWidth = 3;
+    for (const k of [0, 1, 2, 3]) {
+      const r = ((p * 1.8 + k * 0.25) % 1) * 70 + 10;
+      ctx.globalAlpha = (1 - (r - 10) / 70) * 0.7;
+      for (const dir of [-1, 1]) {
+        ctx.beginPath();
+        ctx.arc(dir * 12, -66, r, dir < 0 ? Math.PI - 0.7 : -0.7, dir < 0 ? Math.PI + 0.7 : 0.7);
+        ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+  const sw = Math.sin(t) * 3;
+  // streaming hair and trailing veil
+  blob(ctx, o, `M-14,-82C-40,-76-44,-40-36,-8C-30,-30-22,-48-12,-58ZM14,-82C40,-76${44 + sw},-40${36 + sw},-8C30,-30,22,-48,12,-58Z`, '#d9c6ff', '#a98ae0', '#f5eeff');
+  // gown, wider than the banshee, with ragged hem
+  blob(ctx, o, 'M-15,-60C-30,-36-38,-16-42,-2L-30,-8L-20,2L-10,-6L0,2L10,-6L20,2L30,-8L42,-2C38,-16,30,-36,15,-60Z', '#6a4fb8', '#47318a', '#a98ae0');
+  blob(ctx, o, 'M-9,-56L0,-34L9,-56L5,-60L-5,-60Z', '#3a2670');
+  ball(ctx, o, 0, -72, 13, 15, '#eef2fa', '#c2cde0', '#ffffff');
+  // crown of shards
+  blob(ctx, o, 'M-14,-84L-13,-100L-7,-90L0,-106L7,-90L13,-100L14,-84Z', '#ffc247', '#c98f1c', '#ffe08a');
+  eyes(ctx, o, [[-5, -75], [5, -75]], 2.8 + open, '#14101f');
+  ctx.fillStyle = OUT;
+  ctx.beginPath();
+  ctx.ellipse(0, -66, 4.5 + open * 2.5, 2 + open * 9, 0, 0, TAU);
+  ctx.fill();
+}
+
+// ---------------------------------------------------------------- Headless Horseman
+function horseman(ctx: Ctx, o: DrawOpts, a: string, p: number): void {
+  const t = p * TAU;
+  const hurl = a === 'hurl';
+  const wind = hurl ? ease.inOutCubic(seg(p, 0, 0.45)) : 0;
+  const rel = hurl ? seg(p, 0.45, 0.8) : 0;
+  const bob = Math.sin(t) * 2 - 2;
+  ctx.translate(0, bob);
+  // cape streaming behind
+  const flap = Math.sin(t) * 4;
+  blob(ctx, o, `M-14,-66C-34,-52-50,-30${-52 + flap},-4L-34,-12L-22,-2L-6,-8L10,-66Z`, '#2a2140', '#1b1430', '#4a3a70');
+  // legs and boots
+  limb(ctx, o, -7, -24, -9, -4, 8, '#3a2e58');
+  limb(ctx, o, 7, -24, 9, -4, 8, '#3a2e58');
+  blob(ctx, o, 'M-16,-4L-3,-4L-3,2L-18,2Z', '#14101f');
+  blob(ctx, o, 'M3,-4L16,-4L18,2L3,2Z', '#14101f');
+  // torso in a dark coat with orange buttons
+  blob(ctx, o, 'M-16,-68L16,-68L18,-22L-18,-22Z', '#3d2f66', '#2a2048', '#6a55a8');
+  if (!o.silhouette) {
+    ctx.fillStyle = '#ff8a2b';
+    for (const y of [-58, -48, -38]) {
+      ctx.beginPath();
+      ctx.arc(0, y, 2.2, 0, TAU);
+      ctx.fill();
+    }
+  }
+  // neck stump and high collar
+  blob(ctx, o, 'M-9,-74L9,-74L12,-64L-12,-64Z', '#6a55a8', '#3d2f66');
+  // sword arm (left) and pumpkin arm (right)
+  limb(ctx, o, -15, -62, -34, lerp(-46, -66, wind), 7, '#3d2f66');
+  limb(ctx, o, -34, lerp(-46, -66, wind), -40, lerp(-84, -96, wind), 3, '#cfd6e6');
+  const px = lerp(26, 58, rel);
+  const py = lerp(-88, -50, rel) - wind * 6 + (1 - wind) * 38 * (hurl ? 0 : 1);
+  limb(ctx, o, 15, -62, hurl && rel > 0 ? 28 : px - 4, hurl && rel > 0 ? -70 : py + 14, 7, '#3d2f66');
+  // burning pumpkin where the head should be (held aloft)
+  const fl = Math.sin(t * 3) * 2;
+  glow(ctx, o, px, py, 34, '#ff8a2b', 0.45 + wind * 0.35);
+  ball(ctx, o, px, py, 14, 12, '#ff8a2b', '#c9560c', '#ffc27a');
+  blob(ctx, o, `M${px - 2},${py - 12}L${px + 2},${py - 12}L${px + 3},${py - 17}L${px - 3},${py - 17}Z`, '#5a8a2a');
+  blob(ctx, o, `M${px - 8},${py - 10}C${px - 10},${py - 22 - fl}${px - 2},${py - 24}${px},${py - 30 - fl}C${px + 2},${py - 22}${px + 10},${py - 20 - fl}${px + 8},${py - 10}Z`, '#ffd34d', '#ff8a2b', '#fff0a8');
+  eyes(ctx, o, [[px - 5, py - 2], [px + 5, py - 2]], 2.6, '#14101f');
+  eyes(ctx, o, [[px, py + 5]], 2.2, '#14101f');
+}
+
 const DRAW: Record<CreatureId, (ctx: Ctx, o: DrawOpts, anim: string, p: number) => void> = {
   reaper, zombie, ghost, wraith, poltergeist, doppelganger, lich,
   banshee, goblin, imp, gargoyle, mummy, werewolf, wisp, witch,
+  banshee_queen: bansheeQueen, horseman,
 };
 
 export function drawCreature(ctx: Ctx, id: CreatureId, anim: string, p: number, o: DrawOpts): void {
