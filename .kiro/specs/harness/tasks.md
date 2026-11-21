@@ -41,7 +41,7 @@ Branch prefix `core/`. Each task is one PR. Tags: [C] touches `contract/`.
 
 ## H5. Ship
 - [x] H5.1 README, quick start, "How Kiro built this".
-- [ ] H5.2 Demo run script that feeds the UI lane's demo mode.
+- [x] H5.2 Demo run script that feeds the UI lane's demo mode.
 
 ## Cut line
 Ship H0, H1, H2.2, H3.1, H3.2, H3.4, H4.1, H4.2. That gives a graded sweep and a ramp report on the demo bot. Everything else is polish.

@@ -33,7 +33,7 @@ Servers bind to `127.0.0.1` only. Stop them with Ctrl+C.
 
 ## Not built yet
 
-These scripts exist but report "not implemented" or are blocked: `npm run mock` and `npm run demo` (mock server, H0.7), `npm run validate:events` (H0.6), and `npm run ui:build` (arena UI, Lane B).
+These scripts exist but report "not implemented" or are blocked: `npm run mock` (mock server, H0.7), `npm run validate:events` (H0.6), and `npm run ui:build` (arena UI, Lane B).
 
 ## How Kiro built this
 
