@@ -26,6 +26,8 @@ import '../src/onboarding/tour.css';
 import '../src/arena/lanes-ticker.css';
 import { ReviewCardView } from '../src/arena/review-card';
 import '../src/arena/review-card.css';
+import { ScoreVisuals } from '../src/arena/score-visuals';
+import '../src/arena/score-visuals.css';
 import { mountCampaignHub } from '../src/campaign/hub';
 import '../src/campaign/hub.css';
 import { gearShopStarter } from '../src/campaign/shop';
@@ -130,6 +132,7 @@ const ledgerPanel = new LedgerPanel($('ledger-body'));
 const rankEl = $('rank');
 const ledgerEl = $('ledger');
 const reviewCards = new ReviewCardView(stageEl, (n) => { const i = vm.lanes.findIndex((x) => x.lane === n); return i < 0 ? null : laneBoxes(vm.lanes.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET)[i] ?? null; });
+const scoreVisuals = new ScoreVisuals(stageEl, (n) => { const i = vm.lanes.findIndex((x) => x.lane === n); return i < 0 ? null : laneBoxes(vm.lanes.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET)[i] ?? null; });
 const tickerEl = $('ticker');
 const tickerModel = new LaneTickerModel((id) => vm.stages.find((s) => s.id === id)?.label ?? id);
 const ticker = new LaneTickerView($('ticker-body'), tickerModel, {
@@ -247,6 +250,7 @@ function onEvent(ev: ArenaEvent) {
   inspector.record(ev);
   tickerModel.push(ev, performance.now());
   reviewCards.onEvent(ev);
+  scoreVisuals.onEvent(ev);
   events++;
   if (typeof ev.seq === 'number') lastSeq = ev.seq;
   if (ev.type === 'hello') {
@@ -464,6 +468,7 @@ function frame(now: number) {
   }
   inspector.render(now);
   rankBoard.update(vm);
+  scoreVisuals.ensure(vm.lanes.map((l) => l.lane));
   ledgerPanel.update(vm, now);
   scene.draw(vm, now);
   bossBar.update(vm.boss, now, reduceMotion.matches);

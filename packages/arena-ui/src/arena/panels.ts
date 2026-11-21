@@ -49,26 +49,40 @@ export function stateIcon(m: SkelMode): { icon: string; label: string } {
 const esc = (s: string): string => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 const tierName = (t: string): string => (t ? t.charAt(0).toUpperCase() + t.slice(1) : 'Lane');
 
+/** Competition ranking by score: ties share a rank (1,1,3). PT-U8. */
+export function rankNumbers(ranked: readonly LaneVM[]): number[] {
+  const out: number[] = [];
+  ranked.forEach((l, i) => out.push(i > 0 && ranked[i - 1]!.score === l.score ? out[i - 1]! : i + 1));
+  return out;
+}
+
+/** Average stars (cum stars over cum max, scaled to 5), or a dash with no reviews yet. */
+export function avgStarsText(l: LaneVM): string {
+  return l.stars && l.stars.max > 0 ? ((l.stars.sum / l.stars.max) * 5).toFixed(1) : '-';
+}
+
 export class RankBoard {
   private rows = new Map<number, HTMLElement>();
   private sig = '';
   constructor(private host: HTMLElement) {}
   update(vm: ArenaVM): void {
     const ranked = rankLanes(vm.lanes);
-    const sig = ranked.map((l) => `${l.lane}:${l.score}:${l.counts.completed}:${l.counts.failed}:${l.counts.repeats}:${l.mode}`).join('|');
+    const sig = ranked.map((l) => `${l.lane}:${l.score}:${avgStarsText(l)}:${l.counts.completed}:${l.counts.failed}:${l.counts.repeats}:${l.mode}`).join('|');
     if (sig === this.sig) return;
     this.sig = sig;
     const live = new Set(ranked.map((l) => l.lane));
     for (const [n, el] of this.rows) if (!live.has(n)) { el.remove(); this.rows.delete(n); }
+    const nums = rankNumbers(ranked);
     ranked.forEach((l, i) => {
       let el = this.rows.get(l.lane);
       if (!el) { el = document.createElement('div'); el.className = 'rb-row'; this.host.appendChild(el); this.rows.set(l.lane, el); }
       const st = stateIcon(l.mode);
       el.style.transform = `translateY(${i * ROW_H}px)`;
       el.className = `rb-row rb-${l.mode}`;
-      el.innerHTML = `<span class="rb-rank">${rankGlyph(i, l.score)}</span>`
+      el.innerHTML = `<span class="rb-rank">${nums[i] === 1 ? rankGlyph(0, l.score) : String(nums[i])}</span>`
         + `<span class="rb-name">${esc(tierName(l.tier))} <i>#${l.lane}</i></span>`
         + `<span class="rb-score">${l.score}</span>`
+        + `<span class="rb-avg" title="average stars">${avgStarsText(l)}</span>`
         + `<span class="rb-cf" title="completed / failed">${l.counts.completed}/${l.counts.failed}</span>`
         + `<span class="rb-rep${l.counts.repeats ? ' bad' : ''}" title="repeats">${l.counts.repeats ? '\u00D7' + l.counts.repeats : '-'}</span>`
         + `<span class="rb-state" title="${st.label}">${st.icon}</span>`;
