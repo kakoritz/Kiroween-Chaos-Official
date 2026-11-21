@@ -48,6 +48,9 @@ export interface ProviderArm {
   forMs?: number;
   count?: number;
   nextCaller?: 'recovery';
+  /** order_typo: the order whose file was swapped, and the stage that finds it (default confirmation). */
+  order?: string;
+  detect?: 'confirmation' | 'handoff';
 }
 
 interface Entry {

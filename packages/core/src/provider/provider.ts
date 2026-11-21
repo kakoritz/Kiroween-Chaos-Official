@@ -3,8 +3,8 @@
 import { appendFileSync, closeSync, fsyncSync, openSync, writeFileSync } from 'node:fs';
 import { unit } from '@haunt/shared';
 
-export type Kind = 'account' | 'charge' | 'email' | 'dispatch' | 'notify' | 'ticket' | 'reply';
-export const KINDS: readonly Kind[] = ['account', 'charge', 'email', 'dispatch', 'notify', 'ticket', 'reply'];
+export type Kind = 'account' | 'charge' | 'email' | 'dispatch' | 'notify' | 'ticket' | 'reply' | 'refund' | 'discount';
+export const KINDS: readonly Kind[] = ['account', 'charge', 'email', 'dispatch', 'notify', 'ticket', 'reply', 'refund', 'discount'];
 
 export const POST_ROUTES: Readonly<Record<string, Kind>> = {
   '/accounts': 'account',
@@ -14,10 +14,12 @@ export const POST_ROUTES: Readonly<Record<string, Kind>> = {
   '/notifications': 'notify',
   '/tickets': 'ticket',
   '/replies': 'reply',
+  '/refunds': 'refund',
+  '/discounts': 'discount',
 };
 
 const ID_PREFIX: Record<Kind, string> = {
-  account: 'acct', charge: 'ch', email: 'em', dispatch: 'sh', notify: 'nt', ticket: 'tk', reply: 'rp',
+  account: 'acct', charge: 'ch', email: 'em', dispatch: 'sh', notify: 'nt', ticket: 'tk', reply: 'rp', refund: 'rf', discount: 'dc',
 };
 
 export interface LedgerRow {
@@ -32,7 +34,7 @@ export interface LedgerRow {
   ts: number;
 }
 
-export type FaultMode = 'latency' | 'status' | 'drop' | 'stall' | 'no_driver' | 'handoff_block';
+export type FaultMode = 'latency' | 'status' | 'drop' | 'stall' | 'no_driver' | 'handoff_block' | 'typo';
 export type HandoffBlock = 'no_answer' | 'gated' | 'accident' | 'wrong_order';
 
 export interface FaultSpec {
@@ -41,6 +43,8 @@ export interface FaultSpec {
   /** For handoff_block: the status the handoff call answers with (design.md section 2). */
   block?: HandoffBlock;
   mode: FaultMode;
+  /** For typo: the one order the wrong-order complaint applies to (design.md section 8). */
+  order?: string;
   value?: number;
   /** Apply to the next N matching calls. */
   count?: number;
@@ -195,7 +199,7 @@ export class Provider {
     if (typeof lane !== 'string' || typeof order !== 'string') return json(400, { error: 'lane and order required' });
     const key = h['idempotency-key'] ?? null;
     const recovery = h['x-haunt-phase'] === 'recovery';
-    return this.gate(lane, kind, order, recovery, async (extraMs) => {
+    return this.gate(lane, kind, order, recovery, async (extraMs, fault) => {
       const known = key !== null ? this.responses.get(`${lane}|${kind}|${key}`) : undefined;
       let res: ProviderResponse;
       if (known !== undefined) {
@@ -215,6 +219,8 @@ export class Provider {
         this.persist(row);
         this.onRow?.({ ...row });
         if (key !== null) this.responses.set(`${lane}|${kind}|${key}`, payload);
+        // Wrong order found at confirmation: the email is sent, and the customer complains (design.md section 8).
+        if (kind === 'email' && fault?.mode === 'typo') payload.complaint = 'wrong_order';
         res = json(201, payload);
       }
       // Processed before any delay: a latency fault past the client timeout still leaves the row.
@@ -240,7 +246,7 @@ export class Provider {
     const recovery = h['x-haunt-phase'] === 'recovery';
     return this.gate(lane, 'handoff', shipment, recovery, async (extraMs, fault) => {
       if (extraMs > 0) await this.clock.sleep(extraMs);
-      if (fault?.mode === 'handoff_block') return json(200, { status: fault.block ?? 'no_answer' });
+      if (fault?.mode === 'handoff_block' || fault?.mode === 'typo') return json(200, { status: fault.block ?? 'no_answer' });
       return json(200, { status: 'delivered' });
     });
   }
@@ -260,7 +266,7 @@ export class Provider {
       const callNo = this.next(`call|${lane}`, this.calls);
       const base = 20 + unit(this.seed, 'latency', lane, order, service, callNo) * 80;
       const over = n > CAPACITY_BASE ? (n - CAPACITY_BASE) * CAPACITY_PENALTY_MS : 0;
-      const fault = this.matchFault(lane, service, recovery);
+      const fault = this.matchFault(lane, service, recovery, order);
       const baseMs = Math.floor(base + over);
       if (fault) {
         const v = fault.value ?? 0;
@@ -273,6 +279,7 @@ export class Provider {
           return json(v, { error: `fault ${v}` }, { ...(fault.headers ?? {}) });
         }
         if (fault.mode === 'latency') return await run(baseMs + v, fault);
+        if (fault.mode === 'typo') return await run(baseMs, fault);
         if (fault.mode === 'handoff_block') return service === 'handoff' ? await run(baseMs, fault) : await run(baseMs, null);
         if (service !== 'tracking') return await run(baseMs, null);
         return await run(baseMs + (fault.mode === 'stall' ? v : 0), fault);
@@ -283,7 +290,7 @@ export class Provider {
     }
   }
 
-  private matchFault(lane: string, service: Kind | 'tracking' | 'handoff', recovery: boolean): FaultSpec | null {
+  private matchFault(lane: string, service: Kind | 'tracking' | 'handoff', recovery: boolean, order = ''): FaultSpec | null {
     const now = this.clock.now();
     this.faults = this.faults.filter((f) => (f.remaining === null || f.remaining > 0) && (f.until === null || f.until > now));
     for (const f of this.faults) {
@@ -291,6 +298,8 @@ export class Provider {
       if (s.lane !== lane) continue;
       if (s.service !== '*' && s.service !== service) continue;
       if (s.nextCaller === 'recovery' && !recovery) continue;
+      // Handoff and tracking calls are keyed by shipment, so the order match applies to order-keyed services only.
+      if (s.order !== undefined && service !== 'handoff' && service !== 'tracking' && s.order !== order) continue;
       if (f.windowMs !== null && f.until === null) f.until = now + f.windowMs;
       if (f.remaining !== null) f.remaining -= 1;
       return s;

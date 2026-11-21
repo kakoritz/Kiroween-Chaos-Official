@@ -38,9 +38,11 @@ export function faultBody(lane: string, stage: string | null, arm: ProviderArm):
     case 'gated_house': base = { mode: 'handoff_block', block: 'gated', forMs: 3000 }; break;
     case 'car_accident': base = { mode: 'handoff_block', block: 'accident', forMs: 7000 }; break;
     case 'driver_unreachable': base = { mode: 'no_driver', forMs: 3000 }; break;
+    // Wrong order (design.md section 8): the complaint comes back at confirmation (default) or handoff, once, for one order.
+    case 'order_typo': base = { mode: 'typo', count: 1, ...(arm.order ? { order: arm.order } : {}), ...(arm.detect === 'handoff' ? { block: 'wrong_order' as const } : {}) }; break;
     default: return null;
   }
-  const body: FaultSpec = { lane, service: arm.fault === 'hazard_event' || arm.fault === 'driver_unreachable' || arm.fault === 'wrong_address' ? 'tracking' : arm.fault === 'no_answer' || arm.fault === 'gated_house' || arm.fault === 'car_accident' ? 'handoff' : service, ...base };
+  const body: FaultSpec = { lane, service: arm.fault === 'hazard_event' || arm.fault === 'driver_unreachable' || arm.fault === 'wrong_address' ? 'tracking' : arm.fault === 'no_answer' || arm.fault === 'gated_house' || arm.fault === 'car_accident' || (arm.fault === 'order_typo' && arm.detect === 'handoff') ? 'handoff' : arm.fault === 'order_typo' ? 'email' : service, ...base };
   // The arm carries the (possibly speed-scaled) window or count and wins over the defaults.
   if (arm.forMs !== undefined) { body.forMs = arm.forMs; delete body.count; }
   else if (arm.count !== undefined) { body.count = arm.count; delete body.forMs; }
@@ -66,9 +68,17 @@ export interface RepeatEvent {
 /** Tracks ledger rows per (kind, order, index) and reports a repeat each time the row count grows past 1. */
 export class RepeatDetector {
   private readonly counts = new Map<string, number>();
+  private readonly refunded = new Set<string>();
 
   /** Feed every new ledger row, in write order. Returns a repeat event when this row is an extra one. */
-  add(row: Pick<LedgerRow, 'kind' | 'order' | 'index' | 'lane'>): RepeatEvent | null {
+  add(row: Pick<LedgerRow, 'kind' | 'order' | 'index' | 'lane'> & { key?: string | null }): RepeatEvent | null {
+    // Ledger exemption P15 (playtest-v2 design.md section 8): refund and discount rows are legitimate, and a charge
+    // keyed :rN after a refund row of the same order is the redo's new charge, not a repeat.
+    if (row.kind === 'refund' || row.kind === 'discount') {
+      if (row.kind === 'refund') this.refunded.add(`|`);
+      return null;
+    }
+    if (row.kind === 'charge' && typeof row.key === 'string' && /:r\d+$/.test(row.key) && this.refunded.has(`|`)) return null;
     const key = row.index === null || row.index === undefined ? `${row.order}:${row.kind}` : `${row.order}:${row.kind}:${row.index}`;
     const id = `${row.lane}|${row.kind}|${key}`;
     const n = (this.counts.get(id) ?? 0) + 1;
@@ -85,6 +95,7 @@ export class RepeatDetector {
 
   reset(): void {
     this.counts.clear();
+    this.refunded.clear();
   }
 }
 
