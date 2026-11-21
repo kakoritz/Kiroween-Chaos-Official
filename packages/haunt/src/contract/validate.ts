@@ -103,7 +103,8 @@ interface Lane {
   orderStartTs: number;
   decision?: { order: string; options: string[]; defaultChoice: string };
   res?: { choice: string; effects: Set<string> };
-  intervalOpen: boolean;
+  /** Open recovery intervals: order to the index of the stage that failed first. Closed by a real completion of that stage or a later one. */
+  ivals: Map<string, number>;
   closedInterval: boolean;
   bossHalf?: string;
 }
@@ -112,7 +113,7 @@ const newLane = (): Lane => ({
   ready: false, state: 'idle', doneIdx: -1, stack: [], pendingChaos: 0, parked: new Set(), parkedIdx: new Map(), finished: new Set(), score: 0,
   breaker: new Map(), bossChaos: 0, stageStarts: new Map(), halted: false,
   rv: { count: 0, sum: 0 }, counts: { done: 0, cancelled: 0, quarantined: 0, abandoned: 0 }, doneMs: [], fails: new Map(),
-  orderStartTs: 0, intervalOpen: false, closedInterval: false,
+  orderStartTs: 0, ivals: new Map(), closedInterval: false,
 });
 
 /** Contract v1.1 section 8: fault id to creature. */
@@ -393,7 +394,7 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
           if (isRedo) {
             for (const k of [...L.stageStarts.keys()]) if (k.startsWith(`${o}|`)) L.stageStarts.delete(k);
             for (const k of [...L.fails.keys()]) if (k.startsWith(`${o}|`)) L.fails.delete(k);
-            L.res = undefined; L.decision = undefined; L.intervalOpen = false;
+            L.res = undefined; L.decision = undefined;
           }
         }
         if (L.parked.has(o) && L.expectOrder !== o) bad('R23', ev, `parked order ${o} restarted without order_resumed`);
@@ -440,8 +441,9 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
         if (idx === stageIds.length - 1 && !d.skipped) L.expect = 'order_done';
         if (minor >= 1) {
           L.walk = num(d.walkMs) && d.walkMs > 0 && !d.skipped ? { ts: ev.ts, ms: d.walkMs } : undefined;
-          L.closedInterval = L.intervalOpen;
-          L.intervalOpen = false;
+          const iv = L.ivals.get(ev.order as string);
+          L.closedInterval = false;
+          if (!d.skipped && iv !== undefined && idx >= iv) { L.closedInterval = true; L.ivals.delete(ev.order as string); }
         }
         break;
       }
@@ -451,7 +453,7 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
         if (minor >= 1) {
           const fk = `${ev.order}|${stageId}`;
           L.fails.set(fk, (L.fails.get(fk) ?? 0) + 1);
-          L.intervalOpen = true;
+          if (!L.ivals.has(ev.order as string)) L.ivals.set(ev.order as string, idx);
         }
         if (d.degraded) { L.state = 'degraded_failed'; L.expect = 'stage_start_next'; L.doneIdx = Math.max(L.doneIdx, L.open.idx); L.open = undefined; }
         else L.state = 'failed';
@@ -478,7 +480,7 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
       case 'process_dead': {
         if (L.state === 'dead') { bad('R6', ev, 'process_dead while already dead'); break; }
         closeChaos();
-        if (minor >= 1) { L.walk = undefined; L.grab = undefined; L.intervalOpen = true; }
+        if (minor >= 1) { L.walk = undefined; L.grab = undefined; if (L.order && !L.ivals.has(L.order)) L.ivals.set(L.order, L.open ? L.open.idx : 0); }
         L.dead = { ts: ev.ts, restartInMs: d.restartInMs ?? 0 };
         L.state = 'dead'; L.stack = [];
         if (L.open) L.open.killed = true;
@@ -560,7 +562,7 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
           L.counts.done++;
           L.awaitReview = { order: L.order, cancelled: false };
           L.gap = num(d.ceremonyMs) && num(d.returnMs) ? { ts: ev.ts, ms: d.ceremonyMs + d.returnMs } : undefined;
-          L.walk = undefined; L.grab = undefined; L.intervalOpen = false;
+          L.walk = undefined; L.grab = undefined; L.ivals.delete(L.order);
           if (L.res && L.res.choice === 'discount' && !L.res.effects.has('discount')) bad('R44', ev, 'discount decision resolved without a discount effect');
           if (L.res && L.res.choice !== 'discount') bad('R44', ev, `order_done after a ${L.res.choice} decision`);
           L.res = undefined;
@@ -588,7 +590,8 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
             }
           }
           if (t === 'order_quarantined') L.counts.quarantined++;
-          L.res = undefined; L.decision = undefined; L.walk = undefined; L.grab = undefined; L.intervalOpen = false;
+          L.res = undefined; L.decision = undefined; L.walk = undefined; L.grab = undefined;
+          if (t !== 'order_parked') L.ivals.delete(L.order);
         }
         if (t === 'order_parked') { L.parked.add(L.order); L.parkedIdx.set(L.order, L.doneIdx); }
         else L.finished.add(L.order);

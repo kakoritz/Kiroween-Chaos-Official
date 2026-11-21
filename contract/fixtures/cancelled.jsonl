@@ -1,0 +1,395 @@
+{"seq":1,"ts":1760000000000,"type":"hello","contractVersion":1,"mode":"mock","app":"orders","contractMinor":1}
+{"seq":2,"ts":1760000000100,"type":"wave_start","wave":1,"detail":{"orders":3,"seed":7,"tiers":"race","lanes":2,"speed":1,"app":"orders","pace":"show"}}
+{"seq":3,"ts":1760000000150,"type":"lane_ready","wave":1,"lane":1,"detail":{"tier":"rookie","label":"Rookie","parts":[]}}
+{"seq":4,"ts":1760000000155,"type":"lane_ready","wave":1,"lane":2,"detail":{"tier":"phoenix","label":"Phoenix","parts":["retry","journal","idempotency","breaker","offline_queue"]}}
+{"seq":5,"ts":1760000001000,"type":"order_start","wave":1,"lane":1,"order":"ord-0001","detail":{"index":1,"total":3,"grabMs":1000}}
+{"seq":6,"ts":1760000001000,"type":"order_start","wave":1,"lane":2,"order":"ord-0001","detail":{"index":1,"total":3,"grabMs":1000}}
+{"seq":7,"ts":1760000002000,"type":"stage_start","wave":1,"lane":1,"order":"ord-0001","stage":"intake","detail":{"attempt":1}}
+{"seq":8,"ts":1760000002000,"type":"stage_start","wave":1,"lane":2,"order":"ord-0001","stage":"intake","detail":{"attempt":1}}
+{"seq":9,"ts":1760000002320,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"intake","detail":{"pct":21,"label":"Reading order"}}
+{"seq":10,"ts":1760000002320,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"intake","detail":{"pct":30,"label":"Reading order"}}
+{"seq":11,"ts":1760000002620,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"intake","detail":{"pct":42,"label":"Reading order"}}
+{"seq":12,"ts":1760000002820,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"intake","detail":{"pct":80,"label":"Reading order"}}
+{"seq":13,"ts":1760000003029,"type":"stage_done","wave":1,"lane":2,"order":"ord-0001","stage":"intake","detail":{"ms":1029,"skipped":false,"walkMs":800}}
+{"seq":14,"ts":1760000003043,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"intake","detail":{"pct":71,"label":"Reading order"}}
+{"seq":15,"ts":1760000003343,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"intake","detail":{"pct":92,"label":"Reading order"}}
+{"seq":16,"ts":1760000003473,"type":"stage_done","wave":1,"lane":1,"order":"ord-0001","stage":"intake","detail":{"ms":1473,"skipped":false,"walkMs":800}}
+{"seq":17,"ts":1760000003829,"type":"stage_start","wave":1,"lane":2,"order":"ord-0001","stage":"account","detail":{"attempt":1}}
+{"seq":18,"ts":1760000004129,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"account","detail":{"pct":10,"label":"Creating account"}}
+{"seq":19,"ts":1760000004273,"type":"stage_start","wave":1,"lane":1,"order":"ord-0001","stage":"account","detail":{"attempt":1}}
+{"seq":20,"ts":1760000004429,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"account","detail":{"pct":19,"label":"Creating account"}}
+{"seq":21,"ts":1760000004573,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"account","detail":{"pct":17,"label":"Creating account"}}
+{"seq":22,"ts":1760000004729,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"account","detail":{"pct":29,"label":"Creating account"}}
+{"seq":23,"ts":1760000004873,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"account","detail":{"pct":35,"label":"Creating account"}}
+{"seq":24,"ts":1760000005029,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"account","detail":{"pct":38,"label":"Creating account"}}
+{"seq":25,"ts":1760000005173,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"account","detail":{"pct":52,"label":"Creating account"}}
+{"seq":26,"ts":1760000005329,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"account","detail":{"pct":48,"label":"Creating account"}}
+{"seq":27,"ts":1760000005364,"type":"effect","wave":1,"lane":1,"order":"ord-0001","detail":{"kind":"account_create","key":"ord-0001:account","replayed":false}}
+{"seq":28,"ts":1760000005383,"type":"stage_done","wave":1,"lane":1,"order":"ord-0001","stage":"account","detail":{"ms":1110,"skipped":false,"walkMs":800}}
+{"seq":29,"ts":1760000005629,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"account","detail":{"pct":57,"label":"Creating account"}}
+{"seq":30,"ts":1760000005764,"type":"effect","wave":1,"lane":2,"order":"ord-0001","detail":{"kind":"account_create","key":"ord-0001:account","replayed":false}}
+{"seq":31,"ts":1760000005783,"type":"stage_done","wave":1,"lane":2,"order":"ord-0001","stage":"account","detail":{"ms":1954,"skipped":false,"walkMs":800}}
+{"seq":32,"ts":1760000006183,"type":"stage_start","wave":1,"lane":1,"order":"ord-0001","stage":"payment","detail":{"attempt":1}}
+{"seq":33,"ts":1760000006483,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"payment","detail":{"pct":6,"label":"Charging card"}}
+{"seq":34,"ts":1760000006583,"type":"stage_start","wave":1,"lane":2,"order":"ord-0001","stage":"payment","detail":{"attempt":1}}
+{"seq":35,"ts":1760000006783,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"payment","detail":{"pct":13,"label":"Charging card"}}
+{"seq":36,"ts":1760000006883,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"payment","detail":{"pct":7,"label":"Charging card"}}
+{"seq":37,"ts":1760000007083,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"payment","detail":{"pct":19,"label":"Charging card"}}
+{"seq":38,"ts":1760000007183,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"payment","detail":{"pct":13,"label":"Charging card"}}
+{"seq":39,"ts":1760000007383,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"payment","detail":{"pct":26,"label":"Charging card"}}
+{"seq":40,"ts":1760000007483,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"payment","detail":{"pct":20,"label":"Charging card"}}
+{"seq":41,"ts":1760000007683,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"payment","detail":{"pct":32,"label":"Charging card"}}
+{"seq":42,"ts":1760000007783,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"payment","detail":{"pct":26,"label":"Charging card"}}
+{"seq":43,"ts":1760000007983,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"payment","detail":{"pct":38,"label":"Charging card"}}
+{"seq":44,"ts":1760000008083,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"payment","detail":{"pct":33,"label":"Charging card"}}
+{"seq":45,"ts":1760000008283,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"payment","detail":{"pct":45,"label":"Charging card"}}
+{"seq":46,"ts":1760000008383,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"payment","detail":{"pct":40,"label":"Charging card"}}
+{"seq":47,"ts":1760000008583,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"payment","detail":{"pct":51,"label":"Charging card"}}
+{"seq":48,"ts":1760000008683,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"payment","detail":{"pct":46,"label":"Charging card"}}
+{"seq":49,"ts":1760000008883,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"payment","detail":{"pct":57,"label":"Charging card"}}
+{"seq":50,"ts":1760000008983,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"payment","detail":{"pct":53,"label":"Charging card"}}
+{"seq":51,"ts":1760000009056,"type":"effect","wave":1,"lane":1,"order":"ord-0001","detail":{"kind":"charge","key":"ord-0001:charge","replayed":false,"amount":5867}}
+{"seq":52,"ts":1760000009075,"type":"stage_done","wave":1,"lane":1,"order":"ord-0001","stage":"payment","detail":{"ms":2892,"skipped":false,"walkMs":800}}
+{"seq":53,"ts":1760000009283,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"payment","detail":{"pct":60,"label":"Charging card"}}
+{"seq":54,"ts":1760000009367,"type":"effect","wave":1,"lane":2,"order":"ord-0001","detail":{"kind":"charge","key":"ord-0001:charge","replayed":false,"amount":5867}}
+{"seq":55,"ts":1760000009386,"type":"stage_done","wave":1,"lane":2,"order":"ord-0001","stage":"payment","detail":{"ms":2804,"skipped":false,"walkMs":800}}
+{"seq":56,"ts":1760000009875,"type":"stage_start","wave":1,"lane":1,"order":"ord-0001","stage":"confirmation","detail":{"attempt":1}}
+{"seq":57,"ts":1760000010175,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"confirmation","detail":{"pct":21,"label":"Sending confirmation"}}
+{"seq":58,"ts":1760000010186,"type":"stage_start","wave":1,"lane":2,"order":"ord-0001","stage":"confirmation","detail":{"attempt":1}}
+{"seq":59,"ts":1760000010475,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"confirmation","detail":{"pct":42,"label":"Sending confirmation"}}
+{"seq":60,"ts":1760000010486,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"confirmation","detail":{"pct":21,"label":"Sending confirmation"}}
+{"seq":61,"ts":1760000010786,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"confirmation","detail":{"pct":43,"label":"Sending confirmation"}}
+{"seq":62,"ts":1760000010800,"type":"effect","wave":1,"lane":1,"order":"ord-0001","detail":{"kind":"email","key":"ord-0001:email","replayed":false}}
+{"seq":63,"ts":1760000010819,"type":"stage_done","wave":1,"lane":1,"order":"ord-0001","stage":"confirmation","detail":{"ms":944,"skipped":false,"walkMs":800}}
+{"seq":64,"ts":1760000011086,"type":"effect","wave":1,"lane":2,"order":"ord-0001","detail":{"kind":"email","key":"ord-0001:email","replayed":false}}
+{"seq":65,"ts":1760000011105,"type":"stage_done","wave":1,"lane":2,"order":"ord-0001","stage":"confirmation","detail":{"ms":918,"skipped":false,"walkMs":800}}
+{"seq":66,"ts":1760000011619,"type":"stage_start","wave":1,"lane":1,"order":"ord-0001","stage":"dispatch","detail":{"attempt":1}}
+{"seq":67,"ts":1760000011905,"type":"stage_start","wave":1,"lane":2,"order":"ord-0001","stage":"dispatch","detail":{"attempt":1}}
+{"seq":68,"ts":1760000011919,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"dispatch","detail":{"pct":13,"label":"Booking delivery"}}
+{"seq":69,"ts":1760000012205,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"dispatch","detail":{"pct":11,"label":"Booking delivery"}}
+{"seq":70,"ts":1760000012219,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"dispatch","detail":{"pct":26,"label":"Booking delivery"}}
+{"seq":71,"ts":1760000012505,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"dispatch","detail":{"pct":21,"label":"Booking delivery"}}
+{"seq":72,"ts":1760000012519,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"dispatch","detail":{"pct":39,"label":"Booking delivery"}}
+{"seq":73,"ts":1760000012805,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"dispatch","detail":{"pct":32,"label":"Booking delivery"}}
+{"seq":74,"ts":1760000012819,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"dispatch","detail":{"pct":51,"label":"Booking delivery"}}
+{"seq":75,"ts":1760000013081,"type":"effect","wave":1,"lane":1,"order":"ord-0001","detail":{"kind":"dispatch","key":"ord-0001:dispatch","replayed":false}}
+{"seq":76,"ts":1760000013100,"type":"stage_done","wave":1,"lane":1,"order":"ord-0001","stage":"dispatch","detail":{"ms":1481,"skipped":false,"walkMs":800}}
+{"seq":77,"ts":1760000013105,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"dispatch","detail":{"pct":42,"label":"Booking delivery"}}
+{"seq":78,"ts":1760000013405,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"dispatch","detail":{"pct":53,"label":"Booking delivery"}}
+{"seq":79,"ts":1760000013675,"type":"effect","wave":1,"lane":2,"order":"ord-0001","detail":{"kind":"dispatch","key":"ord-0001:dispatch","replayed":false}}
+{"seq":80,"ts":1760000013694,"type":"stage_done","wave":1,"lane":2,"order":"ord-0001","stage":"dispatch","detail":{"ms":1789,"skipped":false,"walkMs":800}}
+{"seq":81,"ts":1760000013900,"type":"stage_start","wave":1,"lane":1,"order":"ord-0001","stage":"updates","detail":{"attempt":1}}
+{"seq":82,"ts":1760000014200,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"updates","detail":{"pct":12,"label":"Sending updates"}}
+{"seq":83,"ts":1760000014494,"type":"stage_start","wave":1,"lane":2,"order":"ord-0001","stage":"updates","detail":{"attempt":1}}
+{"seq":84,"ts":1760000014500,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"updates","detail":{"pct":25,"label":"Sending updates"}}
+{"seq":85,"ts":1760000014794,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"updates","detail":{"pct":14,"label":"Sending updates"}}
+{"seq":86,"ts":1760000014800,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"updates","detail":{"pct":37,"label":"Sending updates"}}
+{"seq":87,"ts":1760000015094,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"updates","detail":{"pct":28,"label":"Sending updates"}}
+{"seq":88,"ts":1760000015100,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"updates","detail":{"pct":49,"label":"Sending updates"}}
+{"seq":89,"ts":1760000015394,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"updates","detail":{"pct":42,"label":"Sending updates"}}
+{"seq":90,"ts":1760000015413,"type":"effect","wave":1,"lane":1,"order":"ord-0001","detail":{"kind":"notify","key":"ord-0001:notify:1","replayed":false}}
+{"seq":91,"ts":1760000015492,"type":"effect","wave":1,"lane":1,"order":"ord-0001","detail":{"kind":"notify","key":"ord-0001:notify:2","replayed":false}}
+{"seq":92,"ts":1760000015511,"type":"stage_done","wave":1,"lane":1,"order":"ord-0001","stage":"updates","detail":{"ms":1612,"skipped":false,"walkMs":800}}
+{"seq":93,"ts":1760000015694,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"updates","detail":{"pct":56,"label":"Sending updates"}}
+{"seq":94,"ts":1760000015833,"type":"effect","wave":1,"lane":2,"order":"ord-0001","detail":{"kind":"notify","key":"ord-0001:notify:1","replayed":false}}
+{"seq":95,"ts":1760000015899,"type":"effect","wave":1,"lane":2,"order":"ord-0001","detail":{"kind":"notify","key":"ord-0001:notify:2","replayed":false}}
+{"seq":96,"ts":1760000015918,"type":"stage_done","wave":1,"lane":2,"order":"ord-0001","stage":"updates","detail":{"ms":1425,"skipped":false,"walkMs":800}}
+{"seq":97,"ts":1760000016311,"type":"stage_start","wave":1,"lane":1,"order":"ord-0001","stage":"tracking","detail":{"attempt":1}}
+{"seq":98,"ts":1760000016370,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"tracking","detail":{"pct":1,"label":"In transit (poll 1)"}}
+{"seq":99,"ts":1760000016665,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"tracking","detail":{"pct":8,"label":"In transit (poll 2)"}}
+{"seq":100,"ts":1760000016718,"type":"stage_start","wave":1,"lane":2,"order":"ord-0001","stage":"tracking","detail":{"attempt":1}}
+{"seq":101,"ts":1760000016771,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"tracking","detail":{"pct":1,"label":"In transit (poll 1)"}}
+{"seq":102,"ts":1760000016970,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"tracking","detail":{"pct":15,"label":"In transit (poll 3)"}}
+{"seq":103,"ts":1760000017084,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"tracking","detail":{"pct":9,"label":"In transit (poll 2)"}}
+{"seq":104,"ts":1760000017280,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"tracking","detail":{"pct":23,"label":"In transit (poll 4)"}}
+{"seq":105,"ts":1760000017384,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"tracking","detail":{"pct":17,"label":"In transit (poll 3)"}}
+{"seq":106,"ts":1760000017578,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"tracking","detail":{"pct":29,"label":"Delivered"}}
+{"seq":107,"ts":1760000017674,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"tracking","detail":{"pct":24,"label":"In transit (poll 4)"}}
+{"seq":108,"ts":1760000017878,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"tracking","detail":{"pct":36,"label":"Delivered"}}
+{"seq":109,"ts":1760000017985,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"tracking","detail":{"pct":32,"label":"Delivered"}}
+{"seq":110,"ts":1760000018178,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"tracking","detail":{"pct":43,"label":"Delivered"}}
+{"seq":111,"ts":1760000018285,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"tracking","detail":{"pct":40,"label":"Delivered"}}
+{"seq":112,"ts":1760000018478,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"tracking","detail":{"pct":50,"label":"Delivered"}}
+{"seq":113,"ts":1760000018585,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"tracking","detail":{"pct":47,"label":"Delivered"}}
+{"seq":114,"ts":1760000018778,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"tracking","detail":{"pct":57,"label":"Delivered"}}
+{"seq":115,"ts":1760000018885,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"tracking","detail":{"pct":55,"label":"Delivered"}}
+{"seq":116,"ts":1760000019078,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"tracking","detail":{"pct":64,"label":"Delivered"}}
+{"seq":117,"ts":1760000019185,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"tracking","detail":{"pct":62,"label":"Delivered"}}
+{"seq":118,"ts":1760000019378,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"tracking","detail":{"pct":71,"label":"Delivered"}}
+{"seq":119,"ts":1760000019485,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"tracking","detail":{"pct":70,"label":"Delivered"}}
+{"seq":120,"ts":1760000019678,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"tracking","detail":{"pct":77,"label":"Delivered"}}
+{"seq":121,"ts":1760000019785,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"tracking","detail":{"pct":77,"label":"Delivered"}}
+{"seq":122,"ts":1760000019978,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"tracking","detail":{"pct":84,"label":"Delivered"}}
+{"seq":123,"ts":1760000020085,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"tracking","detail":{"pct":85,"label":"Delivered"}}
+{"seq":124,"ts":1760000020278,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"tracking","detail":{"pct":91,"label":"Delivered"}}
+{"seq":125,"ts":1760000020385,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"tracking","detail":{"pct":92,"label":"Delivered"}}
+{"seq":126,"ts":1760000020578,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"tracking","detail":{"pct":98,"label":"Delivered"}}
+{"seq":127,"ts":1760000020618,"type":"stage_done","wave":1,"lane":1,"order":"ord-0001","stage":"tracking","detail":{"ms":4307,"skipped":false,"walkMs":800}}
+{"seq":128,"ts":1760000020657,"type":"stage_done","wave":1,"lane":2,"order":"ord-0001","stage":"tracking","detail":{"ms":3939,"skipped":false,"walkMs":800}}
+{"seq":129,"ts":1760000021418,"type":"stage_start","wave":1,"lane":1,"order":"ord-0001","stage":"handoff","detail":{"attempt":1}}
+{"seq":130,"ts":1760000021457,"type":"stage_start","wave":1,"lane":2,"order":"ord-0001","stage":"handoff","detail":{"attempt":1}}
+{"seq":131,"ts":1760000021718,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"handoff","detail":{"pct":43,"label":"Handing off"}}
+{"seq":132,"ts":1760000021757,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"handoff","detail":{"pct":26,"label":"Handing off"}}
+{"seq":133,"ts":1760000022066,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0001","stage":"handoff","detail":{"pct":93,"label":"Handing off"}}
+{"seq":134,"ts":1760000022121,"type":"stage_done","wave":1,"lane":1,"order":"ord-0001","stage":"handoff","detail":{"ms":702,"skipped":false}}
+{"seq":135,"ts":1760000022122,"type":"order_done","wave":1,"lane":1,"order":"ord-0001","detail":{"clean":true,"ms":21122,"repeats":0,"ceremonyMs":3200,"returnMs":3600,"lap":{"ms":21122,"workMs":14522,"attempts":8,"retries":0,"downtimeMs":0,"issues":[],"recoveries":[]}}}
+{"seq":136,"ts":1760000022122,"type":"review","wave":1,"lane":1,"order":"ord-0001","detail":{"order":"ord-0001","stars":5,"sub":{"timeliness":5,"delays":5,"issues":5,"delivery":5,"ease":5},"reasons":["Lightning fast","No waiting around"],"text":"Lightning fast · No waiting around","cum":{"stars":5,"max":5,"count":1}}}
+{"seq":137,"ts":1760000022122,"type":"score","wave":1,"lane":1,"order":"ord-0001","detail":{"delta":80,"total":80,"reason":"review"}}
+{"seq":138,"ts":1760000022122,"type":"score","wave":1,"lane":1,"detail":{"delta":100,"total":180,"reason":"order clean"}}
+{"seq":139,"ts":1760000022122,"type":"score","wave":1,"lane":1,"detail":{"delta":20,"total":200,"reason":"speed bonus"}}
+{"seq":140,"ts":1760000022337,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0001","stage":"handoff","detail":{"pct":76,"label":"Handing off"}}
+{"seq":141,"ts":1760000022626,"type":"stage_done","wave":1,"lane":2,"order":"ord-0001","stage":"handoff","detail":{"ms":1169,"skipped":false}}
+{"seq":142,"ts":1760000022627,"type":"order_done","wave":1,"lane":2,"order":"ord-0001","detail":{"clean":true,"ms":21627,"repeats":0,"ceremonyMs":3200,"returnMs":3600,"lap":{"ms":21627,"workMs":15027,"attempts":8,"retries":0,"downtimeMs":0,"issues":[],"recoveries":[]}}}
+{"seq":143,"ts":1760000022627,"type":"review","wave":1,"lane":2,"order":"ord-0001","detail":{"order":"ord-0001","stars":5,"sub":{"timeliness":5,"delays":5,"issues":5,"delivery":5,"ease":5},"reasons":["Lightning fast","No waiting around"],"text":"Lightning fast · No waiting around","cum":{"stars":5,"max":5,"count":1}}}
+{"seq":144,"ts":1760000022627,"type":"score","wave":1,"lane":2,"order":"ord-0001","detail":{"delta":80,"total":80,"reason":"review"}}
+{"seq":145,"ts":1760000022627,"type":"score","wave":1,"lane":2,"detail":{"delta":100,"total":180,"reason":"order clean"}}
+{"seq":146,"ts":1760000022627,"type":"score","wave":1,"lane":2,"detail":{"delta":20,"total":200,"reason":"speed bonus"}}
+{"seq":147,"ts":1760000028922,"type":"order_start","wave":1,"lane":1,"order":"ord-0002","detail":{"index":2,"total":3,"grabMs":1000}}
+{"seq":148,"ts":1760000029427,"type":"order_start","wave":1,"lane":2,"order":"ord-0002","detail":{"index":2,"total":3,"grabMs":1000}}
+{"seq":149,"ts":1760000029922,"type":"stage_start","wave":1,"lane":1,"order":"ord-0002","stage":"intake","detail":{"attempt":1}}
+{"seq":150,"ts":1760000030242,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0002","stage":"intake","detail":{"pct":22,"label":"Reading order"}}
+{"seq":151,"ts":1760000030427,"type":"stage_start","wave":1,"lane":2,"order":"ord-0002","stage":"intake","detail":{"attempt":1}}
+{"seq":152,"ts":1760000030542,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0002","stage":"intake","detail":{"pct":44,"label":"Reading order"}}
+{"seq":153,"ts":1760000030747,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"intake","detail":{"pct":36,"label":"Reading order"}}
+{"seq":154,"ts":1760000030925,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0002","stage":"intake","detail":{"pct":72,"label":"Reading order"}}
+{"seq":155,"ts":1760000031164,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"intake","detail":{"pct":86,"label":"Reading order"}}
+{"seq":156,"ts":1760000031225,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0002","stage":"intake","detail":{"pct":94,"label":"Reading order"}}
+{"seq":157,"ts":1760000031289,"type":"stage_done","wave":1,"lane":2,"order":"ord-0002","stage":"intake","detail":{"ms":862,"skipped":false,"walkMs":800}}
+{"seq":158,"ts":1760000031317,"type":"stage_done","wave":1,"lane":1,"order":"ord-0002","stage":"intake","detail":{"ms":1395,"skipped":false,"walkMs":800}}
+{"seq":159,"ts":1760000032089,"type":"stage_start","wave":1,"lane":2,"order":"ord-0002","stage":"account","detail":{"attempt":1}}
+{"seq":160,"ts":1760000032117,"type":"stage_start","wave":1,"lane":1,"order":"ord-0002","stage":"account","detail":{"attempt":1}}
+{"seq":161,"ts":1760000032389,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"account","detail":{"pct":11,"label":"Creating account"}}
+{"seq":162,"ts":1760000032417,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0002","stage":"account","detail":{"pct":10,"label":"Creating account"}}
+{"seq":163,"ts":1760000032689,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"account","detail":{"pct":22,"label":"Creating account"}}
+{"seq":164,"ts":1760000032717,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0002","stage":"account","detail":{"pct":21,"label":"Creating account"}}
+{"seq":165,"ts":1760000032989,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"account","detail":{"pct":33,"label":"Creating account"}}
+{"seq":166,"ts":1760000033017,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0002","stage":"account","detail":{"pct":31,"label":"Creating account"}}
+{"seq":167,"ts":1760000033289,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"account","detail":{"pct":44,"label":"Creating account"}}
+{"seq":168,"ts":1760000033317,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0002","stage":"account","detail":{"pct":41,"label":"Creating account"}}
+{"seq":169,"ts":1760000033589,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"account","detail":{"pct":55,"label":"Creating account"}}
+{"seq":170,"ts":1760000033617,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0002","stage":"account","detail":{"pct":51,"label":"Creating account"}}
+{"seq":171,"ts":1760000033793,"type":"effect","wave":1,"lane":2,"order":"ord-0002","detail":{"kind":"account_create","key":"ord-0002:account","replayed":false}}
+{"seq":172,"ts":1760000033812,"type":"stage_done","wave":1,"lane":2,"order":"ord-0002","stage":"account","detail":{"ms":1723,"skipped":false,"walkMs":800}}
+{"seq":173,"ts":1760000033931,"type":"effect","wave":1,"lane":1,"order":"ord-0002","detail":{"kind":"account_create","key":"ord-0002:account","replayed":false}}
+{"seq":174,"ts":1760000033950,"type":"stage_done","wave":1,"lane":1,"order":"ord-0002","stage":"account","detail":{"ms":1834,"skipped":false,"walkMs":800}}
+{"seq":175,"ts":1760000034612,"type":"stage_start","wave":1,"lane":2,"order":"ord-0002","stage":"payment","detail":{"attempt":1}}
+{"seq":176,"ts":1760000034750,"type":"stage_start","wave":1,"lane":1,"order":"ord-0002","stage":"payment","detail":{"attempt":1}}
+{"seq":177,"ts":1760000034912,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"payment","detail":{"pct":10,"label":"Charging card"}}
+{"seq":178,"ts":1760000035050,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0002","stage":"payment","detail":{"pct":9,"label":"Charging card"}}
+{"seq":179,"ts":1760000035212,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"payment","detail":{"pct":21,"label":"Charging card"}}
+{"seq":180,"ts":1760000035350,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0002","stage":"payment","detail":{"pct":18,"label":"Charging card"}}
+{"seq":181,"ts":1760000035512,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"payment","detail":{"pct":31,"label":"Charging card"}}
+{"seq":182,"ts":1760000035650,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0002","stage":"payment","detail":{"pct":27,"label":"Charging card"}}
+{"seq":183,"ts":1760000035812,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"payment","detail":{"pct":42,"label":"Charging card"}}
+{"seq":184,"ts":1760000035950,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0002","stage":"payment","detail":{"pct":36,"label":"Charging card"}}
+{"seq":185,"ts":1760000036112,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"payment","detail":{"pct":52,"label":"Charging card"}}
+{"seq":186,"ts":1760000036250,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0002","stage":"payment","detail":{"pct":45,"label":"Charging card"}}
+{"seq":187,"ts":1760000036391,"type":"effect","wave":1,"lane":2,"order":"ord-0002","detail":{"kind":"charge","key":"ord-0002:charge","replayed":false,"amount":6673}}
+{"seq":188,"ts":1760000036410,"type":"stage_done","wave":1,"lane":2,"order":"ord-0002","stage":"payment","detail":{"ms":1798,"skipped":false,"walkMs":800}}
+{"seq":189,"ts":1760000036550,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0002","stage":"payment","detail":{"pct":54,"label":"Charging card"}}
+{"seq":190,"ts":1760000036820,"type":"effect","wave":1,"lane":1,"order":"ord-0002","detail":{"kind":"charge","key":"ord-0002:charge","replayed":false,"amount":6673}}
+{"seq":191,"ts":1760000036839,"type":"stage_done","wave":1,"lane":1,"order":"ord-0002","stage":"payment","detail":{"ms":2089,"skipped":false,"walkMs":800}}
+{"seq":192,"ts":1760000037210,"type":"stage_start","wave":1,"lane":2,"order":"ord-0002","stage":"confirmation","detail":{"attempt":1}}
+{"seq":193,"ts":1760000037510,"type":"chaos","wave":1,"lane":2,"detail":{"creature":"gargoyle","fault":"sms_down","scope":"outer","depth":1,"injectedAt":"during","source":"demo"}}
+{"seq":194,"ts":1760000037510,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"confirmation","detail":{"pct":13,"label":"Sending confirmation"}}
+{"seq":195,"ts":1760000037639,"type":"stage_start","wave":1,"lane":1,"order":"ord-0002","stage":"confirmation","detail":{"attempt":1}}
+{"seq":196,"ts":1760000037810,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"confirmation","detail":{"pct":25,"label":"Sending confirmation"}}
+{"seq":197,"ts":1760000037939,"type":"chaos","wave":1,"lane":1,"detail":{"creature":"gargoyle","fault":"sms_down","scope":"outer","depth":1,"injectedAt":"during","source":"demo"}}
+{"seq":198,"ts":1760000037939,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0002","stage":"confirmation","detail":{"pct":14,"label":"Sending confirmation"}}
+{"seq":199,"ts":1760000038110,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"confirmation","detail":{"pct":38,"label":"Sending confirmation"}}
+{"seq":200,"ts":1760000038239,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0002","stage":"confirmation","detail":{"pct":29,"label":"Sending confirmation"}}
+{"seq":201,"ts":1760000038410,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"confirmation","detail":{"pct":51,"label":"Sending confirmation"}}
+{"seq":202,"ts":1760000038539,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0002","stage":"confirmation","detail":{"pct":43,"label":"Sending confirmation"}}
+{"seq":203,"ts":1760000038694,"type":"stage_fail","wave":1,"lane":2,"order":"ord-0002","stage":"confirmation","detail":{"error":"HTTP 503 Service Unavailable","retryable":true,"attempt":1}}
+{"seq":204,"ts":1760000038694,"type":"recover_start","wave":1,"lane":2,"detail":{"action":"backoff","depth":1}}
+{"seq":205,"ts":1760000038839,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0002","stage":"confirmation","detail":{"pct":58,"label":"Sending confirmation"}}
+{"seq":206,"ts":1760000038941,"type":"stage_fail","wave":1,"lane":1,"order":"ord-0002","stage":"confirmation","detail":{"error":"HTTP 503 Service Unavailable","retryable":true,"attempt":1}}
+{"seq":207,"ts":1760000038941,"type":"order_failed","wave":1,"lane":1,"order":"ord-0002","detail":{"stage":"confirmation","error":"HTTP 503 Service Unavailable","cancelMs":1800,"returnMs":3600,"outcome":"cancelled","lap":{"ms":10019,"workMs":6619,"attempts":5,"retries":0,"downtimeMs":0,"issues":[{"stage":"confirmation","count":1}],"recoveries":[]}}}
+{"seq":208,"ts":1760000038941,"type":"review","wave":1,"lane":1,"order":"ord-0002","detail":{"order":"ord-0002","stars":1,"sub":{"timeliness":1,"delays":1,"issues":1,"delivery":1,"ease":1},"reasons":["Never arrived"],"text":"Never arrived","cum":{"stars":6,"max":10,"count":2}}}
+{"seq":209,"ts":1760000038941,"type":"score","wave":1,"lane":1,"order":"ord-0002","detail":{"delta":-80,"total":120,"reason":"review"}}
+{"seq":210,"ts":1760000038941,"type":"score","wave":1,"lane":1,"detail":{"delta":-300,"total":-180,"reason":"order cancelled"}}
+{"seq":211,"ts":1760000038994,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"confirmation","detail":{"pct":90,"label":"Waiting to retry"}}
+{"seq":212,"ts":1760000039194,"type":"recover_done","wave":1,"lane":2,"detail":{"action":"backoff","ms":500,"depth":1}}
+{"seq":213,"ts":1760000039262,"type":"stage_fail","wave":1,"lane":2,"order":"ord-0002","stage":"confirmation","detail":{"error":"HTTP 503 Service Unavailable","retryable":true,"attempt":2}}
+{"seq":214,"ts":1760000039262,"type":"recover_start","wave":1,"lane":2,"detail":{"action":"backoff","depth":1}}
+{"seq":215,"ts":1760000039562,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"confirmation","detail":{"pct":90,"label":"Waiting to retry"}}
+{"seq":216,"ts":1760000039862,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"confirmation","detail":{"pct":90,"label":"Waiting to retry"}}
+{"seq":217,"ts":1760000040162,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"confirmation","detail":{"pct":90,"label":"Waiting to retry"}}
+{"seq":218,"ts":1760000040262,"type":"recover_done","wave":1,"lane":2,"detail":{"action":"backoff","ms":1000,"depth":1}}
+{"seq":219,"ts":1760000040321,"type":"stage_fail","wave":1,"lane":2,"order":"ord-0002","stage":"confirmation","detail":{"error":"HTTP 503 Service Unavailable","retryable":true,"attempt":3}}
+{"seq":220,"ts":1760000040321,"type":"recover_start","wave":1,"lane":2,"detail":{"action":"backoff","depth":1}}
+{"seq":221,"ts":1760000040621,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"confirmation","detail":{"pct":90,"label":"Waiting to retry"}}
+{"seq":222,"ts":1760000040921,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"confirmation","detail":{"pct":90,"label":"Waiting to retry"}}
+{"seq":223,"ts":1760000041221,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"confirmation","detail":{"pct":90,"label":"Waiting to retry"}}
+{"seq":224,"ts":1760000041521,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"confirmation","detail":{"pct":90,"label":"Waiting to retry"}}
+{"seq":225,"ts":1760000041821,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"confirmation","detail":{"pct":90,"label":"Waiting to retry"}}
+{"seq":226,"ts":1760000042121,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"confirmation","detail":{"pct":90,"label":"Waiting to retry"}}
+{"seq":227,"ts":1760000042321,"type":"recover_done","wave":1,"lane":2,"detail":{"action":"backoff","ms":2000,"depth":1}}
+{"seq":228,"ts":1760000042391,"type":"stage_fail","wave":1,"lane":2,"order":"ord-0002","stage":"confirmation","detail":{"error":"HTTP 503 Service Unavailable","retryable":true,"attempt":4}}
+{"seq":229,"ts":1760000042391,"type":"breaker","wave":1,"lane":2,"detail":{"service":"email","state":"open"}}
+{"seq":230,"ts":1760000042391,"type":"order_parked","wave":1,"lane":2,"order":"ord-0002","detail":{"stage":"confirmation","reason":"breaker open"}}
+{"seq":231,"ts":1760000042391,"type":"order_start","wave":1,"lane":2,"order":"ord-0003","detail":{"index":3,"total":3,"grabMs":1000}}
+{"seq":232,"ts":1760000043391,"type":"stage_start","wave":1,"lane":2,"order":"ord-0003","stage":"intake","detail":{"attempt":1}}
+{"seq":233,"ts":1760000043711,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"intake","detail":{"pct":24,"label":"Reading order"}}
+{"seq":234,"ts":1760000044011,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"intake","detail":{"pct":49,"label":"Reading order"}}
+{"seq":235,"ts":1760000044327,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"intake","detail":{"pct":74,"label":"Reading order"}}
+{"seq":236,"ts":1760000044341,"type":"order_start","wave":1,"lane":1,"order":"ord-0003","detail":{"index":3,"total":3,"grabMs":1000}}
+{"seq":237,"ts":1760000044627,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"intake","detail":{"pct":99,"label":"Reading order"}}
+{"seq":238,"ts":1760000044651,"type":"stage_done","wave":1,"lane":2,"order":"ord-0003","stage":"intake","detail":{"ms":1260,"skipped":false,"walkMs":800}}
+{"seq":239,"ts":1760000045341,"type":"stage_start","wave":1,"lane":1,"order":"ord-0003","stage":"intake","detail":{"attempt":1}}
+{"seq":240,"ts":1760000045451,"type":"stage_start","wave":1,"lane":2,"order":"ord-0003","stage":"account","detail":{"attempt":1}}
+{"seq":241,"ts":1760000045661,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0003","stage":"intake","detail":{"pct":20,"label":"Reading order"}}
+{"seq":242,"ts":1760000045751,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"account","detail":{"pct":12,"label":"Creating account"}}
+{"seq":243,"ts":1760000045961,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0003","stage":"intake","detail":{"pct":39,"label":"Reading order"}}
+{"seq":244,"ts":1760000046051,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"account","detail":{"pct":24,"label":"Creating account"}}
+{"seq":245,"ts":1760000046351,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"account","detail":{"pct":36,"label":"Creating account"}}
+{"seq":246,"ts":1760000046426,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0003","stage":"intake","detail":{"pct":70,"label":"Reading order"}}
+{"seq":247,"ts":1760000046651,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"account","detail":{"pct":48,"label":"Creating account"}}
+{"seq":248,"ts":1760000046726,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0003","stage":"intake","detail":{"pct":89,"label":"Reading order"}}
+{"seq":249,"ts":1760000046899,"type":"stage_done","wave":1,"lane":1,"order":"ord-0003","stage":"intake","detail":{"ms":1558,"skipped":false,"walkMs":800}}
+{"seq":250,"ts":1760000047002,"type":"effect","wave":1,"lane":2,"order":"ord-0003","detail":{"kind":"account_create","key":"ord-0003:account","replayed":false}}
+{"seq":251,"ts":1760000047021,"type":"stage_done","wave":1,"lane":2,"order":"ord-0003","stage":"account","detail":{"ms":1570,"skipped":false,"walkMs":800}}
+{"seq":252,"ts":1760000047699,"type":"stage_start","wave":1,"lane":1,"order":"ord-0003","stage":"account","detail":{"attempt":1}}
+{"seq":253,"ts":1760000047821,"type":"stage_start","wave":1,"lane":2,"order":"ord-0003","stage":"payment","detail":{"attempt":1}}
+{"seq":254,"ts":1760000047999,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0003","stage":"account","detail":{"pct":11,"label":"Creating account"}}
+{"seq":255,"ts":1760000048121,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"payment","detail":{"pct":6,"label":"Charging card"}}
+{"seq":256,"ts":1760000048299,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0003","stage":"account","detail":{"pct":21,"label":"Creating account"}}
+{"seq":257,"ts":1760000048421,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"payment","detail":{"pct":13,"label":"Charging card"}}
+{"seq":258,"ts":1760000048599,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0003","stage":"account","detail":{"pct":32,"label":"Creating account"}}
+{"seq":259,"ts":1760000048721,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"payment","detail":{"pct":19,"label":"Charging card"}}
+{"seq":260,"ts":1760000048899,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0003","stage":"account","detail":{"pct":43,"label":"Creating account"}}
+{"seq":261,"ts":1760000049021,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"payment","detail":{"pct":25,"label":"Charging card"}}
+{"seq":262,"ts":1760000049199,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0003","stage":"account","detail":{"pct":53,"label":"Creating account"}}
+{"seq":263,"ts":1760000049321,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"payment","detail":{"pct":32,"label":"Charging card"}}
+{"seq":264,"ts":1760000049446,"type":"effect","wave":1,"lane":1,"order":"ord-0003","detail":{"kind":"account_create","key":"ord-0003:account","replayed":false}}
+{"seq":265,"ts":1760000049465,"type":"stage_done","wave":1,"lane":1,"order":"ord-0003","stage":"account","detail":{"ms":1766,"skipped":false,"walkMs":800}}
+{"seq":266,"ts":1760000049621,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"payment","detail":{"pct":38,"label":"Charging card"}}
+{"seq":267,"ts":1760000049921,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"payment","detail":{"pct":44,"label":"Charging card"}}
+{"seq":268,"ts":1760000049991,"type":"breaker","wave":1,"lane":2,"detail":{"service":"email","state":"half_open"}}
+{"seq":269,"ts":1760000050221,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"payment","detail":{"pct":51,"label":"Charging card"}}
+{"seq":270,"ts":1760000050265,"type":"stage_start","wave":1,"lane":1,"order":"ord-0003","stage":"payment","detail":{"attempt":1}}
+{"seq":271,"ts":1760000050521,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"payment","detail":{"pct":57,"label":"Charging card"}}
+{"seq":272,"ts":1760000050565,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0003","stage":"payment","detail":{"pct":7,"label":"Charging card"}}
+{"seq":273,"ts":1760000050715,"type":"effect","wave":1,"lane":2,"order":"ord-0003","detail":{"kind":"charge","key":"ord-0003:charge","replayed":false,"amount":4496}}
+{"seq":274,"ts":1760000050734,"type":"stage_done","wave":1,"lane":2,"order":"ord-0003","stage":"payment","detail":{"ms":2913,"skipped":false,"walkMs":800}}
+{"seq":275,"ts":1760000050865,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0003","stage":"payment","detail":{"pct":13,"label":"Charging card"}}
+{"seq":276,"ts":1760000051165,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0003","stage":"payment","detail":{"pct":20,"label":"Charging card"}}
+{"seq":277,"ts":1760000051465,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0003","stage":"payment","detail":{"pct":27,"label":"Charging card"}}
+{"seq":278,"ts":1760000051534,"type":"stage_start","wave":1,"lane":2,"order":"ord-0003","stage":"confirmation","detail":{"attempt":1}}
+{"seq":279,"ts":1760000051765,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0003","stage":"payment","detail":{"pct":33,"label":"Charging card"}}
+{"seq":280,"ts":1760000051834,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"confirmation","detail":{"pct":17,"label":"Sending confirmation"}}
+{"seq":281,"ts":1760000052065,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0003","stage":"payment","detail":{"pct":40,"label":"Charging card"}}
+{"seq":282,"ts":1760000052134,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"confirmation","detail":{"pct":34,"label":"Sending confirmation"}}
+{"seq":283,"ts":1760000052365,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0003","stage":"payment","detail":{"pct":46,"label":"Charging card"}}
+{"seq":284,"ts":1760000052434,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"confirmation","detail":{"pct":51,"label":"Sending confirmation"}}
+{"seq":285,"ts":1760000052644,"type":"effect","wave":1,"lane":2,"order":"ord-0003","detail":{"kind":"email","key":"ord-0003:email","replayed":false}}
+{"seq":286,"ts":1760000052644,"type":"breaker","wave":1,"lane":2,"detail":{"service":"email","state":"closed"}}
+{"seq":287,"ts":1760000052663,"type":"stage_done","wave":1,"lane":2,"order":"ord-0003","stage":"confirmation","detail":{"ms":1129,"skipped":false,"walkMs":800}}
+{"seq":288,"ts":1760000052665,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0003","stage":"payment","detail":{"pct":53,"label":"Charging card"}}
+{"seq":289,"ts":1760000052965,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0003","stage":"payment","detail":{"pct":60,"label":"Charging card"}}
+{"seq":290,"ts":1760000053038,"type":"effect","wave":1,"lane":1,"order":"ord-0003","detail":{"kind":"charge","key":"ord-0003:charge","replayed":false,"amount":4496}}
+{"seq":291,"ts":1760000053057,"type":"stage_done","wave":1,"lane":1,"order":"ord-0003","stage":"payment","detail":{"ms":2792,"skipped":false,"walkMs":800}}
+{"seq":292,"ts":1760000053463,"type":"stage_start","wave":1,"lane":2,"order":"ord-0003","stage":"dispatch","detail":{"attempt":1}}
+{"seq":293,"ts":1760000053763,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"dispatch","detail":{"pct":8,"label":"Booking delivery"}}
+{"seq":294,"ts":1760000053857,"type":"stage_start","wave":1,"lane":1,"order":"ord-0003","stage":"confirmation","detail":{"attempt":1}}
+{"seq":295,"ts":1760000054063,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"dispatch","detail":{"pct":17,"label":"Booking delivery"}}
+{"seq":296,"ts":1760000054157,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0003","stage":"confirmation","detail":{"pct":15,"label":"Sending confirmation"}}
+{"seq":297,"ts":1760000054363,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"dispatch","detail":{"pct":25,"label":"Booking delivery"}}
+{"seq":298,"ts":1760000054457,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0003","stage":"confirmation","detail":{"pct":29,"label":"Sending confirmation"}}
+{"seq":299,"ts":1760000054663,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"dispatch","detail":{"pct":33,"label":"Booking delivery"}}
+{"seq":300,"ts":1760000054757,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0003","stage":"confirmation","detail":{"pct":44,"label":"Sending confirmation"}}
+{"seq":301,"ts":1760000054963,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"dispatch","detail":{"pct":42,"label":"Booking delivery"}}
+{"seq":302,"ts":1760000055057,"type":"stage_progress","wave":1,"lane":1,"order":"ord-0003","stage":"confirmation","detail":{"pct":58,"label":"Sending confirmation"}}
+{"seq":303,"ts":1760000055148,"type":"stage_fail","wave":1,"lane":1,"order":"ord-0003","stage":"confirmation","detail":{"error":"HTTP 503 Service Unavailable","retryable":true,"attempt":1}}
+{"seq":304,"ts":1760000055148,"type":"order_failed","wave":1,"lane":1,"order":"ord-0003","detail":{"stage":"confirmation","error":"HTTP 503 Service Unavailable","cancelMs":1800,"returnMs":3600,"outcome":"cancelled","lap":{"ms":10807,"workMs":7407,"attempts":5,"retries":0,"downtimeMs":0,"issues":[{"stage":"confirmation","count":1}],"recoveries":[]}}}
+{"seq":305,"ts":1760000055148,"type":"review","wave":1,"lane":1,"order":"ord-0003","detail":{"order":"ord-0003","stars":1,"sub":{"timeliness":1,"delays":1,"issues":1,"delivery":1,"ease":1},"reasons":["Never arrived"],"text":"Never arrived","cum":{"stars":7,"max":15,"count":3}}}
+{"seq":306,"ts":1760000055148,"type":"score","wave":1,"lane":1,"order":"ord-0003","detail":{"delta":-80,"total":-260,"reason":"review"}}
+{"seq":307,"ts":1760000055148,"type":"score","wave":1,"lane":1,"detail":{"delta":-300,"total":-560,"reason":"order cancelled"}}
+{"seq":308,"ts":1760000055263,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"dispatch","detail":{"pct":50,"label":"Booking delivery"}}
+{"seq":309,"ts":1760000055563,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"dispatch","detail":{"pct":59,"label":"Booking delivery"}}
+{"seq":310,"ts":1760000055678,"type":"effect","wave":1,"lane":2,"order":"ord-0003","detail":{"kind":"dispatch","key":"ord-0003:dispatch","replayed":false}}
+{"seq":311,"ts":1760000055697,"type":"stage_done","wave":1,"lane":2,"order":"ord-0003","stage":"dispatch","detail":{"ms":2234,"skipped":false,"walkMs":800}}
+{"seq":312,"ts":1760000056497,"type":"stage_start","wave":1,"lane":2,"order":"ord-0003","stage":"updates","detail":{"attempt":1}}
+{"seq":313,"ts":1760000056797,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"updates","detail":{"pct":12,"label":"Sending updates"}}
+{"seq":314,"ts":1760000057097,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"updates","detail":{"pct":25,"label":"Sending updates"}}
+{"seq":315,"ts":1760000057397,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"updates","detail":{"pct":37,"label":"Sending updates"}}
+{"seq":316,"ts":1760000057697,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"updates","detail":{"pct":49,"label":"Sending updates"}}
+{"seq":317,"ts":1760000058008,"type":"effect","wave":1,"lane":2,"order":"ord-0003","detail":{"kind":"notify","key":"ord-0003:notify:1","replayed":false}}
+{"seq":318,"ts":1760000058085,"type":"effect","wave":1,"lane":2,"order":"ord-0003","detail":{"kind":"notify","key":"ord-0003:notify:2","replayed":false}}
+{"seq":319,"ts":1760000058104,"type":"stage_done","wave":1,"lane":2,"order":"ord-0003","stage":"updates","detail":{"ms":1607,"skipped":false,"walkMs":800}}
+{"seq":320,"ts":1760000058904,"type":"stage_start","wave":1,"lane":2,"order":"ord-0003","stage":"tracking","detail":{"attempt":1}}
+{"seq":321,"ts":1760000058965,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"tracking","detail":{"pct":1,"label":"In transit (poll 1)"}}
+{"seq":322,"ts":1760000059268,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"tracking","detail":{"pct":7,"label":"In transit (poll 2)"}}
+{"seq":323,"ts":1760000059570,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"tracking","detail":{"pct":12,"label":"In transit (poll 3)"}}
+{"seq":324,"ts":1760000059871,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"tracking","detail":{"pct":17,"label":"In transit (poll 4)"}}
+{"seq":325,"ts":1760000060164,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"tracking","detail":{"pct":23,"label":"Delivered"}}
+{"seq":326,"ts":1760000060464,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"tracking","detail":{"pct":28,"label":"Delivered"}}
+{"seq":327,"ts":1760000060764,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"tracking","detail":{"pct":34,"label":"Delivered"}}
+{"seq":328,"ts":1760000061064,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"tracking","detail":{"pct":39,"label":"Delivered"}}
+{"seq":329,"ts":1760000061364,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"tracking","detail":{"pct":44,"label":"Delivered"}}
+{"seq":330,"ts":1760000061664,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"tracking","detail":{"pct":50,"label":"Delivered"}}
+{"seq":331,"ts":1760000061964,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"tracking","detail":{"pct":55,"label":"Delivered"}}
+{"seq":332,"ts":1760000062264,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"tracking","detail":{"pct":60,"label":"Delivered"}}
+{"seq":333,"ts":1760000062564,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"tracking","detail":{"pct":66,"label":"Delivered"}}
+{"seq":334,"ts":1760000062864,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"tracking","detail":{"pct":71,"label":"Delivered"}}
+{"seq":335,"ts":1760000063164,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"tracking","detail":{"pct":76,"label":"Delivered"}}
+{"seq":336,"ts":1760000063464,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"tracking","detail":{"pct":82,"label":"Delivered"}}
+{"seq":337,"ts":1760000063764,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"tracking","detail":{"pct":87,"label":"Delivered"}}
+{"seq":338,"ts":1760000064064,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"tracking","detail":{"pct":92,"label":"Delivered"}}
+{"seq":339,"ts":1760000064364,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"tracking","detail":{"pct":98,"label":"Delivered"}}
+{"seq":340,"ts":1760000064443,"type":"stage_done","wave":1,"lane":2,"order":"ord-0003","stage":"tracking","detail":{"ms":5539,"skipped":false,"walkMs":800}}
+{"seq":341,"ts":1760000065243,"type":"stage_start","wave":1,"lane":2,"order":"ord-0003","stage":"handoff","detail":{"attempt":1}}
+{"seq":342,"ts":1760000065543,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"handoff","detail":{"pct":34,"label":"Handing off"}}
+{"seq":343,"ts":1760000065979,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0003","stage":"handoff","detail":{"pct":84,"label":"Handing off"}}
+{"seq":344,"ts":1760000066123,"type":"stage_done","wave":1,"lane":2,"order":"ord-0003","stage":"handoff","detail":{"ms":880,"skipped":false}}
+{"seq":345,"ts":1760000066124,"type":"order_done","wave":1,"lane":2,"order":"ord-0003","detail":{"clean":true,"ms":23733,"repeats":0,"ceremonyMs":3200,"returnMs":3600,"lap":{"ms":23733,"workMs":17133,"attempts":8,"retries":0,"downtimeMs":0,"issues":[],"recoveries":[]}}}
+{"seq":346,"ts":1760000066124,"type":"review","wave":1,"lane":2,"order":"ord-0003","detail":{"order":"ord-0003","stars":5,"sub":{"timeliness":5,"delays":5,"issues":5,"delivery":5,"ease":5},"reasons":["Lightning fast","No waiting around"],"text":"Lightning fast · No waiting around","cum":{"stars":10,"max":10,"count":2}}}
+{"seq":347,"ts":1760000066124,"type":"score","wave":1,"lane":2,"order":"ord-0003","detail":{"delta":80,"total":280,"reason":"review"}}
+{"seq":348,"ts":1760000066124,"type":"score","wave":1,"lane":2,"detail":{"delta":100,"total":380,"reason":"order clean"}}
+{"seq":349,"ts":1760000066124,"type":"score","wave":1,"lane":2,"detail":{"delta":20,"total":400,"reason":"speed bonus"}}
+{"seq":350,"ts":1760000066124,"type":"order_resumed","wave":1,"lane":2,"order":"ord-0002","detail":{"stage":"confirmation"}}
+{"seq":351,"ts":1760000072924,"type":"order_start","wave":1,"lane":2,"order":"ord-0002","detail":{"index":2,"total":3}}
+{"seq":352,"ts":1760000072924,"type":"stage_start","wave":1,"lane":2,"order":"ord-0002","stage":"confirmation","detail":{"attempt":2}}
+{"seq":353,"ts":1760000072974,"type":"effect","wave":1,"lane":2,"order":"ord-0002","detail":{"kind":"email","key":"ord-0002:email","replayed":false}}
+{"seq":354,"ts":1760000072993,"type":"stage_done","wave":1,"lane":2,"order":"ord-0002","stage":"confirmation","detail":{"ms":69,"skipped":false,"walkMs":800}}
+{"seq":355,"ts":1760000072993,"type":"score","wave":1,"lane":2,"order":"ord-0002","detail":{"delta":-34,"total":366,"reason":"downtime"}}
+{"seq":356,"ts":1760000073793,"type":"stage_start","wave":1,"lane":2,"order":"ord-0002","stage":"dispatch","detail":{"attempt":1}}
+{"seq":357,"ts":1760000074093,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"dispatch","detail":{"pct":12,"label":"Booking delivery"}}
+{"seq":358,"ts":1760000074393,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"dispatch","detail":{"pct":24,"label":"Booking delivery"}}
+{"seq":359,"ts":1760000074693,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"dispatch","detail":{"pct":36,"label":"Booking delivery"}}
+{"seq":360,"ts":1760000074993,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"dispatch","detail":{"pct":47,"label":"Booking delivery"}}
+{"seq":361,"ts":1760000075293,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"dispatch","detail":{"pct":59,"label":"Booking delivery"}}
+{"seq":362,"ts":1760000075367,"type":"effect","wave":1,"lane":2,"order":"ord-0002","detail":{"kind":"dispatch","key":"ord-0002:dispatch","replayed":false}}
+{"seq":363,"ts":1760000075386,"type":"stage_done","wave":1,"lane":2,"order":"ord-0002","stage":"dispatch","detail":{"ms":1593,"skipped":false,"walkMs":800}}
+{"seq":364,"ts":1760000076186,"type":"stage_start","wave":1,"lane":2,"order":"ord-0002","stage":"updates","detail":{"attempt":1}}
+{"seq":365,"ts":1760000076486,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"updates","detail":{"pct":16,"label":"Sending updates"}}
+{"seq":366,"ts":1760000076786,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"updates","detail":{"pct":31,"label":"Sending updates"}}
+{"seq":367,"ts":1760000077086,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"updates","detail":{"pct":47,"label":"Sending updates"}}
+{"seq":368,"ts":1760000077398,"type":"effect","wave":1,"lane":2,"order":"ord-0002","detail":{"kind":"notify","key":"ord-0002:notify:1","replayed":false}}
+{"seq":369,"ts":1760000077462,"type":"effect","wave":1,"lane":2,"order":"ord-0002","detail":{"kind":"notify","key":"ord-0002:notify:2","replayed":false}}
+{"seq":370,"ts":1760000077481,"type":"stage_done","wave":1,"lane":2,"order":"ord-0002","stage":"updates","detail":{"ms":1295,"skipped":false,"walkMs":800}}
+{"seq":371,"ts":1760000078281,"type":"stage_start","wave":1,"lane":2,"order":"ord-0002","stage":"tracking","detail":{"attempt":1}}
+{"seq":372,"ts":1760000078342,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"tracking","detail":{"pct":2,"label":"In transit (poll 1)"}}
+{"seq":373,"ts":1760000078641,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"tracking","detail":{"pct":10,"label":"In transit (poll 2)"}}
+{"seq":374,"ts":1760000078951,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"tracking","detail":{"pct":18,"label":"In transit (poll 3)"}}
+{"seq":375,"ts":1760000079239,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"tracking","detail":{"pct":26,"label":"In transit (poll 4)"}}
+{"seq":376,"ts":1760000079531,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"tracking","detail":{"pct":34,"label":"Delivered"}}
+{"seq":377,"ts":1760000079831,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"tracking","detail":{"pct":42,"label":"Delivered"}}
+{"seq":378,"ts":1760000080131,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"tracking","detail":{"pct":50,"label":"Delivered"}}
+{"seq":379,"ts":1760000080431,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"tracking","detail":{"pct":59,"label":"Delivered"}}
+{"seq":380,"ts":1760000080731,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"tracking","detail":{"pct":67,"label":"Delivered"}}
+{"seq":381,"ts":1760000081031,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"tracking","detail":{"pct":75,"label":"Delivered"}}
+{"seq":382,"ts":1760000081331,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"tracking","detail":{"pct":83,"label":"Delivered"}}
+{"seq":383,"ts":1760000081631,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"tracking","detail":{"pct":91,"label":"Delivered"}}
+{"seq":384,"ts":1760000081913,"type":"stage_done","wave":1,"lane":2,"order":"ord-0002","stage":"tracking","detail":{"ms":3632,"skipped":false,"walkMs":800}}
+{"seq":385,"ts":1760000082713,"type":"stage_start","wave":1,"lane":2,"order":"ord-0002","stage":"handoff","detail":{"attempt":1}}
+{"seq":386,"ts":1760000083013,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"handoff","detail":{"pct":29,"label":"Handing off"}}
+{"seq":387,"ts":1760000083529,"type":"stage_progress","wave":1,"lane":2,"order":"ord-0002","stage":"handoff","detail":{"pct":79,"label":"Handing off"}}
+{"seq":388,"ts":1760000083754,"type":"stage_done","wave":1,"lane":2,"order":"ord-0002","stage":"handoff","detail":{"ms":1041,"skipped":false}}
+{"seq":389,"ts":1760000083755,"type":"order_done","wave":1,"lane":2,"order":"ord-0002","detail":{"clean":true,"ms":54328,"repeats":0,"ceremonyMs":3200,"returnMs":3600,"lap":{"ms":54328,"workMs":47728,"attempts":13,"retries":4,"downtimeMs":34299,"issues":[{"stage":"confirmation","count":5}],"recoveries":[{"stage":"confirmation","action":"backoff","ms":500},{"stage":"confirmation","action":"backoff","ms":1000},{"stage":"confirmation","action":"backoff","ms":2000}]}}}
+{"seq":390,"ts":1760000083755,"type":"review","wave":1,"lane":2,"order":"ord-0002","detail":{"order":"ord-0002","stars":2.5,"sub":{"timeliness":2,"delays":1,"issues":1,"delivery":5,"ease":3},"reasons":["Took forever to arrive","Kept me waiting"],"text":"Took forever to arrive · Kept me waiting","cum":{"stars":12.5,"max":15,"count":3}}}
+{"seq":391,"ts":1760000083755,"type":"score","wave":1,"lane":2,"order":"ord-0002","detail":{"delta":-20,"total":346,"reason":"review"}}
+{"seq":392,"ts":1760000083755,"type":"score","wave":1,"lane":2,"detail":{"delta":100,"total":446,"reason":"order clean"}}
+{"seq":393,"ts":1760000083755,"type":"score","wave":1,"lane":2,"detail":{"delta":20,"total":466,"reason":"speed bonus"}}
+{"seq":394,"ts":1760000083755,"type":"score","wave":1,"lane":2,"detail":{"delta":40,"total":506,"reason":"parked then resumed"}}
+{"seq":395,"ts":1760000084255,"type":"wave_end","wave":1,"detail":{"summary":{"1":{"score":-560,"grade":"F","completed":1,"failed":2,"parked":0,"quarantined":0,"repeats":0,"orders":{"done":1,"cancelled":2,"parked":0,"quarantined":0,"abandoned":0},"bestMs":21122,"slowestMs":21122,"avgMs":21122,"totalMs":41948,"retries":0,"downtimeMs":0,"issuesByStage":{"confirmation":2},"stars":{"sum":7,"max":15,"count":3,"avg":2.33},"rating":"Cursed"},"2":{"score":506,"grade":"B","completed":3,"failed":0,"parked":1,"quarantined":0,"repeats":0,"orders":{"done":3,"cancelled":0,"parked":1,"quarantined":0,"abandoned":0},"bestMs":21627,"slowestMs":54328,"avgMs":33229,"totalMs":99688,"retries":4,"downtimeMs":34299,"issuesByStage":{"confirmation":5},"stars":{"sum":12.5,"max":15,"count":3,"avg":4.17},"rating":"Respectable"}}}}

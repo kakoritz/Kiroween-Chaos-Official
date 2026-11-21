@@ -3,6 +3,8 @@
 import { TIER_ORDER, TIERS, type HauntEvent, type TierId } from '@haunt/shared';
 import type { ArmSpec } from './plan';
 import { assembleWave, assignSeq, BASE_TS, planWave, type BossSpec, type WaveSpec } from './wave';
+import { decorateV11 } from './v11';
+import { V11_FIXTURES } from './fixtures-v11';
 
 const SEED = 7;
 const when = (order: number, stage: string, delay: number, attempt = 1): ArmSpec['when'] => ({ order, stage, attempt, delay });
@@ -31,7 +33,7 @@ const stackedArms = (order: number): ArmSpec[] => [
 export const FIXTURES: Record<string, () => HauntEvent[]> = {
   calm: () => single(spec({ orders: 4 })),
 
-  'hero-crash': () => single(spec({ orders: 5 }), heroArms()),
+  'hero-crash': () => assignSeq(decorateV11(single(spec({ orders: 5 }), heroArms()), { pace: 2 })),
 
   'stacked-chaos': () => single(spec({ orders: 4 }), { 5: stackedArms(1) }),
 
@@ -127,5 +129,7 @@ export const FIXTURES: Record<string, () => HauntEvent[]> = {
     return assignSeq([...e1, ...mid, ...e2]);
   },
 };
+
+Object.assign(FIXTURES, V11_FIXTURES);
 
 export const FIXTURE_NAMES = Object.keys(FIXTURES);

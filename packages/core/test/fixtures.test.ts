@@ -19,7 +19,7 @@ const types = (ev: HauntEvent[]): string[] => ev.map((e) => e.type);
 describe('fixtures (C1, C2)', () => {
   it('has every fixture named in contract/CONTRACT.md', () => {
     expect([...FIXTURE_NAMES].sort()).toEqual(
-      ['absorbed', 'boss-internet', 'boss-power', 'boss-storm', 'breaker', 'calm', 'deferred', 'full', 'hero-crash', 'inbox', 'loop', 'meltdown', 'parked', 'part-added', 'stacked-chaos', 'stress'].sort(),
+      ['absorbed', 'boss-internet', 'boss-power', 'boss-recovered', 'boss-storm', 'breaker', 'calm', 'cancelled', 'deferred', 'downtime', 'full', 'hero-crash', 'inbox', 'laps-reviews', 'loop', 'meltdown', 'parked', 'part-added', 'stacked-chaos', 'stress', 'typo-discount', 'typo-redo', 'typo-refund', 'world-events'].sort(),
     );
   });
 
@@ -51,6 +51,62 @@ describe('fixtures (C1, C2)', () => {
   });
 });
 
+describe('contract v1.1 fixtures (PT-C0c)', () => {
+  const reviews = (name: string, n: number): any[] => lane(get(name), n).filter((e) => e.type === 'review').map((e) => e.detail);
+
+  it('every v1.1 fixture says contractMinor 1 and carries laps and reviews', () => {
+    for (const name of ['hero-crash', 'laps-reviews', 'cancelled', 'world-events', 'typo-refund', 'typo-discount', 'typo-redo', 'boss-recovered', 'downtime']) {
+      const ev = get(name);
+      expect(ev[0]).toMatchObject({ type: 'hello', contractMinor: 1 });
+      expect(ev.some((e) => e.type === 'review'), name).toBe(true);
+      for (const e of ev.filter((x) => x.type === 'order_done' || x.type === 'order_failed')) expect(e.detail!.lap, `${name} ${e.type}`).toBeDefined();
+    }
+  });
+
+  it('laps-reviews: cumulative tracker with 5, 4.5 and 2 stars on lane 1', () => {
+    const r = reviews('laps-reviews', 1);
+    expect(r.map((x) => x.stars)).toEqual([5, 4.5, 2]);
+    expect(r.map((x) => `${x.cum.stars}/${x.cum.max}`)).toEqual(['5/5', '9.5/10', '11.5/15']);
+  });
+
+  it('cancelled: one star and -300 for the cancelled order', () => {
+    const l1 = lane(get('cancelled'), 1);
+    expect(reviews('cancelled', 1)[1].stars).toBe(1);
+    expect(l1.some((e) => e.type === 'score' && e.detail!.reason === 'order cancelled' && e.detail!.delta === -300)).toBe(true);
+    expect(l1.find((e) => e.type === 'chaos')!.detail).toMatchObject({ fault: 'sms_down', creature: 'gargoyle' });
+  });
+
+  it('world-events: five world faults with their creatures', () => {
+    const faults = get('world-events').filter((e) => e.type === 'chaos').map((e) => `${e.detail!.fault}:${e.detail!.creature}`).sort();
+    expect(faults).toEqual(['app_down:imp', 'car_accident:phantom_car', 'no_answer:black_cat', 'sms_down:gargoyle', 'wrong_address:scarecrow']);
+  });
+
+  it('typo fixtures: one decision each, resolved as named', () => {
+    const want: Record<string, string> = { 'typo-refund': 'refund', 'typo-discount': 'discount', 'typo-redo': 'redo' };
+    for (const [name, choice] of Object.entries(want)) {
+      const d = get(name).filter((e) => e.type === 'decision_made');
+      expect(d).toHaveLength(1);
+      expect(d[0].detail!.choice).toBe(choice);
+    }
+    expect(get('typo-redo').some((e) => e.type === 'order_start' && e.detail!.redo === true)).toBe(true);
+    expect(get('typo-refund').some((e) => e.type === 'order_failed' && e.detail!.reason === 'refunded')).toBe(true);
+  });
+
+  it('boss-recovered: bonus and refund come in pairs; downtime: penalties are negative', () => {
+    const b = get('boss-recovered').filter((e) => e.type === 'score' && (e.detail!.reason === 'boss recovered' || e.detail!.reason === 'boss downtime refund'));
+    expect(b.length).toBeGreaterThan(0);
+    expect(b.filter((e) => e.detail!.reason === 'boss recovered')).toHaveLength(b.filter((e) => e.detail!.reason === 'boss downtime refund').length);
+    const dt = get('downtime').filter((e) => e.type === 'score' && e.detail!.reason === 'downtime');
+    expect(dt.length).toBeGreaterThanOrEqual(2);
+    expect(dt.every((e) => e.detail!.delta < 0)).toBe(true);
+  });
+
+  it('hero-crash keeps the loop grades: wave summary carries the v1.1 fields', () => {
+    const end = get('hero-crash').find((e) => e.type === 'wave_end')!;
+    for (const s of Object.values<any>(end.detail!.summary)) expect(s).toMatchObject({ orders: expect.any(Object), stars: expect.any(Object), rating: expect.any(String) });
+  });
+});
+
 describe('storyboards (C3)', () => {
   it('calm: five lanes, four clean orders each, no chaos', () => {
     const ev = get('calm');
@@ -69,7 +125,7 @@ describe('storyboards (C3)', () => {
     expect(seq).toEqual([
       'chaos', 'effect', 'process_dead', 'process_up', 'recover_start:replay',
       'stage_start', 'stage_done:skipped', 'stage_start', 'stage_done:skipped',
-      'stage_start', 'recover_start:reconcile', 'effect:replayed', 'recover_done:reconcile', 'stage_done', 'recover_done:replay', 'stage_start',
+      'stage_start', 'recover_start:reconcile', 'effect:replayed', 'recover_done:reconcile', 'stage_done', 'score', 'recover_done:replay',
     ]);
     expect(l5[i].detail).toMatchObject({ creature: 'reaper', fault: 'crash', depth: 1, injectedAt: 'after_effect', source: 'demo' });
     const done = l5.find((e) => e.type === 'stage_done' && e.stage === 'payment' && e.detail!.reconciled);
