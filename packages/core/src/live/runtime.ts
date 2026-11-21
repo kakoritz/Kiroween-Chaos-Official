@@ -17,6 +17,7 @@ import { crewPartsEnv } from '../../../haunt/src/campaign/crew';
 import { loadCampaign } from '../../../haunt/src/campaign/nights';
 import { planScripts } from '../../../haunt/src/campaign/wave-config';
 import { loadDemo, type DemoScript } from './demo';
+import { inboxBotCommand, inboxTarget, writeInboxMail } from './inbox-command';
 import type { LiveEngine } from './server';
 
 export const HARDENING_FILES = ['requirements.md', 'design.md', 'tasks.md'] as const;
@@ -113,21 +114,22 @@ export function makeBotCommand(o: BotCommandOptions): SpawnerOptions['botCommand
     if (!tier) return undefined;
     const bundle = o.bundleFor?.(lane, wave, tier.id) ?? tier.id;
     const file = join(botsDir, `${bundle}.js`);
-    if (!existsSync(file)) return undefined;
+    // SH-C6: the inbox app runs the Python bot for real; without Python it falls back to the built TypeScript bots.
+    const inbox = settings.app === 'inbox' ? inboxTarget(o.root, tier.id) : undefined;
+    if (!inbox && !existsSync(file)) return undefined;
     const dir = waveDir(o.runDir, wave);
     const { paths } = prepareLane(dir, Number(lane), settings.seed, settings.orders);
     const attempt = (attempts.get(lane) ?? 0) + 1;
     attempts.set(lane, attempt);
-    return {
-      command: process.execPath,
-      args: [file],
-      env: {
-        HAUNT_RUN_DIR: dir, HAUNT_LANE: lane, HAUNT_TIER: tier.id, HAUNT_SEED: String(settings.seed),
-        HAUNT_PROVIDER: o.providerUrl, HAUNT_ORDERS_DIR: paths.orders, HAUNT_SPEED: String(settings.speed),
-        HAUNT_ATTEMPT: String(attempt), HAUNT_APP: settings.app,
-        ...(tier.id === 'crew' ? { HAUNT_PARTS: crewPartsEnv(tier.use) } : {}),
-      },
+    if (inbox) writeInboxMail(paths.orders, settings.orders, inbox.corpus);
+    const env = {
+      HAUNT_RUN_DIR: dir, HAUNT_LANE: lane, HAUNT_TIER: tier.id, HAUNT_SEED: String(settings.seed),
+      HAUNT_PROVIDER: o.providerUrl, HAUNT_ORDERS_DIR: paths.orders, HAUNT_SPEED: String(settings.speed),
+      HAUNT_ATTEMPT: String(attempt), HAUNT_APP: settings.app,
+      ...(tier.id === 'crew' ? { HAUNT_PARTS: crewPartsEnv(tier.use) } : {}),
     };
+    if (inbox) return inboxBotCommand(inbox, env);
+    return { command: process.execPath, args: [file], env };
   };
 }
 
