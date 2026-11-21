@@ -44,7 +44,7 @@ Lane B owns: A3, the rank board and ledger panel views, B3, the B4 slider UI, th
 - [x] UI-W2. A mode badge and an "Open in demo mode" button so judges land on a running show in under 5 seconds.
 - [x] UI-W3. App switcher: Haunted Orders and Haunted Inbox, same arena, different stage names and sprites. Stage names come from `/api/state`, not hard-coded.
 - [x] UI-W4. Report viewer with the before and after (wave 1 vs wave 2) side by side.
-- [ ] UI-W5. Kiro Crew app page that hosts the arena (see harness H6.9).
+- [x] UI-W5. Kiro Crew app page that hosts the arena (see harness H6.9). Verified read-only: kiro-crew-app/page/index.html iframes the arena UI (default http://127.0.0.1:5173/ from `npm run ui:dev`, override with ?arena=http://127.0.0.1:4173/ for the built preview); kiro-crew-app/app.json registers it at page/index.html. Install check remains H6.9 (the owner).
 - [x] UI-W6. Polish pass: consistent palette, sound with a mute button, motion that follows reduced-motion, readable at 1080p video capture.
 - [x] UI-W7. Accessibility: keyboard Chaos, color-blind safe states (icons plus color).
 - [x] UI-W8. Video capture helper: a "present mode" that hides cursor chrome and shows a clean frame.
