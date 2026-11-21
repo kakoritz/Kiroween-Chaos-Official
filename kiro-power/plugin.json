@@ -1,0 +1,13 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "haunt",
+  "version": "0.1.0",
+  "description": "Stress-test an agent workflow with creature faults and load ramps, then get a graded report and a hardening spec.",
+  "author": {
+    "name": "kakoritz",
+    "url": "https://github.com/kakoritz"
+  },
+  "keywords": ["chaos", "resilience", "stress test", "fault injection", "load ramp", "haunt", "reliability"],
+  "repository": "https://github.com/kakoritz/Kiroween-Chaos",
+  "license": "MIT"
+}

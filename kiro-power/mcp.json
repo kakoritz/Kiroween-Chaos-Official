@@ -1,0 +1,11 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "haunt": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["tools/run-ts.mjs", "packages/core/src/bin/haunt-mcp.ts"],
+      "autoApprove": ["haunt_define", "haunt_report"]
+    }
+  }
+}
