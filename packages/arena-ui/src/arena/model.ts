@@ -5,6 +5,7 @@ import type { ArenaEvent, ArenaState, StageInfo } from '../api/types';
 import { applyBossEvent, emptyBoss, loadBoss, type BossVM } from './boss';
 import { EQUIP_LIFE_MS, type EquipVM } from './equip';
 import type { OrderDropVM } from './order';
+import { applyLap, lapMotion, newLap, START_X, type LapVM } from './lap';
 import { absorb, actAll, addCreature, exitAll, exitDepth, exitStage, prune, PUFF_MS, type CreatureVM } from './creatures';
 
 export type ChipState = 'pending' | 'active' | 'done' | 'replayed' | 'retrying' | 'failed' | 'dead' | 'parked' | 'quarantined';
@@ -52,6 +53,8 @@ export interface LaneVM {
   scorePop: { since: number; delta: number } | null;
   /** Scroll dropping into the hand at order_start (UI-S6). Cosmetic. */
   orderDrop?: OrderDropVM | null;
+  /** Lap choreography (PT-U1): skeleton anchor, walks, grab. Cosmetic. */
+  lap?: LapVM;
 }
 
 export interface LedgerCell { rows: number; repeats: number }
@@ -75,7 +78,7 @@ export function newLane(n: number, stageCount: number, now: number): LaneVM {
     stageIndex: 0, progress: 0, progressLabel: '', workAnim: '', order: null, orderIndex: 0, ordersTotal: 0,
     score: 0, counts: { completed: 0, failed: 0, parked: 0, quarantined: 0, repeats: 0 },
     depth: 0, action: '', restartInMs: 0, cheer: null, dirty: false,
-    ledger: {}, keyMax: {}, flash: {}, creatures: [], survivedAt: 0, equips: [], scorePop: null,
+    ledger: {}, keyMax: {}, flash: {}, creatures: [], survivedAt: 0, equips: [], scorePop: null, lap: newLap(),
   };
 }
 
@@ -106,6 +109,7 @@ export function loadSnapshot(vm: ArenaVM, s: ArenaState, now: number): void {
     }
     const wa = vm.stages[idx]?.workAnimation;
     l.workAnim = wa ?? '';
+    l.lap = newLap(ls.order ? stationX(idx, vm.stages.length) : START_X);
     l.mode = ls.state === 'working' ? 'working' : ls.state === 'recovering' ? 'recovering'
       : ls.state === 'dead' ? 'dead' : ls.state === 'halted' ? 'halted' : ls.state === 'done' ? 'done' : 'idle';
     return l;
@@ -119,6 +123,8 @@ function laneOf(vm: ArenaVM, ev: ArenaEvent): LaneVM | undefined {
 function resetChips(l: LaneVM): void {
   l.chips.fill('pending'); l.attempts.fill(0); l.progress = 0; l.progressLabel = '';
 }
+
+const LAP_EVENTS = new Set(['order_start', 'stage_start', 'stage_done', 'order_done', 'order_failed', 'order_parked', 'process_dead', 'process_up']);
 
 /** Apply one event. Unknown types are ignored (protocol rule 17). */
 export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
@@ -143,6 +149,11 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
   if (!l) return;
   const si = ev.stage ? vm.stages.findIndex((s) => s.id === ev.stage) : -1;
   prune(l, now);
+  if (LAP_EVENTS.has(ev.type)) {
+    const n = vm.stages.length;
+    const open = l.chips.some((c) => c === 'done' || c === 'replayed') ? l.stageIndex : -1;
+    applyLap(l.lap ??= newLap(), ev, d, now, lapMotion(l.lap, now), ev.type === 'process_up' ? open : si, n, (i) => stationX(i, n));
+  }
   switch (ev.type) {
     case 'lane_ready':
       l.tier = str(d.tier, l.tier); l.label = str(d.label, l.label);

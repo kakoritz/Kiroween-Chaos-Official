@@ -31,7 +31,7 @@ Order: P0, then P1 (the visible fixes the owner asked for first), then P2, P3, P
 
 ## Lane B (Visuals)
 
-- [ ] **PT-U1 Lap choreography.** Skeleton anchor states, walking, grab from the **start stack**, `next` chip, `travel_violation` snap (ui.md sections 1 and 2). Acceptance: criteria 1 and 2 of ui.md section 17 against `laps-reviews`.
+- [x] **PT-U1 Lap choreography.** (Done: `arena/lap.ts` anchors, walks of `walkMs`, grab of `grabMs` from the start stack, `next` chip outline, `travel_violation` snap by event time, return run after the ceremony; PT-U2 draws the door ceremony.) Skeleton anchor states, walking, grab from the **start stack**, `next` chip, `travel_violation` snap (ui.md sections 1 and 2). Acceptance: criteria 1 and 2 of ui.md section 17 against `laps-reviews`.
 - [ ] **PT-U2 Handoff ceremony and cancel sequence.** Door open, handover, close, stars float, run back; cancel burn and trudge (ui.md sections 1 and 7).
 - [ ] **PT-U3 Chips v2.** `chipState()` pure module, colours, flags, heat strip, tooltips (ui.md section 3). Acceptance: unit tests for every state.
 - [ ] **PT-U4 Lane ticker.** One row per lane, sliding messages, queue and fast-forward, templates, click to popup (ui.md section 4).

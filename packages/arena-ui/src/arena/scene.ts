@@ -12,6 +12,7 @@ import { archWall, drawProp, pillar } from '../props/draw';
 import { survivedAge } from './boss';
 import { equipPhase, flightPoint, PART_LABEL, wornParts } from './equip';
 import { dropPoint, dropProgress, queueLeft, queueShape } from './order';
+import { grabPoint, grabProgress, lapMotion, START_X, STACK_STEP, STACK_X } from './lap';
 import { cobweb, flagstoneFloor, fogTexture, laneVignette, torchPools } from './crypt';
 
 export const STAGE_W = 1920;
@@ -199,6 +200,14 @@ export function wrapLabel(ctx: Ctx, label: string, w: number, px: number): strin
   return [first, fit(ctx, words.slice(i).join(' '), w)];
 }
 
+/** Dashed orange outline and a small arrow on the chip the skeleton is walking to (ui.md section 1). */
+function nextMark(ctx: Ctx, x: number, y: number): void {
+  const w = 150, h = 40;
+  ctx.save(); ctx.setLineDash([7, 5]); ctx.lineWidth = 3; ctx.strokeStyle = C.torch;
+  rr(ctx, x - w / 2 - 4, y - 4, w + 8, h + 8, 12); ctx.stroke(); ctx.restore();
+  txt(ctx, '\u25B6', x - w / 2 - 14, y + h / 2 + 1, 14, C.torch, 'center', SANS, '800');
+}
+
 function chip(ctx: Ctx, x: number, y: number, label: string, state: ChipState, attempt: number, t: number): void {
   const w = 150; const h = 40;
   const s = CHIP[state];
@@ -294,15 +303,16 @@ function stats(ctx: Ctx, b: LaneBox, l: LaneVM): void {
   });
   txt(ctx, `↻ repeats ${l.counts.repeats}`, x, y + 70, 16, l.counts.repeats > 0 ? C.fail : C.muted, 'left', MONO, '700');
   txt(ctx, `⚰ parked ${l.counts.parked}`, x, y + 92, 16, l.counts.parked > 0 ? C.ghost : C.muted, 'left', MONO, '600');
-  // order queue: parchment scrolls waiting to be picked up, max 4 plus +n (UI-S6)
-  const q = queueShape(queueLeft(l.orderIndex, l.ordersTotal));
-  txt(ctx, 'QUEUE ' + (q.shown + q.more), x + 200, y + 4, 14, C.muted, 'left', MONO, '700');
-  for (let i = q.shown - 1; i >= 0; i--) scroll(ctx, x + QUEUE_X + i * 20, y + 14, 0.5, l.lane + '' + i, false);
-  if (q.more > 0) txt(ctx, `+${q.more}`, x + QUEUE_X + 4 * 20 + 6, y + 56, 14, C.muted, 'left', MONO, '700');
 }
 
-/** Top-left of the first queued scroll, relative to the stats column. */
-const QUEUE_X = 200;
+/** The start stack (ui.md section 2): queued scrolls at the left end of the track, max 4 plus +n. */
+const stackY = (b: LaneBox): number => b.top + b.h * 0.8 - 28;
+function startStack(ctx: Ctx, b: LaneBox, l: LaneVM): void {
+  const q = queueShape(queueLeft(l.orderIndex, l.ordersTotal));
+  const y = stackY(b);
+  for (let i = q.shown - 1; i >= 0; i--) scroll(ctx, STACK_X + i * STACK_STEP, y - (i % 2) * 4, 0.5, l.lane + '' + i, false);
+  if (q.more > 0) txt(ctx, `+${q.more}`, STACK_X + q.shown * STACK_STEP + 10, y + 8, 14, C.muted, 'left', MONO, '700');
+}
 function scroll(ctx: Ctx, x: number, y: number, s: number, seed: string, crumpled: boolean): void {
   ctx.save();
   ctx.translate(x, y); ctx.scale(s, s);
@@ -383,7 +393,7 @@ export class ArenaScene {
 
   private target(vm: ArenaVM, l: LaneVM): number {
     const n = Math.max(1, vm.stages.length);
-    if (l.mode === 'sleep') return TRACK_X0 + 40;
+    if (l.mode === 'sleep') return START_X;
     const busy = l.mode === 'working' || l.mode === 'recovering' || l.mode === 'fail' || l.mode === 'dead' || l.mode === 'reassembling';
     if (busy || !l.order) return stationX(l.stageIndex, n);
     const next = l.chips[l.stageIndex] === 'done' || l.chips[l.stageIndex] === 'replayed' ? Math.min(n - 1, l.stageIndex + 1) : l.stageIndex;
@@ -461,12 +471,14 @@ export class ArenaScene {
     ctx.beginPath(); ctx.rect(0, b.top, STAGE_W, b.h); ctx.clip();
     labelCard(ctx, b, l, now, wornParts(l.parts, l.equips, now, this.speed, this.reducedMotion), this.speed, this.reducedMotion);
     stats(ctx, b, l);
+    if (l.mode !== 'sleep') startStack(ctx, b, l);
     // stage chips and station props
     const chipY = b.top + 4;
     vm.stages.forEach((s, i) => {
       const x = stationX(i, n);
       ctx.fillStyle = 'rgba(10,8,18,0.5)'; ctx.beginPath(); ctx.ellipse(x, b.top + b.h * 0.8 + 2, 22, 6, 0, 0, Math.PI * 2); ctx.fill();
       chip(ctx, x, chipY, s.label, l.chips[i] ?? 'pending', l.attempts[i] ?? 0, this.reducedMotion ? 0 : now);
+      if (l.lap?.next === i && (l.chips[i] ?? 'pending') === 'pending') nextMark(ctx, x, chipY);
     });
     // progress bar under the active chip
     const wi = vm.stages.length ? Math.min(l.stageIndex, n - 1) : 0;
@@ -618,8 +630,9 @@ export class ArenaScene {
     const dt = Math.min(100, now - w.lastT); w.lastT = now;
     const dx = tgt - w.x;
     const frozen = l.mode === 'dead' || l.mode === 'halted' || l.mode === 'reassembling' || l.mode === 'sleep';
-    const walking = !frozen && Math.abs(dx) > 3;
-    if (l.mode === 'sleep') w.x = tgt; else if (walking) w.x += Math.sign(dx) * Math.min(Math.abs(dx), 0.34 * dt * this.speed);
+    const lm = l.lap && l.mode !== 'sleep' && l.mode !== 'dead' && l.mode !== 'halted' ? lapMotion(l.lap, now) : null;
+    const walking = lm ? lm.moving : !frozen && Math.abs(dx) > 3;
+    if (lm) w.x = lm.x; else if (l.mode === 'sleep') w.x = tgt; else if (walking) w.x += Math.sign(dx) * Math.min(Math.abs(dx), 0.34 * dt * this.speed);
     const x = w.x;
     const pose = ArenaScene.poseOf(l, now, walking, this.speed);
     const fr = frameFor(pose.anim, pose.p);
@@ -632,7 +645,7 @@ export class ArenaScene {
     ctx.save();
     ctx.translate(x, feetY - size / 2);
     if (l.mode === 'halted') ctx.filter = 'grayscale(1) brightness(0.8)';
-    const flip = walking && dx < 0 ? -1 : 1;
+    const flip = walking && (lm ? lm.dir < 0 : dx < 0) ? -1 : 1;
     ctx.scale(flip, 1);
     // soft shadow
     ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.beginPath(); ctx.ellipse(0, size / 2, size * 0.3, 6, 0, 0, Math.PI * 2); ctx.fill();
@@ -663,13 +676,14 @@ export class ArenaScene {
     if (l.mode === 'halted') txt(ctx, '⚰ HALTED', x, headY + size * 0.2, 15, C.muted, 'center', SANS, '700');
     if (l.mode === 'fail') txt(ctx, '✕', x, headY + size * 0.22, 26, C.fail, 'center', SANS, '800');
     // scroll in hand
-    const holding = l.order && l.mode !== 'dead' && l.mode !== 'sleep' && l.mode !== 'halted' && l.mode !== 'reassembling';
+    const holding = l.order && !l.lap?.empty && l.mode !== 'dead' && l.mode !== 'sleep' && l.mode !== 'halted' && l.mode !== 'reassembling';
     if (holding) {
       const hx = x + size * 0.34, hy = feetY - size * 0.62 + (l.mode === 'fail' ? 8 : 0), hs = size / 150;
-      const dp = dropProgress(l.orderDrop, now, this.speed, this.reducedMotion);
-      if (dp >= 0) {
-        const from = { x: 1616 + QUEUE_X, y: b.top + 22 };
-        const pt = dropPoint(dp, from, { x: hx, y: hy });
+      const gp = this.reducedMotion ? -1 : grabProgress(l.lap, now);
+      const dp = gp >= 0 || l.lap?.grab ? -1 : dropProgress(l.orderDrop, now, this.speed, this.reducedMotion);
+      const from = { x: STACK_X + 4, y: stackY(b) - 8 };
+      if (gp >= 0 || dp >= 0) {
+        const pt = gp >= 0 ? grabPoint(gp, from, { x: hx, y: hy }) : dropPoint(dp, from, { x: hx, y: hy });
         ctx.save(); ctx.translate(pt.x, pt.y); ctx.rotate(pt.rot); ctx.translate(-pt.x, -pt.y);
         scroll(ctx, pt.x, pt.y, hs * pt.scale, l.order ?? '', false);
         ctx.restore();
