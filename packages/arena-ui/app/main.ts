@@ -2,6 +2,7 @@ import { apiBaseFromQuery, demoFromQuery, modeBadge } from '../src/mode';
 import { ArenaScene, STAGE_H, STAGE_W } from '../src/arena/scene';
 import { applyEvent, emptyVM, loadSnapshot, reconcileLedger, totalScore } from '../src/arena/model';
 import { LedgerPanel, RankBoard } from '../src/arena/panels';
+import { EventTicker } from '../src/arena/ticker';
 import { BossBar, bossAnnouncement } from '../src/arena/boss';
 import { ChaosModeControl, readChaosState } from '../src/arena/chaosmode';
 import { ApiError, createApi, resolveHttpBase, type ArenaApi, type ArenaEvent, type ConnectionStatus, type HauntInPage } from '../src/api';
@@ -27,6 +28,7 @@ root.innerHTML = `
     <div class="sr-only" id="live-assertive" aria-live="assertive"></div>
     <section class="panel panel--rank hidden" id="rank" aria-label="Rank board"><h2>Rank board</h2><div class="rb-body" id="rank-body"></div></section>
     <section class="panel panel--ledger hidden" id="ledger" aria-label="Ledger"><h2>Ledger</h2><div id="ledger-body"></div></section>
+    <section class="panel panel--ticker hidden" id="ticker" aria-label="Event ticker"><h2>Event log</h2><div class="tk-body" id="ticker-body"></div></section>
     <section class="quiet" id="quiet">
       <h1>The crypt is quiet</h1>
       <p>Five skeletons are asleep. Start the show.</p>
@@ -87,6 +89,8 @@ const rankBoard = new RankBoard($('rank-body'));
 const ledgerPanel = new LedgerPanel($('ledger-body'));
 const rankEl = $('rank');
 const ledgerEl = $('ledger');
+const tickerEl = $('ticker');
+const ticker = new EventTicker($('ticker-body'), (id) => vm.stages.find((s) => s.id === id)?.label ?? id);
 const bossBar = new BossBar($('boss'));
 const liveAssertive = $('live-assertive');
 async function reconcile() {
@@ -95,6 +99,7 @@ async function reconcile() {
 
 function onEvent(ev: ArenaEvent) {
   queue.push(ev);
+  ticker.push(ev);
   events++;
   if (typeof ev.seq === 'number') lastSeq = ev.seq;
   if (ev.type === 'hello') {
@@ -211,6 +216,8 @@ function frame(now: number) {
   quietEl.classList.toggle('hidden', vm.lanes.length > 0);
   rankEl.classList.toggle('hidden', vm.lanes.length === 0);
   ledgerEl.classList.toggle('hidden', vm.lanes.length === 0);
+  tickerEl.classList.toggle('hidden', vm.lanes.length === 0);
+  ticker.render();
   rankBoard.update(vm);
   ledgerPanel.update(vm, now);
   scene.draw(vm, now);

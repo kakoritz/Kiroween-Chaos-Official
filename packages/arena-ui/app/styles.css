@@ -45,6 +45,14 @@ html, body { overflow: hidden; }
 .panel { position: absolute; top: 844px; height: 232px; background: rgba(28,24,48,0.9); border: 2px solid var(--stone-2); border-radius: 12px; overflow: hidden; }
 .panel--rank { left: 8px; width: 626px; }
 .panel--ledger { left: 646px; width: 628px; }
+.panel--ticker { left: 1286px; width: 626px; }
+.tk-body { padding: 4px 12px; }
+.tk-row { display: flex; gap: 10px; align-items: center; height: 26px; font: 600 16px ui-monospace, 'Cascadia Code', Menlo, monospace; color: var(--text); white-space: nowrap; overflow: hidden; }
+.tk-row:first-child { color: var(--bone); }
+.tk-i { width: 22px; text-align: center; }
+.tk-ok .tk-i { color: var(--ok); } .tk-bad .tk-i { color: var(--fail); } .tk-warn .tk-i { color: var(--warn); }
+.tk-info .tk-i { color: var(--ghost); } .tk-boss .tk-i { color: var(--hex); }
+.tk-empty { margin: 12px 0; color: var(--muted); font-size: 16px; }
 .panel h2 { margin: 0; height: 30px; line-height: 30px; padding: 0 14px; font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--torch); background: var(--stone-2); }
 .rb-body { position: relative; height: 200px; }
 .rb-row { position: absolute; left: 0; right: 0; top: 0; height: 40px; display: grid; grid-template-columns: 44px 1fr 90px 80px 70px 44px; align-items: center; padding: 0 12px; font: 600 18px ui-monospace, 'Cascadia Code', Menlo, monospace; border-bottom: 1px solid var(--stone-2); transition: transform 400ms ease, opacity 400ms; }

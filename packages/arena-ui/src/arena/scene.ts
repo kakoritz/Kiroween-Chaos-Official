@@ -198,8 +198,20 @@ const CHIP: Record<ChipState, { icon: string; color: string; fill: string; name:
   quarantined: { icon: '⚗', color: C.hex, fill: 'rgba(44,28,72,0.95)', name: 'quarantined' },
 };
 
+/** Wrap a stage label onto at most two lines of `w` px; the second line ends with an ellipsis if it still overflows. */
+export function wrapLabel(ctx: Ctx, label: string, w: number, px: number): string[] {
+  ctx.font = `600 ${px}px ${SANS}`;
+  if (ctx.measureText(label).width <= w) return [label];
+  const words = label.split(/\s+/);
+  let first = '';
+  let i = 0;
+  while (i < words.length - 1 && ctx.measureText(first ? `${first} ${words[i]}` : words[i]!).width <= w) { first = first ? `${first} ${words[i]}` : words[i]!; i++; }
+  if (!first) return [fit(ctx, label, w)];
+  return [first, fit(ctx, words.slice(i).join(' '), w)];
+}
+
 function chip(ctx: Ctx, x: number, y: number, label: string, state: ChipState, attempt: number, t: number): void {
-  const w = 146; const h = 34;
+  const w = 150; const h = 40;
   const s = CHIP[state];
   const pulse = state === 'active' ? 0.55 + 0.45 * Math.sin(t / 220) : 1;
   ctx.save();
@@ -208,8 +220,9 @@ function chip(ctx: Ctx, x: number, y: number, label: string, state: ChipState, a
   ctx.lineWidth = 3; ctx.strokeStyle = s.color; ctx.globalAlpha = pulse; ctx.stroke();
   ctx.globalAlpha = 1;
   txt(ctx, state === 'retrying' ? `${s.icon}${attempt}` : s.icon, x - w / 2 + 16, y + h / 2 + 1, 18, s.color, 'center', SANS, '700');
-  ctx.font = `600 16px ${SANS}`;
-  txt(ctx, fit(ctx, label, w - 42), x - w / 2 + 31, y + h / 2 + 1, 16, state === 'pending' ? C.muted : C.text);
+  const lines = wrapLabel(ctx, label, w - 42, 15);
+  const col = state === 'pending' ? C.muted : C.text;
+  lines.forEach((ln, i) => txt(ctx, ln, x - w / 2 + 31, y + h / 2 + 1 + (i - (lines.length - 1) / 2) * 16, 15, col));
   ctx.restore();
 }
 
@@ -429,7 +442,7 @@ export class ArenaScene {
     labelCard(ctx, b, l, now);
     stats(ctx, b, l);
     // stage chips and station props
-    const chipY = b.top + 6;
+    const chipY = b.top + 4;
     vm.stages.forEach((s, i) => {
       const x = stationX(i, n);
       ctx.fillStyle = 'rgba(10,8,18,0.5)'; ctx.beginPath(); ctx.ellipse(x, b.top + b.h * 0.8 + 2, 22, 6, 0, 0, Math.PI * 2); ctx.fill();
@@ -566,10 +579,12 @@ export class ArenaScene {
       ctx.save(); ctx.translate(x, headY + size * 0.2); ctx.rotate(-0.15);
       ctx.fillStyle = '#f4efe2'; ctx.strokeStyle = C.out; ctx.lineWidth = 2.5; ctx.fillRect(-22 * k, -5 * k, 44 * k, 9 * k); ctx.strokeRect(-22 * k, -5 * k, 44 * k, 9 * k);
       ctx.restore();
+      // left of the skull, so it never overlaps the stage chip row above
+      const sy = headY + size * 0.3;
       ctx.strokeStyle = C.warn; ctx.lineWidth = 4; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.arc(x, headY - 14, 10, now / 150, now / 150 + Math.PI * 1.4); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x - 34, sy, 10, now / 150, now / 150 + Math.PI * 1.4); ctx.stroke();
       const cap = ACTION_CAPTION[l.action] ?? 'Recovering';
-      txt(ctx, cap, x + 20, headY - 14, 15, C.warn, 'left', SANS, '700');
+      txt(ctx, cap, x - 52, sy, 15, C.warn, 'right', SANS, '700');
     }
     if (l.mode === 'dead') {
       const left = Math.max(0, 1 - (now - l.since) / Math.max(1, l.restartInMs));
