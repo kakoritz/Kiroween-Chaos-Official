@@ -52,9 +52,7 @@ export function parseCampaignFixtureName(name: string): { night: number; parts: 
 // ------------------------------------------------------------------------------------------------ plan to arms
 
 /** World faults that the lane planner cannot express yet map to a planner fault and are renamed afterwards (by creature). */
-const PLANNER_FAULT: Record<string, string> = {
-  sms_down: 'endpoint_down', app_down: 'endpoint_down', wrong_address: 'hazard_event', no_answer: 'timeout', car_accident: 'timeout',
-};
+const PLANNER_FAULT: Record<string, string> = {};
 
 /** Longest pause between two presses of one stage in the mock (the planner's handoff stall is about two seconds). */
 const AFTER_PREV_CAP_MS = 800;
