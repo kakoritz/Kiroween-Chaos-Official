@@ -11,6 +11,8 @@ Branches `ui/ON-...`, `core/ON-...`, `docs/ON-...`.
 - [x] **ON-D1 README front page.** Per spec section 7; architecture diagram (mermaid and SVG); remove stale sections. (docs)
 - [x] **ON-D2 One story.** Align `docs/DEVPOST-DRAFT.md`, `BLOG-DRAFT.md`, `SOCIAL-DRAFT.md`, `JUDGES.md`, `DEMO-SCRIPT.md` with the story in section 2 and the video v2 structure in section 8. (docs, owner approves wording)
 - [ ] **ON-D3 Video.** Record per the v2 script after the hosted demo and the live Kiro fix exist; burned-in captions; upload unlisted first, public at submission. (owner)
+  - [x] Plan written: shot list, script and capture plan in `docs/VIDEO-PLAN.md`.
+  - [ ] Recording, edit and upload: **the owner-only**, not done.
 
 ## Cut line
 ON-C1, ON-U1, ON-D1, ON-D2 first (they decide the first impression). Then ON-U2 (captions), ON-U4, ON-U3.
