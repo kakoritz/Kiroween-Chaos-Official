@@ -10,9 +10,9 @@ export interface ShopApi {
 }
 
 const esc = (s: string): string => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] as string);
-/** Slot anchors on the doll (percent of the doll box), head to feet. */
-const ANCHOR: Record<string, [number, number]> = { retry: [78, 42], journal: [22, 42], idempotency: [50, 30], breaker: [22, 62], offline_queue: [50, 80] };
-const ANCHOR_FALLBACK: [number, number][] = [[78, 42], [22, 42], [50, 30], [22, 62], [50, 80]];
+/** Slot anchors (percent of the doll box), in two columns beside the doll so neither the rings nor their labels cover a limb. */
+export const ANCHOR: Record<string, [number, number]> = { retry: [104, 36], journal: [-4, 36], idempotency: [104, 62], breaker: [-4, 62], offline_queue: [104, 88] };
+const ANCHOR_FALLBACK: [number, number][] = [[104, 36], [-4, 36], [104, 62], [-4, 62], [104, 88]];
 
 const DOLL = `<svg class="cpshop__doll" viewBox="0 0 200 300" aria-hidden="true" focusable="false">
   <g fill="#efe6d2" stroke="#14101f" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">

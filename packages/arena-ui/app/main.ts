@@ -238,7 +238,16 @@ const waveSummary = new WaveSummary(stageEl, {
   playDemo: () => { void startDemo(pickScript(currentScript, demoScripts) ?? 'hero'); },
   reportUrl: (n) => `report.html?live=1#/report/${n}`,
 }); // PT-U6
-const shopStart = gearShopStarter(stageEl, { getCampaign: () => api.getCampaign(), startWave: (o) => { campaignResults.begin(o.campaign.night); waveSummary.suppressNext(); return api.startWave(o); } });
+const shopStart = gearShopStarter(stageEl, { getCampaign: () => api.getCampaign(), startWave: async (o) => {
+  // The attract demo (or a leftover wave) plays behind the splash; a night cannot start until it stops.
+  chainDemo = false; captionPlayer.stop();
+  if (demoRunning) { await api.stopDemo(); demoRunning = false; paintDemo(); }
+  try { await api.stopWave(); } catch { /* no wave running */ }
+  waveRunning = false;
+  campaignResults.begin(o.campaign.night);
+  waveSummary.suppressNext();
+  return api.startWave(o);
+} });
 const campaignResults = mountCampaignResults(stageEl, { getCampaign: () => api.getCampaign() }, { onNight: (n) => shopStart(n), onHub: () => window.dispatchEvent(new CustomEvent('haunt:splash', { detail: { action: 'campaign' } })) }); // CP-U3
 
 function onEvent(ev: ArenaEvent) {
