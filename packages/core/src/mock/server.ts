@@ -122,7 +122,6 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
     if (!SPEEDS.includes(speed)) return fail(res, 400, 'bad_request', `speed must be one of ${SPEEDS.join(', ')}`);
     try {
       if (script) startDemo(script, speed);
-      else if (since === undefined && hub.waveNo === 0 && !player.active) startDemo('calm', speed);
     } catch (e) {
       if (e instanceof MockError) return fail(res, e.status, e.code, e.message);
       throw e;

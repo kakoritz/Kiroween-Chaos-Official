@@ -37,6 +37,27 @@ describe('outcome table (H0.7)', () => {
 });
 
 describe('mock server REST and SSE (H0.7)', () => {
+  it('boots quiet: no wave, bare SSE streams only hello, demo start answers 200 (#116)', async () => {
+    const m = createMockServer({ port: 0 });
+    const base = `http://127.0.0.1:${await m.listen()}`;
+    const ctrl = new AbortController();
+    try {
+      const state = await (await fetch(`${base}/api/state`)).json() as any;
+      expect(state.wave).toBeNull();
+      expect(state.lanes).toEqual([]);
+      expect(state.demo.running).toBeNull();
+      const res = await fetch(`${base}/api/events`, { signal: ctrl.signal });
+      const reader = res.body!.getReader();
+      const first = new TextDecoder().decode((await reader.read()).value);
+      expect(JSON.parse(first.slice(first.indexOf('{'))).type).toBe('hello');
+      ctrl.abort();
+      const after = await (await fetch(`${base}/api/state`)).json() as any;
+      expect(after.wave).toBeNull();
+      expect(after.demo.running).toBeNull();
+      expect((await fetch(`${base}/api/demo/start`, { method: 'POST', body: JSON.stringify({ script: 'hero', speed: 4 }) })).status).toBe(200);
+    } finally { await m.close(); }
+  });
+
   it('serves health, creatures, state and outcome lookups', async () => {
     const m = createMockServer({ port: 0 });
     const port = await m.listen();
