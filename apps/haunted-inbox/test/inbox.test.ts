@@ -7,6 +7,9 @@ import { describe, expect, it } from 'vitest';
 import { startProvider } from '../../../packages/core/src/provider';
 import { BotProcess, type BotMessage } from '../../../packages/haunt/src/chaos';
 import { loadHauntConfig } from '../../../packages/haunt/src/config';
+import { CreatureRegistry } from '../../../packages/haunt/src/creatures/plugin';
+import { planSweep, runSweep } from '../../../packages/haunt/src/sweep';
+import { APP_STAGES } from '../../../packages/core/src/live/catalog';
 
 const root = resolve(__dirname, '../../..');
 const bot = (f: string) => join(root, 'apps/haunted-inbox/bot', f);
@@ -58,7 +61,7 @@ describe('python bot', () => {
 interface RunResult { msgs: BotMessage[]; rows: { kind: string; order: string }[]; done: string[]; kills: number }
 
 /** Runs one Python bot as a real process (speed 8), optionally SIGKILLed once at `point`, then restarted. */
-async function run(tier: string, mails: number, crashAt: string | null): Promise<RunResult> {
+async function run(tier: string, mails: number, crashAt: string | null, crashStage: string | null = null): Promise<RunResult> {
   const prov = await startProvider({ port: 0 });
   const runDir = mkdtempSync(join(tmpdir(), 'haunt-inbox-'));
   const lane = join(runDir, 'lane-1');
@@ -75,6 +78,8 @@ async function run(tier: string, mails: number, crashAt: string | null): Promise
       const idle = new Promise<'idle' | 'killed'>((res) => {
         proc.onMessage((m) => {
           msgs.push(m);
+          // a crash point has no stage filter, so a stage-targeted crash is armed once the stage before it starts
+          if (crashStage && attempt === 1 && m.type === 'stage_start' && m.stage === 'draft') proc.send({ k: 'arm', fault: 'crash', point: crashAt });
           if (m.k === 'at_point') {
             if (m.fault !== undefined) {
               kills++;
@@ -86,7 +91,7 @@ async function run(tier: string, mails: number, crashAt: string | null): Promise
         });
       });
       await proc.waitFor('ready');
-      proc.send({ k: 'go', arms: crashAt && attempt === 1 ? [{ fault: 'crash', point: crashAt }] : [] });
+      proc.send({ k: 'go', arms: crashAt && !crashStage && attempt === 1 ? [{ fault: 'crash', point: crashAt }] : [] });
       if ((await idle) === 'idle') {
         proc.send({ k: 'shutdown' });
         await proc.exited;
@@ -127,4 +132,42 @@ describe('real python processes against the provider', () => {
     expect(phoenix.done).toEqual(['ord-0001.json']);
     expect(phoenix.msgs.find((m) => m.k === 'reconciled')).toBeTruthy();
   }, 90000);
+
+  pyIt('I3: a crash at the reply stage sends 2 replies for the rookie and 1 for the phoenix', async () => {
+    const rookie = await run('rookie', 1, 'after_effect_before_journal', 'reply');
+    expect(rookie.kills).toBe(1);
+    expect(rookie.rows.filter((x) => x.kind === 'reply').length).toBe(2);
+    const phoenix = await run('phoenix', 1, 'after_effect_before_journal', 'reply');
+    expect(phoenix.kills).toBe(1);
+    expect(phoenix.rows.filter((x) => x.kind === 'reply').length).toBe(1);
+    expect(phoenix.rows.filter((x) => x.kind === 'ticket').length).toBe(1);
+    expect(phoenix.done).toEqual(['ord-0001.json']);
+  }, 90000);
+});
+
+describe('sweep and catalog on the inbox (I2, I5)', () => {
+  const plan = (app: string) => {
+    const r = loadHauntConfig(join(root, `apps/${app}/haunt.yaml`));
+    if (!r.ok) throw new Error('config invalid');
+    const reg = new CreatureRegistry();
+    const noop = () => undefined;
+    reg.register({ id: 'zombie', label: 'Zombie', family: 'network', faults: ['timeout'], inject: noop });
+    reg.register({ id: 'ghost', label: 'Ghost', family: 'http', faults: ['http_500'], appliesTo: { roles: ['effect'] }, inject: noop });
+    return planSweep(r.config, reg.list());
+  };
+
+  it('I2: a sweep on the inbox yields a report with the same fields as the orders app', async () => {
+    const inbox = await runSweep(plan('haunted-inbox'), () => 'pass', 7);
+    const orders = await runSweep(plan('haunted-orders'), () => 'pass', 7);
+    expect(Object.keys(inbox).sort()).toEqual(Object.keys(orders).sort());
+    expect(Object.keys(inbox.matrix).sort()).toEqual(Object.keys(orders.matrix).sort());
+    expect(inbox.matrix.stages).toEqual(['fetch', 'classify', 'ticket', 'draft', 'reply', 'archive']);
+    expect(inbox.cells.length).toBe(6 + 2);
+  });
+
+  it('I5: the arena catalog stage ids match the inbox haunt.yaml', () => {
+    const r = loadHauntConfig(join(root, 'apps/haunted-inbox/haunt.yaml'));
+    if (!r.ok) throw new Error('config invalid');
+    expect(APP_STAGES.inbox.map((s) => s.id)).toEqual(r.config.stages.map((s) => s.id));
+  });
 });

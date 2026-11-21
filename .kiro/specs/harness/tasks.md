@@ -93,7 +93,7 @@ Engine detail tasks (map to engine/design.md sections):
 - [x] E11 All property tests P1 to P8 and acceptance table A as tests (acceptance.md). (P3/P4 sdk.test.ts, P5 provider.test.ts, P7 score.test.ts, P8 sweep-executor.test.ts and determinism.test.ts, P1/P2/P6 and table A rows A1 to A21 in acceptance-table.test.ts; local only, audited 2026-11-20)
 - [x] E12 Browser target interfaces: Journal, Provider, Clock, Process, and `window.__haunt` (13). (done via H6.3, PRs #30, #41, #56, #65 and #75; audited 2026-11-20)
 - [x] E13 Demo scripts `hero` and `full` run on the real engine (PROTOCOL demo mode). (done via the E-audit-batch3 PR: hero and full presses use `when` triggers, checked live at speed 4: hero repeats account and charge on lane 1 order 1 and lane 5 stays clean, full plays the boss; audited 2026-11-20)
-- [ ] E14 Inbox app per `.kiro/specs/inbox-app/design.md`.
+- [x] E14 Inbox app per `.kiro/specs/inbox-app/design.md`. (done via H6.1 and H6.2; audited 2026-11-20, I2, I3 and I5 tests added)
 - [ ] E15 `docs/DEVPOST-DRAFT.md`, blog post draft, social post draft.
 
 ## Authoritative H0 order and scope (supersedes the earlier H0 list)
