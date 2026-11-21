@@ -520,8 +520,325 @@ function lich(ctx: Ctx, o: DrawOpts, a: string, p: number): void {
   }
 }
 
+// ---------------------------------------------------------------- Banshee
+function banshee(ctx: Ctx, o: DrawOpts, a: string, p: number): void {
+  const t = p * TAU;
+  const scream = a === 'scream';
+  const open = scream ? ease.inOutCubic(seg(p, 0, 0.25)) * (1 - seg(p, 0.85, 1)) : 0;
+  ctx.translate(0, Math.sin(t) * 3.5 - 6);
+  glow(ctx, o, 0, -58, 64, '#7fe3e0', 0.25 + open * 0.2);
+  if (scream && !o.silhouette) {
+    ctx.strokeStyle = '#bff6f2';
+    ctx.lineWidth = 3;
+    for (const k of [0, 1, 2]) {
+      const r = ((p * 1.8 + k * 0.33) % 1) * 60 + 10;
+      ctx.globalAlpha = (1 - (r - 10) / 60) * 0.7;
+      ctx.beginPath();
+      ctx.arc(14, -64, r, -0.7, 0.7);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+  // long streaming hair
+  blob(ctx, o, `M-14,-82C-34,-76-36,-40-30,-10C-26,-30-20,-48-12,-56ZM14,-82C34,-76${36 + Math.sin(t) * 3},-40${30 + Math.sin(t) * 3},-10C26,-30,20,-48,12,-56Z`, '#cfe9f2', '#9bc4d4', '#f4fdff');
+  // gown with ragged hem
+  blob(ctx, o, `M-14,-60C-26,-36-30,-16-34,-2L-24,-8L-16,2L-8,-6L0,2L8,-6L16,2L24,-8L34,-2C30,-16,26,-36,14,-60Z`, '#8fb7d9', '#5f88aa', '#cfe9f6');
+  ball(ctx, o, 0, -72, 13, 15, '#e6f3f8', '#b6d3df', '#ffffff');
+  eyes(ctx, o, [[-5, -75], [5, -75]], 2.6, '#14101f');
+  ctx.fillStyle = OUT;
+  ctx.beginPath();
+  ctx.ellipse(0, -66, 4 + open * 2, 2 + open * 8, 0, 0, TAU);
+  ctx.fill();
+}
+
+// ---------------------------------------------------------------- Goblin
+function goblin(ctx: Ctx, o: DrawOpts, a: string, p: number): void {
+  const t = p * TAU;
+  const hoard = a === 'hoard';
+  const full = hoard ? ease.inOutCubic(seg(p, 0.1, 0.8)) : 0;
+  const hop = hoard ? Math.abs(Math.sin(p * TAU * 3)) * -3 : Math.sin(t * 2) * -1.5;
+  ctx.translate(0, hop);
+  // sack
+  const s = 1 + full * 0.45;
+  ctx.save();
+  ctx.translate(-24, -2);
+  ctx.scale(s, s);
+  blob(ctx, o, 'M-12,0C-20,-14-10,-26,-4,-30L4,-30C10,-26,20,-14,12,0Z', '#9c7a4a', '#6f5430', '#c9a56e');
+  limb(ctx, o, -5, -31, 5, -31, 3, '#6b4a2e');
+  ctx.restore();
+  if (hoard && !o.silhouette) {
+    for (const k of [0, 1, 2]) {
+      const q = (p * 2 + k / 3) % 1;
+      ball(ctx, o, lerp(24, -22, q), -70 + Math.sin(q * Math.PI) * -22 + q * 52, 4, 4, '#ffc247', '#c98f1c', '#ffe08a');
+    }
+  }
+  // legs and body
+  for (const x of [-7, 7]) blob(ctx, o, `M${x - 5},-18L${x + 5},-18L${x + 6},0L${x - 6},0Z`, '#4d5a2f');
+  blob(ctx, o, 'M-14,-18C-18,-34-8,-44,0,-44C8,-44,18,-34,14,-18Z', '#6b4a2e', '#4a3220', '#946a40');
+  // arm
+  const reach = hoard ? Math.sin(p * TAU * 2) * 0.5 : Math.sin(t) * 0.1;
+  ctx.save();
+  ctx.translate(10, -38);
+  ctx.rotate(-0.6 + reach);
+  limb(ctx, o, 0, 0, 20, 4, 6, '#7bb35a');
+  ctx.restore();
+  // head and big ears
+  blob(ctx, o, 'M-12,-58L-34,-66L-14,-48ZM12,-58L34,-66L14,-48Z', '#7bb35a', '#558a3a');
+  ball(ctx, o, 0, -54, 14, 12, '#7bb35a', '#558a3a', '#b4e08f');
+  eyes(ctx, o, [[-5, -56], [5, -56]], 3, '#ffe08a');
+  eyes(ctx, o, [[-5, -56], [5, -56]], 1.2, OUT);
+  if (!o.silhouette) {
+    ctx.strokeStyle = OUT;
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.moveTo(-5, -48);
+    ctx.lineTo(0, -45);
+    ctx.lineTo(5, -48);
+    ctx.stroke();
+  }
+}
+
+// ---------------------------------------------------------------- Imp
+function imp(ctx: Ctx, o: DrawOpts, a: string, p: number): void {
+  const t = p * TAU;
+  const th = a === 'throw';
+  const wind = th ? ease.inOutCubic(seg(p, 0, 0.35)) : 0;
+  const rel = th ? ease.inOutCubic(seg(p, 0.35, 0.5)) : 0;
+  const fly = th ? seg(p, 0.5, 1) : 0;
+  ctx.translate(0, Math.sin(t * (th ? 1 : 2)) * 3 - 10);
+  const flap = Math.sin(t * 4) * 0.35;
+  for (const sd of [-1, 1]) {
+    ctx.save();
+    ctx.scale(sd, 1);
+    ctx.translate(8, -50);
+    ctx.rotate(-0.5 - flap);
+    blob(ctx, o, 'M0,0C14,-22,34,-22,40,-10C32,-12,28,-6,24,-4C20,-8,12,-4,0,6Z', '#8a2f4a', '#5c1d33', '#b8546f');
+    ctx.restore();
+  }
+  // body, tail
+  blob(ctx, o, 'M8,-14C24,-14,32,-22,30,-34C28,-24,20,-20,8,-22Z', '#d6453d', '#9e2d29');
+  blob(ctx, o, 'M-10,-20C-14,-36-8,-48,0,-48C8,-48,14,-36,10,-20Z', '#d6453d', '#9e2d29', '#ff8a70');
+  for (const x of [-5, 5]) blob(ctx, o, `M${x - 3},-20L${x + 3},-20L${x + 3},-6L${x - 3},-6Z`, '#b8352f');
+  // throwing arm and spanner
+  ctx.save();
+  ctx.translate(9, -42);
+  const ang = lerp(-0.4, -2.3, wind) + lerp(0, 2.7, rel);
+  ctx.rotate(ang);
+  limb(ctx, o, 0, 0, 0, 16, 5, '#d6453d');
+  if (fly === 0) {
+    limb(ctx, o, 0, 14, 0, 32, 4, '#aab4c8');
+    ball(ctx, o, 0, 34, 6, 6, '#aab4c8', '#7c869c', '#e3eaf7');
+  }
+  ctx.restore();
+  if (fly > 0) {
+    ctx.save();
+    ctx.translate(lerp(14, 74, fly), lerp(-40, -14, fly) - Math.sin(fly * Math.PI) * 30);
+    ctx.rotate(fly * 14);
+    limb(ctx, o, -10, 0, 10, 0, 4, '#aab4c8');
+    ball(ctx, o, 12, 0, 6, 6, '#aab4c8', '#7c869c', '#e3eaf7');
+    ctx.restore();
+  }
+  ctx.save();
+  ctx.translate(-6, -42);
+  ctx.rotate(-0.2 + Math.sin(t) * 0.1);
+  limb(ctx, o, 0, 0, -8, 14, 5, '#d6453d');
+  ctx.restore();
+  // head, horns
+  blob(ctx, o, 'M-9,-58L-14,-72L-3,-62ZM9,-58L14,-72L3,-62Z', '#f1e6c8', '#bfb18b');
+  ball(ctx, o, 0, -56, 13, 12, '#d6453d', '#9e2d29', '#ff8a70');
+  eyes(ctx, o, [[-5, -57], [5, -57]], 3.2, '#ffe08a');
+  eyes(ctx, o, [[-5, -57], [5, -57]], 1.3, OUT);
+  if (!o.silhouette) {
+    ctx.strokeStyle = OUT;
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.moveTo(-6, -50);
+    ctx.quadraticCurveTo(0, -46, 6, -50);
+    ctx.stroke();
+  }
+}
+
+// ---------------------------------------------------------------- Gargoyle
+function gargoyle(ctx: Ctx, o: DrawOpts, a: string, p: number): void {
+  const t = p * TAU;
+  const land = a === 'land';
+  const drop = land ? 1 - ease.outBounce(seg(p, 0, 0.45)) : 0;
+  const fold = land ? ease.inOutCubic(seg(p, 0.45, 0.8)) : 0;
+  ctx.translate(0, -drop * 46);
+  const flap = land ? (1 - seg(p, 0, 0.45)) * 0.5 : Math.sin(t) * 0.04;
+  const G = '#8a8fa3';
+  const GS = '#5f6478';
+  const GR = '#c0c5d8';
+  for (const sd of [-1, 1]) {
+    ctx.save();
+    ctx.scale(sd, 1);
+    ctx.translate(10, -48);
+    ctx.rotate(-0.3 - flap + fold * 0.5);
+    blob(ctx, o, `M0,0C10,-${30 - fold * 18},32,-${34 - fold * 20},44,-${22 - fold * 10}L34,-14L28,-18L18,-8L10,-12Z`, '#6d7288', GS, GR);
+    ctx.restore();
+  }
+  // crouched body, tail
+  blob(ctx, o, 'M-12,-4C-30,-4-34,-14-26,-20C-24,-12-16,-10-10,-14Z', G, GS);
+  blob(ctx, o, 'M-18,0C-22,-24-14,-48,0,-48C14,-48,22,-24,18,0Z', G, GS, GR);
+  blob(ctx, o, 'M-22,0L-22,-8L-6,-8L-6,0ZM6,0L6,-8L22,-8L22,0Z', GS, '#4a4e60');
+  // head, horns, snarl
+  blob(ctx, o, 'M-10,-62L-16,-76L-4,-66ZM10,-62L16,-76L4,-66Z', '#5f6478', '#4a4e60');
+  blob(ctx, o, 'M-14,-70C-14,-82,14,-82,14,-70L12,-54L-12,-54Z', G, GS, GR);
+  eyes(ctx, o, [[-6, -68], [6, -68]], 3, '#ff9a3c');
+  if (!o.silhouette) {
+    ctx.fillStyle = OUT;
+    ctx.fillRect(-8, -60, 16, 4);
+    ctx.fillStyle = BONE;
+    for (const x of [-6, -1, 4]) ctx.fillRect(x, -60, 3, 3);
+  }
+}
+
+// ---------------------------------------------------------------- Mummy
+function mummy(ctx: Ctx, o: DrawOpts, a: string, p: number): void {
+  const t = p * TAU;
+  const wrap = a === 'wrap';
+  const reach = wrap ? ease.inOutCubic(seg(p, 0, 0.4)) : 0;
+  const unroll = wrap ? seg(p, 0.3, 1) : 0;
+  ctx.translate(0, -Math.abs(Math.sin(t)) * (wrap ? 0.5 : 2));
+  const B = '#dcd0b0';
+  const BS = '#aa9d7c';
+  const BR = '#f5ecd2';
+  for (const x of [-7, 7]) blob(ctx, o, `M${x - 6},-30L${x + 6},-30L${x + 7},0L${x - 7},0Z`, B, BS, BR);
+  blob(ctx, o, 'M-16,-30C-20,-48-14,-62,0,-62C14,-62,20,-48,16,-30Z', B, BS, BR);
+  if (!o.silhouette) {
+    ctx.strokeStyle = BS;
+    ctx.lineWidth = 2;
+    for (const y of [-56, -48, -40, -34]) {
+      ctx.beginPath();
+      ctx.moveTo(-15, y + 4);
+      ctx.lineTo(15, y - 4);
+      ctx.stroke();
+    }
+  }
+  // arms straight out, bandage trailing
+  const lift = lerp(-0.1, -1.45, reach);
+  for (const sd of [1, -1]) {
+    ctx.save();
+    ctx.translate(sd * 14, -56);
+    ctx.rotate(sd * (lift + Math.sin(t) * 0.04 * (1 - reach)) * -1 + (sd === 1 ? 0 : 0));
+    limb(ctx, o, 0, 0, sd * 4, 28, 8, B);
+    ctx.restore();
+  }
+  if (wrap && !o.silhouette) {
+    ctx.strokeStyle = BR;
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(30, -58);
+    ctx.bezierCurveTo(30 + 20 * unroll, -50, 30 + 30 * unroll, -30 + Math.sin(t * 2) * 6, 30 + 44 * unroll, -22);
+    ctx.stroke();
+  }
+  // head wrap, eyes
+  ball(ctx, o, 0, -74, 14, 14, B, BS, BR);
+  if (!o.silhouette) {
+    ctx.fillStyle = OUT;
+    ctx.fillRect(-10, -78, 20, 7);
+  }
+  eyes(ctx, o, [[-5, -74.5], [5, -74.5]], 2.4, '#5ee08a');
+}
+
+// ---------------------------------------------------------------- Werewolf
+function werewolf(ctx: Ctx, o: DrawOpts, a: string, p: number): void {
+  const t = p * TAU;
+  const howl = a === 'howl';
+  const up = howl ? ease.inOutCubic(seg(p, 0, 0.3)) * (1 - seg(p, 0.85, 1)) : 0;
+  const moon = howl ? ease.outBack(seg(p, 0.15, 0.7)) : 0;
+  if (howl && !o.silhouette) {
+    glow(ctx, o, 30, lerp(-20, -92, moon), 40, '#fff2b8', 0.5);
+    ball(ctx, o, 30, lerp(-20, -92, moon), 15, 15, '#fff2b8', '#e3cf86', '#ffffff');
+  }
+  ctx.translate(0, Math.sin(t * 2) * -1.5 * (1 - up));
+  const F = '#7a5a43';
+  const FS = '#523a2a';
+  const FR = '#a98163';
+  for (const x of [-9, 9]) blob(ctx, o, `M${x - 7},-26L${x + 7},-26L${x + 9},0L${x - 9},0Z`, F, FS);
+  blob(ctx, o, 'M-18,-26C-26,-46-14,-62,2,-60C18,-58,26,-44,18,-26Z', F, FS, FR);
+  blob(ctx, o, 'M-12,-26C-14,-36-4,-40,0,-36C4,-40,14,-36,12,-26Z', '#c8a888', '#a08064');
+  ctx.save();
+  ctx.translate(14, -50);
+  ctx.rotate(-0.3 - up * 1.1 + Math.sin(t) * 0.05);
+  limb(ctx, o, 0, 0, 6, 26, 8, F);
+  blob(ctx, o, 'M0,24L6,34L10,24L14,32L16,22L10,20Z', '#efe6d2');
+  ctx.restore();
+  // head tilts back during the howl
+  ctx.save();
+  ctx.translate(2, -62);
+  ctx.rotate(-up * 0.7);
+  blob(ctx, o, 'M-8,-10L-10,-28L2,-16ZM6,-10L14,-26L12,-12Z', F, FS, FR);
+  ball(ctx, o, 0, -6, 14, 13, F, FS, FR);
+  const jaw = 3 + up * 9;
+  blob(ctx, o, `M6,-8L26,${-4 - jaw * 0.2}L24,${2 + jaw}L6,${2 + jaw * 0.5}Z`, '#8a6a52', FS);
+  eyes(ctx, o, [[3, -9]], 3, '#ffe08a');
+  eyes(ctx, o, [[3.6, -9]], 1.2, OUT);
+  ball(ctx, o, 25, -4, 3, 3, OUT);
+  ctx.restore();
+}
+
+// ---------------------------------------------------------------- Will-o'-Wisp
+function wisp(ctx: Ctx, o: DrawOpts, a: string, p: number): void {
+  const t = p * TAU;
+  const lead = a === 'lead';
+  const dx = lead ? ease.inOutCubic(seg(p, 0.1, 0.9)) * 40 : 0;
+  const bob = Math.sin(t * (lead ? 2 : 1)) * 5;
+  ctx.translate(dx, bob - 28);
+  if (lead && !o.silhouette) {
+    for (const k of [1, 2, 3, 4]) {
+      ctx.globalAlpha = 0.5 - k * 0.1;
+      ball(ctx, o, -k * 9, Math.sin(t * 2 - k) * 3 + 6, 7 - k, 9 - k * 1.5, '#7fd9ff');
+    }
+    ctx.globalAlpha = 1;
+  }
+  glow(ctx, o, 0, 0, 56, '#7fd9ff', 0.45);
+  // flame
+  blob(ctx, o, `M0,-34C${10 + Math.sin(t * 3) * 3},-16,18,-6,16,6C14,18,-14,18,-16,6C-18,-6,-10,-16,0,-34Z`, '#7fd9ff', '#3f9fd1', '#e3f8ff');
+  blob(ctx, o, 'M0,-16C6,-8,9,-2,7,5C5,11,-5,11,-7,5C-9,-2,-6,-8,0,-16Z', '#f4fdff');
+  eyes(ctx, o, [[-5, 2], [5, 2]], 2.4, '#14101f');
+  // tiny lantern it dangles
+  limb(ctx, o, 14, -2, 26, 10, 2, '#6b4a2e');
+  blob(ctx, o, 'M22,10L34,10L33,24L23,24Z', '#ffc247', '#c98f1c', '#ffe08a');
+}
+
+// ---------------------------------------------------------------- Witch
+function witch(ctx: Ctx, o: DrawOpts, a: string, p: number): void {
+  const t = p * TAU;
+  const hex = a === 'hex';
+  const swing = hex ? Math.sin(p * TAU * 2) * 0.5 : Math.sin(t) * 0.08;
+  ctx.translate(0, Math.sin(t) * 2.5 - 4);
+  if (hex && !o.silhouette) {
+    for (const k of [0, 1, 2, 3, 4]) {
+      const q = (p * 1.5 + k / 5) % 1;
+      ctx.globalAlpha = 1 - q;
+      ball(ctx, o, 30 + Math.cos(q * TAU * 1.5 + k) * 14, -60 - q * 30 + Math.sin(q * TAU * 1.5 + k) * 6, 3, 3, '#7bf07a');
+    }
+    ctx.globalAlpha = 1;
+  }
+  // broom-less robe
+  blob(ctx, o, 'M-12,-54C-26,-34-32,-14-34,0L-16,-4L0,2L16,-4L34,0C32,-14,26,-34,12,-54Z', '#5b2f8a', '#3c1d5c', '#8a55c4');
+  // wand arm
+  ctx.save();
+  ctx.translate(12, -48);
+  ctx.rotate(-1.0 + swing);
+  limb(ctx, o, 0, 0, 0, 22, 6, '#5b2f8a');
+  limb(ctx, o, 0, 22, 0, 44, 3, '#6b4a2e');
+  ball(ctx, o, 0, 46, 3.5, 3.5, '#7bf07a');
+  ctx.restore();
+  // face, hair, hat
+  blob(ctx, o, 'M-12,-66C-20,-56-18,-46-14,-42L-10,-60Z', '#2a2236');
+  ball(ctx, o, 0, -64, 12, 13, '#a8d98a', '#7aa862', '#d6f5bf');
+  eyes(ctx, o, [[-4, -66], [4, -66]], 2.4, OUT);
+  blob(ctx, o, 'M2,-62L6,-56L9,-62Z', '#8fbf70');
+  blob(ctx, o, 'M-24,-74C-12,-80,12,-80,24,-74C12,-70-12,-70-24,-74Z', '#3c1d5c', '#2a1442', '#5b2f8a');
+  blob(ctx, o, `M-12,-76L-4,-98L${8 + Math.sin(t) * 2},-110L8,-76Z`, '#3c1d5c', '#2a1442', '#5b2f8a');
+  blob(ctx, o, 'M-12,-80L12,-80L12,-76L-12,-76Z', '#ffc247', '#c98f1c');
+}
+
 const DRAW: Record<CreatureId, (ctx: Ctx, o: DrawOpts, anim: string, p: number) => void> = {
   reaper, zombie, ghost, wraith, poltergeist, doppelganger, lich,
+  banshee, goblin, imp, gargoyle, mummy, werewolf, wisp, witch,
 };
 
 export function drawCreature(ctx: Ctx, id: CreatureId, anim: string, p: number, o: DrawOpts): void {

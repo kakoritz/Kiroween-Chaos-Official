@@ -52,7 +52,7 @@ Lane B owns: A3, the rank board and ledger panel views, B3, the B4 slider UI, th
 
 ## Skeleton Crew theme (see docs/WINNING.md)
 - [x] UI-S1. Crypt look per ui-spec section 20 (stone floors, torch pools, cobwebs, fog).
-- [ ] UI-S2. Skeleton sprite built from bones in code, with poses: work, cheer, fail (collapse), recover (reassemble), dead.
+- [x] UI-S2. Skeleton sprite built from bones in code, with poses: work, cheer, fail (collapse), recover (reassemble), dead.
 - [ ] UI-S3. Gear overlays for the five resilience parts. Gear list comes from `/api/state`.
 - [ ] UI-S4. Equip animation when `part_added` arrives: gear flies to the skeleton, score ticks up.
 - [ ] UI-S5. Creature sprites and animations from the table in design.md. Start with Reaper, Zombie, Ghost, Wraith, Poltergeist, Doppelganger, plus the Lich boss.

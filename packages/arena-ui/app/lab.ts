@@ -168,7 +168,8 @@ function lineup(): void {
 
 // Review lineup: ?lineup=creatures draws the seven creatures idle, mid action, then as 56 px silhouettes.
 function creatureLineup(): void {
-  const list = listSprites().filter((s) => s.id.startsWith('creature-'));
+  const only = new URLSearchParams(location.search).get('only')?.split(',');
+  const list = listSprites().filter((s) => s.id.startsWith('creature-') && (!only || only.includes(s.id.slice(9))));
   root.append(el('h2', undefined, 'Creature lineup'));
   const W = 300;
   for (const [idx, title, p] of [[0, 'Idle', 0.25], [1, 'Acting', 0.55]] as const) {

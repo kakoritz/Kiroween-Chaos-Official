@@ -18,8 +18,9 @@ const chain = (): CanvasRenderingContext2D => {
 };
 
 describe('creature art', () => {
-  it('lists the seven creatures with at least two animations each', () => {
-    expect(CREATURES.map((c) => c.id)).toEqual(['reaper', 'zombie', 'ghost', 'wraith', 'poltergeist', 'doppelganger', 'lich']);
+  it('lists the fifteen creatures with at least two animations each', () => {
+    expect(CREATURES.map((c) => c.id)).toEqual(['reaper', 'zombie', 'ghost', 'wraith', 'poltergeist', 'doppelganger', 'lich',
+      'banshee', 'goblin', 'imp', 'gargoyle', 'mummy', 'werewolf', 'wisp', 'witch']);
     for (const c of CREATURES) expect(c.anims.length).toBeGreaterThanOrEqual(2);
   });
 

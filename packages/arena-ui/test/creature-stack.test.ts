@@ -116,9 +116,9 @@ describe('creature stack (UI-B3)', () => {
     expect(captionOf('missing_file')).toBe('MISSING FILE');
     expect(captionOf('some_new_fault')).toBe('SOME NEW FAULT');
     expect(spriteOf('lich')).toBe('lich');
-    expect(spriteOf('banshee')).toBeNull();
+    expect(spriteOf('banshee_queen')).toBeNull();
     const vm = start();
-    applyEvent(vm, chaos('banshee', 'internet_outage', 1), 0);
+    applyEvent(vm, chaos('banshee_queen', 'internet_outage', 1), 0);
     expect(creatureFrame(vm.lanes[0]!.creatures[0]!, 100).anim).toBe('idle');
   });
 });

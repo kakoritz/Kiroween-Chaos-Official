@@ -118,6 +118,7 @@ export interface CreatureFrame {
 
 const ACT_ANIM: Record<string, string> = {
   reaper: 'swing', zombie: 'sit', ghost: 'touch', wraith: 'yank', poltergeist: 'fling', doppelganger: 'copy', lich: 'cast',
+  banshee: 'scream', goblin: 'hoard', imp: 'throw', gargoyle: 'land', mummy: 'wrap', werewolf: 'howl', wisp: 'lead', witch: 'hex',
 };
 
 export const actAnimOf = (id: string): string => ACT_ANIM[id] ?? 'idle';
