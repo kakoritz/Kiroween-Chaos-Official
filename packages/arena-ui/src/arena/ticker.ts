@@ -17,6 +17,8 @@ export function tickerLine(ev: ArenaEvent, stageLabel: (id: string) => string): 
   switch (ev.type) {
     case 'wave_start': return { tone: 'info', icon: '\u25B6', text: `Wave ${typeof ev.wave === 'number' ? ev.wave : ''} started` };
     case 'wave_end': return { tone: 'info', icon: '\u25A0', text: 'Wave ended' };
+    case 'order_start': return { tone: 'info', icon: '\u25B7', text: `${lane}order ${str(ev.order)} started`.replace('  ', ' ') };
+    case 'stage_done': return { tone: 'ok', icon: '\u2713', text: `${lane}${stage || 'stage'} done` };
     case 'order_done': return { tone: 'ok', icon: '\u2713', text: `${lane}order ${str(ev.order)} done`.replace('  ', ' ') };
     case 'order_failed': return { tone: 'bad', icon: '\u2717', text: `${lane}order ${str(ev.order)} failed`.replace('  ', ' ') };
     case 'order_parked': return { tone: 'warn', icon: '\u29D6', text: `${lane}order parked` };
@@ -39,10 +41,13 @@ export function tickerLine(ev: ArenaEvent, stageLabel: (id: string) => string): 
 export class EventTicker {
   private rows: TickerLine[] = [];
   private dirty = true;
+  private seen = 0;
   constructor(private readonly el: HTMLElement, private readonly stageLabel: (id: string) => string) {}
 
   push(ev: ArenaEvent): void {
-    if (ev.type === 'reset') { this.rows = []; this.dirty = true; return; }
+    if (ev.type === 'reset') { this.rows = []; this.seen = 0; this.dirty = true; return; }
+    this.seen++;
+    if (this.seen === 2) this.dirty = true;
     const line = tickerLine(ev, this.stageLabel);
     if (!line) return;
     this.rows.unshift(line);
@@ -54,7 +59,7 @@ export class EventTicker {
     if (!this.dirty) return;
     this.dirty = false;
     this.el.textContent = '';
-    if (!this.rows.length) { const p = document.createElement('p'); p.className = 'tk-empty'; p.textContent = 'Waiting for events'; this.el.append(p); return; }
+    if (!this.rows.length) { const p = document.createElement('p'); p.className = 'tk-empty'; p.textContent = this.seen > 1 ? 'Quiet so far, nothing notable yet' : 'Waiting for events'; this.el.append(p); return; }
     for (const r of this.rows) {
       const row = document.createElement('div');
       row.className = `tk-row tk-${r.tone}`;
