@@ -1,3 +1,5 @@
+> **Video v2 structure** (title hook, captions, live Kiro fix, MCP scene, scorecard) is in `.kiro/specs/onboarding/spec.md` section 8 and wins over the table below.
+
 # Demo video script (target 2:50, hard limit 3:00)
 
 Rules: public YouTube, no copyrighted music, no trademarks (do not show Stripe, Shopify or similar logos). Music is generated in code or none. Record on the real device. Captions on.

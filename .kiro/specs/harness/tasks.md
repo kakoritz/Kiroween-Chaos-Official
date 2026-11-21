@@ -109,3 +109,8 @@ Do in this order. Tell Lane B when step 6 merges.
 H1 starts after step 6. Aim for steps 1 to 6 within one day, even if some extra fixtures follow.
 
 Task numbering note: E1 to E15 are the detailed tasks inside H1 to H4. E1-E8 belong to H1, E6-E7 to H2, E9 to H3/H4, E10 to H4, E11 across all, E12 to H6.3, E13 to H5, E14 to H6.2, E15 to H5.
+
+## New work from the owner play-test and the judge review (2026-11-21)
+
+Lane A tasks live in: `.kiro/specs/playtest-v2/tasks.md` (PT-C*), `.kiro/specs/campaign/tasks.md` (CP-C*), `.kiro/specs/onboarding/tasks.md` (ON-C*), `.kiro/specs/share/tasks.md` (SH-C*, SH-K*). Start with PT-C0 (contract v1.1 plumbing), then PT-C1, C2, C3, C4, C5, C6. Hosted demo (H6.3 / ON-C1) is P0. See `docs/WIN-REVIEW.md` for the order of work.
+

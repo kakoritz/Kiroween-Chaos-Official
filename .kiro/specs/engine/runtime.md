@@ -1,3 +1,5 @@
+> **Play-test v2 changes:** pace `slow`, travel scheduler (`hold`), scoring v2, new faults, wrong-order decisions: see `.kiro/specs/playtest-v2/design.md`. Where it differs from sections 8, 23 and 33 here, the play-test v2 file wins.
+
 # Engine runtime contract (Lane A)
 
 Closes the gaps between `engine/design.md` (the rules) and code. If this file and `design.md` differ, **this file wins**. Read after `design.md`.

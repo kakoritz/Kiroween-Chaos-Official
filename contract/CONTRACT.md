@@ -1,3 +1,5 @@
+> **See also `contract/V1_1.md`** for the additive v1.1 catalog (new faults `sms_down`, `app_down`, `updates_down`, `wrong_address`, `no_answer`, `gated_house`, `car_accident`, `order_typo`, and creatures `scarecrow`, `black_cat`, `phantom_car`, `prankster`).
+
 # Contract v1: IDs, catalogs, versioning
 
 `contractVersion: 1`. **The protocol itself (events, endpoints, ordering, shapes, mock behavior) is in [PROTOCOL.md](PROTOCOL.md).** Beat-by-beat fixtures are in [STORYBOARDS.md](STORYBOARDS.md). This file only holds the shared IDs and catalogs, so nothing is defined twice.

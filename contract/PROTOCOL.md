@@ -1,3 +1,5 @@
+> **Contract v1.1 (additive) is in `contract/V1_1.md` and wins where it differs** (pace slow, travel gaps, laps, reviews, decisions, new faults, new endpoints, rules 40 to 47).
+
 # Protocol (contract v1, complete)
 
 Part of the contract. Read with [CONTRACT.md](CONTRACT.md). **Where this file differs from CONTRACT.md, this file wins.** Changes follow the contract rules in `docs/SWIMLANES.md`.

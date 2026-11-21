@@ -51,3 +51,13 @@ If a format cannot be confirmed by Nov 25, ship the item as documentation plus a
 ## Lane A: fix after H0 merges
 
 - Event validator violations. The real H0 validator is on main and npm run validate:events runs it. A read-only run against live output (npm run live) reported more than 500 event violations before H0 merged. Lane A runs npm run validate:events against live output and fixes the engine and runtime emitters until it reports 0 violations.
+
+## Added 2026-11-21 (needs the owner)
+
+| # | Item | Why |
+|---|---|---|
+| 10 | Fix GitHub Actions billing or make the repo public | CI jobs do not start; blocks the fresh-clone gate and the Pages demo |
+| 11 | Pick the tagline and approve the one story (`onboarding` section 2) | Presentation |
+| 12 | CI policy for the sweep Action: opt-in example, not a required check | `share` section 3 |
+| 13 | Approve scope: world events (PT-C7) and wrong-order decisions (PT-C8) are optional extras after the must-have list | `playtest-v2` cut line |
+| 14 | Approve the campaign scope (nights 1, 2, 5 first) | `campaign` cut line |

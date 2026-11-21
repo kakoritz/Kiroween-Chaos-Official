@@ -4,8 +4,11 @@ When two documents disagree, the higher one wins.
 
 | Rank | Document | Owns |
 |---|---|---|
+| 0 | `contract/V1_1.md` | Additive v1.1: pace slow, travel gaps, laps, reviews, decisions, new faults and endpoints |
 | 1 | `contract/PROTOCOL.md` | Events, endpoints, ordering, state shapes, mock behavior |
 | 2 | `contract/CONTRACT.md`, `STORYBOARDS.md` | IDs, catalogs, fixtures.  |
+| 2b | `.kiro/specs/playtest-v2/` (design, ui, requirements, tasks) | Laps, reviews, scoring v2, travel, world events, wrong-order decisions, UI v2. **Wins over engine and arena specs where it differs** |
+| 2c | `.kiro/specs/campaign/`, `.kiro/specs/onboarding/`, `.kiro/specs/share/` | Campaign game, first-impression and video, badge, Action, Workflow Lab, real loop proof, Kiro proof |
 | 3 | `.kiro/specs/engine/design.md` and `acceptance.md` | Pipeline, provider, journal, tiers, faults, scoring, grading, oracle |
 | 4 | `.kiro/specs/inbox-app/design.md` | App 2 |
 | 5 | `.kiro/specs/harness/` | Haunt product requirements and Lane A tasks |
@@ -41,3 +44,17 @@ When two documents disagree, the higher one wins.
 | Wave | One run of N orders through all lanes |
 | Sweep, stack, ramp, soak | Haunt test modes |
 | Hardening spec | A spec written by the reviewer from run findings, applied by Kiro |
+
+## Glossary additions (play-test v2)
+
+| Term | Meaning |
+|---|---|
+| Lap | One order's trip with its time, attempts, retries, downtime, issues |
+| Issue | A counted problem event at a stage |
+| Downtime | Time an order is not progressing because of a failure; costs points |
+| Review | The customer's star rating of an order |
+| Cancelled | A failed order (shown as cancelled) |
+| World event | A failure with a story at a step (SMS down, gated house, wrong address) |
+| Decision | A player choice (refund, discount, redo) for a wrong order |
+| Night | A campaign level |
+| Crew | The player's own lane in the campaign |

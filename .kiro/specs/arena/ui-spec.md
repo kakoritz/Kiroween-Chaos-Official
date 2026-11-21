@@ -1,3 +1,5 @@
+> **Play-test v2 UI rules are in `.kiro/specs/playtest-v2/ui.md` and win where they differ** (lap choreography, start stack, chip colours and flags, lane ticker, lane popup, reviews, header gear menu, legend). Onboarding (splash, captions, tour) is in `.kiro/specs/onboarding/spec.md`; the campaign in `.kiro/specs/campaign/spec.md`.
+
 # Arena UI spec (Lane B): layout, motion, events to visuals, controls, states
 
 Authoritative for everything visual. Event meanings come from `contract/PROTOCOL.md`. If this file and `arena/design.md` differ, **this file wins**. Pixel numbers are for a 1920x1080 design stage. Tune freely for looks, but keep the structure.

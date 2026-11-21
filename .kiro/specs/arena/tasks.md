@@ -76,3 +76,8 @@ Task ids are prefixed `UI-` (for example `UI-A3`) so they do not collide with re
 - [x] UI-ART4. Remaining creatures, crypt background layers, props.
 - [ ] UI-ART5. Keep `docs/ASSETS.md` current: every CC0 asset with pack, author, licence (CC0 or Public Domain) and URL, added before the asset is committed. Re-style CC0 art to the style guide.
 
+
+## New work from the owner play-test and the judge review (2026-11-21)
+
+Lane B tasks live in: `.kiro/specs/playtest-v2/tasks.md` (PT-U*, PT-ART), `.kiro/specs/campaign/tasks.md` (CP-U*), `.kiro/specs/onboarding/tasks.md` (ON-U*), `.kiro/specs/share/tasks.md` (SH-U*). Start with PT-U1 to PT-U9 once the mock serves contract v1.1 (PT-C0). See `docs/WIN-REVIEW.md` for the order of work.
+

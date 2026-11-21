@@ -1,0 +1,27 @@
+# Share, adopt, prove: tasks
+
+Branches `core/SH-...`, `ui/SH-...`, `docs/SH-...`.
+
+## Lane A
+- [ ] **SH-C1 Badge and scorecard.** `haunt badge`, SVG and HTML generators (deterministic), MCP tool `haunt_badge`, tests (same run same bytes).
+- [ ] **SH-C2 GitHub Action.** Composite action, example workflow, optional demo repo; PR comment with the Markdown report and badge; exit codes. Decision on CI policy in `docs/DECISIONS.md`.
+- [ ] **SH-C3 Workflow Lab engine.** Generic bot built from declared stages and parts; in-page sweep (browser engine); suggestions from reviewer rules; `inpage` functions `labRun(model)`.
+- [ ] **SH-C4 Real loop proof.** Run the live loop, get wave 2 to A on the stated plan, fix the Phoenix lost-order and `updates` crash cases if they appear, save everything in `docs/proof/`; label recorded fixes.
+- [ ] **SH-C5 LLM reviewer and hook.** `reviewer --llm`, fallback to rules, hook at wave end.
+- [ ] **SH-C6 Inbox live in the arena.** Spawn the Python inbox through the runner for real (not only the CLI sweep) so Night 6 and the app switcher use a live second app. (Judge panel noted this was not done.)
+- [ ] **SH-K1 Trace generator and hook.** `tools/trace.ts`, `docs/TRACE.md`, `.kiro/hooks/trace-on-merge`, `// covers:` comments in tests.
+- [ ] **SH-K3 Install proof.** Install the Power and the Crew app, capture screenshots and clips, update docs.
+- [ ] **SH-K4 MCP scene.** Script and recording notes in `docs/proof/mcp-scene.md`.
+- [ ] **SH-K5 Steering files.** `tech.md`, `contract.md`, `art.md` in `.kiro/steering/`.
+
+## Lane B
+- [ ] **SH-U1 Workflow Lab UI.** Form, presets, protections toggles, run view, report, export of `haunt.yaml`, badge, scorecard, honest "model-based" label.
+- [ ] **SH-U2 Share button.** In the report viewer: download badge and scorecard, copy README snippet.
+- [ ] **SH-U3 Architecture diagram page.** In the hosted demo footer ("How it works").
+
+## Docs and owner
+- [ ] **SH-D1 Architecture diagram.** Mermaid in README and `docs/img/architecture.svg`.
+- [ ] **SH-K2 Kiro write-up.** `docs/KIRO-WRITEUP.md` in rubric order with the candid section; rewrite `docs/KIRO-LOG.md` entries from PR bookkeeping into real notes. (owner reviews wording)
+
+## Cut line
+SH-C4 (real proof), SH-K2, SH-C1, SH-U2, SH-K3 first (they fix the red flags and feed Social Blitz). Then SH-C2, SH-C3 plus SH-U1 (Workflow Lab), SH-K1, SH-C6. Then the rest.

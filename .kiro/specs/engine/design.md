@@ -1,3 +1,5 @@
+> **Scoring v2 replaces section 7**, and stage 8 `handoff` becomes a provider call: see `.kiro/specs/playtest-v2/design.md` (sections 1 to 8) and `contract/V1_1.md`.
+
 > **See `runtime.md` in this folder.** It closes the gaps in this file (bot runtime, chaos arming, provider API, journal and input rules, schemas, CLI). Where they differ, `runtime.md` wins.
 
 # Engine design (Lane A): the exact rules

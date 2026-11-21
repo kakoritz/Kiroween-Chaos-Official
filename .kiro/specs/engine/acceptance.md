@@ -1,3 +1,5 @@
+> **Table D (scoring examples) is replaced by `.kiro/specs/playtest-v2/design.md` section 5**, and table L (new world faults) and properties P9 to P18 are in the same file. Failed orders are now shown as **cancelled**.
+
 # Acceptance: the oracle
 
 This file is the answer key. Core tests assert it. The mock fixtures follow it. The UI can rely on it when it draws results.
