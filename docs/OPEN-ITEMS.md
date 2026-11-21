@@ -50,4 +50,4 @@ If a format cannot be confirmed by Nov 25, ship the item as documentation plus a
 
 ## Lane A: fix after H0 merges
 
-- Event validator violations. A read-only run of the H0 validator against live output (npm run live) reported more than 500 event violations. The real validator lives in the unmerged H0 contract PRs (#2 to #7), so validate:events on main is still a stub. After H0 merges, Lane A runs the real validator against live output and fixes the engine and runtime emitters until it reports 0 violations.
+- Event validator violations. The real H0 validator is on main and npm run validate:events runs it. A read-only run against live output (npm run live) reported more than 500 event violations before H0 merged. Lane A runs npm run validate:events against live output and fixes the engine and runtime emitters until it reports 0 violations.
