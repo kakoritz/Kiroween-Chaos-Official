@@ -6,7 +6,7 @@ Branches `ui/ON-...`, `core/ON-...`, `docs/ON-...`.
 - [x] **ON-C2 Captions data.** `packages/core/demo/hero|full|loop.captions.json` and the captions endpoint or bundle (`GET /api/demo/captions/:script`, `inpage getCaptions(script)`). (Lane A) (done: hero/full/loop.captions.json, `GET /api/demo/captions/:script` in live and mock, `getCaptions` in http and in-page clients)
 - [x] **ON-U1 Title splash.** Logo, typed hook, four buttons, `?splash=0`, skip, reduced motion. (Lane B) (done: src/onboarding/splash.ts, mounted from app/main.ts)
 - [x] **ON-U2 Captions and callouts.** Subtitle line in the safe strip, CC toggle, callout arrows for the hero beat, `?freeze=<beat>` capture mode. (Lane B) (done: src/onboarding/captions.ts)
-- [ ] **ON-U3 Guided tour.** Six steps with spotlight, `?tour=1`, button, Esc. (Lane B)
+- [x] **ON-U3 Guided tour.** Six steps with spotlight, `?tour=1`, button, Esc. (Lane B) (done: src/onboarding/tour.ts)
 - [ ] **ON-U4 First-impression polish.** No MOCK or "Wave 4" noise on first load (quiet state label), rank board not crowning on zero, larger text for the video, one title and one tagline in the header. (Lane B)
 - [ ] **ON-D1 README front page.** Per spec section 7; architecture diagram (mermaid and SVG); remove stale sections. (docs)
 - [ ] **ON-D2 One story.** Align `docs/DEVPOST-DRAFT.md`, `BLOG-DRAFT.md`, `SOCIAL-DRAFT.md`, `JUDGES.md`, `DEMO-SCRIPT.md` with the story in section 2 and the video v2 structure in section 8. (docs, owner approves wording)

@@ -15,6 +15,8 @@ import { Splash, splashDecision, splashTarget } from '../src/onboarding/splash';
 import '../src/onboarding/splash.css';
 import { CaptionOverlay, CaptionPlayer, freezeFromQuery } from '../src/onboarding/captions';
 import '../src/onboarding/captions.css';
+import { Tour, tourRequested } from '../src/onboarding/tour';
+import '../src/onboarding/tour.css';
 import { ApiError, createApi, resolveHttpBase, type ArenaApi, type ArenaEvent, type ConnectionStatus, type HauntInPage } from '../src/api';
 
 // W1/W2 shell plus the A3 canvas arena: the client connects the same way for mock, live and\n// browser. Events feed a pure reducer; the canvas redraws every animation frame from that state.
@@ -30,6 +32,7 @@ root.innerHTML = `
       <div id="chaos-mode"></div>
       <span class="spacer"></span>
       <span class="total" id="total" title="Total score"></span>
+      <button class="btn btn--ghost" id="tour-open" type="button" title="Six-step guided tour">Tour</button>
       <button class="btn btn--ghost" id="keys-btn" type="button" aria-expanded="false" aria-controls="keys-pop" title="Keyboard and state legend (?)">&#9000; Keys</button>
       <button class="btn btn--ghost" id="mute" type="button" aria-pressed="true" title="Sound is off until you turn it on">&#128263; Sound off</button>
       <span class="pill hidden" id="demo-pill">DEMO</span>
@@ -317,6 +320,33 @@ void boot();
       onDismiss: () => { /* the demo already plays behind the splash */ },
     }, { reduced, autoDismissMs: sd.autoDismissMs });
   }
+}
+
+// Guided tour (ON-U3): header button, ?tour=1, and the splash "Take the tour" button.
+{
+  let tour: Tour | null = null;
+  const keysBtn = $<HTMLButtonElement>('keys-btn');
+  const beginTour = async () => {
+    if (tour) return;
+    if (!demoRunning && !waveRunning) await startDemo('hero');
+    tour = new Tour(stageEl, {
+      onAction: (a) => {
+        if (a === 'legend' && keysBtn.getAttribute('aria-expanded') !== 'true') keysBtn.click();
+        else if (a === 'chaos') void api.chaos({ lane: 0 }).catch(showError);
+        else if (a === 'report') {
+          window.dispatchEvent(new CustomEvent('haunt:tour-report'));
+          document.getElementById('report-btn')?.click();
+        }
+      },
+      onEnd: () => {
+        tour = null;
+        if (keysBtn.getAttribute('aria-expanded') === 'true') keysBtn.click();
+      },
+    });
+  };
+  $('tour-open').addEventListener('click', () => void beginTour());
+  window.addEventListener('haunt:splash', (e) => { if ((e as CustomEvent).detail?.action === 'tour') void beginTour(); });
+  if (tourRequested(window.location.search)) window.setTimeout(() => void beginTour(), 600);
 }
 
 // Fixed 1920x1080 design stage, scaled uniformly to fit and centred (letterboxed). The canvas
