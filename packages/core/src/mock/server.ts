@@ -1,4 +1,4 @@
-﻿// Mock server (H0.3): the whole REST surface of contract/PROTOCOL.md plus SSE, driven by fixtures and a small chaos
+// Mock server (H0.3): the whole REST surface of contract/PROTOCOL.md plus SSE, driven by fixtures and a small chaos
 // simulator. It is not an engine. Event sequences come from the lane planner fixtures; outcomes from the outcome table.
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { readFileSync } from 'node:fs';
@@ -12,6 +12,8 @@ import { OutcomeTable } from './outcomes';
 import { ChaosSim, DEMO_SCRIPTS, MockError, Player, fixtureFor, scaledWave } from './play';
 import { hardening, laneLaps, laneLog, laneOrderRecord, laneOrders, ledger, pendingDecision, postmortem, stageDetail, waveCompare, waveLaps, waveReport, waveStars, wavesList } from './queries';
 import { loadCampaign } from '../../../haunt/src/campaign/nights';
+import { parseCampaignRequest } from '../../../haunt/src/campaign/wave-config';
+import { campaignFixture, parseCampaignFixtureName } from '../../mock/campaign-fixtures';
 
 export { DEMO_SCRIPTS };
 export const SPEEDS = [0.5, 1, 2, 4];
@@ -65,13 +67,26 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
   }
 
   function startDemo(script: string, speed: number): void {
-    const name = fixtureFor(script);
-    if (!name) throw new MockError(400, 'bad_request', `script must be one of ${[...DEMO_SCRIPTS, ...Object.keys(FIXTURES)].join(', ')}`);
+    const camp = parseCampaignFixtureName(script);
+    const name = camp ? undefined : fixtureFor(script);
+    if (!camp && !name) throw new MockError(400, 'bad_request', `script must be one of ${[...DEMO_SCRIPTS, ...Object.keys(FIXTURES)].join(', ')}`);
     if (hub.running && !player.active) hub.emit({ type: 'wave_end', wave: hub.wave!.n, detail: { summary: {}, stopped: true } });
-    const events = FIXTURES[name]();
+    const events = camp ? campaignFixture(camp.night, camp.parts, (campaign ??= loadCampaign())) : FIXTURES[name!]();
     const app = events.find((e) => e.type === 'hello')?.app as AppId | undefined;
     if (app && app !== hub.app) { hub.app = app; hub.reset(); }
     startWave(events, speed, script);
+  }
+
+  /** POST /api/wave/start {campaign: {night, parts}} (V1_1 section 12): the night fixes orders, seed, pace, lanes, tiers and app. */
+  function startCampaign(res: ServerResponse, b: Record<string, any>): void {
+    const data = (campaign ??= loadCampaign());
+    let req: ReturnType<typeof parseCampaignRequest>;
+    try { req = parseCampaignRequest(b.campaign, data.nights); } catch (e) { return fail(res, 400, 'bad_request', String((e as Error).message)); }
+    const speed = b.speed ?? hub.speed;
+    if (!SPEEDS.includes(speed)) return fail(res, 400, 'bad_request', `speed must be one of ${SPEEDS.join(', ')}`);
+    const app = data.nights.find((n) => n.id === req.night)!.app ?? 'orders';
+    if (app !== hub.app) { hub.app = app; hub.reset(); }
+    send(res, 200, { wave: startWave(campaignFixture(req.night, req.parts, data), speed) });
   }
 
   function stopWave(): void {
@@ -226,6 +241,7 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
 
     if (path === '/api/wave/start') {
       if (hub.running) return fail(res, 409, 'wave_running', 'a wave is already running');
+      if (b.campaign !== undefined) return startCampaign(res, b);
       const orders = b.orders ?? 12;
       const lanes = b.lanes ?? 5;
       const seed = b.seed ?? 7;

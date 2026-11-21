@@ -17,6 +17,7 @@ export interface HauntInPage {
   stopDemo(): Promise<any>;
   getCaptions?(script: string): Promise<any>;
   getCreatures(): Promise<any>;
+  getCampaign(): Promise<any>;
   getApps(): Promise<any>;
   setApp(app: string): Promise<any>;
   getLaneStage(lane: number, stage: string, order?: string): Promise<any>;
@@ -59,6 +60,7 @@ export class InPageApi implements ArenaApi {
   stopDemo() { return wrap(this.h.stopDemo()); }
   getCaptions(script: DemoScript) { return wrap(this.h.getCaptions ? this.h.getCaptions(script) : Promise.reject(new ApiError('not_applicable', 'captions not available'))); }
   getCreatures() { return wrap(this.h.getCreatures()); }
+  getCampaign() { return wrap(this.h.getCampaign()); }
   getApps() { return wrap(this.h.getApps()); }
   setApp(app: string) { return wrap(this.h.setApp(app)); }
   getLaneStage(lane: number, stage: string, order?: string) { return wrap(this.h.getLaneStage(lane, stage, order)); }

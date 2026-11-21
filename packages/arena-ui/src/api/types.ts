@@ -64,7 +64,9 @@ export interface AppInfo { id: string; label: string; stages: StageInfo[] | stri
 
 export interface WaveOptions {
   orders?: number; seed?: number; tiers?: 'race' | 'allPhoenix'; lanes?: number;
-  speed?: 0.5 | 1 | 2 | 4; pace?: 'normal' | 'show'; app?: string;
+  speed?: 0.5 | 1 | 2 | 4; pace?: 'normal' | 'show' | 'slow'; app?: string;
+  /** Campaign night (V1_1.md section 12): the night fixes orders, seed, pace, lanes, tiers and app. */
+  campaign?: { night: number; parts?: string[] };
 }
 export interface ChaosOptions {
   lane?: number; creature?: string; fault?: string; scope?: 'inner' | 'outer'; point?: string;
@@ -104,6 +106,8 @@ export interface ArenaApi {
   stopDemo(): Promise<unknown>;
   getCaptions?(script: DemoScript): Promise<Caption[]>;
   getCreatures(): Promise<Creature[]>;
+  /** GET /api/campaign (contract V1_1.md section 12): `{nights, gear, start}`. */
+  getCampaign(): Promise<any>;
   getApps(): Promise<AppInfo[]>;
   setApp(app: string): Promise<unknown>;
   getLaneStage(lane: number, stage: string, order?: string): Promise<any>;

@@ -22,6 +22,8 @@ export interface LaneCfg {
   pace: number;
   /** Progress event cadence in ms (at least every 300 ms by contract). */
   progressMs?: number;
+  /** Parts to use instead of the tier's own (the campaign Crew lane). */
+  parts?: PartId[];
 }
 
 export interface ArmSpec {
@@ -184,7 +186,7 @@ class Planner {
 
   constructor(readonly cfg: LaneCfg, specs: ArmSpec[]) {
     this.stages = APPS[cfg.app].stages;
-    this.parts = new Set(TIERS[cfg.tier].parts);
+    this.parts = new Set(cfg.parts ?? TIERS[cfg.tier].parts);
     this.journalOn = this.parts.has('journal');
     this.arms = specs.map((spec) => this.makeArm(spec));
   }

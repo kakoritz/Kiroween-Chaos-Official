@@ -12,7 +12,7 @@ const when = (order: number, stage: string, delay: number, attempt = 1): ArmSpec
 const arm = (id: string, fault: string, extra: Partial<ArmSpec> = {}): ArmSpec => ({ id, fault, source: 'demo', ...extra });
 
 /** Stage durations of a clean order at the show pace (2x of the planner midpoints, rounded). */
-const DUR: Record<string, number> = { intake: 1300, account: 1500, payment: 2300, confirmation: 1200, dispatch: 1800, updates: 1200, tracking: 4500, handoff: 900 };
+export const DUR: Record<string, number> = { intake: 1300, account: 1500, payment: 2300, confirmation: 1200, dispatch: 1800, updates: 1200, tracking: 4500, handoff: 900 };
 const STAGES = APPS.orders.stages;
 
 interface Raw { t: number; type: string; order?: string; stage?: string; detail: Record<string, any> }
@@ -119,7 +119,7 @@ export class Script {
 const PRIO: Record<string, number> = { hello: -2, wave_start: -1, lane_ready: 0, boss_warning: 0, boss_start: 0, boss_end: 2, wave_end: 9 };
 
 /** Adds scripted lanes to a planner wave (or builds a whole wave from scripts when `base` is empty). */
-function withScripts(base: HauntEvent[], app: 'orders', allTiers: TierId[], scripts: Script[], orders: number): HauntEvent[] {
+export function withScripts(base: HauntEvent[], app: 'orders', allTiers: TierId[], scripts: Script[], orders: number): HauntEvent[] {
   const events = base.map((e) => ({ ...e, detail: e.detail ? { ...e.detail } : undefined })) as HauntEvent[];
   if (!events.length) {
     events.push({ seq: 0, ts: BASE_TS, type: 'hello', contractVersion: 1, mode: 'mock', app });

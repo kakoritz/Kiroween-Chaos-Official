@@ -4,6 +4,7 @@
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { FIXTURES } from '../packages/core/src/sim/fixtures';
+import { CAMPAIGN_FIXTURES } from '../packages/core/mock/campaign-fixtures';
 import { findRepoRoot, formatViolations, validateEvents } from '../packages/haunt/src/contract/validate';
 
 const root = findRepoRoot();
@@ -12,7 +13,7 @@ const check = process.argv.includes('--check');
 if (!check) mkdirSync(dir, { recursive: true });
 
 let bad = 0;
-for (const [name, build] of Object.entries(FIXTURES)) {
+for (const [name, build] of Object.entries({ ...FIXTURES, ...CAMPAIGN_FIXTURES })) {
   const events = build();
   const violations = validateEvents(events);
   if (violations.length) {

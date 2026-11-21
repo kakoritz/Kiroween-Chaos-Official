@@ -24,7 +24,7 @@ describe('fixtures (C1, C2)', () => {
   });
 
   it('the committed files are exactly what the generator produces', () => {
-    const files = readdirSync(dir).filter((f) => f.endsWith('.jsonl')).sort();
+    const files = readdirSync(dir).filter((f) => f.endsWith('.jsonl') && !/^(night|finale)/.test(f)).sort();
     expect(files).toEqual(FIXTURE_NAMES.map((n) => `${n}.jsonl`).sort());
     for (const name of FIXTURE_NAMES) {
       const text = readFileSync(resolve(dir, `${name}.jsonl`), 'utf8').replace(/\r\n/g, '\n');

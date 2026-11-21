@@ -55,6 +55,7 @@ const facade: HauntInPage = {
   startDemo: unsupported('startDemo'),
   stopDemo: async () => ({ stopped: true }),
   getCreatures: async () => [],
+  getCampaign: async () => ({ nights: [], gear: [], start: { gear: [], credits: 0 } }),
   getApps: async () => [],
   setApp: unsupported('setApp'),
   getLaneStage: unsupported('getLaneStage'),

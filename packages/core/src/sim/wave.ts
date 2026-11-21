@@ -1,6 +1,6 @@
 // Turns lane plans into a contract event stream (hello, wave_start, lane_ready, lane events, bosses, wave_end).
 // Shared by the fixture generator and the mock server. All times here are plan time at 1x.
-import { TIERS, TIMING, orderId, type AppId, type TierId, type HauntEvent } from '@haunt/shared';
+import { TIERS, TIMING, orderId, type AppId, type PartId, type TierId, type HauntEvent } from '@haunt/shared';
 import { planLane, type ArmSpec, type LanePlan, type LaneCfg } from './plan';
 
 export const LANE_START_MS = 1000;
@@ -13,11 +13,13 @@ export interface WaveSpec {
   tiersMode?: 'race' | 'allPhoenix';
   orders: number;
   seed: number;
-  pace: 1 | 2;
+  pace: 1 | 2 | 3;
   waveNo?: number;
   progressMs?: number;
   /** Override what lane_ready shows (a hardened Rookie keeps its name but gains parts). */
   laneReady?: { tier: string; label: string; parts: string[] }[];
+  /** Parts per lane that replace the tier's own (campaign Crew on lane 1). */
+  laneParts?: (PartId[] | undefined)[];
 }
 
 export interface BossSpec {
@@ -42,7 +44,7 @@ export function planWave(spec: WaveSpec, armsByLane: Record<number, ArmSpec[]> =
   const resolved: ResolvedBoss[] = bosses.map((b) => ({ ...b, startAt: b.warnAt + TIMING.bossWarnMs, endAt: 0 }));
   const plans = spec.tiers.map((tier, i) => {
     const lane = i + 1;
-    const cfg: LaneCfg = { lane, tier, app: spec.app, seed: spec.seed, orders: spec.orders, pace: spec.pace, progressMs: spec.progressMs };
+    const cfg: LaneCfg = { lane, tier, app: spec.app, seed: spec.seed, orders: spec.orders, pace: spec.pace, progressMs: spec.progressMs, parts: spec.laneParts?.[i] };
     const arms = [...(armsByLane[lane] ?? [])];
     for (const b of resolved) arms.push({ id: `boss-${b.fault}`, fault: b.fault, source: 'boss', at: b.startAt });
     return planLane(cfg, arms);
@@ -75,7 +77,7 @@ export function assembleWave(pw: PlannedWave, ts0: number, includeHello = true):
   if (includeHello) add({ seq: 0, ts: ts0, type: 'hello', contractVersion: 1, mode: 'mock', app: spec.app }, -2, 0, 0);
   add({
     seq: 0, ts: ts0 + 100, type: 'wave_start', wave,
-    detail: { orders: spec.orders, seed: spec.seed, tiers: spec.tiersMode ?? 'race', lanes: spec.tiers.length, speed: 1, app: spec.app, pace: spec.pace === 2 ? 'show' : 'normal' },
+    detail: { orders: spec.orders, seed: spec.seed, tiers: spec.tiersMode ?? 'race', lanes: spec.tiers.length, speed: 1, app: spec.app, pace: spec.pace === 3 ? 'slow' : spec.pace === 2 ? 'show' : 'normal' },
   }, -1, 0, 0);
   spec.tiers.forEach((tier, i) => {
     const lr = spec.laneReady?.[i] ?? { tier, label: TIERS[tier].label, parts: [...TIERS[tier].parts] };
