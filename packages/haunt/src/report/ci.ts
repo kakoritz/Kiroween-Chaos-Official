@@ -2,6 +2,7 @@
 // Exit codes: 0 all targets pass, 1 a target failed, 2 usage or config error (set by the CLI).
 // Spec: harness requirements H5.7 (the CLI exits non-zero when targets fail), tasks.md H4.4.
 import type { RampReport } from '../ramp/executor';
+import type { SoakReport } from '../soak';
 import type { StackReport } from '../stack';
 import type { SweepReport } from '../sweep/executor';
 import { checkTargets, targetsExitCode, type TargetResult, type TargetSpec } from './targets';
@@ -18,6 +19,12 @@ export function sweepTargets(spec: TargetSpec, r: SweepReport): TargetResult[] {
 /** Stack: a depth that repeats a side effect counts against the repeats target. */
 export function stackTargets(spec: TargetSpec, r: StackReport): TargetResult[] {
   return checkTargets(spec, { recoveryMs: [], repeats: r.cells.filter((c) => c.outcome === 'repeat').length });
+}
+
+/** Soak: a side effect repeated or an order lost in any segment counts against the repeats target. Drift and reliability are in the report's passed flag. */
+export function soakTargets(spec: TargetSpec, r: SoakReport): TargetResult[] {
+  const base = checkTargets(spec, { recoveryMs: [], repeats: r.disagreements }).filter((t) => t.name === 'repeats');
+  return [...base, { name: 'soakDrift', value: r.throughputRatio, target: 0.8, pass: r.noDrift && r.reliability >= 90 }];
 }
 
 /** Ramp: the knee must reach the concurrency target. No knee up to the last step counts as the last step. */

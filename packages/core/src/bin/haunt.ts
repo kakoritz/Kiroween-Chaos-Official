@@ -8,7 +8,8 @@ import { CORE_CREATURES, EXTRA_CREATURES } from '../../../haunt/src/creatures';
 import { planSweep, renderMatrix, runSweep, sweepReportJson, createLiveCellRunner, type RunCell } from '../../../haunt/src/sweep';
 import { createLiveRampRunner, runRamp } from '../../../haunt/src/ramp';
 import { createLiveStackRunner, planStack, renderStackCurve, runStack, stackReportJson } from '../../../haunt/src/stack';
-import { ciExitCode, rampTargets, renderTargetLines, stackTargets, sweepTargets } from '../../../haunt/src/report/ci';
+import { createLiveSoakRunner, renderSoak, runSoak, soakReportJson } from '../../../haunt/src/soak';
+import { ciExitCode, rampTargets, renderTargetLines, soakTargets, stackTargets, sweepTargets } from '../../../haunt/src/report/ci';
 import { startProvider } from '../provider/server';
 
 const argv = process.argv.slice(2);
@@ -160,13 +161,57 @@ async function stack(): Promise<number> {
   }
 }
 
+async function soak(): Promise<number> {
+  const tier = opt('tier', 'phoenix')!;
+  const seed = Number(opt('seed', '1'));
+  const speed = Number(opt('speed', '8'));
+  const minutes = Number(opt('minutes', '5'));
+  const frequency = Number(opt('frequency', '0.3'));
+  const orders = Number(opt('orders', '2'));
+  if (![seed, speed, minutes, orders].every((n) => Number.isFinite(n) && n > 0) || !Number.isFinite(frequency) || frequency < 0 || frequency > 1) { console.error('seed, speed, minutes and orders must be positive numbers and frequency 0..1'); return 2; }
+  const root = process.cwd();
+  const configPath = resolve(opt('config', join(root, 'apps', 'haunted-orders', 'haunt.yaml'))!);
+  const bot = resolve(opt('bot', join(root, 'dist', 'bots', `${tier}.js`))!);
+  const outDir = resolve(opt('out', join(root, '.haunt', 'soaks'))!);
+  const loaded = loadHauntConfig(configPath);
+  if (!loaded.ok) { console.error(`config errors:\n${loaded.errors.join('\n')}`); return 2; }
+  const creatures = [...CORE_CREATURES, ...EXTRA_CREATURES];
+  const plan = planSweep(loaded.config, creatures, { catalogStages: true });
+
+  const prov = await startProvider({ port: 0 });
+  const runDir = join(root, '.haunt', 'soak-run', `${tier}-${process.pid}`);
+  try {
+    const live = createLiveSoakRunner({
+      command: process.execPath, args: [bot], runDir, tier, orders, speed, cellTimeoutMs: Number(opt('cell-timeout', '30000')),
+      recoverMs: loaded.config.targets.recoverMs, creatures,
+      provider: {
+        url: prov.url,
+        reset: () => prov.provider.reset(),
+        ledger: (lane) => prov.provider.ledger(lane),
+        post: async (body) => { prov.provider.addFault(body); },
+      },
+    });
+    const report = await runSoak(live, { durationMs: minutes * 60000, frequency, seed, ordersPerSegment: orders, cells: plan.cells });
+    console.log(renderSoak(report));
+    mkdirSync(outDir, { recursive: true });
+    const file = join(outDir, `soak-${tier}-seed${seed}.json`);
+    writeFileSync(file, soakReportJson(report));
+    console.log(`report ${file}`);
+    return gate(soakTargets(loaded.config.targets, report));
+  } finally {
+    await prov.close();
+    rmSync(runDir, { recursive: true, force: true });
+  }
+}
 if (cmd === 'sweep') {
   process.exitCode = await sweep();
 } else if (cmd === 'stack') {
   process.exitCode = await stack();
+} else if (cmd === 'soak') {
+  process.exitCode = await soak();
 } else if (cmd === 'ramp') {
   process.exitCode = await ramp();
 } else {
-  console.log(`usage: npm run haunt -- ramp|sweep|stack [--tier rookie|retrier|journaler|reconciler|phoenix] [--seed N] [--orders N] [--speed N] [--config path] [--bot path] [--out dir] [--no-gate]`);
+  console.log(`usage: npm run haunt -- ramp|sweep|stack|soak [--tier rookie|retrier|journaler|reconciler|phoenix] [--seed N] [--orders N] [--speed N] [--config path] [--bot path] [--out dir] [--no-gate]`);
   process.exitCode = cmd ? 2 : 0;
 }
