@@ -47,7 +47,9 @@ export function buildCreatures(): Creature[] {
     const c = out.get(f.creature);
     if (c) c.causes.push(f.id);
     else {
-      const [label, description] = LABELS[f.creature] ?? [f.creature, ''];
+      const named = LABELS[f.creature];
+      if (!named) throw new Error('creature display name missing in catalog: ' + f.creature);
+      const [label, description] = named;
       out.set(f.creature, { id: f.creature, label, family: f.family, sprite: f.creature, causes: [f.id], boss: false, apps: ['orders', 'inbox'], description });
     }
   }

@@ -55,6 +55,18 @@ describe('live server: reads', () => {
     expect(cs.find((c) => c.id === 'zombie').causes).toEqual(['timeout', 'comm_timeout', 'slow_link']);
     for (const c of cs) expect(c.sprite).toBe(c.id);
   });
+  it('serves a display name and description for every creature', async () => {
+    const { get } = await boot();
+    const cs = (await get('/api/creatures')).body as any[];
+    const label = (id: string) => cs.find((c) => c.id === id).label;
+    expect([label('reaper'), label('zombie'), label('ghost'), label('lich')]).toEqual(['Reaper', 'Zombie', 'Ghost', 'Lich']);
+    expect(label('will_o_wisp')).toBe('Will-o-the-wisp');
+    for (const c of cs) {
+      expect(c.label).toMatch(/^[A-Z]/);
+      expect(c.label).not.toBe(c.id);
+      expect(c.description.length).toBeGreaterThan(0);
+    }
+  });
 
   it('apps list and app switch emits reset', async () => {
     const { get, post } = await boot();
