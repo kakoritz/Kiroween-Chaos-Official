@@ -9,6 +9,7 @@ import { stationX, type ArenaVM, type ChipState, type LaneVM } from './model';
 import { CHIP_ICON, fromLegacy, heatAlpha, heatAt, type ChipInfo, type ChipV2State } from './chips';
 import { captionOf, creatureFrame, shown, spriteOf, MAX_SHOWN, type CreatureVM } from './creatures';
 import { drawCreature } from '../creatures/draw';
+import { bugTint, puff, seedOf, swarmBugs, swarmStale } from './swarm';
 import { drawWorldCreature, drawWorldProp, isWorld, worldPhase, worldProp } from './world-events';
 import { archWall, drawProp, pillar } from '../props/draw';
 import { survivedAge } from './boss';
@@ -434,11 +435,19 @@ export class ArenaScene {
     return stationX(next, n);
   }
 
+  /** True while a creature that has started acting is still on the lane: the skeleton shoos it (TV3-U5). */
+  static harassed(l: LaneVM, now: number): boolean {
+    return l.creatures.some((c) => c.exitAt === null && !c.shrug && c.actAt !== null && now >= c.actAt && !c.killer);
+  }
+
   /** Chosen pose for a lane at time `now` (ms). Pure of the canvas, exported for tests. */
   static poseOf(l: LaneVM, now: number, walking: boolean, speed = 1): { anim: string; p: number } {
     const el = Math.max(0, now - l.since) * speed;
     if (l.cheer && now - l.cheer.since < l.cheer.dur / speed && (l.mode === 'idle' || l.mode === 'working' || l.mode === 'done')) {
       return { anim: 'cheer', p: ((now - l.cheer.since) * speed % 800) / 800 };
+    }
+    if (!walking && (l.mode === 'working' || l.mode === 'recovering' || l.mode === 'fail' || l.mode === 'idle') && ArenaScene.harassed(l, now)) {
+      return { anim: 'shoo', p: ((now - l.since) * speed % 520) / 520 };
     }
     switch (l.mode) {
       case 'sleep': return { anim: 'sleep', p: (now % 3200) / 3200 };
@@ -586,8 +595,49 @@ export class ArenaScene {
       ctx.restore();
       if (isWorld(c.id) && !c.shrug && fr.exit === 0) drawWorldProp(ctx, worldProp(c.id, c.fault, c.actAt, now, this.speed), x, y + size * 0.9, size);
       this.creatureTags(ctx, c, x, y, size, now, fr.exit);
+      this.drawSwarm(ctx, l, b, c, fr.exit, now, skelX);
     });
     if (l.creatures.length > MAX_SHOWN) txt(ctx, '+' + (l.creatures.length - MAX_SHOWN), baseX - 40, b.top + 74, 13, C.muted, 'center', MONO, '700');
+  }
+
+  /** Little attackers around the skeleton: orbit, peck, then dissipate in a puff (tournament-v3 section 7.1). */
+  private drawSwarm(ctx: Ctx, l: LaneVM, b: LaneBox, c: CreatureVM, exit: number, now: number, skelX: number): void {
+    if (c.inner && c.killer) return;
+    const corpse = l.mode === 'dead' || l.mode === 'halted';
+    const quiet = l.mode === 'idle' || l.mode === 'done';
+    if (c.exitAt === null && swarmStale(now - c.born, this.speed, quiet)) { c.exitAt = now; c.exitDur = 600; }
+    const acted = c.actAt !== null && now >= c.actAt;
+    const size = Math.min(88, b.h * 0.5);
+    const cx = skelX;
+    const cy = b.top + b.h * 0.8 + 4 - size * 0.55;
+    const age = now - (c.actAt ?? c.born);
+    const lite = this.lite;
+    const bugs = swarmBugs({ depth: c.depth, attempts: Math.min(3, Math.floor(age / 4000)), seed: seedOf(c.id, c.born), age, exit, corpse, harass: acted, speed: this.speed });
+    const tint = bugTint(c.id);
+    const pf = puff(exit);
+    ctx.save();
+    for (const g of (lite ? bugs.slice(0, 5) : bugs)) {
+      if (g.a <= 0.02) continue;
+      const bx = cx + g.x;
+      const by = cy + g.y;
+      ctx.globalAlpha = g.a;
+      const r = 4.6 * g.s;
+      const wing = Math.abs(Math.sin(g.flap * Math.PI * 2)) * 6.5 * g.s;
+      ctx.fillStyle = tint.wing;
+      ctx.beginPath(); ctx.ellipse(bx - 3, by - 4 - wing * 0.2, 4.4 * g.s, wing + 1, -0.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(bx + 3, by - 4 - wing * 0.2, 4.4 * g.s, wing + 1, 0.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = tint.body;
+      ctx.beginPath(); ctx.ellipse(bx, by, r * 1.15, r, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(20,14,30,0.85)';
+      ctx.fillRect(bx - 1, by - r + 0.5, 1.4, r * 2 - 1);
+      if (g.peck > 0.7) { ctx.fillStyle = '#fff4b0'; ctx.fillRect(bx - 1, by + r, 2, 2); }
+    }
+    if (pf) {
+      ctx.globalAlpha = pf.a;
+      ctx.strokeStyle = tint.wing; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(cx, cy, pf.r, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.restore();
   }
 
   /** Fault caption, dice for random chaos, hourglass for a deferred fault. */
