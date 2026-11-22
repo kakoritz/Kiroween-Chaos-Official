@@ -38,3 +38,17 @@ export function pickScript(current: string | null, available: string[] | null): 
   const at = current ? ok.indexOf(current as (typeof ok)[number]) : -1;
   return ok[(at + 1) % ok.length]!;
 }
+
+/**
+ * A `?demo=<script>` launch is one-shot: once it has started, the param becomes `?demo=off` so a reload
+ * (or a back/forward restore) starts nothing (dropping it would fall back to the bare-load playlist).
+ * Returns the new search string (with leading `?`, or empty), or null when there is nothing to change.
+ */
+export function consumeDemoParam(search: string): string | null {
+  const p = new URLSearchParams(search);
+  const v = p.get('demo');
+  if (v === null || ['off', 'none', '0'].includes(v.toLowerCase())) return null;
+  p.set('demo', 'off');
+  const out = p.toString();
+  return out ? `?${out}` : '';
+}
