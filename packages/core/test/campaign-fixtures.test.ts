@@ -99,7 +99,7 @@ describe('campaign fixtures: lane 1 is the Crew', () => {
 
   it('night 6 is the inbox app', () => {
     const stages = new Set(fx(6).filter((e) => e.type === 'stage_start').map((e) => e.stage));
-    expect(stages.has('ticket')).toBe(true);
+    expect(stages.has('assign')).toBe(true);
     expect(stages.has('payment')).toBe(false);
   });
 });

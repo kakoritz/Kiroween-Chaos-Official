@@ -77,7 +77,7 @@ describe('live server: reads', () => {
     const before = srv!.log.events.length;
     expect((await post('/api/app', { app: 'inbox' })).status).toBe(200);
     expect(srv!.log.events.length).toBe(before + 1);
-    expect((await get('/api/state')).body.stages.map((s: any) => s.id)).toEqual(['fetch', 'classify', 'ticket', 'draft', 'reply', 'archive']);
+    expect((await get('/api/state')).body.stages.map((s: any) => s.id)).toEqual(['login', 'ingest', 'validate', 'dedupe', 'triage', 'assign', 'notify', 'escalate', 'resolve', 'close']);
     expect((await post('/api/app', { app: 'x' })).body.error.code).toBe('bad_request');
   });
 });

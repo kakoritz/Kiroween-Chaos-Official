@@ -145,8 +145,8 @@
     "seed": 106,
     "app": "inbox",
     "plan": [
-      { "when": { "lane": 1, "event": "stage_start", "stage": "ticket", "attempt": 1 }, "forEachOrder": true, "delayMs": 600, "lane": 1, "fault": "crash", "creature": "reaper", "point": "after_effect_before_journal" },
-      { "when": { "lane": 1, "event": "stage_start", "stage": "reply", "order": "msg-0003", "attempt": 1 }, "lane": 1, "fault": "timeout", "creature": "zombie" }
+      { "when": { "lane": 1, "event": "stage_start", "stage": "assign", "attempt": 1 }, "forEachOrder": true, "delayMs": 600, "lane": 1, "fault": "crash", "creature": "reaper", "point": "after_effect_before_journal" },
+      { "when": { "lane": 1, "event": "stage_start", "stage": "notify", "order": "msg-0003", "attempt": 1 }, "lane": 1, "fault": "timeout", "creature": "zombie" }
     ],
     "rivals": ["retrier", "journaler", "reconciler", "phoenix"],
     "medals": {

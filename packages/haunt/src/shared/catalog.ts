@@ -47,16 +47,20 @@ export const ORDERS_STAGES: StageDef[] = [
   { id: 'handoff', label: 'Handoff', icon: 'door', workAnimation: 'doorstep', role: 'final', min: 300, max: 600, effects: [], verb: 'Handing off' },
 ];
 
-// The inbox durations are not fixed by the specs (assumption, see docs/DECISIONS.md).
+// The Ticket Desk (PK-C3, packs spec section 4): the Python inbox as a service desk. Durations are not fixed by the specs
+// (assumption, see docs/DECISIONS.md); apps/haunted-inbox/haunt.yaml and bot/run.py carry the same ten stages.
 export const INBOX_STAGES: StageDef[] = [
-  { id: 'fetch', label: 'Fetch mail', icon: 'mail', workAnimation: 'read_mail', role: 'input', min: 300, max: 700, effects: [], verb: 'Fetching mail' },
-  { id: 'classify', label: 'Classify', icon: 'brain', workAnimation: 'think', role: 'work', min: 600, max: 1100, effects: [], verb: 'Classifying' },
-  { id: 'ticket', label: 'File ticket', icon: 'ticket', workAnimation: 'file_ticket', role: 'effect', min: 500, max: 1000, effects: [{ kind: 'ticket', key: 'ticket', service: 'ticket' }], verb: 'Filing ticket' },
-  { id: 'draft', label: 'Draft reply', icon: 'envelope', workAnimation: 'write_letter', role: 'work', min: 800, max: 1400, effects: [], verb: 'Drafting reply' },
-  { id: 'reply', label: 'Send reply', icon: 'plane', workAnimation: 'send_letter', role: 'effect', min: 500, max: 1000, effects: [{ kind: 'email', key: 'reply', service: 'reply' }], verb: 'Sending reply' },
-  { id: 'archive', label: 'Archive', icon: 'archive', workAnimation: 'archive_box', role: 'final', min: 300, max: 600, effects: [], verb: 'Archiving' },
+  { id: 'login', label: 'SSO login', icon: 'user', workAnimation: 'fill_form', role: 'work', min: 300, max: 600, effects: [], verb: 'Refreshing SSO' },
+  { id: 'ingest', label: 'Ingest request', icon: 'mail', workAnimation: 'read_mail', role: 'input', min: 400, max: 700, effects: [], verb: 'Ingesting request' },
+  { id: 'validate', label: 'Validate', icon: 'brain', workAnimation: 'think', role: 'work', min: 300, max: 600, effects: [], verb: 'Validating fields' },
+  { id: 'dedupe', label: 'Deduplicate', icon: 'brain', workAnimation: 'think', role: 'work', min: 300, max: 600, effects: [], verb: 'Checking duplicates' },
+  { id: 'triage', label: 'Triage', icon: 'brain', workAnimation: 'think', role: 'work', min: 400, max: 800, effects: [], verb: 'Triaging' },
+  { id: 'assign', label: 'Assign ticket', icon: 'ticket', workAnimation: 'file_ticket', role: 'effect', min: 500, max: 900, effects: [{ kind: 'ticket', key: 'ticket', service: 'ticket' }], verb: 'Filing ticket' },
+  { id: 'notify', label: 'Notify requester', icon: 'envelope', workAnimation: 'write_letter', role: 'effect', min: 400, max: 800, effects: [{ kind: 'email', key: 'reply', service: 'reply' }], verb: 'Sending reply' },
+  { id: 'escalate', label: 'Escalate', icon: 'bubbles', workAnimation: 'send_bubbles', role: 'effect', min: 300, max: 600, effects: [{ kind: 'notify', key: 'escalate', service: 'notify' }], verb: 'Escalating' },
+  { id: 'resolve', label: 'Resolve', icon: 'box', workAnimation: 'archive_box', role: 'work', min: 300, max: 600, effects: [], verb: 'Resolving' },
+  { id: 'close', label: 'Close and survey', icon: 'archive', workAnimation: 'archive_box', role: 'final', min: 300, max: 500, effects: [], verb: 'Closing' },
 ];
-
 export const APPS: Record<AppId, { id: AppId; label: string; stages: StageDef[]; orderPrefix: string }> = {
   orders: { id: 'orders', label: 'Haunted Orders', stages: ORDERS_STAGES, orderPrefix: 'ord' },
   inbox: { id: 'inbox', label: 'Haunted Inbox', stages: INBOX_STAGES, orderPrefix: 'msg' },

@@ -202,7 +202,17 @@
         "ticket",
         "draft",
         "reply",
-        "archive"
+        "archive",
+        "login",
+        "ingest",
+        "validate",
+        "dedupe",
+        "triage",
+        "assign",
+        "notify",
+        "escalate",
+        "resolve",
+        "close"
       ]
     },
     "envelope": {

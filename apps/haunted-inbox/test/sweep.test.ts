@@ -31,11 +31,11 @@ describe('sweep over the Python inbox', () => {
     const r = loadHauntConfig(join(app, 'haunt.yaml'));
     if (!r.ok) throw new Error('config invalid');
     const plan = planSweep(r.config, creatures);
-    expect(plan.stages).toEqual(['fetch', 'classify', 'ticket', 'draft', 'reply', 'archive']);
-    expect(plan.cells.some((c) => c.stage === 'ticket' && c.creature === 'reaper')).toBe(true);
+    expect(plan.stages).toEqual(['login', 'ingest', 'validate', 'dedupe', 'triage', 'assign', 'notify', 'escalate', 'resolve', 'close']);
+    expect(plan.cells.some((c) => c.stage === 'assign' && c.creature === 'reaper')).toBe(true);
   });
 
-  pyIt('a Reaper crash at ticket recovers with no repeated ticket (phoenix)', async () => {
+  pyIt('a Reaper crash at assign recovers with no repeated ticket (phoenix)', async () => {
     const r = loadHauntConfig(join(app, 'haunt.yaml'));
     if (!r.ok) throw new Error('config invalid');
     const [, ...args] = parseCommandLine(r.config.start);
@@ -54,7 +54,7 @@ describe('sweep over the Python inbox', () => {
           post: async (body) => { prov.provider.addFault(body); },
         },
       });
-      const out = await run({ stage: 'ticket', creature: 'reaper', fault: 'crash' }, 1);
+      const out = await run({ stage: 'assign', creature: 'reaper', fault: 'crash' }, 1);
       expect(typeof out === 'string' ? out : out.outcome).toBe('pass');
     } finally {
       await prov.close();

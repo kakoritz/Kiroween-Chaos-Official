@@ -8,31 +8,28 @@ targets:
   repeats: 0
   concurrency: 8
 stages:
-  - id: fetch
-    label: Fetch mail
-    role: input
-    duration: [400, 800]
-  - id: classify
-    label: Classify
-    role: work
-    duration: [500, 1000]
-  - id: ticket
-    label: File ticket
+  - { id: login, label: SSO login, role: work, duration: [300, 600] }
+  - { id: ingest, label: Ingest request, role: input, duration: [400, 700] }
+  - { id: validate, label: Validate, role: work, duration: [300, 600] }
+  - { id: dedupe, label: Deduplicate, role: work, duration: [300, 600] }
+  - { id: triage, label: Triage, role: work, duration: [400, 800] }
+  - id: assign
+    label: Assign ticket
     role: effect
     effects:
       - { kind: ticket, key: ticket, idempotent: required }
-    duration: [500, 1000]
-  - id: draft
-    label: Draft reply
-    role: work
-    duration: [500, 1000]
-  - id: reply
-    label: Send reply
+    duration: [500, 900]
+  - id: notify
+    label: Notify requester
     role: effect
     effects:
       - { kind: reply, key: reply, idempotent: required }
-    duration: [500, 1000]
-  - id: archive
-    label: Archive
-    role: final
+    duration: [400, 800]
+  - id: escalate
+    label: Escalate
+    role: effect
+    effects:
+      - { kind: notify, key: escalate, idempotent: required }
     duration: [300, 600]
+  - { id: resolve, label: Resolve, role: work, duration: [300, 600] }
+  - { id: close, label: Close and survey, role: final, duration: [300, 500] }

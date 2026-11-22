@@ -27,13 +27,13 @@ const py = findPython();
 const pyIt = py ? it : it.skip;
 
 describe('haunt.yaml', () => {
-  it('validates and lists the six inbox stages', () => {
+  it('validates and lists the ten inbox stages', () => {
     const r = loadHauntConfig(join(root, 'apps/haunted-inbox/haunt.yaml'));
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    expect(r.config.stages.map((s) => s.id)).toEqual(['fetch', 'classify', 'ticket', 'draft', 'reply', 'archive']);
-    expect(r.config.stages.map((s) => s.role)).toEqual(['input', 'work', 'effect', 'work', 'effect', 'final']);
-    expect(r.config.stages.flatMap((s) => s.effects.map((e) => e.kind))).toEqual(['ticket', 'reply']);
+    expect(r.config.stages.map((s) => s.id)).toEqual(['login', 'ingest', 'validate', 'dedupe', 'triage', 'assign', 'notify', 'escalate', 'resolve', 'close']);
+    expect(r.config.stages.map((s) => s.role)).toEqual(['work', 'input', 'work', 'work', 'work', 'effect', 'effect', 'effect', 'work', 'final']);
+    expect(r.config.stages.flatMap((s) => s.effects.map((e) => e.kind))).toEqual(['ticket', 'reply', 'notify']);
   });
 
   pyIt('matches the durations in run.py', () => {
@@ -79,7 +79,7 @@ async function run(tier: string, mails: number, crashAt: string | null, crashSta
         proc.onMessage((m) => {
           msgs.push(m);
           // a crash point has no stage filter, so a stage-targeted crash is armed once the stage before it starts
-          if (crashStage && attempt === 1 && m.type === 'stage_start' && m.stage === 'draft') proc.send({ k: 'arm', fault: 'crash', point: crashAt });
+          if (crashStage && attempt === 1 && m.type === 'stage_done' && m.stage === 'assign') proc.send({ k: 'arm', fault: 'crash', point: crashAt });
           if (m.k === 'at_point') {
             if (m.fault !== undefined) {
               kills++;
@@ -161,8 +161,8 @@ describe('sweep and catalog on the inbox (I2, I5)', () => {
     const orders = await runSweep(plan('haunted-orders'), () => 'pass', 7);
     expect(Object.keys(inbox).sort()).toEqual(Object.keys(orders).sort());
     expect(Object.keys(inbox.matrix).sort()).toEqual(Object.keys(orders.matrix).sort());
-    expect(inbox.matrix.stages).toEqual(['fetch', 'classify', 'ticket', 'draft', 'reply', 'archive']);
-    expect(inbox.cells.length).toBe(6 + 2);
+    expect(inbox.matrix.stages).toEqual(['login', 'ingest', 'validate', 'dedupe', 'triage', 'assign', 'notify', 'escalate', 'resolve', 'close']);
+    expect(inbox.cells.length).toBe(13);
   });
 
   it('I5: the arena catalog stage ids match the inbox haunt.yaml', () => {
