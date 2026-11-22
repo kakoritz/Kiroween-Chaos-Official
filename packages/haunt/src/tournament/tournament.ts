@@ -4,6 +4,8 @@
 import { TIERS, type TierId } from '../shared/catalog';
 import { addRound, causeOf, diedAt, epitaph, laneRound, newCum, pickEliminated, standingOrder, wallOf, avgStars, type Cum, type Ev, type LaneRound } from './rp';
 import { DEFAULT_ROUNDS, parseRounds, tierOfLane, type RoundCfg } from './rounds';
+import { buildCasebook, computeAwards, type Award, type Casebook } from './casebook';
+import type { Case } from './signature';
 
 export interface Corpse { lane: number; stage: string; kind: 'eliminated' | 'wall'; round: number; epitaph: string; cause?: string }
 export interface Fallen { round: number; stage: string; cause: string }
@@ -70,6 +72,10 @@ export class Tournament {
   readonly fallen = new Map<number, Fallen>();
   /** Lane that went down first (Wooden Spoon). */
   firstOut?: number;
+  firstOutRound?: number;
+  /** Every case met so far, and recovery times by lane, for the Casebook and the awards. */
+  readonly cases: Case[] = [];
+  private readonly recov = new Map<number, number[]>();
   champion?: number;
 
   constructor(o: { seed: string | number; rounds?: RoundCfg[] | unknown; lanes?: number }) {
@@ -99,7 +105,8 @@ export class Tournament {
     if (this.phase !== 'running') throw new Error('no round is running');
     const cfg = this.cfgOf(this.round);
     const rounds: LaneRound[] = this.alive.map((l) => laneRound(events, l, tierOfLane(l), cfg.orders, extras.lessonsBonus?.[l] ?? 0));
-    for (const r of rounds) addRound(this.cum.get(r.lane)!, r);
+    for (const r of rounds) { addRound(this.cum.get(r.lane)!, r); this.recov.set(r.lane, [...(this.recov.get(r.lane) ?? []), ...r.recoveryMs]); }
+    this.cases.push(...((extras.cases ?? []) as Case[]));
     const order = standingOrder(this.alive.map((l) => this.cum.get(l)!));
     const halted = new Set(rounds.filter((r) => r.halted).map((r) => r.lane));
     const last = this.round >= this.total;
@@ -126,15 +133,15 @@ export class Tournament {
     const result: RoundResult = { round: this.round, total: this.total, ...(extras.wave !== undefined ? { wave: extras.wave } : {}), intensity: cfg.intensity, orders: cfg.orders, lanes: [...this.alive], standings, eliminated, walls, rule: TIE_RULE };
     this.history.push(result);
 
-    out_.push({
+    const roundEnd: Ev = {
       type: 'round_end',
       detail: {
         round: this.round, total: this.total, standings: standings.map((s) => ({ ...s })),
         ...(eliminated.length ? { eliminated: eliminated[0], eliminatedLanes: eliminated } : {}),
         rule: TIE_RULE, lessons: extras.lessons ?? [], cases: extras.cases ?? [],
-        ...(extras.awards !== undefined ? { awards: extras.awards } : {}), ...(extras.casebook !== undefined ? { casebook: extras.casebook } : {}),
       },
-    });
+    };
+    out_.push(roundEnd);
     for (const w of walls) { this.corpses.push(w); out_.push({ type: 'corpse', lane: w.lane, stage: w.stage, detail: { lane: w.lane, stage: w.stage, kind: 'wall', round: w.round, epitaph: w.epitaph } }); }
     for (const l of eliminated) {
       const r = byLane.get(l)!;
@@ -142,7 +149,7 @@ export class Tournament {
       const cause = causeOf(r);
       const ep = epitaph(r, stage, this.round, cause);
       this.fallen.set(l, { round: this.round, stage, cause });
-      if (this.firstOut === undefined) this.firstOut = l;
+      if (this.firstOut === undefined) { this.firstOut = l; this.firstOutRound = this.round; }
       const c: Corpse = { lane: l, stage, kind: 'eliminated', round: this.round, epitaph: ep, cause };
       this.corpses.push(c);
       out_.push({ type: 'lane_eliminated', lane: l, stage, detail: { lane: l, round: this.round, stage, cause, epitaph: ep } });
@@ -157,14 +164,27 @@ export class Tournament {
       this.phase = 'done';
     } else {
       this.phase = 'awaiting_next';
-      out_.push({ type: 'awaiting_next', detail: { round: this.round, next: this.round + 1 } });
     }
+    // The Casebook is always produced, also when the champion had no issues; awards are as of this round (Champion once there is one).
+    roundEnd.detail!.casebook = this.casebook();
+    roundEnd.detail!.awards = this.awards();
+    if (this.phase === 'awaiting_next') out_.push({ type: 'awaiting_next', detail: { round: this.round, next: this.round + 1 } });
     return out_;
   }
 
-  /** The closing event once the champion is known (the caller adds awards and the casebook). */
+  casebook(): Casebook { return buildCasebook(this.cases, this.history.length); }
+
+  awards(): Award[] {
+    return computeAwards({
+      ...(this.champion !== undefined ? { champion: this.champion } : {}), cases: this.cases,
+      repeats: new Map([...this.cum].map(([l, c]) => [l, c.repeats])), rp: new Map([...this.cum].map(([l, c]) => [l, c.rp])), recoveries: this.recov,
+      ...(this.firstOut !== undefined ? { firstOut: this.firstOut, firstOutRound: this.firstOutRound } : {}),
+    });
+  }
+
+  /** The closing event once the champion is known. */
   endEvent(extra: Record<string, unknown> = {}): Ev {
-    return { type: 'tournament_end', detail: { champion: this.champion, tier: this.champion ? TIERS[tierOfLane(this.champion)].label : undefined, rounds: this.history.length, awards: [], casebookRef: '/api/casebook', ...extra } };
+    return { type: 'tournament_end', detail: { champion: this.champion, tier: this.champion ? TIERS[tierOfLane(this.champion)].label : undefined, rounds: this.history.length, awards: this.awards(), casebook: this.casebook(), casebookRef: '/api/casebook', ...extra } };
   }
 
   /** `GET /api/tournament`. */
@@ -173,6 +193,7 @@ export class Tournament {
       seed: this.seed, phase: this.phase, round: this.round, total: this.total, rounds: this.rounds, alive: [...this.alive],
       standings: this.history.at(-1)?.standings ?? [], history: this.history, corpses: [...this.corpses],
       fallen: Object.fromEntries(this.fallen), ...(this.champion !== undefined ? { champion: this.champion } : {}),
+      awards: this.awards(), casebook: this.casebook(),
       cumulative: [...this.cum.values()].map((c) => ({ ...c, avgStars: Math.round(avgStars(c) * 100) / 100 })),
     };
   }

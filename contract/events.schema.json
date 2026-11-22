@@ -138,6 +138,9 @@
     },
     {
       "$ref": "#/$defs/lesson"
+    },
+    {
+      "$ref": "#/$defs/case"
     }
   ],
   "$defs": {
@@ -2630,6 +2633,84 @@
                   ]
                 },
                 "action": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "case": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "case"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "signature",
+                "lane",
+                "round",
+                "order",
+                "outcome",
+                "costMs",
+                "costPoints"
+              ],
+              "properties": {
+                "signature": {
+                  "type": "string"
+                },
+                "lane": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 5
+                },
+                "round": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "order": {
+                  "type": "string"
+                },
+                "outcome": {
+                  "enum": [
+                    "solved",
+                    "partly",
+                    "lost"
+                  ]
+                },
+                "mechanism": {
+                  "type": "string"
+                },
+                "costMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "costPoints": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "unknown": {
+                  "type": "boolean"
+                },
+                "fingerprint": {
                   "type": "string"
                 }
               }

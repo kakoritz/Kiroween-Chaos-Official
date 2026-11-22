@@ -27,6 +27,7 @@ import { tierById } from '../../../haunt/src/pipeline/pipeline';
 import { roundScript } from './tournament-script';
 import { LessonsStore, lessonEvent, policyOf } from '../../../haunt/src/tournament/lessons';
 import { laneCases } from '../../../haunt/src/tournament/signature';
+import { caseEvents } from '../../../haunt/src/tournament/casebook';
 import { join as joinPath } from 'node:path';
 
 export const LIVE_HOST = '127.0.0.1';
@@ -379,10 +380,14 @@ export class LiveServer {
     const evs = waveEvents(this.log.events, n);
     const out = tn.t.finishRound(evs as never, this.roundExtras(tn.t, evs, n));
     const learned = ((out[0]?.detail?.lessons ?? []) as { lane: number; suggestion?: boolean; signature: string; stage: string; mechanism: string; via: 'overcame' | 'suggested'; learnedRound: number; action?: string }[]).filter((l) => !l.suggestion);
+    const roundCases = (out[0]?.detail?.cases ?? []) as Parameters<typeof caseEvents>[0];
     out.forEach((e, i) => {
       this.log.emit({ ...(e as HauntEvent), wave: n });
-      // `lesson` events follow round_end, before any lane is announced fallen.
-      if (i === 0) for (const l of learned) this.log.emit({ ...(lessonEvent(l.lane, l as never) as unknown as HauntEvent), wave: n });
+      // `lesson` and `case` events follow round_end, before any lane is announced fallen.
+      if (i === 0) {
+        for (const l of learned) this.log.emit({ ...(lessonEvent(l.lane, l as never) as unknown as HauntEvent), wave: n });
+        for (const c of caseEvents(roundCases)) this.log.emit({ ...(c as unknown as HauntEvent), wave: n });
+      }
     });
     if ((tn.t.phase as string) === 'done') this.log.emit({ ...(tn.t.endEvent(this.finalExtras(tn.t)) as HauntEvent), wave: n });
   }
@@ -391,14 +396,17 @@ export class LiveServer {
   protected roundExtras(t: Tournament, evs: HauntEvent[], wave: number): Record<string, unknown> {
     const lessonsBonus: Record<number, number> = {};
     const lessons: unknown[] = [];
+    const cases: ReturnType<typeof laneCases> = [];
     for (const lane of t.alive) {
       const tier = tierOfLane(lane);
-      const r = this.lessons.learn(lane, tier, laneCases(evs as never, lane, t.round), t.round);
+      const mine = laneCases(evs as never, lane, t.round);
+      cases.push(...mine);
+      const r = this.lessons.learn(lane, tier, mine, t.round);
       lessonsBonus[lane] = 25 * r.firstOvercome.length;
       for (const l of r.newLessons) lessons.push({ lane, ...l });
       for (const s of r.newSuggestions) lessons.push({ lane, suggestion: true, ...s });
     }
-    return { wave, lessonsBonus, lessons };
+    return { wave, lessonsBonus, lessons, cases };
   }
   protected finalExtras(_t: Tournament): Record<string, unknown> { return {}; }
 
@@ -530,6 +538,7 @@ export class LiveServer {
         const l = this.lessons.get(lane, tierOfLane(lane));
         return { json: { ...l, policy: policyOf(l) } };
       }
+      if (p === '/api/casebook') return { json: this.tourney ? { ...this.tourney.t.casebook(), awards: this.tourney.t.awards() } : { rounds: 0, cases: [], open: [], awards: [], note: 'No tournament yet.' } };
       if (p === '/api/tournament') return { json: this.tourney ? { ...this.tourney.t.view(), wave: this.tourney.wave } : { phase: 'idle' } };
       if (p === '/api/waves') return { json: this.wavesView() };
       if (seg[0] === 'api' && seg[1] === 'waves' && seg.length >= 4) {

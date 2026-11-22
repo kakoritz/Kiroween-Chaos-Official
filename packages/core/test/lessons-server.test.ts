@@ -99,3 +99,31 @@ describe('lessons in a live tournament', () => {
     await srv!.close(); srv = undefined;
   });
 });
+
+describe('Casebook in a live tournament (TV3-C10)', () => {
+  it('serves GET /api/casebook with open and solved cases, emits case events after round_end and crowns awards at the end', async () => {
+    const { get, post, until } = await boot();
+    expect((await get('/api/casebook')).body).toMatchObject({ cases: [], open: [], awards: [] });
+    await post('/api/tournament/start', { seed: 7, resetLessons: true, rounds: [{ lanes: 5, orders: 6, intensity: 3 }, { lanes: 4, orders: 6, intensity: 3 }] });
+    await until(() => srv!.log.events.some((e) => e.type === 'awaiting_next'));
+    const evs = srv!.log.events;
+    const roundEnd = evs.find((e) => e.type === 'round_end')!;
+    const cases = evs.filter((e) => e.type === 'case');
+    expect(cases.map((e) => [Number(e.lane), (e.detail as any).signature, (e.detail as any).outcome])).toEqual([
+      [2, 'payment + endpoint_down + order_lost', 'lost'], [3, 'payment + endpoint_down + recovered', 'solved'],
+    ]);
+    expect(evs.indexOf(cases[0]!)).toBeGreaterThan(evs.indexOf(roundEnd));
+    const book = (await get('/api/casebook')).body;
+    expect(book.cases.map((r: any) => [r.signature, r.status])).toEqual([['payment + endpoint_down + order_lost', 'open'], ['payment + endpoint_down + recovered', 'solved']]);
+    expect(book.cases[0].recommendedFix).toEqual({ action: 'retry_backoff', part: 'retry', rule: 'R2' });
+    expect(book.cases[1].solvedBy).toMatchObject([{ lane: 3, tier: 'journaler', mechanism: 'retry_backoff' }]);
+    expect((roundEnd.detail as any).casebook.cases).toHaveLength(2);
+    expect((await get('/api/tournament')).body.casebook.cases).toHaveLength(2);
+    await post('/api/next');
+    await until(() => srv!.log.events.some((e) => e.type === 'tournament_end'));
+    const end = srv!.log.events.find((e) => e.type === 'tournament_end')!;
+    expect((end.detail as any).awards.map((a: any) => a.id)).toContain('champion');
+    expect((end.detail as any).casebook.cases.length).toBeGreaterThanOrEqual(2);
+    expect((await get('/api/casebook')).body.awards.length).toBeGreaterThan(0);
+  });
+});

@@ -119,6 +119,10 @@ describe('mock tournament', () => {
       expect(state.tournament).toMatchObject({ round: 1, total: 2, phase: 'awaiting_next' });
       const t = await (await fetch(`${base}/api/tournament`)).json() as any;
       expect(t.history).toHaveLength(1);
+      const book = await (await fetch(`${base}/api/casebook`)).json() as any;
+      expect(book.cases.length).toBeGreaterThan(0);
+      expect((await (await fetch(`${base}/api/lessons/3`)).json() as any).lane).toBe(3);
+      expect((await fetch(`${base}/api/lessons`, { method: 'DELETE' })).status).toBe(200);
       expect((await post('/api/next')).status).toBe(200);
       expect((await post('/api/next')).status).toBe(409);
     } finally { await m.close(); }

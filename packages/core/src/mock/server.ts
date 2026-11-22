@@ -203,6 +203,11 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
       if (path === '/api/campaign') return send(res, 200, campaign ??= loadCampaign());
       if (path === '/api/apps') return send(res, 200, Object.values(APPS).map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role, kind: stageKind(s.role) })) })));
       if (path === '/api/state') return send(res, 200, stateBody());
+      if (path === '/api/casebook') {
+        const last = [...hub.buffer].reverse().find((e) => e.type === 'tournament_end' || e.type === 'round_end');
+        const d = (last?.detail ?? {}) as { casebook?: object; awards?: unknown };
+        return send(res, 200, last ? { ...(d.casebook ?? {}), awards: d.awards ?? [] } : { rounds: 0, cases: [], open: [], awards: [], note: 'No tournament yet.' });
+      }
       if (path === '/api/tournament') {
         const rounds = hub.buffer.filter((e) => e.type === 'round_end').map((e) => e.detail);
         return send(res, 200, hub.tournament ? { ...hub.tournament, history: rounds, standings: (rounds.at(-1) as { standings?: unknown } | undefined)?.standings ?? [], corpses: [...hub.corpses] } : { phase: 'idle' });
