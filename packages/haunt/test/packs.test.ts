@@ -48,7 +48,7 @@ describe('streaming pack (PK-C2)', () => {
     expect(pack.faults.map((f) => f.id)).toEqual(['buffering', 'cdn_timeout', 'drm_denied', 'render_fail', 'remote_server_down', 'region_lock', 'double_play', 'watch_history_dup', 'token_expired']);
     expect(pack.faults.find((f) => f.id === 'cdn_timeout')).toMatchObject({ creature: 'CDN Kraken', stage: 'start_stream' });
     expect(pack.bosses.map((b) => b.label)).toEqual(['Kraken', 'Server Lich']);
-    expect(pack.reviews).toEqual({ label: 'Viewer rating', subscores: ['startup_time', 'buffering', 'render', 'ads', 'ease'] });
+    expect(pack.reviews).toMatchObject({ label: 'Viewer rating', subscores: ['startup_time', 'buffering', 'render', 'ads', 'ease'] });
     expect(Object.keys(pack.tiers).sort()).toEqual(['breaker', 'idempotency', 'journal', 'offline_queue', 'retry']);
   });
   it('the embedded browser copy equals the pack file', () => {

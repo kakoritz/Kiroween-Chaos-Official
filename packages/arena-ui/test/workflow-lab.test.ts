@@ -4,8 +4,9 @@ import { labToYaml } from '../../haunt/src/lab/model';
 import { blankStage, labFiles, matrixView, modelFromYaml, presetModel, setAllParts, setRole, worstFindings, PRESETS } from '../src/workflow-lab/model';
 
 describe('workflow lab model (SH-U1)', () => {
-  it('has the four presets from the spec plus the streaming pack', () => {
-    expect(PRESETS.map((p) => p.label)).toEqual(['Orders', 'Inbox', 'Payments', 'Report generator', 'Streaming service (model-based pack)']);
+  it('has the four presets from the spec plus the streaming and ticketing packs; Payments is the third', () => {
+    expect(PRESETS.map((p) => p.label)).toEqual(['Orders', 'Inbox', 'Payments', 'Report generator', 'Streaming service (model-based pack)', 'Ticket desk (model-based pack)']);
+    expect(PRESETS[2]!.id).toBe('payments');
     for (const p of PRESETS) expect(presetModel(p.id).stages.length).toBeGreaterThan(0);
   });
   it('preset copies do not share state', () => {
@@ -59,5 +60,38 @@ describe('streaming pack preset (PK-UI)', () => {
     expect(lines[0]).toMatch(/Haunted Stream.*model-based/);
     expect(lines.join('\n')).toMatch(/CDN Kraken/);
     expect(lines.join('\n')).toMatch(/Viewer rating/);
+  });
+});
+
+describe('pack report views (PK-UI)', () => {
+  it('shows pack title, creatures, review sub-scores, bosses, curses and R1..R8 suggestions for the ticket desk', async () => {
+    const { labRun } = await import('../../haunt/src/lab/engine');
+    const { packLines, reviewView, scenarioLines, suggestionViews, RULE_TEXT, cloneModel } = await import('../src/workflow-lab/model');
+    const r = await labRun(cloneModel(presetModel('ticketing')));
+    const lines = packLines(r).join('\n');
+    expect(lines).toMatch(/Haunted Desk.*model-based/);
+    expect(lines).toMatch(/Zombie horde/);
+    const rv = reviewView(r)!;
+    expect(rv.label).toBe('Requester CSAT');
+    expect(rv.scores.map((s) => s.id)).toEqual(['first_response', 'resolution_time', 'reassignments', 'sla', 'ease']);
+    expect(rv.scores.every((s) => s.glyphs.length === 5)).toBe(true);
+    expect(scenarioLines(r).join('\n')).toMatch(/Boss Queue Lich/);
+    expect(scenarioLines(r).join('\n')).toMatch(/Curse cursed tracker on assign/);
+    const sv = suggestionViews(r);
+    expect(sv.length).toBeGreaterThan(0);
+    for (const s of sv) for (const rule of s.rules) expect(RULE_TEXT[rule.id]).toBe(rule.text);
+    const idem = sv.find((s) => s.part === 'idempotency')!;
+    expect(idem.rules.map((x) => x.id)).toContain('R1');
+    expect(idem.domain).toMatch(/external ticket id/);
+    expect(Object.keys(RULE_TEXT)).toEqual(['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8']);
+  });
+  it('plain presets have no review or scenarios, and the export still carries haunt.yaml', async () => {
+    const { labRun } = await import('../../haunt/src/lab/engine');
+    const { reviewView, scenarioLines } = await import('../src/workflow-lab/model');
+    const r = await labRun(presetModel('payments'));
+    expect(reviewView(r)).toBeNull();
+    expect(scenarioLines(r)).toEqual([]);
+    expect(labFiles(r)[0]!.text).toContain('name: payments-lab');
+    expect(r.commands).toEqual(['npx haunt init', 'haunt validate', 'haunt sweep']);
   });
 });

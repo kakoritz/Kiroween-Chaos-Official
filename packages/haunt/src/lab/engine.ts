@@ -7,7 +7,7 @@ import type { Finding } from '../report/builder';
 import type { HauntEvent } from '../score/score';
 import { runSweep, type CellDetail, type SweepReport } from '../sweep/executor';
 import type { CellOutcome, SweepPlan } from '../sweep/matrix';
-import { LAB_COMMANDS, labToYaml, partSet, validateLabModel, type LabPackMeta, type LabModel, type LabPart, type LabStage, type PartSet } from './model';
+import { LAB_COMMANDS, labToYaml, partSet, validateLabModel, type LabPackMeta, type LabModel, type LabPart, type LabStage, type PartSet, type PackFault } from './model';
 
 export const LAB_LABEL = 'Model-based what-if: results come from rules over the protections you declare, not from running your real code.';
 
@@ -31,10 +31,41 @@ export const LAB_CREATURES: readonly LabCreature[] = [
 const PROCESS_FAULTS = new Set(['crash', 'out_of_memory', 'power_outage']);
 const LONG_FAULTS = new Set(['internet_outage', 'endpoint_down', 'slow_link']);
 
+/** What a pack fault does in the lab, from its `mode` (falls back to the fault of its art creature). */
+const MODE_FAULT: Record<string, string> = {
+  duplicate: 'duplicate_request', timeout: 'timeout', stall: 'timeout', status: 'http_500', crash: 'crash', outage: 'internet_outage',
+  expire: 'http_404', corrupt: 'malformed_payload', misroute: 'malformed_payload',
+};
+export function packFaultOf(f: PackFault): string {
+  return MODE_FAULT[f.mode] ?? LAB_CREATURES.find((c) => c.id === f.art)?.fault ?? 'crash';
+}
+
 export function labPlan(model: LabModel): SweepPlan {
   const cells: SweepPlan['cells'] = [];
   for (const s of model.stages) for (const c of LAB_CREATURES) if (c.roles.includes(s.role)) cells.push({ stage: s.id, creature: c.id, fault: c.fault });
+  // The pack's own faults land on the stage the pack declares (faults on "any" stage are covered by the generic creatures).
+  const known = new Set(model.stages.map((s) => s.id));
+  for (const f of model.pack?.faults ?? []) {
+    if (!known.has(f.stage) || cells.some((c) => c.stage === f.stage && c.creature === f.art)) continue;
+    cells.push({ stage: f.stage, creature: f.art, fault: packFaultOf(f) });
+  }
   return { stages: model.stages.map((s) => s.id), creatures: LAB_CREATURES.map((c) => c.id), cells };
+}
+
+const RANK: Record<string, number> = { pass: 0, recovered_late: 1, repeat: 2, fail: 3, halt: 4 };
+const worse = (a: CellDetail, b: CellDetail): CellDetail => ((RANK[b.outcome] ?? 0) > (RANK[a.outcome] ?? 0) ? b : a);
+
+export interface LabCurse { id: string; endpoint: string; stage: string; fault: string }
+/** Curses are persistent traits: the cursed stage sees the fault in every cell, not once. */
+export function labCurses(model: LabModel): LabCurse[] {
+  const known = new Set(model.stages.map((s) => s.id));
+  const dflt = (model.stages.find((s) => s.role === 'effect') ?? model.stages[0])?.id;
+  const out: LabCurse[] = [];
+  for (const c of model.pack?.curses ?? []) {
+    const stage = c.stage ?? dflt;
+    if (stage && known.has(stage)) out.push({ id: c.id, endpoint: c.endpoint, stage, fault: c.fault ?? 'http_500' });
+  }
+  return out;
 }
 
 /** What the generic bot does in one cell, from the declared parts. */
@@ -77,7 +108,7 @@ export function labCell(stage: LabStage, fault: string, p: PartSet): CellDetail 
 interface Evidence { events: HauntEvent[]; journal: { order: string; kind: string }[]; ledger: { order: string; kind: string }[] }
 
 /** Builds the events a real run would have produced, so the real reviewer rules (R1 to R8) can read them. */
-function evidenceFor(report: SweepReport, p: PartSet): Evidence {
+function evidenceFor(report: Pick<SweepReport, 'cells'>, p: PartSet): Evidence {
   const events: HauntEvent[] = [];
   const journal: Evidence['journal'] = [];
   const ledger: Evidence['ledger'] = [];
@@ -164,6 +195,12 @@ export interface LabReport {
   parts: PartSet;
   grade: SweepReport['grade'];
   reliability: number;
+  /** Pack bosses as sweep scenarios (empty for plain presets). */
+  bosses: LabBossResult[];
+  /** Pack curses as persistent traits, with what each one does to the current protections. */
+  curses: LabCurseResult[];
+  /** The pack's review with sub-scores. */
+  review?: LabReview;
   matrix: SweepReport['matrix'];
   cells: SweepReport['cells'];
   findings: Finding[];
@@ -177,7 +214,62 @@ export interface LabReport {
 
 async function sweepModel(model: LabModel, p: PartSet, seed: number): Promise<SweepReport> {
   const byId = new Map(model.stages.map((s) => [s.id, s]));
-  return runSweep(labPlan(model), (cell) => labCell(byId.get(cell.stage)!, cell.fault, p), seed);
+  const curses = labCurses(model);
+  return runSweep(labPlan(model), (cell) => {
+    const stage = byId.get(cell.stage)!;
+    let d = labCell(stage, cell.fault, p);
+    for (const c of curses) if (c.stage === cell.stage) d = worse(d, labCell(stage, c.fault, p));
+    return d;
+  }, seed);
+}
+
+export interface LabCurseResult extends LabCurse { creature: string; outcome: CellOutcome }
+export interface LabBossCell { stage: string; fault: string; creature: string; outcome: CellOutcome }
+export interface LabBossResult { id: string; label: string; story?: string; hits: string[]; cells: LabBossCell[]; outcome: CellOutcome; survived: boolean }
+export interface LabReviewScore { id: string; stars: number; stages: string[] }
+export interface LabReview { label: string; overall: number; subscores: LabReviewScore[] }
+
+/** A boss is a night: every stage it hits gets that stage's pack faults at once (a crash when the pack lists none), plus the curses. */
+export function labBosses(model: LabModel, p: PartSet): LabBossResult[] {
+  const pack = model.pack;
+  if (!pack) return [];
+  const byId = new Map(model.stages.map((s) => [s.id, s]));
+  const curses = labCurses(model);
+  return pack.bosses.filter((b) => b.hits.every((h) => byId.has(h))).map((b) => {
+    const cells: LabBossCell[] = [];
+    for (const h of b.hits) {
+      const stage = byId.get(h)!;
+      const faults = pack.faults.filter((f) => f.stage === h);
+      const list = faults.length ? faults.map((f) => ({ fault: packFaultOf(f), creature: f.creature })) : [{ fault: 'crash', creature: 'Reaper' }];
+      for (const x of list) {
+        let d = labCell(stage, x.fault, p);
+        for (const c of curses) if (c.stage === h) d = worse(d, labCell(stage, c.fault, p));
+        // Three or more stages failing together: retries with no breaker or queue pile onto each other and finish late.
+        if (b.hits.length >= 3 && d.outcome === 'pass' && p.retry && !p.breaker && !p.offline_queue && x.fault !== 'duplicate_request') d = { outcome: 'recovered_late' };
+        cells.push({ stage: h, fault: x.fault, creature: x.creature, outcome: d.outcome });
+      }
+    }
+    const outcome = cells.reduce<CellOutcome>((w, c) => ((RANK[c.outcome] ?? 0) > (RANK[w] ?? 0) ? c.outcome : w), 'pass');
+    return { id: b.id, label: b.label ?? b.id, ...(b.story ? { story: b.story } : {}), hits: [...b.hits], cells, outcome, survived: RANK[outcome]! <= RANK.recovered_late! };
+  });
+}
+
+/** Sub-scores of the pack's review (1 to 5 stars): each is judged on the stages the pack maps to it, or on the whole sweep. */
+export function labReview(model: LabModel, cells: SweepReport['cells']): LabReview | undefined {
+  const rv = model.pack?.review;
+  if (!rv) return undefined;
+  const score = (stages: string[]): number => {
+    const own = stages.length ? cells.filter((c) => stages.includes(c.stage)) : cells;
+    if (!own.length) return 5;
+    const frac = own.reduce((n, c) => n + (c.outcome === 'pass' ? 1 : c.outcome === 'recovered_late' ? 0.5 : 0), 0) / own.length;
+    let stars = Math.max(1, Math.round(1 + 4 * frac));
+    if (own.some((c) => c.outcome === 'repeat')) stars = Math.min(stars, 2);
+    if (own.some((c) => c.lost)) stars = 1;
+    return stars;
+  };
+  const subscores = rv.subscores.map((id) => ({ id, stars: score(rv.stages?.[id] ?? []), stages: rv.stages?.[id] ?? [] }));
+  const overall = Math.round((subscores.reduce((n, s) => n + s.stars, 0) / Math.max(1, subscores.length)) * 10) / 10;
+  return { label: rv.label, overall, subscores };
 }
 
 const nowMs = (): number => (typeof performance !== 'undefined' ? performance.now() : 0);
@@ -190,7 +282,15 @@ export async function labRun(model: LabModel): Promise<LabReport> {
   const seed = model.seed ?? 1;
   const p = partSet(model);
   const report = await sweepModel(model, p, seed);
-  const ev = evidenceFor(report, p);
+  const bosses = labBosses(model, p);
+  const curses: LabCurseResult[] = labCurses(model).map((c) => {
+    const st = model.stages.find((s) => s.id === c.stage)!;
+    return { ...c, creature: LAB_CREATURES.find((x) => x.fault === c.fault)?.label ?? c.fault, outcome: labCell(st, c.fault, p).outcome };
+  });
+  // Boss cells feed the reviewer as extra lanes, so a failed boss night yields "add this part" suggestions like any sweep cell.
+  const bossCells = bosses.flatMap((b) => b.cells.filter((c) => c.outcome !== 'pass').map((c) => ({ stage: c.stage, creature: `boss-${b.id}`, fault: c.fault, outcome: c.outcome })));
+  const ev = evidenceFor({ cells: [...report.cells, ...bossCells] as SweepReport['cells'] }, p);
+  const review = labReview(model, report.cells);
   const inputStages = model.stages.filter((s) => s.role === 'input').map((s) => s.id);
   const findings = reviewEvents(ev.events, {
     inputStages,
@@ -207,7 +307,7 @@ export async function labRun(model: LabModel): Promise<LabReport> {
     modelBased: true, label: LAB_LABEL, name: model.name, seed, parts: p,
     ...(model.pack ? { pack: model.pack } : {}),
     creatureLabels: { ...Object.fromEntries(LAB_CREATURES.map((c) => [c.id, c.label])), ...(model.pack?.creatures ?? {}) },
-    grade: report.grade, reliability: report.reliability, matrix: report.matrix, cells: report.cells,
+    grade: report.grade, reliability: report.reliability, bosses, curses, ...(review ? { review } : {}), matrix: report.matrix, cells: report.cells,
     findings, suggestions, gradeWithSuggestions: after.grade,
     yaml: labToYaml(model), commands: LAB_COMMANDS, elapsedMs: Math.max(0, Math.round(nowMs() - t0)),
   };
