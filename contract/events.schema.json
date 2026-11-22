@@ -141,6 +141,12 @@
     },
     {
       "$ref": "#/$defs/case"
+    },
+    {
+      "$ref": "#/$defs/pattern"
+    },
+    {
+      "$ref": "#/$defs/spec_written"
     }
   ],
   "$defs": {
@@ -2712,6 +2718,139 @@
                 },
                 "fingerprint": {
                   "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "pattern": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "pattern"
+            },
+            "lane": false,
+            "detail": {
+              "type": "object",
+              "required": [
+                "id",
+                "signature",
+                "count",
+                "downtimeMsTotal",
+                "status"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "signature": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "downtimeMsTotal": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "status": {
+                  "enum": [
+                    "new",
+                    "suggested",
+                    "accepted",
+                    "applied",
+                    "verified",
+                    "rejected"
+                  ]
+                },
+                "lostOrders": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "repeats": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "lanes": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                },
+                "qualifies": {
+                  "type": "boolean"
+                },
+                "change": {
+                  "type": "string"
+                },
+                "unknown": {
+                  "type": "boolean"
+                },
+                "fingerprint": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "spec_written": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "spec_written"
+            },
+            "lane": false,
+            "detail": {
+              "type": "object",
+              "required": [
+                "runId",
+                "path",
+                "patterns"
+              ],
+              "properties": {
+                "runId": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string"
+                },
+                "patterns": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "refused": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "lint": {
+                  "type": "object"
                 }
               }
             }

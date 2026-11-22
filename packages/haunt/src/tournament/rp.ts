@@ -3,7 +3,7 @@
 import { APPS, TIERS, type TierId } from '../shared/catalog';
 import { laneIssues } from '../runner/floor';
 
-export interface Ev { type?: string; lane?: unknown; order?: unknown; stage?: unknown; detail?: Record<string, any> | undefined; ts?: number }
+export interface Ev { seq?: number; type?: string; lane?: unknown; order?: unknown; stage?: unknown; detail?: Record<string, any> | undefined; ts?: number }
 
 export const RP = { ok: 100, lost: 300, repeat: 150, abandoned: 150, lessonCap: 200, lessonEach: 25 } as const;
 

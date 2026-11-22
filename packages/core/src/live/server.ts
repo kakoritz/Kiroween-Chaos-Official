@@ -28,6 +28,7 @@ import { roundScript } from './tournament-script';
 import { LessonsStore, lessonEvent, policyOf } from '../../../haunt/src/tournament/lessons';
 import { laneCases } from '../../../haunt/src/tournament/signature';
 import { caseEvents } from '../../../haunt/src/tournament/casebook';
+import { PatternStore, THRESHOLDS, costOf, minePatterns, patternEvent, qualifies } from '../../../haunt/src/miner/patterns';
 import { join as joinPath } from 'node:path';
 
 export const LIVE_HOST = '127.0.0.1';
@@ -75,6 +76,10 @@ export interface LiveOptions {
   pingMs?: number;
   /** Where lessons are kept (`<lane>.json` and `lane-<lane>.policy.json`). Defaults to `.haunt/lessons` under the working folder. */
   lessonsDir?: string;
+  /** Pattern store file. Defaults to `.haunt/patterns.json` under the working folder. */
+  patternsFile?: string;
+  /** Run folder of the bots (for journal evidence). Defaults to `.haunt` under the working folder. */
+  runDir?: string;
 }
 
 class ApiError extends Error {
@@ -100,7 +105,7 @@ export class LiveServer {
   intensity = { level: 3, autoRamp: false, everyN: 4, max: 11 };
   demoRunning: string | null = null;
   /** The running tournament (TV3-C7), if any. */
-  tourney?: { t: Tournament; speed: number; pace: 'normal' | 'show' | 'slow'; wave: number };
+  tourney?: { t: Tournament; speed: number; pace: 'normal' | 'show' | 'slow'; wave: number; id: string };
   /** Corpses of the tournament, rebuilt from `corpse` events so a late page sees them (rule 51). */
   corpses: Corpse[] = [];
   private chaosCount = 0;
@@ -111,6 +116,9 @@ export class LiveServer {
   private tracker?: LapTracker;
   /** Lessons ledger and policy overlays (TV3-C8). */
   readonly lessons: LessonsStore;
+  /** Patterns the miner keeps across runs and rounds (TV3-C11). */
+  readonly patterns: PatternStore;
+  protected readonly runDir: string;
   private readonly clients = new Set<ServerResponse>();
   private http?: Server;
 
@@ -122,6 +130,8 @@ export class LiveServer {
     this.ledger = opts.ledger ?? (() => ({ lanes: [] }));
     this.pingMs = opts.pingMs ?? PING_MS;
     this.lessons = new LessonsStore(opts.lessonsDir ?? joinPath(process.cwd(), '.haunt', 'lessons'));
+    this.patterns = new PatternStore(opts.patternsFile ?? joinPath(process.cwd(), '.haunt', 'patterns.json'));
+    this.runDir = opts.runDir ?? joinPath(process.cwd(), '.haunt');
     this.hardening = opts.hardening ?? (() => undefined);
     const dist = opts.staticDir ?? resolve(process.cwd(), 'packages', 'arena-ui', 'dist');
     this.staticDir = existsSync(dist) ? dist : undefined;
@@ -356,7 +366,7 @@ export class LiveServer {
     this.engine.setChaosMode?.({ mode: 'manual', frequency: 0.3, seed });
     this.chaosMode = { mode: 'manual', frequency: 0.3, seed };
     if (body.resetLessons === true) this.lessons.reset();
-    this.tourney = { t, speed, pace, wave: 0 };
+    this.tourney = { t, speed, pace, wave: 0, id: 't' + Date.now().toString(36) };
     return { tournament: true, ...this.beginRound() };
   }
 
@@ -389,7 +399,17 @@ export class LiveServer {
         for (const c of caseEvents(roundCases)) this.log.emit({ ...(c as unknown as HauntEvent), wave: n });
       }
     });
+    this.minePatterns(tn.id, tn.t.round, n, evs, evs.map((e) => Number(e.lane)).filter((l) => Number.isInteger(l)));
     if ((tn.t.phase as string) === 'done') this.log.emit({ ...(tn.t.endEvent(this.finalExtras(tn.t)) as HauntEvent), wave: n });
+  }
+
+  /** Mine the round's events into the pattern store and publish a `pattern` event for each qualifying pattern that changed (TV3-C11). */
+  protected minePatterns(runId: string, round: number, wave: number, evs: HauntEvent[], lanes: number[]): void {
+    const journals = [...new Set(lanes)].map((lane) => ({ lane, path: joinPath(this.runDir, 'wave-' + wave, 'lane-' + lane, 'journal.jsonl') }));
+    const mined = minePatterns({ run: runId, round, events: evs as never, journals, reportLink: '/api/waves/' + wave + '/report' });
+    for (const c of this.patterns.ingest(mined, runId + '#r' + round)) {
+      if (qualifies(c.pattern)) this.log.emit({ ...(patternEvent(c.pattern, c.kind) as unknown as HauntEvent), wave });
+    }
   }
 
   /** Hooks for lessons and the Casebook (TV3-C8, C10). */
@@ -538,6 +558,10 @@ export class LiveServer {
         const l = this.lessons.get(lane, tierOfLane(lane));
         return { json: { ...l, policy: policyOf(l) } };
       }
+      if (p === '/api/patterns') {
+        const all = this.patterns.list().map((x) => ({ ...x, qualifies: qualifies(x), cost: costOf(x) })).sort((a, b) => b.cost - a.cost || a.signature.localeCompare(b.signature));
+        return { json: { thresholds: THRESHOLDS, patterns: all, qualifying: all.filter((x) => x.qualifies).length } };
+      }
       if (p === '/api/casebook') return { json: this.tourney ? { ...this.tourney.t.casebook(), awards: this.tourney.t.awards() } : { rounds: 0, cases: [], open: [], awards: [], note: 'No tournament yet.' } };
       if (p === '/api/tournament') return { json: this.tourney ? { ...this.tourney.t.view(), wave: this.tourney.wave } : { phase: 'idle' } };
       if (p === '/api/waves') return { json: this.wavesView() };
@@ -574,6 +598,7 @@ export class LiveServer {
       return undefined;
     }
     if (method === 'DELETE' && p === '/api/lessons') { this.lessons.reset(); return { json: {} }; }
+    if (method === 'DELETE' && p === '/api/patterns') { this.patterns.reset(); return { json: {} }; }
     if (method !== 'POST') return undefined;
     switch (p) {
       case '/api/wave/start': return { json: this.startWave(body) };

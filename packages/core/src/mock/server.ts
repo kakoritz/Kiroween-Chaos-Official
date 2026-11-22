@@ -185,6 +185,7 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
     const body = method === 'POST' ? await readBody(req) : undefined;
     if (method === 'POST' && !isObj(body)) return fail(res, 400, 'bad_request', 'body must be a JSON object');
 
+    if (method === 'DELETE' && path === '/api/patterns') { hub.patterns.clear(); return send(res, 200, {}); }
     if (method === 'DELETE' && path === '/api/lessons') { hub.lessons.clear(); return send(res, 200, {}); }
     if (method === 'GET') {
       if (path.startsWith('/api/lessons/')) {
@@ -203,6 +204,10 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
       if (path === '/api/campaign') return send(res, 200, campaign ??= loadCampaign());
       if (path === '/api/apps') return send(res, 200, Object.values(APPS).map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role, kind: stageKind(s.role) })) })));
       if (path === '/api/state') return send(res, 200, stateBody());
+      if (path === '/api/patterns') {
+        const all = [...hub.patterns.values()];
+        return send(res, 200, { thresholds: { count: 3, lostOrders: 1, downtimeMs: 30000 }, patterns: all, qualifying: all.filter((p) => p.qualifies).length });
+      }
       if (path === '/api/casebook') {
         const last = [...hub.buffer].reverse().find((e) => e.type === 'tournament_end' || e.type === 'round_end');
         const d = (last?.detail ?? {}) as { casebook?: object; awards?: unknown };

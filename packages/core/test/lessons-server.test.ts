@@ -45,7 +45,7 @@ function engine(): LiveEngine {
 
 async function boot() {
   const lessonsDir = join(mkdtempSync(join(tmpdir(), 'haunt-ls-')), 'lessons');
-  srv = new LiveServer({ engine: engine(), staticDir: '/nonexistent', lessonsDir });
+  srv = new LiveServer({ engine: engine(), staticDir: '/nonexistent', lessonsDir, patternsFile: join(lessonsDir, '..', 'patterns.json'), runDir: join(lessonsDir, '..') });
   const { url } = await srv.listen(0);
   const get = async (p: string) => { const r = await fetch(url + p); return { status: r.status, body: await r.json() as any }; };
   const post = async (p: string, b?: unknown) => { const r = await fetch(url + p, { method: 'POST', body: JSON.stringify(b ?? {}) }); return { status: r.status, body: await r.json() as any }; };
@@ -125,5 +125,31 @@ describe('Casebook in a live tournament (TV3-C10)', () => {
     expect((end.detail as any).awards.map((a: any) => a.id)).toContain('champion');
     expect((end.detail as any).casebook.cases.length).toBeGreaterThanOrEqual(2);
     expect((await get('/api/casebook')).body.awards.length).toBeGreaterThan(0);
+  });
+});
+
+describe('pattern miner in a live tournament (TV3-C11)', () => {
+  it('mines each round into the store, publishes pattern events for qualifying patterns and serves GET /api/patterns', async () => {
+    const { get, post, until, del } = await boot();
+    expect((await get('/api/patterns')).body).toMatchObject({ patterns: [], qualifying: 0, thresholds: { count: 3, lostOrders: 1, downtimeMs: 30000 } });
+    await post('/api/tournament/start', { seed: 7, resetLessons: true });
+    await until(() => srv!.log.events.some((e) => e.type === 'awaiting_next'));
+    const evs = srv!.log.events;
+    const pat = evs.filter((e) => e.type === 'pattern');
+    expect(pat.map((e) => (e.detail as any).signature)).toEqual(['payment + endpoint_down + order_lost']);
+    expect(pat[0]!.lane).toBeUndefined();
+    expect(pat[0]!.detail).toMatchObject({ count: 1, lostOrders: 1, status: 'new', qualifies: true, change: 'new', lanes: [2] });
+    expect(evs.indexOf(pat[0]!)).toBeGreaterThan(evs.findIndex((e) => e.type === 'case'));
+    const api = (await get('/api/patterns')).body;
+    expect(api.qualifying).toBe(1);
+    expect(api.patterns[0]).toMatchObject({ signature: 'payment + endpoint_down + order_lost', status: 'new', lostOrders: 1, qualifies: true, shapes: ['case'], lanes: [2] });
+    expect(api.patterns[0].firstSeen).toMatchObject({ round: 1, order: 'ord-0001', lane: 2 });
+    expect(api.patterns[0].evidence[0]).toMatchObject({ round: 1, report: '/api/waves/1/report' });
+    // Round 2 on the same server keeps accumulating into the same file.
+    await post('/api/next');
+    await until(() => srv!.log.events.filter((e) => e.type === 'round_end').length === 2);
+    expect((await get('/api/patterns')).body.patterns.length).toBeGreaterThanOrEqual(1);
+    expect((await del('/api/patterns')).status).toBe(200);
+    expect((await get('/api/patterns')).body.patterns).toEqual([]);
   });
 });
