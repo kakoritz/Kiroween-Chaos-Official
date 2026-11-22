@@ -88,6 +88,11 @@ export class HttpApi implements ArenaApi {
   getWaveStars(n: number) { return this.request('GET', `/api/waves/${n}/stars`); }
   decide(lane: number, order: string, choice: string) { return this.request('POST', '/api/decision', { lane, order, choice }); }
   setIntensity(level: number, opts: { autoRamp?: boolean; everyN?: number; max?: number } = {}) { return this.request('POST', '/api/intensity', { level, ...opts }); }
+  startTournament(opts: Record<string, unknown> = {}) { return this.request('POST', '/api/tournament/start', opts); }
+  next() { return this.request('POST', '/api/next'); }
+  getTournament() { return this.request('GET', '/api/tournament'); }
+  getCasebook() { return this.request('GET', '/api/casebook'); }
+  getLessons(lane: number) { return this.request('GET', `/api/lessons/${lane}`); }
   getLedger() { return this.request('GET', '/api/ledger'); }
   getWaves() { return this.request<WaveSummary[]>('GET', '/api/waves'); }
   getReport(n: number) { return this.request('GET', `/api/waves/${n}/report`); }

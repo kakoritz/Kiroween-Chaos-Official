@@ -29,6 +29,11 @@ export interface HauntInPage {
   getWaveStars(n: number): Promise<any>;
   decide(lane: number, order: string, choice: string): Promise<any>;
   setIntensity?(level: number, opts?: { autoRamp?: boolean; everyN?: number; max?: number }): Promise<any>;
+  startTournament?(opts?: Record<string, unknown>): Promise<any>;
+  next?(): Promise<any>;
+  getTournament?(): Promise<any>;
+  getCasebook?(): Promise<any>;
+  getLessons?(lane: number): Promise<any>;
   getLedger(): Promise<any>;
   getWaves(): Promise<any>;
   getReport(n: number): Promise<any>;
@@ -73,6 +78,14 @@ export class InPageApi implements ArenaApi {
   getWaveStars(n: number) { return wrap(this.h.getWaveStars(n)); }
   decide(lane: number, order: string, choice: string) { return wrap(this.h.decide(lane, order, choice)); }
   setIntensity(level: number, opts: { autoRamp?: boolean; everyN?: number; max?: number } = {}) { return wrap(this.h.setIntensity ? this.h.setIntensity(level, opts) : Promise.reject(new ApiError('not_applicable', 'the intensity dial needs a server'))); }
+  private need<T>(f: ((...a: any[]) => Promise<T>) | undefined, ...a: any[]): Promise<T> {
+    return wrap(f ? f.apply(this.h, a) : Promise.reject(new ApiError('not_applicable', 'the tournament needs a server')));
+  }
+  startTournament(opts: Record<string, unknown> = {}) { return this.need(this.h.startTournament, opts); }
+  next() { return this.need(this.h.next); }
+  getTournament() { return this.need(this.h.getTournament); }
+  getCasebook() { return this.need(this.h.getCasebook); }
+  getLessons(lane: number) { return this.need(this.h.getLessons, lane); }
   getLedger() { return wrap(this.h.getLedger()); }
   getWaves() { return wrap(this.h.getWaves()); }
   getReport(n: number) { return wrap(this.h.getReport(n)); }

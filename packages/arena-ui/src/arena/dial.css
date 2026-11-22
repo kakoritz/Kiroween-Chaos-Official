@@ -1,5 +1,5 @@
 /* TV3-U6: header intensity dial. Colour is never the only cue: the number and a word always show. */
-.dial { display: flex; flex-direction: column; gap: 2px; width: 300px; flex: none; padding: 5px 10px 4px; border: 2px solid var(--stone-2); border-radius: 10px; background: rgba(13,11,20,0.55); }
+.dial { display: flex; flex-direction: column; gap: 2px; width: 282px; flex: none; padding: 5px 10px 4px; border: 2px solid var(--stone-2); border-radius: 10px; background: rgba(13,11,20,0.55); }
 .dial-top { display: flex; align-items: baseline; gap: 8px; height: 20px; white-space: nowrap; position: relative; }
 .dial-l { font: 700 11px ui-monospace, Menlo, monospace; letter-spacing: 0.16em; color: var(--muted); }
 .dial-n { font: 800 18px ui-monospace, Menlo, monospace; color: var(--bone); min-width: 22px; text-align: right; }

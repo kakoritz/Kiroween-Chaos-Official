@@ -16,6 +16,8 @@ import { GearMenu, DEFAULT_PACE, badgeTitle, type Pace } from '../src/arena/gear
 import '../src/arena/gearmenu.css';
 import { IntensityDial, applyIntensity, readDial, defaultDial } from '../src/arena/dial';
 import '../src/arena/dial.css';
+import { RoundIndicator, RoundCard, FinalScreen, type TournamentHost } from '../src/arena/tournament-view';
+import '../src/arena/tournament.css';
 import { LegendModal } from '../src/arena/legend-modal';
 import { ArenaSound } from '../src/sound';
 import { FrameSampler, perfSecondsFromQuery } from '../src/perf';
@@ -53,6 +55,7 @@ root.innerHTML = `
       <span class="logo">HAUNT</span>
       <span class="tagline">${SPLASH_TAGLINE}</span>
       <span class="wave" id="wave"></span>
+      <span id="round-ind"></span>
       <div id="app-switch"></div>
       <div id="chaos-mode"></div>
       <div id="dial"></div>
@@ -82,7 +85,7 @@ root.innerHTML = `
     <section class="quiet" id="quiet">
       <h1>The crypt is quiet</h1>
       <p>Five skeletons are asleep. Start the show.</p>
-      <button class="btn btn--big" id="demo-big" type="button">&#9654; Play demo</button>
+      <div class="quiet-btns"><button class="btn btn--big" id="demo-big" type="button">&#9654; Play demo</button><button class="btn btn--big btn--ghost" id="tour-big" type="button" title="Five lanes race. The worst drops each round.">&#9876; Start tournament</button></div>
       <div class="err" id="err" role="alert"></div>
       <div class="stats" id="stats"></div>
     </section>
@@ -109,6 +112,8 @@ let waveNo = 0;
 let api: ArenaApi;
 let chaosCtl: ChaosModeControl;
 let dial: IntensityDial | null = null;
+// TV3-U8: true once any tournament event arrived; Next then calls POST /api/next instead of starting a wave.
+let tourActive = false;
 let appSwitch: AppSwitcher | null = null;
 let demoRunning = false;
 let waveRunning = false;
@@ -277,11 +282,31 @@ const campaignSandbox = mountCampaignSandbox(stageEl, { getCampaign: () => api.g
   waveSummary.suppressNext();
   return api.startWave(o);
 } });
+const tournamentHost: TournamentHost = {
+  laneTitle: (n) => vm.lanes.find((l) => l.lane === n)?.label || vm.lanes.find((l) => l.lane === n)?.tier || '',
+  laneTier: (n) => vm.lanes.find((l) => l.lane === n)?.tier ?? 'rookie',
+  stageLabel: (id) => vm.stages.find((s) => s.id === id)?.label ?? id,
+  next: () => { awaitingNext = true; void goNext(); },
+  startTournament: () => { void beginTournament(); },
+  reducedMotion: () => reduceMotion.matches || document.body.classList.contains('reduced-motion'),
+};
+const roundInd = new RoundIndicator($('round-ind'));
+const roundCard = new RoundCard(stageEl, tournamentHost);
+const finalScreen = new FinalScreen(stageEl, tournamentHost);
+$('round-ind').addEventListener('click', () => { if (vm.tournament.phase === 'ended') finalScreen.reopen(); });
+const TOURNAMENT_EVENTS = new Set(['round_start', 'round_end', 'awaiting_next', 'lane_eliminated', 'corpse', 'tournament_end']);
 const campaignResults = mountCampaignResults(stageEl, { getCampaign: () => api.getCampaign() }, { onNight: (n) => shopStart(n), onHub: () => window.dispatchEvent(new CustomEvent('haunt:splash', { detail: { action: 'campaign' } })) }); // CP-U3
 
 function onEvent(ev: ArenaEvent) {
+  if (TOURNAMENT_EVENTS.has(ev.type)) tourActive = true;
+  if (ev.type === 'reset') tourActive = false;
+  roundCard.onEvent(ev);
+  finalScreen.onEvent(ev);
   campaignResults.onEvent(ev);
   campaignSandbox.onEvent(ev);
+  // In a tournament the standings card replaces the wave card.
+  if (tourActive && ev.type === 'wave_end') waveSummary.suppressNext();
+  if (tourActive && ev.type === 'round_end') waveSummary.close();
   waveSummary.onEvent(ev);
   queue.push(ev);
   captionPlayer.event(ev, performance.now());
@@ -306,9 +331,17 @@ function onEvent(ev: ArenaEvent) {
     waveRunning = true;
     awaitingNext = false; nextBtn.classList.add('hidden');
     errEl.textContent = '';
+  } else if (ev.type === 'awaiting_next') {
+    awaitingNext = true; waveRunning = false;
+    nextBtn.textContent = '\u25B6 Next round';
+    nextBtn.classList.remove('hidden');
+    void reconcile();
+  } else if (ev.type === 'round_start' || ev.type === 'tournament_end') {
+    awaitingNext = false; nextBtn.classList.add('hidden');
   } else if (ev.type === 'wave_end') {
     waveRunning = false;
     awaitingNext = !(ev.detail && (ev.detail as { stopped?: unknown }).stopped);
+    nextBtn.textContent = tourActive ? '▶ Next round' : '▶ Next wave';
     nextBtn.classList.toggle('hidden', !awaitingNext);
     void reconcile();
   }
@@ -333,7 +366,14 @@ async function loadState() {
     demoScripts = Array.isArray(s.demo?.scripts) ? s.demo.scripts : demoScripts;
     waveEl.textContent = waveLabel(waveNo);
     queue.length = 0;
-    loadSnapshot(vm, s, performance.now());
+    // Rounds, standings and awards for a late joiner; a server without the tournament endpoint just answers 404.
+    const tour = await api.getTournament().catch(() => null);
+    loadSnapshot(vm, tour ? { ...s, tournament: { ...(s.tournament ?? {}), ...(tour as object) } } : s, performance.now());
+    if (vm.tournament.active) {
+      tourActive = true;
+      if (vm.tournament.awaitingNext) { awaitingNext = true; nextBtn.textContent = '\u25B6 Next round'; nextBtn.classList.remove('hidden'); }
+      roundCard.adopt(vm.tournament); finalScreen.adopt(vm.tournament);
+    }
     await reconcile();
   } catch (e) { showError(e); }
   paintBadge();
@@ -374,6 +414,7 @@ async function boot() {
     setPace: (p) => { pace = p; },
     setSpeed: (s) => { void api.setSpeed(s).catch(showError); },
     toggleSound: () => muteBtn.click(),
+    startTournament: () => { void beginTournament(); },
     setReducedMotion: (on) => { scene.reducedMotion = on || reduceMotion.matches; document.body.classList.toggle('reduced-motion', on || reduceMotion.matches); },
   }, $('chaos-mode'));
   new LegendModal(stageEl, $<HTMLButtonElement>('legend-btn'));
@@ -420,11 +461,26 @@ async function boot() {
   }, 3000);
 }
 
-// Next wave (TV3-U2): the only thing that starts the next wave after a wave ends.
+// Start tournament (TV3-U8): five lanes, the worst drops each round. Clears whatever plays behind the splash first.
+async function beginTournament() {
+  errEl.textContent = '';
+  try {
+    chainDemo = false; captionPlayer.stop();
+    if (demoRunning) { await api.stopDemo(); demoRunning = false; paintDemo(); }
+    if (waveRunning) { try { await api.stopWave(); } catch { /* none running */ } waveRunning = false; }
+    waveSummary.suppressNext();
+    await api.startTournament();
+    tourActive = true;
+  } catch (e) { showError(e); }
+}
+$('tour-big').addEventListener('click', () => void beginTournament());
+
+// Next wave (TV3-U2) and next round (TV3-U8): the only thing that starts the next one after a review.
 async function goNext() {
   if (!awaitingNext) return;
   awaitingNext = false; nextBtn.classList.add('hidden');
   try {
+    if (tourActive) { await api.next(); return; }
     if (chainDemo) {
       const s = await api.getState();
       const next = pickScript(currentScript, Array.isArray(s.demo?.scripts) ? s.demo.scripts : demoScripts);
@@ -536,6 +592,8 @@ function frame(now: number) {
   }
   scene.speed = vm.speed || 1;
   totalEl.textContent = vm.lanes.length ? `Score ${totalScore(vm)}` : '';
+  roundInd.update(vm.tournament);
+  document.body.classList.toggle('tour-on', vm.tournament.active && vm.tournament.round > 0);
   quietEl.classList.toggle('hidden', vm.lanes.length > 0);
   rankEl.classList.toggle('hidden', vm.lanes.length === 0);
   ledgerEl.classList.toggle('hidden', vm.lanes.length === 0);

@@ -185,3 +185,4 @@ body.present .rb-row, body.present .lg td, body.present .lg th, body.present .tk
 .hdr .wave, .hdr .total { font-size: 17px; }
 .hdr .badge { padding: 5px 12px; font-size: 14px; }
 .hdr .seg-b { padding: 6px 10px; font-size: 15px; white-space: nowrap; }
+.quiet-btns { display: flex; gap: 12px; }

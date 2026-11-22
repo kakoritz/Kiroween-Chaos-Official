@@ -9,6 +9,8 @@ import { chipWidth, stationX, type ArenaVM, type ChipState, type LaneVM } from '
 import type { OutageVM } from './outage';
 import { CHIP_ICON, fromLegacy, heatAlpha, heatAt, type ChipInfo, type ChipV2State } from './chips';
 import { outageAt, outageFrame, ringLabel } from './outage';
+import { drawTombstone, drawWallCorpse, drawWisp, tombHeight } from './corpse';
+import { epitaphOf } from './tournament';
 import { captionOf, creatureFrame, creatureTip, shown, spriteOf, MAX_SHOWN, type CreatureVM } from './creatures';
 import { drawCreature } from '../creatures/draw';
 import { bugTint, puff, seedOf, swarmBugs, swarmStale } from './swarm';
@@ -328,7 +330,7 @@ function labelCard(ctx: Ctx, b: LaneBox, l: LaneVM, t: number, worn: string[], s
     const last = l.stars.last > 0 ? ` (${Number.isInteger(l.stars.last) ? l.stars.last : l.stars.last.toFixed(1)})` : '';
     txt(ctx, `\u2605 ${starTracker({ stars: l.stars.sum, max: l.stars.max })}${last}`, 46, b.top + h - 46, 14, l.stars.sum / Math.max(1, l.stars.max) >= 0.9 ? C.warn : C.muted, 'left', MONO, '700');
     const rt = laneRatingTitle(l.stars);
-    if (rt) txt(ctx, rt.title, 246, b.top + h - 64, 11, rt.tone === 'gold' ? C.warn : rt.tone === 'red' ? C.fail : C.muted, 'right', MONO, '700');
+    if (rt && !l.fallen) txt(ctx, rt.title, 246, b.top + 46, 13, rt.tone === 'gold' ? C.warn : rt.tone === 'red' ? C.fail : C.muted, 'right', MONO, '700');
   }
   if (l.scorePop) {
     const age = (t - l.scorePop.since) * speed / 1100;
@@ -345,6 +347,18 @@ function labelCard(ctx: Ctx, b: LaneBox, l: LaneVM, t: number, worn: string[], s
     ctx.strokeStyle = C.hex; ctx.lineWidth = 2.5; ctx.stroke();
     txt(ctx, `☠${l.depth}`, bx, by + 1, 18, C.text, 'center', SANS, '700');
   }
+  ctx.restore();
+}
+
+/** "FALLEN R2" pill on a fallen lane's label card (TV3-U8). Drawn at full strength over the greyed row. */
+function fallenTag(ctx: Ctx, b: LaneBox, round: number): void {
+  const label = round > 0 ? `FALLEN R${round}` : 'FALLEN';
+  ctx.save();
+  ctx.font = `800 13px ${MONO}`;
+  const w = Math.ceil(ctx.measureText(label).width) + 18;
+  rr(ctx, 244 - w, b.top + 33, w, 21, 6); ctx.fillStyle = 'rgba(70,24,34,0.96)'; ctx.fill();
+  ctx.lineWidth = 2.5; ctx.strokeStyle = C.fail; ctx.stroke();
+  txt(ctx, label, 244 - w / 2, b.top + 44, 13, '#ff9aa6', 'center', MONO, '800');
   ctx.restore();
 }
 
@@ -538,22 +552,28 @@ export class ArenaScene {
     const n = vm.stages.length;
     ctx.save();
     ctx.beginPath(); ctx.rect(0, b.top, STAGE_W, b.h); ctx.clip();
+    const fell = l.fallen ?? null;
+    const deathIdx = fell ? Math.max(0, vm.stages.findIndex((s) => s.id === fell.stage)) : -1;
+    if (fell) ctx.globalAlpha = 0.5;
     labelCard(ctx, b, l, now, wornParts(l.parts, l.equips, now, this.speed, this.reducedMotion), this.speed, this.reducedMotion);
+    if (fell) { ctx.globalAlpha = 1; fallenTag(ctx, b, fell.round); ctx.globalAlpha = 0.4; }
     stats(ctx, b, l);
-    if (l.mode !== 'sleep') startStack(ctx, b, l);
+    if (l.mode !== 'sleep' && !fell) startStack(ctx, b, l);
     // stage chips and station props
     const chipY = b.top + 4;
     const cw = chipWidth(n);
     vm.stages.forEach((s, i) => {
       const x = stationX(i, n);
       ctx.fillStyle = 'rgba(10,8,18,0.5)'; ctx.beginPath(); ctx.ellipse(x, b.top + b.h * 0.8 + 2, 22, 6, 0, 0, Math.PI * 2); ctx.fill();
-      const info = l.v2?.[i] ?? fromLegacy(l.chips[i] ?? 'pending', l.attempts[i] ?? 0);
+      let info = l.v2?.[i] ?? fromLegacy(l.chips[i] ?? 'pending', l.attempts[i] ?? 0);
+      if (fell) { ctx.globalAlpha = i === deathIdx ? 1 : 0.4; if (i === deathIdx) info = { ...info, state: 'dead' }; }
       chipV2(ctx, x, chipY, s.label, info, cw, this.reducedMotion ? 0 : now);
       heatSegment(ctx, x, chipY + 44, heatAlpha(heatAt(l.heat, l.v2, l.heatFolded, i).issues), cw);
       if (l.lap?.next === i && info.state === 'pending') nextMark(ctx, x, chipY, cw);
       const og = outageAt(l, s.id);
       if (og && (og.endedAt === null || now - og.endedAt < 700)) outageRing(ctx, x, chipY + 41 + 20, og, now, this.reducedMotion);
     });
+    ctx.globalAlpha = 1;
     // progress bar under the active chip
     const wi = vm.stages.length ? Math.min(l.stageIndex, n - 1) : 0;
     const bx = stationX(wi, n);
@@ -566,9 +586,71 @@ export class ArenaScene {
       if (pct > 0) { rr(ctx, bx - 68, by + 2, Math.max(8, 136 * pct), 8, 4); ctx.fillStyle = failed ? C.fail : C.torch; ctx.fill(); }
       if (l.progressLabel && l.mode === 'working') { ctx.font = `600 13px ${MONO}`; txt(ctx, fit(ctx, l.progressLabel, 130), bx + 78, by + 7, 13, C.muted, 'left', MONO, '600'); }
     }
-    this.drawSkeleton(ctx, vm, l, b, now);
+    this.drawCorpses(ctx, vm, l, b, now);
+    if (fell) this.drawFallen(ctx, vm, l, b, now, deathIdx);
+    else this.drawSkeleton(ctx, vm, l, b, now);
     this.drawCreatures(ctx, l, b, now);
     this.drawSurvived(ctx, l, b, now);
+    ctx.restore();
+  }
+
+  /** Corpse markers on this lane: a wall stays under a living skeleton; an eliminated lane's tombstone is drawn by drawFallen. */
+  private drawCorpses(ctx: Ctx, vm: ArenaVM, l: LaneVM, b: LaneBox, now: number): void {
+    const n = vm.stages.length;
+    const floorY = b.top + b.h * 0.8 + 4;
+    for (const c of vm.tournament.corpses) {
+      if (c.lane !== l.lane || c.kind !== 'wall') continue;
+      const si = vm.stages.findIndex((s) => s.id === c.stage);
+      if (si < 0) continue;
+      const box = drawWallCorpse(ctx, stationX(si, n) + 6, floorY, Math.min(64, b.h * 0.42));
+      if (!this.lite) drawWisp(ctx, stationX(si, n) + 6, floorY, 60, now, this.reducedMotion, l.lane);
+      this.hot.push({ ...box, tip: epitaphOf(c, l.label || l.tier, vm.stages[si]!.label) });
+    }
+  }
+
+  /** An eliminated lane: tombstone on the stage where it died, the skeleton lying beside it, a ghost wisp, and a dim swarm that keeps circling. */
+  private drawFallen(ctx: Ctx, vm: ArenaVM, l: LaneVM, b: LaneBox, now: number, deathIdx: number): void {
+    const n = vm.stages.length;
+    const fell = l.fallen!;
+    const size = Math.min(88, b.h * 0.5);
+    const floorY = b.top + b.h * 0.8 + 4;
+    const x = stationX(deathIdx, n) + 14;
+    const corpse = vm.tournament.corpses.find((c) => c.lane === l.lane && c.kind === 'eliminated');
+    // The creatures that followed this lane circle the stone, so the failure stays visible.
+    let w = this.walkers.get(l.lane);
+    if (!w) { w = { x, lastT: now }; this.walkers.set(l.lane, w); }
+    w.x = x; w.lastT = now;
+    // skeleton lying on the ground to the left of the stone
+    const tier = TIER_IDS.includes(l.tier as Tier) ? (l.tier as Tier) : undefined;
+    ctx.save();
+    ctx.translate(x - 70, floorY - size / 2 + 4);
+    ctx.scale(1.02, 1.02);
+    ctx.filter = 'grayscale(0.7) brightness(0.82)';
+    ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.beginPath(); ctx.ellipse(0, size / 2, size * 0.42, 6, 0, 0, Math.PI * 2); ctx.fill();
+    drawSkeleton(ctx, frameFor('collapse', 1), { silhouette: false, size }, tier, wornParts(l.parts, [], now, this.speed, this.reducedMotion));
+    ctx.restore();
+    ctx.filter = 'none';
+    const h = tombHeight(b.h);
+    const box = drawTombstone(ctx, x, floorY, h, fell.round);
+    drawWisp(ctx, x, floorY - h, h, now, this.reducedMotion, l.lane);
+    const label = vm.stages[deathIdx]?.label ?? fell.stage;
+    const tip = epitaphOf(corpse ?? { lane: l.lane, stage: fell.stage, kind: 'eliminated', round: fell.round, epitaph: fell.epitaph, cause: fell.cause }, l.label || l.tier, label);
+    this.hot.push({ x: box.x - 70, y: box.y, w: box.w + 80, h: box.h, tip });
+    // dim, slow swarm
+    const bugs = swarmBugs({ depth: 2, seed: l.lane * 31 + fell.round * 7, age: now, exit: 0, corpse: true, harass: false, speed: this.speed });
+    const tint = bugTint('wisp');
+    ctx.save();
+    for (const g of (this.lite ? bugs.slice(0, 4) : bugs)) {
+      ctx.globalAlpha = g.a * 0.8;
+      const bx = x + g.x * 0.9, by = floorY - h * 0.55 + g.y * 0.8;
+      const r = 3.6 * g.s;
+      const wing = Math.abs(Math.sin(g.flap * Math.PI * 2)) * 5 * g.s;
+      ctx.fillStyle = tint.wing;
+      ctx.beginPath(); ctx.ellipse(bx - 3, by - 3 - wing * 0.2, 3.6 * g.s, wing + 1, -0.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(bx + 3, by - 3 - wing * 0.2, 3.6 * g.s, wing + 1, 0.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = tint.body;
+      ctx.beginPath(); ctx.ellipse(bx, by, r * 1.1, r, 0, 0, Math.PI * 2); ctx.fill();
+    }
     ctx.restore();
   }
 

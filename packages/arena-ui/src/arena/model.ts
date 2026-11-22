@@ -8,6 +8,7 @@ import type { OrderDropVM } from './order';
 import { applyLap, lapMotion, newLap, START_X, type LapVM } from './lap';
 import { foldHeat, newHeat, chipState, type ChipInfo, type Heat } from './chips';
 import { applyIntensity, defaultDial, readDial, type DialState } from './dial';
+import { applyTournamentEvent, emptyTournament, loadTournament, type Fallen, type TournamentVM } from './tournament';
 import { endOutage, openOutage, pruneOutages, type OutageVM } from './outage';
 import { absorb, actAll, addCreature, exitAll, exitDepth, exitStage, prune, PUFF_MS, type CreatureVM } from './creatures';
 
@@ -63,6 +64,8 @@ export interface LaneVM {
   v2?: ChipInfo[];
   heat?: Heat;
   heatFolded?: boolean;
+  /** Set once the lane is eliminated (TV3-U8): the row greys out and its corpse stays on the death stage. */
+  fallen?: Fallen | null;
   /** Outage countdown rings, one per stage at most (TV3-U7). Cosmetic, not restorable from a snapshot. */
   outages?: OutageVM[];
   /** Live star tracker (PT-U6): cum of the last review in this wave and that review's stars. */
@@ -81,9 +84,11 @@ export interface ArenaVM {
   boss: BossVM;
   /** Intensity dial (TV3-U6): the server's level, ramp flag and the source of the last change. */
   intensity: DialState;
+  /** Tournament rounds, standings, corpses (TV3-U8). */
+  tournament: TournamentVM;
 }
 
-export const emptyVM = (): ArenaVM => ({ stages: [], lanes: [], wave: 0, running: false, speed: 1, boss: emptyBoss(), intensity: defaultDial() });
+export const emptyVM = (): ArenaVM => ({ stages: [], lanes: [], wave: 0, running: false, speed: 1, boss: emptyBoss(), intensity: defaultDial(), tournament: emptyTournament() });
 
 export function newLane(n: number, stageCount: number, now: number): LaneVM {
   return {
@@ -131,6 +136,7 @@ export function loadSnapshot(vm: ArenaVM, s: ArenaState, now: number): void {
   vm.speed = s.wave?.speed ?? 1;
   loadBoss(vm.boss, s, now, vm.speed);
   vm.intensity = readDial(s) ?? vm.intensity;
+  loadTournament(vm.tournament, s);
   vm.lanes = (s.lanes ?? []).map((ls) => {
     const l = newLane(ls.lane, vm.stages.length, now);
     l.tier = ls.tier; l.label = ls.label; l.parts = ls.parts.filter((p) => p.installed).map((p) => p.id);
@@ -147,10 +153,33 @@ export function loadSnapshot(vm: ArenaVM, s: ArenaState, now: number): void {
     const wa = vm.stages[idx]?.workAnimation;
     l.workAnim = wa ?? '';
     l.lap = newLap(ls.order ? stationX(idx, vm.stages.length) : START_X);
-    l.mode = ls.state === 'working' ? 'working' : ls.state === 'recovering' ? 'recovering'
+    l.fallen = vm.tournament.fallen[ls.lane] ?? null;
+    l.mode = l.fallen ? 'halted' : ls.state === 'working' ? 'working' : ls.state === 'recovering' ? 'recovering'
       : ls.state === 'dead' ? 'dead' : ls.state === 'halted' ? 'halted' : ls.state === 'done' ? 'done' : 'idle';
     return l;
   });
+}
+
+/** A fallen lane stops: the row greys out and the skeleton gives way to the corpse. Creatures stay and keep circling. */
+function fallLane(l: LaneVM, f: Fallen, now: number): void {
+  l.fallen = f;
+  if (l.mode !== 'halted') { l.mode = 'halted'; l.since = now; }
+  l.order = null; l.depth = 0; l.outages = [];
+  exitAll(l, now, { delay: 600 });
+}
+
+/** After a tournament event: make sure every roster lane has a row, and fallen lanes are marked. */
+function syncTournamentLanes(vm: ArenaVM, ev: ArenaEvent, now: number): void {
+  const t = vm.tournament;
+  if (ev.type === 'round_start' && vm.stages.length > 0) {
+    for (const n of t.roster) if (!vm.lanes.some((l) => l.lane === n)) vm.lanes.push(newLane(n, vm.stages.length, now));
+    vm.lanes.sort((a, b) => a.lane - b.lane);
+  }
+  for (const l of vm.lanes) {
+    const f = t.fallen[l.lane];
+    if (f && !l.fallen) fallLane(l, f, now);
+    else if (f && l.fallen) l.fallen = f;
+  }
 }
 
 function laneOf(vm: ArenaVM, ev: ArenaEvent): LaneVM | undefined {
@@ -184,7 +213,8 @@ function trackChips(l: LaneVM, vm: ArenaVM, ev: ArenaEvent): void {
 /** Apply one event. Unknown types are ignored (protocol rule 17). */
 export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
   const d = (ev.detail ?? {}) as Record<string, unknown>;
-  if (ev.type === 'reset') { vm.lanes = []; vm.wave = 0; vm.running = false; vm.boss = emptyBoss(); return; }
+  if (ev.type === 'reset') { vm.lanes = []; vm.wave = 0; vm.running = false; vm.boss = emptyBoss(); vm.tournament = emptyTournament(); return; }
+  if (applyTournamentEvent(vm.tournament, ev as never)) { syncTournamentLanes(vm, ev, now); return; }
   if (ev.type === 'boss_warning' || ev.type === 'boss_start' || ev.type === 'boss_end') {
     const k = applyBossEvent(vm.boss, ev, now, vm.speed);
     // Survived flash on every lane that is not dead or halted (ui-spec section 5).
@@ -197,12 +227,22 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
     vm.running = true;
     vm.speed = num(d.speed, 1);
     const n = Math.max(1, Math.min(5, num(d.lanes, 5)));
+    const roster = vm.tournament.active ? vm.tournament.roster : [];
+    if (roster.length > 0) {
+      // In a tournament the fallen lanes stay on the board; only the live lanes start fresh (contract rule 50).
+      const old = new Map(vm.lanes.map((l) => [l.lane, l] as const));
+      vm.lanes = roster.map((n2) => (vm.tournament.fallen[n2] && old.get(n2) ? old.get(n2)! : newLane(n2, vm.stages.length, now)));
+      for (const l of vm.lanes) if (vm.tournament.fallen[l.lane]) fallLane(l, vm.tournament.fallen[l.lane]!, now);
+      return;
+    }
     vm.lanes = Array.from({ length: n }, (_, i) => newLane(i + 1, vm.stages.length, now));
     return;
   }
   if (ev.type === 'wave_end') { vm.running = false; vm.boss = emptyBoss(); return; }
   const l = laneOf(vm, ev);
   if (!l) return;
+  // Rule 50: a fallen lane emits no more order events. If one arrives anyway, the corpse stays a corpse.
+  if (l.fallen) return;
   const si = ev.stage ? vm.stages.findIndex((s) => s.id === ev.stage) : -1;
   prune(l, now);
   pruneOutages(l, now);
