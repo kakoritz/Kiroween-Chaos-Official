@@ -18,6 +18,8 @@ export interface ReviewInput {
   /** Ledger extra rows of the order by kind (charge, update, ...). */
   extra: Record<string, number>;
   degraded: boolean;
+  /** A gremlin hit this order (spec 5.3). With a slow recovery the review cannot be 5.0. */
+  gremlin?: boolean;
   decision?: { choice: string; detectedAt?: string };
   cancelled: boolean;
   baselineMs: number;
@@ -84,6 +86,8 @@ export function review(inp: ReviewInput): ReviewResult {
   if (choice === 'refund') stars = Math.min(stars, 2);
   if (choice === 'discount') stars = Math.min(stars, 3);
   if (choice === 'redo') stars = Math.min(stars, 4);
+  // Never perfect (spec 5.3): a gremlin plus a slow recovery (over a second of normalised downtime) cannot give 5.0. A fast clean recovery can.
+  if (inp.gremlin && d > 1) stars = Math.min(stars, 4.5);
   stars = Math.max(1, stars);
   const lowDelivery = (inp.extra.charge ?? 0) > 0 ? 'Charged twice!' : choice === 'discount' ? 'Wrong order' : inp.degraded ? 'Missing updates' : LOW.delivery;
   let reasons = SUBS.filter((k) => sub[k] <= 3).map((k) => (k === 'delivery' ? lowDelivery : LOW[k])).slice(0, 2);

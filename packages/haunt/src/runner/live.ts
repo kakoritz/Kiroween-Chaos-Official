@@ -7,6 +7,8 @@ import type { HauntEvent } from '../score/score';
 import type { RunnerEngine } from './engine';
 import { RepeatDetector } from './provider';
 import { RandomChaos, planBoss, TICK_MS, type BossPlan } from './schedule';
+import { DialChaos } from './intensity';
+import { FLOOR_FRACTION } from './floor';
 
 /** Boss window length at 1x; real ms is this divided by speed. */
 export const BOSS_DURATION_MS = 17000;
@@ -26,11 +28,14 @@ export interface WaveClockOptions {
   randomEnabled?: () => boolean;
   /** Boss schedule runs in random and demo mode. Defaults to the same test as random chaos. */
   bossEnabled?: () => boolean;
+  /** Floor rule (spec 5.3): inject a gremlin for a lane that has had no issue by mid-round. Default true. */
+  floor?: boolean;
 }
 
 export class WaveClock {
   readonly boss: BossPlan;
   private readonly random: RandomChaos;
+  private readonly dial: DialChaos;
   private elapsed = 0;
   private nextTick = 0;
   private phase: 'idle' | 'warned' | 'live' | 'done' = 'idle';
@@ -39,6 +44,7 @@ export class WaveClock {
   constructor(private readonly o: WaveClockOptions) {
     const speed = o.speed ?? o.engine.speed;
     this.random = new RandomChaos({ seed: o.seed, frequency: o.frequency, speed });
+    this.dial = new DialChaos(`${o.seed}|dial`);
     this.boss = planBoss({ wave: o.wave, orders: o.orders, speed });
   }
 
@@ -55,10 +61,28 @@ export class WaveClock {
     const { engine, record } = this.o;
     const speed = this.o.speed ?? engine.speed;
     const tickMs = TICK_MS / speed;
+    if (this.o.floor !== false && elapsedMs >= this.boss.expectedMs * FLOOR_FRACTION) {
+      for (const lane of engine.lanes) {
+        if (engine.floor.count(lane) > 0 || engine.floor.gremlined(lane)) continue;
+        const info = this.info(lane);
+        if (info.stage === null || info.state === 'dead') continue;
+        try { engine.gremlin(lane); } catch { /* depth limit: try again next tick */ }
+      }
+    }
     while (this.nextTick <= elapsedMs) {
       const at = this.nextTick;
       this.nextTick += tickMs;
       if (!this.randomOn()) continue;
+      if (engine.dialTouched) {
+        // The intensity dial drives the plan (spec 5.1): rate, simultaneous faults, unknown share and depth come from the level.
+        for (const lane of engine.lanes) {
+          const info = this.info(lane);
+          for (const p of this.dial.tick(lane, info.stage, at, engine.level, engine.director.depth(lane))) {
+            try { engine.chaos({ lane: Number(lane), fault: p.fault, source: p.fuzz ? 'fuzz' : 'random', ...(p.fuzz ? { fuzz: p.fuzz } : {}) }); } catch { /* lane at depth limit */ }
+          }
+        }
+        continue;
+      }
       for (const lane of engine.lanes) {
         const info = this.info(lane);
         const req = this.random.tick(lane, info.stage, at);

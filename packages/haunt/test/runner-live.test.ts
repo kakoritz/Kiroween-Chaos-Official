@@ -15,8 +15,11 @@ function setup(mode: 'off' | 'manual' | 'random', frequency = 1) {
 describe('WaveClock', () => {
   it('fires nothing while mode is manual', () => {
     const { events, clock } = setup('manual');
-    clock.step(60000);
+    clock.step(14000);
     expect(events).toHaveLength(0);
+    // Only the never-perfect floor (spec 5.3) acts in manual mode: one gremlin per lane, after the middle of the round.
+    clock.step(60000);
+    expect(events.map((e) => [e.type, e.detail?.source])).toEqual([['chaos', 'gremlin'], ['chaos', 'gremlin']]);
   });
 
   it('fires random chaos tagged source random', () => {

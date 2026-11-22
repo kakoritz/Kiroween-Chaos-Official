@@ -76,7 +76,7 @@ export function matchesOneOf(ev: unknown): boolean {
   return cached!(ev);
 }
 
-const IGNORABLE = new Set(['score', 'effect', 'repeat', 'chaos', 'chaos_absorbed', 'breaker']);
+const IGNORABLE = new Set(['score', 'effect', 'repeat', 'chaos', 'chaos_absorbed', 'breaker', 'outage']);
 const CLOSERS = new Set(['chaos_absorbed', 'stage_fail', 'process_dead', 'recover_start', 'lane_halted', 'order_parked', 'order_failed', 'order_quarantined', 'order_abandoned']);
 
 type LaneState = 'idle' | 'running' | 'failed' | 'degraded_failed' | 'continuing' | 'dead' | 'halted';
@@ -267,7 +267,7 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
     const isGlobal = (GLOBAL_TYPES as readonly string[]).includes(t);
     if (isGlobal && ev.lane !== undefined) bad('R16', ev, 'global events must not carry lane');
     if (!isGlobal && ev.lane === undefined) { bad('R16', ev, 'lane event without lane'); return; }
-    if (t !== 'hello' && t !== 'reset' && ev.wave === undefined) bad('R16', ev, 'missing wave');
+    if (t !== 'hello' && t !== 'reset' && t !== 'intensity' && ev.wave === undefined) bad('R16', ev, 'missing wave');
 
     switch (t) {
       case 'hello': minor = num((ev as any).contractMinor) ? (ev as any).contractMinor : 0; return;
@@ -326,6 +326,11 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
           if (l.pendingChaos > 0 || l.state === 'dead' || l.stack.length) bad('R10', ev, `boss_end before lane ${n} settled`);
         }
         boss = null;
+        return;
+      }
+      case 'intensity': {
+        // V1_2 section 5: the dial can move at any time, also between waves. Level 1 to 11.
+        if (!(Number.isInteger(d.level) && d.level >= 1 && d.level <= 11)) bad('R56', ev, `intensity level ${d.level} is not an integer from 1 to 11`);
         return;
       }
       case 'hardening_spec':

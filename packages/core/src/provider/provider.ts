@@ -53,6 +53,8 @@ export interface FaultSpec {
   /** Or for a time window in ms. One of count or forMs. */
   forMs?: number;
   headers?: Record<string, string>;
+  /** Fuzz (TV3-C4): the answer is cut short, status mode answers with a body that is not JSON-complete. */
+  truncate?: boolean;
   /** Only calls with phase "recovery". */
   nextCaller?: 'recovery';
 }
@@ -278,7 +280,7 @@ export class Provider {
         }
         if (fault.mode === 'status') {
           await this.clock.sleep(baseMs);
-          return json(v, { error: `fault ${v}` }, { ...(fault.headers ?? {}) });
+          return json(v, fault.truncate ? '{"error":"fau' : { error: `fault ${v}` }, { ...(fault.headers ?? {}) });
         }
         if (fault.mode === 'latency') return await run(baseMs + v, fault);
         if (fault.mode === 'typo') return await run(baseMs, fault);

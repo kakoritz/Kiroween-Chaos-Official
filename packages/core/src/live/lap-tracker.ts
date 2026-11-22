@@ -22,6 +22,8 @@ interface Rec {
   open?: { start: number; idx: number };
   extra: Record<string, number>;
   degraded: boolean;
+  /** A gremlin hit this order (spec 5.3): it counts as an issue and caps the review when recovery was slow. */
+  gremlin?: boolean;
   decision?: { choice?: string; detectedAt?: string };
   stageCur?: string;
 }
@@ -146,6 +148,9 @@ export class LapTracker {
         if (r && top) r.recov.push({ stage: top.stage, action: top.action, ms: typeof d.ms === 'number' ? d.ms : t - top.ts });
         break;
       }
+      case 'chaos':
+        if (r && d.source === 'gremlin') { this.bump(r, ev.stage ?? S.open ?? r.stageCur ?? this.stageIds[0]); r.gremlin = true; }
+        break;
       case 'decision_needed': if (r) r.decision = { detectedAt: d.detectedAt }; break;
       case 'decision_made': if (r) r.decision = { ...(r.decision ?? {}), choice: d.choice }; break;
       case 'order_quarantined': S.counts.quarantined++; S.rec = undefined; S.open = undefined; break;
@@ -168,7 +173,7 @@ export class LapTracker {
       const lap = { ms, workMs: Math.max(0, ms - r.grab - r.walks), attempts: r.attempts, retries: r.retries, downtimeMs, issues, recoveries: r.recov };
       const cancelled = ev.type === 'order_failed';
       const rv: ReviewResult = review({
-        lap, extra: r.extra, degraded: r.degraded, cancelled, baselineMs: this.base, paceFactor: this.normFactor,
+        lap, extra: r.extra, degraded: r.degraded, gremlin: r.gremlin, cancelled, baselineMs: this.base, paceFactor: this.normFactor,
         decision: r.decision?.choice ? { choice: r.decision.choice, detectedAt: r.decision.detectedAt } : undefined,
       });
       const cum = S.stars.add(rv.stars);
@@ -200,6 +205,8 @@ export class LapTracker {
       retries: S.retries,
       downtimeMs: S.downtimeMs,
       issuesByStage: S.issuesByStage,
+      // Issues of the lane this wave (spec 5.3): finished orders plus the one in flight. P19: never zero.
+      issues: Object.values(S.issuesByStage).reduce((a, b) => a + b, 0) + (S.rec ? [...S.rec.issues.values()].reduce((a, b) => a + b, 0) : 0),
       stars: { sum: st.sum, max: st.max, count: st.count, avg },
       rating: ratingFor(avg),
     };

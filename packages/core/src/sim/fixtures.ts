@@ -5,6 +5,7 @@ import type { ArmSpec } from './plan';
 import { assembleWave, assignSeq, BASE_TS, planWave, type BossSpec, type WaveSpec } from './wave';
 import { decorateV11 } from './v11';
 import { V11_FIXTURES } from './fixtures-v11';
+import { drawOutageMs, fuzzFault } from '../../../haunt/src/runner/intensity';
 
 const SEED = 7;
 const when = (order: number, stage: string, delay: number, attempt = 1): ArmSpec['when'] => ({ order, stage, attempt, delay });
@@ -30,7 +31,38 @@ const stackedArms = (order: number): ArmSpec[] => [
   arm('stack-3', 'crash', { creature: 'reaper', when: when(order, 'payment', 4000) }),
 ];
 
+/**
+ * Intensity 11 (THROW EVERYTHING): a fault on every effect stage of every order of every lane, unknown (fuzz) faults among them with a
+ * `fingerprint`, outage windows drawn from the level, the dial at 3 first and then thrown to 11 by the player (V1_2 section 5).
+ */
+function intensity11(): HauntEvent[] {
+  const orders = 3;
+  const stages = ['account', 'submit', 'payment', 'confirmation', 'receive', 'process', 'ship'];
+  const arms: Record<number, ArmSpec[]> = {};
+  for (let lane = 1; lane <= 5; lane++) {
+    arms[lane] = [];
+    for (let o = 1; o <= orders; o++) {
+      stages.forEach((stage, k) => {
+        const id = `i11-${lane}-${o}-${stage}`;
+        const fz = k % 2 === 0 ? fuzzFault(SEED, lane, id, stage) : null;
+        const w = when(o, stage, 150);
+        if (fz) arms[lane]!.push(arm(id, fz.fault, { source: 'fuzz', when: w, extra: { unknown: true, fingerprint: fz.fingerprint, fuzz: { fault: fz.fault, ...(fz.status !== undefined ? { status: fz.status } : {}), ...(fz.truncated ? { truncated: true } : {}) } } }));
+        else if (k % 3 === 1) arms[lane]!.push(arm(id, 'endpoint_down', { source: 'random', when: w, outageMs: drawOutageMs(SEED, lane, id, 11) }));
+        else arms[lane]!.push(arm(id, k % 2 ? 'http_500' : 'timeout', { source: 'random', when: w }));
+      });
+    }
+  }
+  const events = assembleWave(planWave(spec({ orders }), arms), BASE_TS);
+  const at = (ts: number): number => { const i = events.findIndex((e) => e.ts > ts); return i < 0 ? events.length : i; };
+  const dial = (ts: number, level: number, source: string): HauntEvent => ({ seq: 0, ts, type: 'intensity', wave: 1, detail: { level, source, autoRamp: false } });
+  events.splice(at(BASE_TS + 120), 0, dial(BASE_TS + 120, 3, 'plan'));
+  events.splice(at(BASE_TS + 9000), 0, dial(BASE_TS + 9000, 11, 'player'));
+  return assignSeq(events);
+}
+
 export const FIXTURES: Record<string, () => HauntEvent[]> = {
+  'intensity-11': intensity11,
+
   calm: () => single(spec({ orders: 4 })),
 
   'hero-crash': () => assignSeq(decorateV11(single(spec({ orders: 5 }), heroArms()), { pace: 2 })),

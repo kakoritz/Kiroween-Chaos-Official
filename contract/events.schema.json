@@ -95,6 +95,12 @@
       "$ref": "#/$defs/part_added"
     },
     {
+      "$ref": "#/$defs/outage"
+    },
+    {
+      "$ref": "#/$defs/intensity"
+    },
+    {
       "$ref": "#/$defs/boss_warning"
     },
     {
@@ -840,8 +846,16 @@
                     "random",
                     "boss",
                     "demo",
-                    "sweep"
+                    "sweep",
+                    "gremlin",
+                    "fuzz"
                   ]
+                },
+                "unknown": {
+                  "type": "boolean"
+                },
+                "fingerprint": {
+                  "type": "string"
                 },
                 "deferred": {
                   "type": "boolean"
@@ -1527,6 +1541,95 @@
                 }
               }
             }
+          }
+        }
+      ]
+    },
+    "outage": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "outage"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "outageMs",
+                "seed"
+              ],
+              "properties": {
+                "outageMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "seed": {
+                  "description": "number or string"
+                },
+                "fault": {
+                  "type": "string"
+                },
+                "level": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 11
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "intensity": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "intensity"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "level",
+                "source"
+              ],
+              "properties": {
+                "level": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 11
+                },
+                "source": {
+                  "enum": [
+                    "player",
+                    "ramp",
+                    "plan"
+                  ]
+                },
+                "autoRamp": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "lane": false
           }
         }
       ]

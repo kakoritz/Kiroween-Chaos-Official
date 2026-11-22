@@ -2,6 +2,8 @@
 // Shared by the fixture generator and the mock server. All times here are plan time at 1x.
 import { TIERS, TIMING, orderId, type AppId, type PartId, type TierId, type HauntEvent } from '@haunt/shared';
 import { planLane, type ArmSpec, type LanePlan, type LaneCfg } from './plan';
+import { gremlinVariant, laneIssues } from '../../../haunt/src/runner/floor';
+import { unit } from '../../../haunt/src/shared/rng';
 
 export const LANE_START_MS = 1000;
 export const BASE_TS = 1_760_000_000_000;
@@ -20,6 +22,8 @@ export interface WaveSpec {
   laneReady?: { tier: string; label: string; parts: string[] }[];
   /** Parts per lane that replace the tier's own (campaign Crew on lane 1). */
   laneParts?: (PartId[] | undefined)[];
+  /** Never perfect (spec 5.3, P19): a lane whose plan has no issue gets a gremlin at the middle of the round, and `wave_end` carries `issues` per lane. */
+  floor?: boolean;
 }
 
 export interface BossSpec {
@@ -40,6 +44,22 @@ export interface PlannedWave {
   endAt: number;
 }
 
+const GREMLIN_STAGES = ['account', 'submit', 'payment', 'confirmation', 'receive', 'process', 'ship'];
+
+/** Floor rule: if the lane has no issue, plan it again with one gremlin (slow call, one 500 or a duplicate delivery). Asserts the floor holds. */
+function withFloor(spec: WaveSpec, cfg: LaneCfg, arms: ArmSpec[], plan: LanePlan): LanePlan {
+  if (laneIssues(plan.events) > 0) return plan;
+  const variant = gremlinVariant(spec.seed, cfg.lane, spec.waveNo ?? 1);
+  const stage = variant === 'duplicate_request' ? 'create' : GREMLIN_STAGES[Math.floor(unit(spec.seed, 'gremlin-stage', cfg.lane) * GREMLIN_STAGES.length)]!;
+  const mid = Math.max(1, Math.ceil(spec.orders / 2));
+  for (const order of [...new Set([mid, 1, spec.orders])]) {
+    const gremlin: ArmSpec = { id: `gremlin-${cfg.lane}`, fault: variant, source: 'gremlin', creature: 'gremlin', extra: { fault: 'gremlin', variant }, when: { order, stage, attempt: 1, delay: 100 } };
+    const p = planLane(cfg, [...arms, gremlin]);
+    if (laneIssues(p.events) > 0) return p;
+  }
+  throw new Error(`floor rule: lane ${cfg.lane} ended with zero issues`);
+}
+
 export function planWave(spec: WaveSpec, armsByLane: Record<number, ArmSpec[]> = {}, bosses: BossSpec[] = []): PlannedWave {
   const resolved: ResolvedBoss[] = bosses.map((b) => ({ ...b, startAt: b.warnAt + TIMING.bossWarnMs, endAt: 0 }));
   const plans = spec.tiers.map((tier, i) => {
@@ -47,7 +67,8 @@ export function planWave(spec: WaveSpec, armsByLane: Record<number, ArmSpec[]> =
     const cfg: LaneCfg = { lane, tier, app: spec.app, seed: spec.seed, orders: spec.orders, pace: spec.pace, progressMs: spec.progressMs, parts: spec.laneParts?.[i] };
     const arms = [...(armsByLane[lane] ?? [])];
     for (const b of resolved) arms.push({ id: `boss-${b.fault}`, fault: b.fault, source: 'boss', at: b.startAt });
-    return planLane(cfg, arms);
+    const plan = planLane(cfg, arms);
+    return spec.floor ? withFloor(spec, cfg, arms, plan) : plan;
   });
   for (const b of resolved) {
     let end = b.startAt + 500;
@@ -93,7 +114,7 @@ export function assembleWave(pw: PlannedWave, ts0: number, includeHello = true):
   const summary: Record<string, any> = {};
   pw.plans.forEach((p, i) => {
     const s = p.summary;
-    summary[String(i + 1)] = { score: s.score, grade: s.grade, completed: s.completed, failed: s.failed, parked: s.parked, quarantined: s.quarantined, repeats: s.repeats };
+    summary[String(i + 1)] = { score: s.score, grade: s.grade, completed: s.completed, failed: s.failed, parked: s.parked, quarantined: s.quarantined, repeats: s.repeats, ...(spec.floor ? { issues: laneIssues(p.events) } : {}) };
   });
   add({ seq: 0, ts: Math.round(base + pw.endAt + 500), type: 'wave_end', wave, detail: { summary } }, 9, 0, 0);
   out.sort((a, b) => a.key[0] - b.key[0] || a.key[1] - b.key[1] || a.key[2] - b.key[2] || a.key[3] - b.key[3]);
