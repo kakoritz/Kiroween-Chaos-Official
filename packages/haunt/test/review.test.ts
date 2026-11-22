@@ -31,9 +31,9 @@ describe('review sub-scores', () => {
     expect(review(mk({ decision: { choice: 'discount' } })).sub.delivery).toBe(2);
     expect(review(mk({ decision: { choice: 'redo' } })).sub.delivery).toBe(4);
   });
-  it('ease counts intake and confirmation issues, typo decisions lower it', () => {
+  it('ease counts create and confirmation issues, typo decisions lower it', () => {
     const at = (stage: string, count: number) => review(mk({ lap: { issues: [{ stage, count }] } })).sub.ease;
-    expect(at('intake', 1)).toBe(4);
+    expect(at('create', 1)).toBe(4);
     expect(at('confirmation', 2)).toBe(3);
     expect(at('charge', 3)).toBe(5);
     expect(review(mk({ decision: { choice: 'redo' } })).sub.ease).toBe(2);
@@ -45,7 +45,7 @@ describe('review stars, caps and reasons', () => {
   it('stars are in 0.5 steps from 1 to 5', () => {
     for (const ms of [8000, 14000, 20000, 28000, 40000]) {
       for (const dt of [0, 3000, 8000, 20000]) {
-        const s = review(mk({ lap: { ms, downtimeMs: dt, issues: [{ stage: 'intake', count: 2 }] } })).stars;
+        const s = review(mk({ lap: { ms, downtimeMs: dt, issues: [{ stage: 'create', count: 2 }] } })).stars;
         expect(s * 2).toBe(Math.round(s * 2));
         expect(s).toBeGreaterThanOrEqual(1);
         expect(s).toBeLessThanOrEqual(5);
@@ -53,7 +53,7 @@ describe('review stars, caps and reasons', () => {
     }
   });
   it('is deterministic', () => {
-    const i = mk({ lap: { ms: 17000, downtimeMs: 4000, issues: [{ stage: 'intake', count: 1 }] } });
+    const i = mk({ lap: { ms: 17000, downtimeMs: 4000, issues: [{ stage: 'create', count: 1 }] } });
     expect(review(i)).toEqual(review(i));
   });
   it('caps: charge 2, refund 2, discount 3, redo 4', () => {

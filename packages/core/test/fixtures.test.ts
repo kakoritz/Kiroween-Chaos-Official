@@ -124,8 +124,8 @@ describe('storyboards (C3)', () => {
     const seq = l5.slice(i, i + 16).map((e) => `${e.type}${e.type === 'recover_start' || e.type === 'recover_done' ? ':' + e.detail!.action : ''}${e.detail?.skipped ? ':skipped' : ''}${e.detail?.replayed ? ':replayed' : ''}`);
     expect(seq).toEqual([
       'chaos', 'effect', 'process_dead', 'process_up', 'recover_start:replay',
-      'stage_start', 'stage_done:skipped', 'stage_start', 'stage_done:skipped',
-      'stage_start', 'recover_start:reconcile', 'effect:replayed', 'recover_done:reconcile', 'stage_done', 'score', 'recover_done:replay',
+      'stage_start', 'stage_done:skipped', 'stage_start', 'stage_done:skipped', 'stage_start', 'stage_done:skipped',
+      'stage_start', 'recover_start:reconcile', 'effect:replayed', 'recover_done:reconcile', 'stage_done',
     ]);
     expect(l5[i].detail).toMatchObject({ creature: 'reaper', fault: 'crash', depth: 1, injectedAt: 'after_effect', source: 'demo' });
     const done = l5.find((e) => e.type === 'stage_done' && e.stage === 'payment' && e.detail!.reconciled);
@@ -134,19 +134,35 @@ describe('storyboards (C3)', () => {
     expect(l5.find((e) => e.type === 'order_done')!.detail).toMatchObject({ clean: true });
   });
 
-  it('hero-crash lane 1 (Rookie): restart from stage 1, repeats the account then the charge', () => {
+  it('hero-crash: account is the first stage of every lane and Retrier to Phoenix never duplicate a ledger effect', () => {
+    const ev = get('hero-crash');
+    for (const n of [1, 2, 3, 4, 5]) {
+      expect(lane(ev, n).find((e) => e.type === 'stage_start')!.stage).toBe('account');
+    }
+    // Lanes 2 to 4 are not pressed in the hero script, lane 5 (Phoenix) is crashed and reconciles: no `repeat` on any of them.
+    for (const n of [2, 3, 4, 5]) expect(lane(ev, n).filter((e) => e.type === 'repeat')).toEqual([]);
+    // One effect per kind per order on those lanes: account, order, charge, email, store x2, dispatch, notify x2.
+    for (const n of [2, 3, 4, 5]) {
+      const keys = lane(ev, n).filter((e) => e.type === 'effect' && !e.detail!.replayed).map((e) => `${e.order}|${e.detail!.key}`);
+      expect(new Set(keys).size).toBe(keys.length);
+      expect(new Set(lane(ev, n).filter((e) => e.type === 'effect').map((e) => e.detail!.kind))).toEqual(new Set(['account_create', 'order', 'charge', 'email', 'store', 'dispatch', 'notify']));
+    }
+  });
+
+  it('hero-crash lane 1 (Rookie): restart from stage 1, repeats the account, the order then the charge', () => {
     const l1 = lane(get('hero-crash'), 1);
     const i = l1.findIndex((e) => e.type === 'chaos');
     const head = types(l1.slice(i, i + 7));
     expect(head).toEqual(['chaos', 'effect', 'process_dead', 'process_up', 'recover_start', 'recover_done', 'stage_start']);
     expect(l1[i + 4].detail!.action).toBe('restart');
-    expect(l1[i + 6]).toMatchObject({ stage: 'intake', detail: { attempt: 2 } });
+    expect(l1[i + 6]).toMatchObject({ stage: 'account', detail: { attempt: 2 } });
     const repeats = l1.filter((e) => e.type === 'repeat');
-    expect(repeats.map((e) => e.detail!.kind)).toEqual(['account_create', 'charge']);
+    expect(repeats.map((e) => e.detail!.kind)).toEqual(['account_create', 'order', 'charge']);
     const scores = l1.filter((e) => e.type === 'score' && e.detail!.delta === -150);
-    expect(scores).toHaveLength(2);
+    expect(scores).toHaveLength(3);
     expect(repeats[0].seq).toBeLessThan(repeats[1].seq);
-    expect(l1.find((e) => e.type === 'order_done')!.detail).toMatchObject({ clean: false, repeats: 2 });
+    expect(repeats[1].seq).toBeLessThan(repeats[2].seq);
+    expect(l1.find((e) => e.type === 'order_done')!.detail).toMatchObject({ clean: false, repeats: 3 });
     expect(get('hero-crash').find((e) => e.type === 'process_dead')!.detail!.restartInMs).toBe(1000);
   });
 
@@ -266,7 +282,8 @@ describe('storyboards (C3)', () => {
     const l5 = lane(ev, 5);
     const chaosIdx = l5.findIndex((e) => e.type === 'chaos');
     const fail = l5.slice(chaosIdx).find((e) => e.type === 'stage_fail');
-    expect(fail?.stage).toBe('account');
+    // The 404 lands in create (input), the first stage that takes it is submit.
+    expect(fail?.stage).toBe('submit');
   });
 
   it('boss-internet and boss-storm carry their boss faults', () => {

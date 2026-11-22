@@ -28,29 +28,33 @@ function classify(plan: LanePlan): { outcome: Code; extraRows: Partial<Record<Ef
 }
 
 const R: Partial<Record<EffectKind, number>> = {};
-const all5 = { account_create: 1, charge: 1, email: 1, dispatch: 1, notify: 2 };
+// Every effect of the 11-step order: account, order (submit), charge, receipt, store (receive + process), shipment, notices.
+const all5 = { account_create: 1, order: 1, charge: 1, email: 1, store: 2, dispatch: 1, notify: 2 };
+const early = { account_create: 1, order: 1 };
 type Cell = Code | [Code, Partial<Record<EffectKind, number>>];
 // Acceptance table A, typed independently of the resolver (rows A1 to A21).
 const TABLE_A: { id: string; fault: string; stage: string; point?: string; cells: Cell[] }[] = [
-  { id: 'A1', fault: 'crash', stage: 'payment', point: 'before_effect', cells: [['REPEAT', { account_create: 1 }], ['REPEAT', { account_create: 1 }], 'OK', 'OK', 'OK'] },
-  { id: 'A2', fault: 'crash', stage: 'payment', point: 'after_effect_before_journal', cells: [['REPEAT', { account_create: 1, charge: 1 }], ['REPEAT', { account_create: 1, charge: 1 }], ['REPEAT', { charge: 1 }], 'OK', 'OK'] },
-  { id: 'A3', fault: 'crash', stage: 'payment', point: 'after_journal', cells: [['REPEAT', { account_create: 1, charge: 1 }], ['REPEAT', { account_create: 1, charge: 1 }], 'OK', 'OK', 'OK'] },
+  { id: 'A1', fault: 'crash', stage: 'payment', point: 'before_effect', cells: [['REPEAT', early], ['REPEAT', early], 'OK', 'OK', 'OK'] },
+  { id: 'A2', fault: 'crash', stage: 'payment', point: 'after_effect_before_journal', cells: [['REPEAT', { ...early, charge: 1 }], ['REPEAT', { ...early, charge: 1 }], ['REPEAT', { charge: 1 }], 'OK', 'OK'] },
+  { id: 'A3', fault: 'crash', stage: 'payment', point: 'after_journal', cells: [['REPEAT', { ...early, charge: 1 }], ['REPEAT', { ...early, charge: 1 }], 'OK', 'OK', 'OK'] },
   { id: 'A4', fault: 'crash', stage: 'account', point: 'after_effect_before_journal', cells: [['REPEAT', { account_create: 1 }], ['REPEAT', { account_create: 1 }], ['REPEAT', { account_create: 1 }], 'OK', 'OK'] },
-  { id: 'A5', fault: 'crash', stage: 'intake', point: 'mid_stage', cells: ['OK', 'OK', 'OK', 'OK', 'OK'] },
-  { id: 'A6', fault: 'crash', stage: 'tracking', point: 'mid_stage', cells: [['REPEAT', all5], ['REPEAT', all5], 'OK', 'OK', 'OK'] },
-  { id: 'A7', fault: 'power_outage', stage: 'payment', point: 'after_effect_before_journal', cells: [['REPEAT', { account_create: 1, charge: 1 }], ['REPEAT', { account_create: 1, charge: 1 }], ['REPEAT', { charge: 1 }], 'OK', 'OK'] },
+  // Account now comes first, so a bot with no journal repeats it when the process dies while it reads the input file.
+  { id: 'A5', fault: 'crash', stage: 'create', point: 'mid_stage', cells: [['REPEAT', { account_create: 1 }], ['REPEAT', { account_create: 1 }], 'OK', 'OK', 'OK'] },
+  { id: 'A5b', fault: 'crash', stage: 'account', point: 'before_effect', cells: ['OK', 'OK', 'OK', 'OK', 'OK'] },
+  { id: 'A6', fault: 'crash', stage: 'transit', point: 'mid_stage', cells: [['REPEAT', all5], ['REPEAT', all5], 'OK', 'OK', 'OK'] },
+  { id: 'A7', fault: 'power_outage', stage: 'payment', point: 'after_effect_before_journal', cells: [['REPEAT', { ...early, charge: 1 }], ['REPEAT', { ...early, charge: 1 }], ['REPEAT', { charge: 1 }], 'OK', 'OK'] },
   { id: 'A9', fault: 'timeout', stage: 'payment', cells: ['FAILED', ['REPEAT', { charge: 1 }], ['REPEAT', { charge: 1 }], 'OK', 'OK'] },
   { id: 'A10', fault: 'http_404', stage: 'payment', cells: ['FAILED', 'OK', 'OK', 'OK', 'OK'] },
   { id: 'A11', fault: 'http_500', stage: 'payment', cells: ['FAILED', 'OK', 'OK', 'OK', 'OK'] },
   { id: 'A12', fault: 'http_429', stage: 'payment', cells: ['FAILED', 'FAILED', 'FAILED', 'FAILED', 'OK'] },
   { id: 'A13', fault: 'internet_outage', stage: 'payment', cells: ['FAILED', 'FAILED', 'FAILED', 'FAILED', 'PARKED_OK'] },
   { id: 'A14', fault: 'endpoint_down', stage: 'payment', cells: ['FAILED', 'FAILED', 'FAILED', 'FAILED', 'PARKED_OK'] },
-  { id: 'A15', fault: 'missing_file', stage: 'intake', cells: ['HALT', 'FAILED', 'FAILED', 'FAILED', 'PARKED_OK'] },
-  { id: 'A16', fault: 'malformed_payload', stage: 'intake', cells: ['HALT', 'FAILED', 'FAILED', 'FAILED', 'QUAR'] },
-  { id: 'A17', fault: 'duplicate_request', stage: 'intake', cells: [['REPEAT', all5], ['REPEAT', all5], 'OK', 'OK', 'OK'] },
+  { id: 'A15', fault: 'missing_file', stage: 'create', cells: ['HALT', 'FAILED', 'FAILED', 'FAILED', 'PARKED_OK'] },
+  { id: 'A16', fault: 'malformed_payload', stage: 'create', cells: ['HALT', 'FAILED', 'FAILED', 'FAILED', 'QUAR'] },
+  { id: 'A17', fault: 'duplicate_request', stage: 'create', cells: [['REPEAT', all5], ['REPEAT', all5], 'OK', 'OK', 'OK'] },
   { id: 'A18', fault: 'disk_full', stage: 'payment', cells: ['OK', 'OK', 'OK', 'OK', 'OK'] },
-  { id: 'A19', fault: 'hazard_event', stage: 'tracking', cells: ['FAILED', 'FAILED', 'FAILED', 'FAILED', 'OK'] },
-  { id: 'A20', fault: 'driver_unreachable', stage: 'tracking', cells: ['FAILED', 'FAILED', 'FAILED', 'FAILED', 'OK'] },
+  { id: 'A19', fault: 'hazard_event', stage: 'transit', cells: ['FAILED', 'FAILED', 'FAILED', 'FAILED', 'OK'] },
+  { id: 'A20', fault: 'driver_unreachable', stage: 'transit', cells: ['FAILED', 'FAILED', 'FAILED', 'FAILED', 'OK'] },
   { id: 'A21', fault: 'slow_link', stage: 'payment', cells: ['OK', 'OK', 'OK', 'OK', 'OK'] },
 ];
 

@@ -107,7 +107,7 @@ export { orderId };
 
 /**
  * `order_typo` (design.md section 8): swap the items of the order file for different products, keeping the original in
- * `orig/`. The file stays valid JSON, so intake passes. Returns false when the file is missing or not an order.
+ * `orig/`. The file stays valid JSON, so create passes. Returns false when the file is missing or not an order.
  */
 export function typoOrder(paths: LanePaths, order: string, seed: string | number): boolean {
   const file = `${order}.json`;

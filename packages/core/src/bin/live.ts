@@ -1,4 +1,4 @@
-// `npm run live`: starts the live server on 127.0.0.1:7070 and the provider on 127.0.0.1:7071. Optional first argument: port.
+// `npm run live`: starts the live server on 127.0.0.1:7070 and the provider on 127.0.0.1:7071. Optional first argument: port. `HAUNT_PORT` and `HAUNT_PROVIDER_PORT` override the two ports (a second server can run beside the first).
 import { join } from 'node:path';
 import { EventLog } from '../../../haunt/src/events/eventlog';
 import { LIVE_PORT, LiveServer, createLiveRuntime, loopFixEvents, makeBotCommand, readHardening } from '../live';
@@ -6,7 +6,7 @@ import { startProvider } from '../provider/server';
 
 const port = Number(process.argv.find((a, i) => i >= 2 && /^\d+$/.test(a)) ?? process.env.HAUNT_PORT ?? LIVE_PORT);
 const runDir = join(process.cwd(), '.haunt');
-const provider = await startProvider();
+const provider = await startProvider({ port: Number(process.env.HAUNT_PROVIDER_PORT) || undefined });
 // `--loop`: lane 1 (Rookie) runs the recorded hardened bundle from wave 2 on (runtime.md section 32).
 const loop = process.argv.includes('--loop');
 // Lanes spawn dist/bots/<tier>.js per lane (npm run build:bots). A tier with no built bot is left unspawned; demos and chaos still arm the director.

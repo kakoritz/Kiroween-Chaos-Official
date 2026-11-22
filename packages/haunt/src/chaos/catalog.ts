@@ -11,10 +11,12 @@ export const CRASH_POINTS: readonly HookPoint[] = [
 export const RECOVERY_POINTS: readonly HookPoint[] = ['during_replay', 'during_reconcile', 'during_backoff'];
 
 /** Stages that make provider calls. */
-export const EFFECT_STAGES: readonly string[] = ['account', 'payment', 'confirmation', 'dispatch', 'updates', 'tracking'];
-/** Stages that run a journaled effect (tracking only polls), so only these have an fter_effect_before_journal hook. */
-export const JOURNALED_EFFECT_STAGES: readonly string[] = EFFECT_STAGES.filter((s) => s !== 'tracking');
-const ALL = ['intake', 'account', 'payment', 'confirmation', 'dispatch', 'updates', 'tracking', 'handoff'];
+export const EFFECT_STAGES: readonly string[] = ['account', 'submit', 'payment', 'confirmation', 'receive', 'process', 'updates', 'ship', 'transit'];
+/** Stages that run a journaled effect (transit only polls), so only these have an after_effect_before_journal hook. */
+export const JOURNALED_EFFECT_STAGES: readonly string[] = EFFECT_STAGES.filter((s) => s !== 'transit');
+const ALL = ['account', 'create', 'submit', 'payment', 'confirmation', 'receive', 'process', 'updates', 'ship', 'transit', 'handoff'];
+/** Effect stages that retry on a count fault (updates degrades instead, transit polls). */
+const CALL_STAGES: readonly string[] = ['account', 'submit', 'payment', 'confirmation', 'receive', 'process', 'ship'];
 
 export interface FaultDef {
   id: string;
@@ -36,28 +38,28 @@ export const FAULTS: readonly FaultDef[] = [
   def({ id: 'crash', creature: 'reaper', family: 'process', kind: 'process', stages: ALL, restartMs: 1000, count: 1 }),
   def({ id: 'out_of_memory', creature: 'reaper', family: 'process', kind: 'process', stages: ALL, restartMs: 2500, count: 1 }),
   def({ id: 'power_outage', creature: 'wraith', family: 'process', kind: 'process', stages: ALL, restartMs: 5000, count: 1 }),
-  def({ id: 'internet_outage', creature: 'banshee', family: 'network', kind: 'provider', stages: ['account', 'payment', 'confirmation', 'dispatch', 'updates', 'tracking'], forMs: 8000 }),
+  def({ id: 'internet_outage', creature: 'banshee', family: 'network', kind: 'provider', stages: EFFECT_STAGES, forMs: 8000 }),
   def({ id: 'endpoint_down', creature: 'gargoyle', family: 'network', kind: 'provider', stages: EFFECT_STAGES, forMs: 10000 }),
-  def({ id: 'timeout', creature: 'zombie', family: 'network', kind: 'provider', stages: ['account', 'payment', 'confirmation', 'dispatch'], count: 1 }),
-  def({ id: 'comm_timeout', creature: 'zombie', family: 'network', kind: 'provider', stages: ['account', 'payment', 'confirmation', 'dispatch'], count: 1 }),
+  def({ id: 'timeout', creature: 'zombie', family: 'network', kind: 'provider', stages: CALL_STAGES, count: 1 }),
+  def({ id: 'comm_timeout', creature: 'zombie', family: 'network', kind: 'provider', stages: CALL_STAGES, count: 1 }),
   def({ id: 'slow_link', creature: 'zombie', family: 'network', kind: 'provider', stages: EFFECT_STAGES, forMs: 6000 }),
-  def({ id: 'http_404', creature: 'ghost', family: 'http', kind: 'provider', stages: ['account', 'payment', 'confirmation', 'dispatch'], count: 2 }),
-  def({ id: 'http_429', creature: 'goblin', family: 'http', kind: 'provider', stages: ['payment', 'confirmation', 'dispatch'], count: 3 }),
+  def({ id: 'http_404', creature: 'ghost', family: 'http', kind: 'provider', stages: CALL_STAGES, count: 2 }),
+  def({ id: 'http_429', creature: 'goblin', family: 'http', kind: 'provider', stages: ['payment', 'confirmation', 'ship'], count: 3 }),
   def({ id: 'http_500', creature: 'imp', family: 'http', kind: 'provider', stages: EFFECT_STAGES, count: 2 }),
-  def({ id: 'missing_file', creature: 'poltergeist', family: 'data', kind: 'file', stages: ['intake'], forMs: 6000 }),
-  def({ id: 'duplicate_request', creature: 'doppelganger', family: 'data', kind: 'file', stages: ['intake'], count: 1 }),
-  def({ id: 'malformed_payload', creature: 'witch', family: 'data', kind: 'file', stages: ['intake'], count: 1 }),
+  def({ id: 'missing_file', creature: 'poltergeist', family: 'data', kind: 'file', stages: ['create'], forMs: 6000 }),
+  def({ id: 'duplicate_request', creature: 'doppelganger', family: 'data', kind: 'file', stages: ['create'], count: 1 }),
+  def({ id: 'malformed_payload', creature: 'witch', family: 'data', kind: 'file', stages: ['create'], count: 1 }),
   def({ id: 'disk_full', creature: 'mummy', family: 'data', kind: 'disk', stages: ALL, count: 1 }),
-  def({ id: 'hazard_event', creature: 'werewolf', family: 'world', kind: 'provider', stages: ['tracking'], forMs: 5000 }),
+  def({ id: 'hazard_event', creature: 'werewolf', family: 'world', kind: 'provider', stages: ['transit'], forMs: 5000 }),
   def({ id: 'sms_down', creature: 'gargoyle', family: 'network', kind: 'provider', stages: ['confirmation'], forMs: 8000 }),
-  def({ id: 'app_down', creature: 'imp', family: 'http', kind: 'provider', stages: ['dispatch'], forMs: 8000 }),
+  def({ id: 'app_down', creature: 'imp', family: 'http', kind: 'provider', stages: ['ship'], forMs: 8000 }),
   def({ id: 'updates_down', creature: 'goblin', family: 'http', kind: 'provider', stages: ['updates'], forMs: 8000 }),
-  def({ id: 'wrong_address', creature: 'scarecrow', family: 'world', kind: 'provider', stages: ['tracking'], forMs: 5000 }),
+  def({ id: 'wrong_address', creature: 'scarecrow', family: 'world', kind: 'provider', stages: ['transit'], forMs: 5000 }),
   def({ id: 'no_answer', creature: 'black_cat', family: 'world', kind: 'provider', stages: ['handoff'], forMs: 3000 }),
   def({ id: 'gated_house', creature: 'black_cat', family: 'world', kind: 'provider', stages: ['handoff'], forMs: 3000 }),
-  def({ id: 'order_typo', creature: 'prankster', family: 'world', kind: 'provider', stages: ['intake'], forMs: 0 }),
+  def({ id: 'order_typo', creature: 'prankster', family: 'world', kind: 'provider', stages: ['create'], forMs: 0 }),
   def({ id: 'car_accident', creature: 'phantom_car', family: 'world', kind: 'provider', stages: ['handoff'], forMs: 7000 }),
-  def({ id: 'driver_unreachable', creature: 'will_o_wisp', family: 'world', kind: 'provider', stages: ['tracking'], forMs: 3000 }),
+  def({ id: 'driver_unreachable', creature: 'will_o_wisp', family: 'world', kind: 'provider', stages: ['transit'], forMs: 3000 }),
 ];
 
 export const BOSSES = ['boss_power_outage', 'boss_internet_outage', 'boss_hazard_storm'] as const;

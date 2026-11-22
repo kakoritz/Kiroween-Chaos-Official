@@ -22,7 +22,9 @@ export interface ArenaEvent {
   [extra: string]: unknown;
 }
 
-export interface StageInfo { id: string; label: string; icon: string; workAnimation: string }
+export interface StageInfo { id: string; label: string; icon: string; workAnimation: string; kind?: 'effect' | 'read' | 'poll' | 'final' }
+/** `app` is the id string, or (contract v1.2 section 1) an object that carries the stage list as `stages: [{id, label, kind}]`. */
+export interface AppRef { id?: string; label?: string; stages?: Array<Partial<StageInfo> & { id: string; label: string }> }
 export interface PartInfo { id: string; label: string; installed: boolean }
 
 export interface LaneState {
@@ -44,7 +46,7 @@ export interface LaneState {
 export interface ArenaState {
   contractVersion: number;
   mode: RunMode | string;
-  app: string;
+  app: string | AppRef;
   wave: null | { n: number; running: boolean; seed: number; speed: number; orders: number; tiers: string; startedAt: number };
   chaos: { mode: 'off' | 'manual' | 'random'; frequency: number; seed: number };
   stages: StageInfo[];

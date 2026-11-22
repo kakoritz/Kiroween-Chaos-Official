@@ -1,7 +1,7 @@
 // The mock, in the page. Implements window.__haunt (contract mode `browser`) on top of the same Hub, Player,
 // ChaosSim and query code the mock server uses, so the hosted demo needs no server and makes no network call.
 // Everything it plays is a recorded or scaled fixture run, and the page labels it "Recorded run".
-import { APPS, CONTRACT_VERSION, CREATURES, PARTS, TIERS, TIER_ORDER, type AppId, type HauntEvent } from '@haunt/shared';
+import { APPS, CONTRACT_VERSION, stageKind, CREATURES, PARTS, TIERS, TIER_ORDER, type AppId, type HauntEvent } from '@haunt/shared';
 import { FIXTURES } from '../sim/fixtures';
 import { Hub } from './hub';
 import { CAPTION_SCRIPTS, loadCaptions } from '../live/captions';
@@ -67,11 +67,11 @@ export function createInPageMock(outcomeRows: ConstructorParameters<typeof Outco
       contractVersion: CONTRACT_VERSION, mode: 'browser', app: hub.app,
       wave: w ? { n: w.n, running: hub.running, seed: w.seed, speed: hub.speed, orders: w.orders, tiers: w.tiers, startedAt: w.startedAt } : null,
       chaos: hub.chaosMode,
-      stages: APPS[hub.app].stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role })),
+      stages: APPS[hub.app].stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role, kind: stageKind(s.role) })),
       lanes: [...hub.lanes.values()].sort((a, b) => a.lane - b.lane),
       boss: hub.boss,
       demo: { scripts: DEMO_SCRIPTS, running: hub.demoRunning },
-      apps: Object.values(APPS).map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, role: s.role })) })),
+      apps: Object.values(APPS).map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, role: s.role, kind: stageKind(s.role) })) })),
       tiers: TIER_ORDER.map((t) => ({ id: t, label: TIERS[t].label, parts: TIERS[t].parts })),
       parts: Object.values(PARTS),
       scripts: DEMO_SCRIPTS,
@@ -122,7 +122,7 @@ export function createInPageMock(outcomeRows: ConstructorParameters<typeof Outco
       if (!(CAPTION_SCRIPTS as readonly string[]).includes(script)) throw new MockError(404, 'not_found', 'unknown demo script');
       return loadCaptions(script);
     },
-    getApps: async () => Object.values(APPS).map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role })) })),
+    getApps: async () => Object.values(APPS).map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role, kind: stageKind(s.role) })) })),
     setApp: async (app: string) => guard(() => {
       if (app !== 'orders' && app !== 'inbox') throw new MockError(400, 'bad_request', 'app must be orders or inbox');
       if (hub.running) throw new MockError(409, 'wave_running', 'a wave is running');
@@ -145,7 +145,7 @@ export function createInPageMock(outcomeRows: ConstructorParameters<typeof Outco
     getPostmortem: async (n: number) => { const w = wave(n); return w && w.endedAt !== undefined ? postmortem(hub, w) : notReady(); },
     getHardening: async (n: number) => { const w = wave(n); return w && w.endedAt !== undefined ? hardening(hub, w) : notReady(); },
     subscribe: (fn: (e: any) => void, opts: { since?: number } = {}): (() => void) => {
-      fn({ type: 'hello', contractVersion: CONTRACT_VERSION, mode: 'browser', seq: hub.seq, ts: Date.now(), app: hub.app });
+      fn({ type: 'hello', contractVersion: CONTRACT_VERSION, mode: 'browser', seq: hub.seq, ts: Date.now(), app: hub.app, stages: APPS[hub.app].stages.map((s) => ({ id: s.id, label: s.label, kind: stageKind(s.role) })) });
       if (opts.since !== undefined) for (const e of hub.buffer) if (e.seq > opts.since) fn(e);
       hub.subs.add(fn);
       return () => { hub.subs.delete(fn); };

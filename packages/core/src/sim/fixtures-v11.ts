@@ -12,7 +12,7 @@ const when = (order: number, stage: string, delay: number, attempt = 1): ArmSpec
 const arm = (id: string, fault: string, extra: Partial<ArmSpec> = {}): ArmSpec => ({ id, fault, source: 'demo', ...extra });
 
 /** Stage durations of a clean order at the show pace (2x of the planner midpoints, rounded). */
-export const DUR: Record<string, number> = { intake: 1300, account: 1500, payment: 2300, confirmation: 1200, dispatch: 1800, updates: 1200, tracking: 4500, handoff: 900 };
+export const DUR: Record<string, number> = { account: 1200, create: 1000, submit: 600, payment: 2000, confirmation: 900, receive: 600, process: 900, updates: 900, ship: 1500, transit: 4500, handoff: 900 };
 const STAGES = APPS.orders.stages;
 
 interface Raw { t: number; type: string; order?: string; stage?: string; detail: Record<string, any> }
@@ -83,7 +83,7 @@ export class Script {
   }
 
   /** The stages of a clean order from `from` up to and including `to`. */
-  run(order: string, from = 'intake', to = 'handoff', suffix?: string): void {
+  run(order: string, from = 'account', to = 'handoff', suffix?: string): void {
     const a = STAGES.findIndex((s) => s.id === from);
     const b = STAGES.findIndex((s) => s.id === to);
     for (let i = a; i <= b; i++) this.stage(order, STAGES[i].id, { suffix });
@@ -183,8 +183,8 @@ function cancelled(): HauntEvent[] {
 function worldEvents(): HauntEvent[] {
   const base = plan({ orders: 3, tiers: ['rookie', 'retrier', 'journaler'] }, {
     1: [arm('we-1', 'endpoint_down', { creature: 'gargoyle', when: when(1, 'confirmation', 300) })],
-    2: [arm('we-2', 'endpoint_down', { creature: 'imp', when: when(1, 'dispatch', 300) })],
-    3: [arm('we-3', 'hazard_event', { creature: 'scarecrow', when: when(1, 'tracking', 300) })],
+    2: [arm('we-2', 'endpoint_down', { creature: 'imp', when: when(1, 'ship', 300) })],
+    3: [arm('we-3', 'hazard_event', { creature: 'scarecrow', when: when(1, 'transit', 300) })],
   });
   rename(base, 1, 'endpoint_down', 'sms_down');
   rename(base, 2, 'endpoint_down', 'app_down');
@@ -194,14 +194,14 @@ function worldEvents(): HauntEvent[] {
   const s4 = new Script(4, 'reconciler', 3);
   s4.t = 0;
   const o1 = s4.start(1);
-  s4.run(o1, 'intake', 'tracking');
+  s4.run(o1, 'account', 'transit');
   s4.cancel(o1, 'handoff', { error: 'handoff blocked: accident', afterMs: 1600, chaos: { creature: 'phantom_car', fault: 'car_accident' } });
   for (const i of [2, 3]) { s4.gap(600); const o = s4.start(i); s4.run(o); s4.done(o); }
 
   // Lane 5 (Phoenix): the black cat hides the door, three attempts fail, the fourth lands.
   const s5 = new Script(5, 'phoenix', 3);
   const p1 = s5.start(1);
-  s5.run(p1, 'intake', 'tracking');
+  s5.run(p1, 'account', 'transit');
   s5.stage(p1, 'handoff', {
     ms: 900,
     fails: [
@@ -228,8 +228,8 @@ function typo(choice: Choice, detectedAt: 'confirmation' | 'handoff'): HauntEven
   s.gap(600);
   const o = s.start(2);
   s.at(s.t + 300, 'chaos', { creature: 'prankster', fault: 'order_typo', scope: 'outer', depth: 1, injectedAt: 'during', source: 'demo' });
-  const upTo = detectedAt === 'confirmation' ? 'payment' : 'tracking';
-  s.run(o, 'intake', upTo);
+  const upTo = detectedAt === 'confirmation' ? 'payment' : 'transit';
+  s.run(o, 'account', upTo);
   const stage = detectedAt;
   s.at(s.t, 'stage_start', { attempt: 1 }, o, stage);
   const t0 = s.t;
@@ -252,7 +252,7 @@ function typo(choice: Choice, detectedAt: 'confirmation' | 'handoff'): HauntEven
     s.sc(-60, 'discount');
     s.at(s.t + 900, 'stage_done', { ms: s.t + 900 - t0, skipped: false }, o, stage);
     s.t += 900;
-    if (stage === 'confirmation') s.run(o, 'dispatch', 'handoff');
+    if (stage === 'confirmation') s.run(o, 'receive', 'handoff');
     s.at(s.t, 'order_done', { clean: false, ms: 0, repeats: 0 }, o);
     s.counts.completed++;
     s.sc(40, 'order with repeats');
@@ -261,7 +261,7 @@ function typo(choice: Choice, detectedAt: 'confirmation' | 'handoff'): HauntEven
     s.at(s.t + 150, 'effect', { kind: 'refund', key: `${o}:refund`, replayed: false, amount: 5800 }, o);
     s.t += 600;
     s.at(s.t, 'order_start', { index: 2, total: 2, redo: true }, o);
-    s.run(o, 'intake', 'handoff', ':r1');
+    s.run(o, 'account', 'handoff', ':r1');
     s.done(o);
     s.grade = 'A';
   }
@@ -278,7 +278,7 @@ function bossRecovered(): HauntEvent[] {
 function downtime(): HauntEvent[] {
   const s = new Script(1, 'retrier', 2);
   const o1 = s.start(1);
-  s.run(o1, 'intake', 'account');
+  s.run(o1, 'account', 'submit');
   s.stage(o1, 'payment', {
     ms: 2300,
     fails: [
@@ -291,7 +291,7 @@ function downtime(): HauntEvent[] {
     ms: 1200,
     fails: [{ error: 'timeout after 2000 ms', afterMs: 800, action: 'retry', recoverMs: 2400, chaos: { creature: 'zombie', fault: 'timeout' } }],
   });
-  s.run(o1, 'dispatch', 'handoff');
+  s.run(o1, 'receive', 'handoff');
   s.done(o1);
   s.gap(600);
   const o2 = s.start(2);

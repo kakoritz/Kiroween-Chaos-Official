@@ -1,4 +1,4 @@
-// The eight-stage order pipeline and the five policy tiers.
+// The eleven-stage order pipeline (tournament-v3 spec section 2) and the five policy tiers.
 // Spec: .kiro/specs/engine/design.md sections 1 and 4; runtime.md sections 5, 7, 21 and 28.
 import { fnv1a32, mulberry32, unit } from '../shared';
 import { ParkSignal, ProcessKilled, QuarantineError, WrongOrder, type Part, type Sdk } from '../sdk';
@@ -11,13 +11,16 @@ export interface StageDef {
 }
 
 export const STAGES: readonly StageDef[] = [
-  { id: 'intake', label: 'Order intake', min: 400, max: 900 },
-  { id: 'account', label: 'Account creation', min: 500, max: 1000 },
-  { id: 'payment', label: 'Payment processing', min: 800, max: 1500 },
-  { id: 'confirmation', label: 'Confirmation', min: 400, max: 800 },
-  { id: 'dispatch', label: 'Dispatch to delivery', min: 600, max: 1200 },
-  { id: 'updates', label: 'Order updates', min: 400, max: 800 },
-  { id: 'tracking', label: 'Delivery tracking', min: 1500, max: 3000 },
+  { id: 'account', label: 'Account or login', min: 400, max: 800 },
+  { id: 'create', label: 'Create order', min: 300, max: 700 },
+  { id: 'submit', label: 'Submit order', min: 200, max: 400 },
+  { id: 'payment', label: 'Payment', min: 700, max: 1300 },
+  { id: 'confirmation', label: 'Confirmation', min: 300, max: 600 },
+  { id: 'receive', label: 'Store receives', min: 200, max: 400 },
+  { id: 'process', label: 'Process order', min: 300, max: 600 },
+  { id: 'updates', label: 'Order updates', min: 300, max: 600 },
+  { id: 'ship', label: 'Ship and pack', min: 500, max: 1000 },
+  { id: 'transit', label: 'Delivery updates', min: 1500, max: 3000 },
   { id: 'handoff', label: 'Handoff', min: 300, max: 600 },
 ];
 
@@ -64,6 +67,15 @@ export function orderId(i: number): string {
   return `ord-${String(i).padStart(4, '0')}`;
 }
 
+/**
+ * The customer of an order, derived from the order id alone so the `account` stage (first) never needs the input file
+ * that `create` reads. Same rule as `generateOrders`: `ord-0007` is `user7@example.test`.
+ */
+export function customerEmail(id: string): string {
+  const m = /(\d+)/.exec(id);
+  return m ? `user${Number(m[1])}@example.test` : `${id}@example.test`;
+}
+
 /** Same seed gives the same orders. Emails are unique. */
 export function generateOrders(seed: string | number, n: number): OrderData[] {
   const rng = mulberry32(fnv1a32(`${seed}|orders`));
@@ -75,14 +87,14 @@ export function generateOrders(seed: string | number, n: number): OrderData[] {
       const s = SKUS[Math.floor(rng() * SKUS.length)]!;
       items.push({ sku: s.sku, qty: 1 + Math.floor(rng() * 3), price: s.price });
     }
-    out.push({ id: orderId(i), email: `user${i}@example.test`, items, total: items.reduce((a, b) => a + b.qty * b.price, 0) });
+    out.push({ id: orderId(i), email: customerEmail(orderId(i)), items, total: items.reduce((a, b) => a + b.qty * b.price, 0) });
   }
   return out;
 }
 
 /**
  * `order_typo` (design.md section 8): the same customer and id, but every line is a different product. The file is still
- * valid JSON, so intake passes and the wrong cart is charged. Deterministic from the seed.
+ * valid JSON, so create passes and the wrong cart is charged. Deterministic from the seed.
  */
 export function swapItems(order: OrderData, seed: string | number): OrderData {
   const rng = mulberry32(fnv1a32(`${seed}|typo|${order.id}`));
@@ -124,9 +136,9 @@ export interface PipelineDeps {
   attempt?: number;
   /** Reads and validates the input file for an order. Throws InputError. */
   readOrder(id: string): Promise<OrderData>;
-  /** One tracking poll. Resolves to true when delivered. */
+  /** One transit poll (the provider "tracking" endpoint). Resolves to true when delivered. */
   pollTracking(shipment: string): Promise<boolean>;
-  /** Live handoff call (stage 8). Throws when the handoff is blocked. Absent in bots that do not call a provider. */
+  /** Live handoff call (stage 11). Throws when the handoff is blocked. Absent in bots that do not call a provider. */
   handoff?(shipment: string): Promise<void>;
   hook(point: 'input_read', ctx: { order: string; stage: string }): Promise<void>;
   emit(msg: Record<string, unknown>): void;
@@ -150,7 +162,7 @@ export class Pipeline {
     this.queue = use.has('offline_queue');
   }
 
-  /** Runs one order through all eight stages. Throws LaneHalted when the tier cannot absorb an input error. */
+  /** Runs one order through all eleven stages. Throws LaneHalted when the tier cannot absorb an input error. */
   async run(id: string): Promise<PipelineResult> {
     let halted = false;
     const res = await this.d.sdk.order(id, async () => {
@@ -181,27 +193,36 @@ export class Pipeline {
     const def = (n: string) => STAGES.find((s) => s.id === n)!;
     let order: OrderData | undefined;
     let account: unknown;
+    let submitted: unknown;
     let charge: unknown;
     let shipment = '';
 
-    await sdk.stage('intake', async (s) => {
-      await s.work(this.work(def('intake'), id));
-      await this.d.hook('input_read', { order: id, stage: 'intake' });
+    // Account or login comes first: the customer is derived from the order id, not from the input file.
+    await sdk.stage('account', async (s) => {
+      await s.work(this.work(def('account'), id));
+      account = await s.effect('account', { key: this.key(s, 'account'), body: { email: customerEmail(id) } });
+    });
+    account ??= sdk.recorded('account', 'account');
+
+    await sdk.stage('create', async (s) => {
+      await s.work(this.work(def('create'), id));
+      await this.d.hook('input_read', { order: id, stage: 'create' });
       try {
         order = await this.d.readOrder(id);
       } catch (e) {
         throw this.inputFailure(e);
       }
     });
-    // After a journal replay intake is skipped; read the file again for its data only (no effect repeats).
+    // After a journal replay create is skipped; read the file again for its data only (no effect repeats).
     if (!order) order = await this.d.readOrder(id).catch((e) => { throw this.inputFailure(e); });
     const o = order;
 
-    await sdk.stage('account', async (s) => {
-      await s.work(this.work(def('account'), id));
-      account = await s.effect('account', { key: this.key(s, 'account'), body: { email: o.email } });
+    // Submit: the order number becomes final. One cheap journaled effect of its own kind, so a repeat shows in ORDERS.
+    await sdk.stage('submit', async (s) => {
+      await s.work(this.work(def('submit'), id));
+      submitted = await s.effect('order', { key: this.key(s, 'order'), body: { account: idOf(account), total: o.total } });
     });
-    account ??= sdk.recorded('account', 'account');
+    submitted ??= sdk.recorded('submit', 'order');
     await sdk.stage('payment', async (s) => {
       await s.work(this.work(def('payment'), id));
       charge = await s.effect('charge', { key: this.key(s, 'charge'), body: { amount: o.total, account: idOf(account) } });
@@ -211,11 +232,14 @@ export class Pipeline {
       await s.work(this.work(def('confirmation'), id));
       await s.effect('email', { key: this.key(s, 'email'), body: { charge: idOf(charge) } });
     });
-    await sdk.stage('dispatch', async (s) => {
-      await s.work(this.work(def('dispatch'), id));
-      shipment = idOf(await s.effect('dispatch', { key: this.key(s, 'dispatch') }));
+    await sdk.stage('receive', async (s) => {
+      await s.work(this.work(def('receive'), id));
+      await s.effect('store', { key: this.key(s, 'store:1'), index: 1, body: { step: 'receive', ref: idOf(submitted) } });
     });
-    shipment ||= idOf(sdk.recorded('dispatch', 'dispatch'));
+    await sdk.stage('process', async (s) => {
+      await s.work(this.work(def('process'), id));
+      await s.effect('store', { key: this.key(s, 'store:2'), index: 2, body: { step: 'process', lines: o.items.length } });
+    });
     await sdk.stage('updates', async (s) => {
       await s.work(this.work(def('updates'), id));
       // Non-critical: a failure after retries is degraded and the pipeline continues (runtime.md section 21).
@@ -228,15 +252,20 @@ export class Pipeline {
         this.d.emit({ type: 'stage_fail', order: id, stage: 'updates', detail: { degraded: true } });
       }
     });
-    await sdk.stage('tracking', async (s) => {
-      await s.work(this.work(def('tracking'), id));
-      const polls = Math.max(1, Math.ceil(def('tracking').min / POLL_EVERY_MS));
+    await sdk.stage('ship', async (s) => {
+      await s.work(this.work(def('ship'), id));
+      shipment = idOf(await s.effect('dispatch', { key: this.key(s, 'dispatch') }));
+    });
+    shipment ||= idOf(sdk.recorded('ship', 'dispatch'));
+    await sdk.stage('transit', async (s) => {
+      await s.work(this.work(def('transit'), id));
+      const polls = Math.max(1, Math.ceil(def('transit').min / POLL_EVERY_MS));
       for (let i = 1; i <= polls; i++) {
         const delivered = await this.d.pollTracking(shipment);
-        this.d.emit({ type: 'progress', order: id, stage: 'tracking', detail: { poll: i } });
+        this.d.emit({ type: 'progress', order: id, stage: 'transit', detail: { poll: i } });
         if (delivered) return;
       }
-      throw new Error('tracking: not delivered');
+      throw new Error('transit: not delivered');
     });
     await sdk.stage('handoff', async (s) => {
       await s.work(this.work(def('handoff'), id));

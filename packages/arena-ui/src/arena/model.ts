@@ -97,9 +97,29 @@ function setMode(l: LaneVM, mode: SkelMode, now: number): void {
   if (l.mode !== mode) { l.mode = mode; l.since = now; }
 }
 
+/** The orders stage list before contract v1.2. Used only when the server sends no list at all (rule 48). */
+export const LEGACY_STAGES: readonly StageInfo[] = [
+  { id: 'intake', label: 'Order intake', icon: 'mail', workAnimation: 'read_mail' },
+  { id: 'account', label: 'Account creation', icon: 'user', workAnimation: 'fill_form' },
+  { id: 'payment', label: 'Payment processing', icon: 'card', workAnimation: 'swipe_card' },
+  { id: 'confirmation', label: 'Confirmation', icon: 'envelope', workAnimation: 'write_letter' },
+  { id: 'dispatch', label: 'Dispatch to delivery', icon: 'box', workAnimation: 'load_scooter' },
+  { id: 'updates', label: 'Order updates', icon: 'bubbles', workAnimation: 'send_bubbles' },
+  { id: 'tracking', label: 'Delivery tracking', icon: 'road', workAnimation: 'scooter_road' },
+  { id: 'handoff', label: 'Handoff', icon: 'door', workAnimation: 'doorstep' },
+];
+
+/** Stage chips come from the server: `app.stages` (v1.2) first, then `stages`, then the legacy list. */
+export function stagesOf(s: Pick<ArenaState, 'app' | 'stages'>): StageInfo[] {
+  const fromApp = typeof s.app === 'object' && s.app !== null && Array.isArray(s.app.stages) && s.app.stages.length > 0 ? s.app.stages : null;
+  const list = fromApp ?? (Array.isArray(s.stages) && s.stages.length > 0 ? s.stages : null);
+  if (!list) return LEGACY_STAGES.map((x) => ({ ...x }));
+  return list.map((x) => ({ icon: '', workAnimation: 'think', ...x }) as StageInfo);
+}
+
 /** Build from GET /api/state on load and reconnect. Stage names come from here (W3). */
 export function loadSnapshot(vm: ArenaVM, s: ArenaState, now: number): void {
-  vm.stages = Array.isArray(s.stages) ? s.stages.map((x) => ({ ...x })) : [];
+  vm.stages = stagesOf(s);
   vm.wave = s.wave?.n ?? 0;
   vm.running = !!s.wave?.running;
   vm.speed = s.wave?.speed ?? 1;

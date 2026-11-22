@@ -6,6 +6,17 @@ import { dirname, resolve } from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
 import { APPS, ALL_TYPES, GLOBAL_TYPES, type AppId, type HauntEvent } from '@haunt/shared';
 
+/** The orders stage ids before v1.2 (V1_2.md section 1). A recorded stream that uses them is checked against this list. */
+export const LEGACY_ORDERS_STAGE_IDS: readonly string[] = ['intake', 'account', 'payment', 'confirmation', 'dispatch', 'updates', 'tracking', 'handoff'];
+
+/** Stage ids a stream is checked against: the hello's `stages` list when present, the legacy list for an old orders stream, else the app's list. */
+function stageIdsFor(events: readonly HauntEvent[], app: AppId): string[] {
+  const hello = events.find((e) => e.type === 'hello') as (HauntEvent & { stages?: unknown }) | undefined;
+  if (Array.isArray(hello?.stages) && hello!.stages.length > 0) return hello!.stages.map((s: { id?: unknown }) => String(s?.id));
+  if (app === 'orders' && events.some((e) => e.stage === 'intake')) return [...LEGACY_ORDERS_STAGE_IDS];
+  return APPS[app].stages.map((s) => s.id);
+}
+
 export interface Violation {
   rule: string;
   seq: number;
@@ -141,7 +152,7 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
   let lastSeq = -1;
   let lastTs = -1;
   let boss: { fault: string; warnTs: number; startsInMs: number; started: boolean; startTs: number } | null = null;
-  let stageIds: string[] = APPS.orders.stages.map((s) => s.id);
+  let stageIds: string[] = stageIdsFor(events, 'orders');
   let sawWaveStart = false;
   let minor = 0;
 
@@ -268,7 +279,7 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
         waveOpen = true; sawWaveStart = true;
         waveNo = ev.wave ?? waveNo + 1;
         app = (d.app as AppId) in APPS ? (d.app as AppId) : 'orders';
-        stageIds = APPS[app].stages.map((s) => s.id);
+        stageIds = stageIdsFor(events, app);
         lanes = new Map();
         boss = null;
         return;

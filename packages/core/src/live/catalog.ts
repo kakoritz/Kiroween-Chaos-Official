@@ -1,5 +1,6 @@
 // Static catalogs served by the live server: creatures, apps, stages, gear (contract/CONTRACT.md, PROTOCOL.md rule 19).
 import { FAULTS, BOSSES } from '../../../haunt/src/chaos/catalog';
+import { ORDERS_STAGES, stageKind, type StageKind } from '../../../haunt/src/shared/catalog';
 
 export const CONTRACT_VERSION = 1;
 export type AppId = 'orders' | 'inbox';
@@ -71,26 +72,19 @@ export function buildCreatures(): Creature[] {
 export const CREATURES: readonly Creature[] = buildCreatures();
 export const FAULT_IDS: ReadonlySet<string> = new Set(CREATURES.flatMap((c) => c.causes));
 
-export interface StageView { id: string; label: string; icon: string; workAnimation: string }
+/** One stage as the server serves it: `kind` is the contract's stage kind (V1_2.md section 1). */
+export interface StageView { id: string; label: string; icon: string; workAnimation: string; kind: StageKind }
 
 export const APP_STAGES: Record<AppId, StageView[]> = {
-  orders: [
-    { id: 'intake', label: 'Order intake', icon: 'mail', workAnimation: 'read_mail' },
-    { id: 'account', label: 'Account creation', icon: 'user', workAnimation: 'fill_form' },
-    { id: 'payment', label: 'Payment processing', icon: 'card', workAnimation: 'swipe_card' },
-    { id: 'confirmation', label: 'Confirmation', icon: 'envelope', workAnimation: 'write_letter' },
-    { id: 'dispatch', label: 'Dispatch to delivery', icon: 'box', workAnimation: 'load_scooter' },
-    { id: 'updates', label: 'Order updates', icon: 'bubbles', workAnimation: 'send_bubbles' },
-    { id: 'tracking', label: 'Delivery tracking', icon: 'road', workAnimation: 'scooter_road' },
-    { id: 'handoff', label: 'Handoff', icon: 'door', workAnimation: 'doorstep' },
-  ],
+  // The orders list comes from the one stage table (haunt/shared/catalog), so ids, labels and kinds cannot drift.
+  orders: ORDERS_STAGES.map((d) => ({ id: d.id, label: d.label, icon: d.icon, workAnimation: d.workAnimation, kind: stageKind(d.role) })),
   inbox: [
-    { id: 'fetch', label: 'Fetch', icon: 'mail', workAnimation: 'read_mail' },
-    { id: 'classify', label: 'Classify', icon: 'brain', workAnimation: 'think' },
-    { id: 'ticket', label: 'Ticket', icon: 'ticket', workAnimation: 'file_ticket' },
-    { id: 'draft', label: 'Draft', icon: 'envelope', workAnimation: 'write_letter' },
-    { id: 'reply', label: 'Reply', icon: 'plane', workAnimation: 'send_letter' },
-    { id: 'archive', label: 'Archive', icon: 'archive', workAnimation: 'archive_box' },
+    { id: 'fetch', label: 'Fetch', icon: 'mail', workAnimation: 'read_mail', kind: 'read' },
+    { id: 'classify', label: 'Classify', icon: 'brain', workAnimation: 'think', kind: 'read' },
+    { id: 'ticket', label: 'Ticket', icon: 'ticket', workAnimation: 'file_ticket', kind: 'effect' },
+    { id: 'draft', label: 'Draft', icon: 'envelope', workAnimation: 'write_letter', kind: 'read' },
+    { id: 'reply', label: 'Reply', icon: 'plane', workAnimation: 'send_letter', kind: 'effect' },
+    { id: 'archive', label: 'Archive', icon: 'archive', workAnimation: 'archive_box', kind: 'final' },
   ],
 };
 

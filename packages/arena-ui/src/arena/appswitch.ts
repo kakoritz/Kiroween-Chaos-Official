@@ -23,7 +23,10 @@ export function appChoices(apps: unknown): AppChoice[] {
 /** The app title shown on the switcher, e.g. "Haunted Orders". */
 export const appTitle = (c: AppChoice): string => (/^haunted\b/i.test(c.label) ? c.label : `Haunted ${c.label}`);
 
-export const currentApp = (s: Pick<ArenaState, 'app'> | null | undefined): string => (s && typeof s.app === 'string' ? s.app : '');
+export const currentApp = (s: Pick<ArenaState, 'app'> | null | undefined): string => {
+  const a = s?.app;
+  return typeof a === 'string' ? a : a && typeof a.id === 'string' ? a.id : '';
+};
 
 export interface SwitchHost {
   getApps(): Promise<unknown>;

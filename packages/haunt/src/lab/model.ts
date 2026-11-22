@@ -110,12 +110,15 @@ export const LAB_PRESETS: Record<string, LabModel> = {
   orders: {
     name: 'orders-lab',
     stages: [
-      { id: 'intake', label: 'Order intake', role: 'input' },
-      { id: 'account', label: 'Account creation', role: 'effect', effects: [eff('account')] },
-      { id: 'payment', label: 'Payment processing', role: 'effect', effects: [eff('charge')] },
+      { id: 'account', label: 'Account or login', role: 'effect', effects: [eff('account')] },
+      { id: 'create', label: 'Create order', role: 'input' },
+      { id: 'submit', label: 'Submit order', role: 'effect', effects: [eff('order')] },
+      { id: 'payment', label: 'Payment', role: 'effect', effects: [eff('charge')] },
       { id: 'confirmation', label: 'Confirmation', role: 'effect', effects: [eff('email')] },
-      { id: 'dispatch', label: 'Dispatch', role: 'effect', effects: [eff('dispatch')] },
-      { id: 'tracking', label: 'Tracking', role: 'poll' },
+      { id: 'receive', label: 'Store receives', role: 'effect', effects: [eff('store')] },
+      { id: 'process', label: 'Process order', role: 'effect', effects: [eff('store')] },
+      { id: 'ship', label: 'Ship and pack', role: 'effect', effects: [eff('dispatch')] },
+      { id: 'transit', label: 'Delivery updates', role: 'poll' },
     ],
   },
   inbox: {

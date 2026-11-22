@@ -7,7 +7,7 @@ import { CREATURES, FAULT_IDS } from '../src/live/catalog';
 
 const CASES = [
   { fault: 'sms_down', creature: 'gargoyle', stage: 'confirmation', service: 'email' },
-  { fault: 'app_down', creature: 'imp', stage: 'dispatch', service: 'dispatch' },
+  { fault: 'app_down', creature: 'imp', stage: 'ship', service: 'dispatch' },
   { fault: 'updates_down', creature: 'goblin', stage: 'updates', service: 'notify' },
 ] as const;
 

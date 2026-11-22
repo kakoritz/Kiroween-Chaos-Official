@@ -69,7 +69,8 @@ describe('mock server REST and SSE (H0.7)', () => {
       const state = await (await fetch(`${base}/api/state`)).json() as any;
       expect(state.scripts).toEqual(['hero', 'full', 'loop']);
       expect(state.contractVersion).toBe(1);
-      expect(state.stages.length).toBe(8);
+      expect(state.stages.length).toBe(11);
+      expect(state.stages[0].id).toBe('account');
       const row = await (await fetch(`${base}/api/outcome?tier=phoenix&fault=internet_outage&stage=payment`)).json() as any;
       expect(row.outcome).toBe('PARKED_OK');
       expect((await fetch(`${base}/api/outcome?tier=nope&fault=x&stage=y`)).status).toBe(404);

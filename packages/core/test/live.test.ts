@@ -43,7 +43,10 @@ describe('live server: reads', () => {
     expect(s.wave).toBeNull();
     expect(s.lanes).toEqual([]);
     expect(s.boss).toEqual({ next: null, startsInMs: null, active: false });
-    expect(s.stages).toHaveLength(8);
+    expect(s.stages).toHaveLength(11);
+    expect(s.stages.map((x: { id: string }) => x.id)).toEqual(['account', 'create', 'submit', 'payment', 'confirmation', 'receive', 'process', 'updates', 'ship', 'transit', 'handoff']);
+    expect(s.stages[0]).toMatchObject({ id: 'account', label: 'Account or login', kind: 'effect' });
+    expect(s.stages.map((x: { kind: string }) => x.kind)).toEqual(['effect', 'read', 'effect', 'effect', 'effect', 'effect', 'effect', 'effect', 'effect', 'poll', 'final']);
     expect(s.demo).toEqual({ scripts: ['hero', 'full', 'loop'], running: null });
   });
 
@@ -136,7 +139,7 @@ describe('live server: lane views from events', () => {
     rec({ type: 'stage_start', lane: '1', order: 'ord-0001', stage: 'payment', detail: { attempt: 1 } });
     rec({ type: 'chaos', lane: '1', order: 'ord-0001', stage: 'payment', detail: { creature: 'reaper', fault: 'crash', scope: 'inner', depth: 1, injectedAt: 'after_effect', source: 'user' } });
     rec({ type: 'process_dead', lane: '1', detail: { reason: 'crash', restartInMs: 1000 } });
-    expect((await get('/api/state')).body.lanes[0]).toMatchObject({ state: 'dead', stage: 'payment', stageIndex: 2, depth: 1, order: 'ord-0001' });
+    expect((await get('/api/state')).body.lanes[0]).toMatchObject({ state: 'dead', stage: 'payment', stageIndex: 3, depth: 1, order: 'ord-0001' });
     rec({ type: 'process_up', lane: '1', detail: { attempt: 2 } });
     rec({ type: 'order_done', lane: '1', order: 'ord-0001', detail: { clean: false, ms: 5000, repeats: 0 } });
     const lane = (await get('/api/state')).body.lanes[0];
@@ -261,6 +264,9 @@ describe('live server: SSE', () => {
     await post('/api/wave/start', { lanes: 1 });
     const { events } = await reading;
     expect(events[0]).toMatchObject({ type: 'hello', contractVersion: 1, mode: 'live', app: 'orders' });
+    // V1_2 section 1: the hello carries the stage list as data, account first.
+    expect(events[0].stages.map((s: { id: string }) => s.id)).toEqual(['account', 'create', 'submit', 'payment', 'confirmation', 'receive', 'process', 'updates', 'ship', 'transit', 'handoff']);
+    expect(events[0].stages[1]).toEqual({ id: 'create', label: 'Create order', icon: 'mail', workAnimation: 'read_mail', kind: 'read' });
     expect(events[0].seq).toBe(1);
     const ws = events.find((e) => e.type === 'wave_start');
     expect('lane' in ws).toBe(false);

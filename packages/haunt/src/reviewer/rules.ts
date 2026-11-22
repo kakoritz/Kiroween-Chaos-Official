@@ -7,7 +7,7 @@ export interface LedgerKey { order: string; kind: string }
 export interface ReviewOptions {
   /** Recovery target in ms (default 20000). */
   recoverMs?: number;
-  /** Stage ids that take input files (default intake, fetch). */
+  /** Stage ids that take input files (default create, intake, fetch). */
   inputStages?: string[];
   /** R7 inputs: journal results and ledger rows. Rule is skipped when both are omitted. */
   journal?: LedgerKey[];
@@ -35,7 +35,7 @@ type Draft = Omit<Finding, 'id'>;
 export function reviewEvents(events: HauntEvent[], opts: ReviewOptions = {}): Finding[] {
   const evs = [...events].sort((a, b) => seqOf(a) - seqOf(b));
   const recoverTarget = opts.recoverMs ?? 20000;
-  const inputStages = opts.inputStages ?? ['intake', 'fetch'];
+  const inputStages = opts.inputStages ?? ['create', 'intake', 'fetch'];
   const out: Draft[] = [];
   const add = (rule: string, severity: Severity, e: { stage?: string }, fault: string, summary: string, seqs: number[], part: string) =>
     out.push({ rule, severity, stage: e.stage ?? '', fault, summary, evidenceSeq: [...new Set(seqs)].sort((a, b) => a - b), suggestedPart: part });

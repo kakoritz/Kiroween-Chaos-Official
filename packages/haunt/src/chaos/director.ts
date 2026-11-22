@@ -134,9 +134,9 @@ export class ChaosDirector {
       // The wrong order needs the file swapped first: it waits for the bot's next `input_read` hook (`onInputRead`),
       // which also names the order the provider complains about.
       entry.waitStage = INPUT_READ;
-      if (info.stage !== null && info.stage !== 'intake') {
+      if (info.stage !== null && info.stage !== 'create') {
         detail.deferred = true;
-        detail.deferredTo = 'intake';
+        detail.deferredTo = 'create';
       }
     } else if (def.kind !== 'process') {
       const applies = info.stage !== null && def.stages.includes(info.stage);

@@ -140,11 +140,17 @@
       "enum": [
         "intake",
         "account",
+        "create",
+        "submit",
         "payment",
         "confirmation",
+        "receive",
+        "process",
         "dispatch",
         "updates",
+        "ship",
         "tracking",
+        "transit",
         "handoff",
         "fetch",
         "classify",
@@ -1085,8 +1091,10 @@
                 "kind": {
                   "enum": [
                     "account_create",
+                    "order",
                     "charge",
                     "email",
+                    "store",
                     "dispatch",
                     "notify",
                     "ticket",
@@ -1139,8 +1147,10 @@
                 "kind": {
                   "enum": [
                     "account_create",
+                    "order",
                     "charge",
                     "email",
+                    "store",
                     "dispatch",
                     "notify",
                     "ticket"

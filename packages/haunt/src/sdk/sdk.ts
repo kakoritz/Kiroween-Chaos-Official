@@ -85,7 +85,7 @@ class OrderCancelled extends Error {
     super('wrong order refunded');
   }
 }
-/** The wrong order was refunded and starts again from intake. Unwinds to `order()`. */
+/** The wrong order was refunded and starts again from the first stage. Unwinds to `order()`. */
 class OrderRedo extends Error {}
 
 /** Journal home of the refund and discount effects: they belong to no pipeline stage. */
@@ -409,7 +409,7 @@ export class Sdk {
     const row = r.row;
     const payload: Record<string, unknown> = { id: row.id };
     if (kind === 'charge' || kind === 'refund' || kind === 'discount') payload.amount = row.amount;
-    if (kind === 'notify') payload.index = row.index;
+    if (kind === 'notify' || kind === 'store') payload.index = row.index;
     return payload;
   }
 
@@ -473,7 +473,7 @@ export class Sdk {
     this.o.host.emit({ type: 'breaker', order: this.order_, detail: { service, state: 'half_open' } });
   }
 
-  /** Counts a failed call against the service breaker (also used for tracking polls, which sit outside effect()). */
+  /** Counts a failed call against the service breaker (also used for transit polls, which sit outside effect()). */
   noteFailure(service: string): void {
     const b = this.breakerFor(service);
     b.fails++;

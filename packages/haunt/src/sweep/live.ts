@@ -41,7 +41,7 @@ export interface LiveCellOptions {
   speed?: number;
   /** A fault that fired and took longer than this to finish counts as recovered_late. */
   recoverMs?: number;
-  /** Stages whose faults are applied before the bot starts (input faults). Default ['intake']. */
+  /** Stages whose faults are applied before the bot starts (input faults). Default ['create', 'intake'] (the v1.2 input stage and the legacy one). */
   preStages?: readonly string[];
   /** Hard stop on restarts. Default 6. */
   maxStarts?: number;
@@ -60,7 +60,7 @@ export function createLiveCellRunner(o: LiveCellOptions): RunCell {
   const now = o.now ?? Date.now;
   const speed = o.speed ?? 4;
   const orders = o.orders ?? 2;
-  const pre = new Set(o.preStages ?? ['intake']);
+  const pre = new Set(o.preStages ?? ['create', 'intake']);
   const byId = new Map(o.creatures.map((c) => [c.id, c]));
   mkdirSync(o.runDir, { recursive: true });
   const base = mkdtempSync(join(o.runDir, 'sweep-'));
@@ -118,7 +118,7 @@ export function createLiveCellRunner(o: LiveCellOptions): RunCell {
     const t0 = now();
     // missing_file acts at the bot's input_read hook on the head file it is about to read (runtime.md section 20),
     // so a lane with one order is not left empty before it starts.
-    const atInputRead = cell.fault === 'missing_file' && cell.stage === 'intake';
+    const atInputRead = cell.fault === 'missing_file' && (cell.stage === 'create' || cell.stage === 'intake');
     if (pre.has(cell.stage) && !atInputRead) pending.push(inject());
 
     const ac = new AbortController();

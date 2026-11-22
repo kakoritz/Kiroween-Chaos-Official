@@ -156,7 +156,7 @@ function plannedNight(night: CampaignNight, parts: readonly PartId[]): HauntEven
 // ------------------------------------------------------------------------------------------------ finale
 
 /** The stages of a clean order at the slow pace, from `from` up to and including `to`. */
-function runSlow(s: Script, order: string, from = 'intake', to = 'handoff', suffix?: string): void {
+function runSlow(s: Script, order: string, from = 'account', to = 'handoff', suffix?: string): void {
   const ids = APPS.orders.stages.map((d) => d.id);
   for (let i = ids.indexOf(from); i <= ids.indexOf(to); i++) s.stage(order, ids[i], { ms: Math.round(DUR[ids[i]] * SCALE), suffix });
 }
@@ -200,7 +200,7 @@ function finaleNight(night: CampaignNight, parts: readonly PartId[]): HauntEvent
   const typoOrder = (i: number): void => {
     const o = s.start(i);
     s.at(s.t + 300, 'chaos', { creature: 'prankster', fault: 'order_typo', scope: 'outer', depth: 1, injectedAt: 'during', source: 'demo' });
-    runSlow(s, o, 'intake', 'payment');
+    runSlow(s, o, 'account', 'payment');
     const t0 = s.t;
     s.at(t0, 'stage_start', { attempt: 1 }, o, 'confirmation');
     const failT = t0 + Math.round(700 * SCALE);
@@ -214,7 +214,7 @@ function finaleNight(night: CampaignNight, parts: readonly PartId[]): HauntEvent
     s.sc(-60, 'discount');
     s.at(s.t + 900, 'stage_done', { ms: s.t + 900 - t0, skipped: false }, o, 'confirmation');
     s.t += 900;
-    runSlow(s, o, 'dispatch', 'handoff');
+    runSlow(s, o, 'receive', 'handoff');
     s.at(s.t, 'order_done', { clean: false, ms: 0, repeats: 0 }, o);
     s.counts.completed++;
     s.sc(40, 'order with repeats');

@@ -7,7 +7,7 @@ import { CREATURES, FAULT_IDS } from '../src/live/catalog';
 import { Provider } from '../src/provider/provider';
 
 const CASES = [
-  { fault: 'wrong_address', creature: 'scarecrow', stage: 'tracking', service: 'tracking', mode: 'stall', forMs: 5000, row: 'L4' },
+  { fault: 'wrong_address', creature: 'scarecrow', stage: 'transit', service: 'tracking', mode: 'stall', forMs: 5000, row: 'L4' },
   { fault: 'no_answer', creature: 'black_cat', stage: 'handoff', service: 'handoff', mode: 'handoff_block', forMs: 3000, row: 'L5' },
   { fault: 'gated_house', creature: 'black_cat', stage: 'handoff', service: 'handoff', mode: 'handoff_block', forMs: 3000, row: 'L6' },
   { fault: 'car_accident', creature: 'phantom_car', stage: 'handoff', service: 'handoff', mode: 'handoff_block', forMs: 7000, row: 'L7' },
@@ -30,7 +30,7 @@ describe('world events b: wrong_address, no_answer, gated_house, car_accident (P
     });
 
     it(`${c.row} ${c.fault}: outcomes by tier, deferred off its stage`, () => {
-      expect(resolveOutcome('orders', 'rookie', c.fault, c.stage === 'tracking' ? 'payment' : 'tracking')).toBeNull();
+      expect(resolveOutcome('orders', 'rookie', c.fault, c.stage === 'transit' ? 'payment' : 'transit')).toBeNull();
       for (const tier of ['rookie', 'retrier', 'journaler', 'reconciler'] as const) {
         expect(resolveOutcome('orders', tier, c.fault, c.stage)!.outcome).toBe('FAILED');
       }

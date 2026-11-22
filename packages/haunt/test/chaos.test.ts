@@ -71,9 +71,9 @@ describe('director: arming', () => {
 describe('director: deferral', () => {
   it('defers a fault that does not apply to the stage, never drops it', () => {
     const d = director();
-    const r = d.arm('L1', { fault: 'http_404' }, { state: 'working', stage: 'tracking' });
+    const r = d.arm('L1', { fault: 'http_404' }, { state: 'working', stage: 'transit' });
     expect(r).toMatchObject({ ok: true, provider: null, detail: { deferred: true, deferredTo: 'account' } });
-    expect(d.onStageStart('L1', 'intake')).toEqual([]);
+    expect(d.onStageStart('L1', 'create')).toEqual([]);
     expect(d.onStageStart('L1', 'account')).toMatchObject([{ fault: 'http_404', count: 2 }]);
     expect(d.onStageStart('L1', 'account')).toEqual([]);
   });
@@ -81,19 +81,19 @@ describe('director: deferral', () => {
   it('file faults wait for intake', () => {
     const d = director();
     const r = d.arm('L1', { fault: 'malformed_payload' }, WORKING);
-    expect(r).toMatchObject({ ok: true, detail: { deferred: true, deferredTo: 'intake' } });
-    expect(d.onStageStart('L1', 'intake')).toHaveLength(1);
+    expect(r).toMatchObject({ ok: true, detail: { deferred: true, deferredTo: 'create' } });
+    expect(d.onStageStart('L1', 'create')).toHaveLength(1);
   });
 
-  it('hazard_event waits for tracking', () => {
+  it('hazard_event waits for transit', () => {
     const d = director();
-    const r = d.arm('L1', { fault: 'hazard_event' }, { state: 'working', stage: 'dispatch' });
-    expect(r).toMatchObject({ ok: true, detail: { deferredTo: 'tracking' } });
+    const r = d.arm('L1', { fault: 'hazard_event' }, { state: 'working', stage: 'ship' });
+    expect(r).toMatchObject({ ok: true, detail: { deferredTo: 'transit' } });
   });
 
   it('inner provider fault is queued for the next recovery call, not deferred', () => {
     const d = director();
-    const r = d.arm('L1', { fault: 'http_500' }, { state: 'recovering', stage: 'intake' });
+    const r = d.arm('L1', { fault: 'http_500' }, { state: 'recovering', stage: 'create' });
     expect(r).toMatchObject({ ok: true, detail: { scope: 'inner', injectedAt: 'recovery' }, provider: { count: 1, nextCaller: 'recovery' } });
   });
 });

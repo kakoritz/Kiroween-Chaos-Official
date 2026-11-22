@@ -23,7 +23,7 @@ send({ k: 'ready' });
 createInterface({ input: process.stdin }).on('line', (l) => {
   if (JSON.parse(l).k !== 'go') return;
   for (const f of readdirSync(join(root, 'orders')).sort()) {
-    for (const stage of ['intake', 'payment']) send({ type: 'stage_start', order: f.slice(0, 8), stage });
+    for (const stage of ['create', 'payment']) send({ type: 'stage_start', order: f.slice(0, 8), stage });
     renameSync(join(root, 'orders', f), join(root, process.env.FAIL_ALL ? 'failed' : 'done', f));
   }
   process.exit(0);
@@ -49,7 +49,7 @@ name: t
 start: node bot.js
 truth: http://127.0.0.1:7071
 stages:
-  - id: intake
+  - id: create
     role: input
   - id: payment
     role: effect
@@ -61,7 +61,7 @@ const plan = planSweep(cfg.config, creatures, { catalogStages: true });
 
 describe('live sweep cell runner', () => {
   it('plans only catalog-applicable cells', () => {
-    expect(plan.cells.some((c) => c.stage === 'intake' && c.creature === 'werewolf')).toBe(false);
+    expect(plan.cells.some((c) => c.stage === 'create' && c.creature === 'werewolf')).toBe(false);
     expect(plan.cells.some((c) => c.stage === 'payment' && c.creature === 'goblin')).toBe(true);
     expect(plan.cells.some((c) => c.stage === 'payment' && c.creature === 'poltergeist')).toBe(false);
   });
@@ -92,7 +92,7 @@ describe('live sweep cell runner', () => {
 
   it('fails a cell whose orders end in failed/', async () => {
     const run = createLiveCellRunner({ command: process.execPath, args: [botJs], runDir: work, provider: fakeProvider(), creatures, orders: 2, env: { FAIL_ALL: '1' } });
-    const r = await run({ stage: 'intake', creature: 'doppelganger', fault: 'duplicate_request' }, 3);
+    const r = await run({ stage: 'create', creature: 'doppelganger', fault: 'duplicate_request' }, 3);
     expect(r).toEqual({ outcome: 'fail' });
   });
 

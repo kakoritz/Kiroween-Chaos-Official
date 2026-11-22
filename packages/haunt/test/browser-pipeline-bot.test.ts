@@ -22,7 +22,7 @@ ${code}`;
 }
 
 describe('browser pipeline bot', () => {
-  it('runs the eight-stage Pipeline in a worker: one side effect per order, journal done', async () => {
+  it('runs the eleven-stage Pipeline in a worker: one side effect per order, journal done', async () => {
     const spawn = await makeSpawn();
     const journal = new BrowserJournal(new MemoryStorage(), 'l5');
     const ledger = new PageLedger();
@@ -35,11 +35,11 @@ describe('browser pipeline bot', () => {
     proc.kill();
     expect(events.find((e) => e.k === 'bot_error')).toBeUndefined();
     for (const o of ['ord-0001', 'ord-0002']) {
-      for (const k of ['account', 'charge', 'email', 'dispatch'] as const) expect(ledger.count(o, k)).toBe(1);
+      for (const k of ['account', 'order', 'charge', 'email', 'dispatch'] as const) expect(ledger.count(o, k)).toBe(1);
       expect(ledger.count(o, 'notify')).toBe(2);
     }
     const stages = events.filter((e) => e.type === 'stage_done' && e.order === 'ord-0001').map((e) => e.stage);
-    expect(stages).toEqual(['intake', 'account', 'payment', 'confirmation', 'dispatch', 'updates', 'tracking', 'handoff']);
+    expect(stages).toEqual(['account', 'create', 'submit', 'payment', 'confirmation', 'receive', 'process', 'updates', 'ship', 'transit', 'handoff']);
     expect(events.filter((e) => e.type === 'order_done').map((e) => e.order)).toEqual(['ord-0001', 'ord-0002']);
     expect(replay(journal.records()).get('ord-0002')?.outcome).toBe('done');
   }, 30000);

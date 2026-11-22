@@ -67,7 +67,7 @@ describe('determinism: chaos schedule', () => {
     const c = new RandomChaos({ seed, frequency: 1 });
     const out: (string | null)[] = [];
     for (let t = 0; t < 400; t++) {
-      for (const lane of ['1', '2']) out.push(c.tick(lane, t % 2 ? 'charge' : 'intake', t * 1000)?.fault ?? null);
+      for (const lane of ['1', '2']) out.push(c.tick(lane, t % 2 ? 'charge' : 'create', t * 1000)?.fault ?? null);
     }
     return out;
   };
@@ -153,7 +153,7 @@ describe('determinism: report', () => {
     reliability: 70,
     matrix: [
       { stage: 'pay', fault: 'crash', point: 'after', result: 'repeat', repeats: [{ kind: 'charge', extra: 1 }], evidenceSeq: [4] },
-      { stage: 'intake', fault: 'timeout', result: 'pass', repeats: [], recoverMs: 900, evidenceSeq: [1] },
+      { stage: 'create', fault: 'timeout', result: 'pass', repeats: [], recoverMs: 900, evidenceSeq: [1] },
     ],
     recoveryMs: [900, 1200],
     repeats: [],

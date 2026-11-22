@@ -9,7 +9,7 @@ export type JournalRecord =
   | { t: 'stage_done'; order: string; stage: string; ts: number }
   | { t: 'order_done'; order: string; ts: number }
   | { t: 'order_end'; order: string; outcome: OrderOutcome; ts: number }
-  /** Wrong-order redo (playtest-v2 design.md section 8): generation `n` starts from intake with `:rN` keys. */
+  /** Wrong-order redo (playtest-v2 design.md section 8): generation `n` starts from the first stage with `:rN` keys. */
   | { t: 'order_redo'; order: string; n: number; ts: number }
   /** The wrong-order decision that was made, so a restart applies it instead of asking again. */
   | { t: 'decision'; order: string; choice: DecisionChoice; ts: number };
@@ -101,7 +101,7 @@ export function applyRecord(state: JournalState, r: JournalRecord): void {
       order(r.order).outcome = r.outcome;
       break;
     case 'order_redo': {
-      // A redo starts the order again from intake: nothing of the wrong generation may be replayed.
+      // A redo starts the order again from the first stage: nothing of the wrong generation may be replayed.
       const o = order(r.order);
       o.stages = new Map();
       o.redo = r.n;

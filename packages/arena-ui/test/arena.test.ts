@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyEvent, emptyVM, loadSnapshot, newLane, stationX, totalScore, type ArenaVM } from '../src/arena/model';
+import { applyEvent, emptyVM, loadSnapshot, newLane, stagesOf, LEGACY_STAGES, stationX, totalScore, type ArenaVM } from '../src/arena/model';
 import { laneBoxes } from '../src/arena/scene';
 import { ANIMS, frameFor } from '../src/rig/skeleton';
 import type { ArenaEvent, ArenaState } from '../src/api/types';
@@ -78,6 +78,20 @@ describe('arena model', () => {
     loadSnapshot(vm, snap, 0);
     expect(vm.stages.map((s) => s.id)).toEqual(['intake', 'account', 'payment']);
     expect(vm.lanes[0]!.chips).toEqual(['done', 'dead', 'pending']); expect(vm.lanes[0]!.mode).toBe('dead'); expect(vm.lanes[0]!.parts).toEqual(['retry']);
+  });
+
+  it('draws the chips from app.stages (v1.2) first, then stages, then the legacy list', () => {
+    const eleven = ['account', 'create', 'submit', 'payment', 'confirmation', 'receive', 'process', 'updates', 'ship', 'transit', 'handoff'];
+    const fromApp = stagesOf({ app: { id: 'orders', stages: eleven.map((id) => ({ id, label: id, kind: 'effect' as const })) }, stages } as unknown as ArenaState);
+    expect(fromApp.map((s) => s.id)).toEqual(eleven);
+    expect(fromApp[0]).toMatchObject({ id: 'account', label: 'account', kind: 'effect' });
+    expect(stagesOf({ app: 'orders', stages } as unknown as ArenaState).map((s) => s.id)).toEqual(['intake', 'account', 'payment']);
+    const legacy = stagesOf({ app: 'orders', stages: [] } as unknown as ArenaState);
+    expect(legacy.map((s) => s.id)).toEqual(LEGACY_STAGES.map((s) => s.id));
+    expect(legacy[0]!.id).toBe('intake');
+    const vm = emptyVM();
+    loadSnapshot(vm, { app: { id: 'orders', stages: eleven.map((id) => ({ id, label: id, kind: 'effect' as const })) }, wave: null, lanes: [] } as unknown as ArenaState, 0);
+    expect(vm.stages).toHaveLength(11);
   });
 
   it('lays out lanes at 768/N capped at 200 and stations evenly', () => {

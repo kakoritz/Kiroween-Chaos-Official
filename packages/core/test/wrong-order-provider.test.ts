@@ -8,15 +8,15 @@ const post = (p: Provider, path: string, body: Record<string, unknown>, key?: st
 
 describe('provider typo mode (PT-C8b)', () => {
   it('arm becomes a one-shot typo fault on email, or on handoff with detect', () => {
-    const a = faultBody('1', 'intake', { id: 1, fault: 'order_typo', order: 'ord-0001' });
+    const a = faultBody('1', 'create', { id: 1, fault: 'order_typo', order: 'ord-0001' });
     expect(a).toMatchObject({ lane: '1', service: 'email', mode: 'typo', order: 'ord-0001', count: 1 });
-    const b = faultBody('1', 'intake', { id: 2, fault: 'order_typo', order: 'ord-0001', detect: 'handoff' });
+    const b = faultBody('1', 'create', { id: 2, fault: 'order_typo', order: 'ord-0001', detect: 'handoff' });
     expect(b).toMatchObject({ service: 'handoff', mode: 'typo', block: 'wrong_order' });
   });
 
   it('confirmation: the email answers 201 with a complaint, once, only for that order', async () => {
     const p = new Provider({ clock: fast });
-    await p.handle({ method: 'POST', path: '/_fault', body: faultBody('L', 'intake', { id: 1, fault: 'order_typo', order: 'o1' })! as never });
+    await p.handle({ method: 'POST', path: '/_fault', body: faultBody('L', 'create', { id: 1, fault: 'order_typo', order: 'o1' })! as never });
     const other = await post(p, '/emails', { lane: 'L', order: 'o2' }, 'o2:email');
     expect(other.body).not.toHaveProperty('complaint');
     const r = await post(p, '/emails', { lane: 'L', order: 'o1' }, 'o1:email');
@@ -29,7 +29,7 @@ describe('provider typo mode (PT-C8b)', () => {
 
   it('handoff: the handoff call answers wrong_order', async () => {
     const p = new Provider({ clock: fast });
-    await p.handle({ method: 'POST', path: '/_fault', body: faultBody('L', 'intake', { id: 1, fault: 'order_typo', order: 'o1', detect: 'handoff' })! as never });
+    await p.handle({ method: 'POST', path: '/_fault', body: faultBody('L', 'create', { id: 1, fault: 'order_typo', order: 'o1', detect: 'handoff' })! as never });
     const r = await p.handle({ method: 'GET', path: '/handoff/sh_1', query: { lane: 'L' } });
     expect(r.body).toEqual({ status: 'wrong_order' });
   });

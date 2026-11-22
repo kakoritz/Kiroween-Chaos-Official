@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { loadCampaign } from '../../haunt/src/campaign/nights';
 import { computeMedal } from '../../haunt/src/campaign/medals';
 import { simulateNight } from '../src/campaign/night-sim';
+import { scanRepeats } from '../../haunt/src/runner/provider';
 import type { Part } from '../../haunt/src/sdk';
 
 const nights = loadCampaign().nights;
@@ -24,6 +25,30 @@ describe('night 1, The Double Charge (acceptance 1)', () => {
     expect(r.summary.orders?.done).toBe(night(1).orders);
     const bare = await simulateNight(night(1), []);
     expect(r.summary.score).toBeGreaterThan(bare.summary.score);
+  });
+});
+
+describe('the 11-step order through the real pipeline and provider ledger', () => {
+  const PHOENIX: Part[] = ['retry', 'journal', 'idempotency', 'breaker', 'offline_queue'];
+  it('Reconciler and Phoenix crash at payment on every order and the ledger still has one row per effect', async () => {
+    for (const parts of [['retry', 'journal', 'idempotency'] as Part[], PHOENIX]) {
+      const r = await simulateNight(night(1), parts);
+      expect(scanRepeats(r.ledger)).toEqual([]);
+      const per = new Map<string, number>();
+      for (const row of r.ledger) per.set(`${row.order}|${row.kind}`, (per.get(`${row.order}|${row.kind}`) ?? 0) + 1);
+      const kinds = [...new Set(r.ledger.map((x) => x.kind))].sort();
+      expect(kinds).toEqual(['account', 'charge', 'dispatch', 'email', 'notify', 'order', 'store']);
+      for (let i = 1; i <= night(1).orders; i++) {
+        const o = `ord-${String(i).padStart(4, '0')}`;
+        expect([per.get(`${o}|account`), per.get(`${o}|order`), per.get(`${o}|charge`), per.get(`${o}|store`), per.get(`${o}|dispatch`)]).toEqual([1, 1, 1, 2, 1]);
+      }
+    }
+  });
+
+  it('with no parts the Crew repeats account, order and charge when the crash lands at payment', async () => {
+    const r = await simulateNight(night(1), []);
+    const kinds = new Set(scanRepeats(r.ledger).map((x) => x.kind));
+    expect(kinds.has('account') && kinds.has('order') && kinds.has('charge')).toBe(true);
   });
 });
 

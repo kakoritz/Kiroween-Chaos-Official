@@ -6,7 +6,7 @@ import { need, providerCreature, type CoreContext } from './core';
 
 /** Extra engine helpers for the data and disk creatures. */
 export interface ExtraContext extends CoreContext {
-  /** Replaces the intake file content with an unparseable payload. */
+  /** Replaces the order input file content with an unparseable payload. */
   corruptInput?: () => void | Promise<void>;
   /** Makes the next write to the lane output folder fail with a disk-full error. */
   fillDisk?: () => void | Promise<void>;
@@ -26,7 +26,7 @@ export const phantomCar = providerCreature('phantom_car', 'Phantom Car', 'world'
 
 export const witch: CreaturePlugin = {
   id: 'witch', label: 'Witch', family: 'data', faults: ['malformed_payload'],
-  appliesTo: { stages: ['intake'] },
+  appliesTo: { stages: ['create'] },
   async inject(ctx) {
     await need((ctx as ExtraContext).corruptInput, 'corruptInput', 'malformed_payload')();
   },

@@ -14,11 +14,11 @@ describe('wire shaping of bot events (PROTOCOL.md rules 6, 13, 27, 29)', () => {
   it('a tier with no journal gets a restart pair, the repeated order_start is dropped and attempt keeps counting', () => {
     const out = shapeAll([
       { type: 'order_start', order: 'ord-0001' },
-      { type: 'stage_start', order: 'ord-0001', stage: 'intake' },
+      { type: 'stage_start', order: 'ord-0001', stage: 'create' },
       { type: 'process_dead' },
       { type: 'process_up' },
       { type: 'order_start', order: 'ord-0001' },
-      { type: 'stage_start', order: 'ord-0001', stage: 'intake' },
+      { type: 'stage_start', order: 'ord-0001', stage: 'create' },
     ]);
     expect(out.map((e) => e.type)).toEqual(['order_start', 'stage_start', 'process_dead', 'process_up', 'recover_start', 'recover_done', 'stage_start']);
     expect(out[4]!.detail).toMatchObject({ action: 'restart' });
@@ -29,12 +29,12 @@ describe('wire shaping of bot events (PROTOCOL.md rules 6, 13, 27, 29)', () => {
   it('a replay gets a stage_start before each skipped stage_done and recover_done carries its pair action', () => {
     const out = shapeAll([
       { type: 'order_start', order: 'ord-0001' },
-      { type: 'stage_start', order: 'ord-0001', stage: 'intake' },
+      { type: 'stage_start', order: 'ord-0001', stage: 'create' },
       { type: 'process_dead' },
       { type: 'process_up' },
       { type: 'order_start', order: 'ord-0001' },
       { type: 'recover_start', order: 'ord-0001', detail: { action: 'replay' } },
-      { type: 'stage_done', order: 'ord-0001', stage: 'intake', detail: { skipped: true } },
+      { type: 'stage_done', order: 'ord-0001', stage: 'create', detail: { skipped: true } },
       { type: 'recover_start', order: 'ord-0001', detail: { action: 'reconcile' } },
       { type: 'recover_done', order: 'ord-0001', detail: { action: 'reconciled' } },
       { type: 'recover_done', order: 'ord-0001', detail: { action: 'replay' } },
@@ -43,7 +43,7 @@ describe('wire shaping of bot events (PROTOCOL.md rules 6, 13, 27, 29)', () => {
       'order_start', 'stage_start', 'process_dead', 'process_up', 'recover_start',
       'stage_start', 'stage_done', 'recover_start', 'recover_done', 'recover_done',
     ]);
-    expect(out[5]).toMatchObject({ stage: 'intake', detail: { attempt: 2 } });
+    expect(out[5]).toMatchObject({ stage: 'create', detail: { attempt: 2 } });
     expect(out[8]!.detail.action).toBe('reconcile');
     expect(out[9]!.detail.action).toBe('replay');
   });

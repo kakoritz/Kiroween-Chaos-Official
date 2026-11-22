@@ -4,11 +4,11 @@ import type { ArenaVM, LaneVM, SkelMode } from './model';
 import { rankGlyph } from '../onboarding/polish';
 
 export const ROW_H = 40;
-const KIND_ORDER = ['account_create', 'charge', 'email', 'dispatch', 'notify', 'ticket'];
+const KIND_ORDER = ['account_create', 'order', 'charge', 'email', 'store', 'dispatch', 'notify', 'ticket'];
 export const KIND_LABEL: Record<string, string> = {
-  account_create: 'Accounts', charge: 'Charges', email: 'Emails', dispatch: 'Dispatches', notify: 'Notices', ticket: 'Tickets',
+  account_create: 'Accounts', order: 'Orders', charge: 'Charges', email: 'Emails', store: 'Store', dispatch: 'Shipments', notify: 'Notices', ticket: 'Tickets',
 };
-export const DEFAULT_KINDS = ['account_create', 'charge', 'email', 'dispatch', 'notify'];
+export const DEFAULT_KINDS = ['account_create', 'order', 'charge', 'email', 'store', 'dispatch', 'notify'];
 
 /** Score descending, then fewer repeats, then lane number (ui-spec section 10). */
 export function rankLanes(lanes: readonly LaneVM[]): LaneVM[] {
@@ -31,7 +31,8 @@ export function cellView(l: LaneVM, kind: string): CellView {
   return { rows: c.rows, repeats: c.repeats, dup: c.repeats > 0, text: c.repeats > 0 ? `${c.rows} +${c.repeats}` : String(c.rows) };
 }
 
-export const kindLabel = (k: string): string => KIND_LABEL[k] ?? k.replace(/_/g, ' ');
+/** Column title. In the orders app (a `charge` column is present) the confirmation email is the customer's receipt. */
+export const kindLabel = (k: string, orders = false): string => (k === 'email' && orders ? 'Receipts' : KIND_LABEL[k] ?? k.replace(/_/g, ' '));
 
 /** Icon plus color for the state: dead dims, halted is struck through, done is checked. */
 export function stateIcon(m: SkelMode): { icon: string; label: string } {
@@ -103,7 +104,7 @@ export class LedgerPanel {
     const sig = kinds.join() + '#' + vm.lanes.map((l) => `${l.lane}:${l.counts.completed}:${kinds.map((k) => cellView(l, k).text).join(',')}`).join('|') + '#' + flash;
     if (sig === this.sig) return;
     this.sig = sig;
-    const head = `<tr><th>Lane</th>${kinds.map((k) => `<th>${esc(kindLabel(k))}</th>`).join('')}</tr>`;
+    const head = `<tr><th>Lane</th>${kinds.map((k) => `<th>${esc(kindLabel(k, kinds.includes('charge')))}</th>`).join('')}</tr>`;
     const rows = vm.lanes.map((l) => {
       const cells = kinds.map((k) => {
         const c = cellView(l, k);

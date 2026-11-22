@@ -4,7 +4,7 @@ Branches `core/TV3-...` and `ui/TV3-...`. One PR per task. Contract first (TV3-C
 
 ## Lane A (Core)
 - [ ] **TV3-C0 Contract v1.2.** Land `contract/V1_2.md` in the mock: `stages` list in state, `round_*` events, `awaiting_next` and `POST /api/next`, `intensity`, `curse*`, `corpse`, `lesson`, `casebook`, `pattern`, new faults. Fixtures. (Lane B approves.)
-- [ ] **TV3-C1 New order and stage list.** Eleven stages, legacy mapping, ledger columns, kill hooks, bots for all five tiers, fixtures, grader and tests. Behind `HAUNT_STAGES=v2` until all five bots pass; then default. Property tests P1 to P18 stay green.
+- [x] **TV3-C1 New order and stage list.** Eleven stages, legacy mapping, ledger columns, kill hooks, bots for all five tiers, fixtures, grader and tests. Behind `HAUNT_STAGES=v2` until all five bots pass; then default. Property tests P1 to P18 stay green.
 - [ ] **TV3-C2 Wave end review state.** `awaiting_next`, `POST /api/next`, no auto start; optional auto-continue setting; fix `npm run demo` loops to respect it (the hero script presses Next itself).
 - [ ] **TV3-C3 Never perfect.** Gremlin floor rule, per-lane per-round issue counter, property P19, review formula cap.
 - [ ] **TV3-C4 Intensity dial.** Level table (spec section 5.1), `POST /api/intensity`, live plan scaling, unknown-fault fuzz pool with seed, level 11, auto-ramp on top of `ramp`.

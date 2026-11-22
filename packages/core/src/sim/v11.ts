@@ -59,7 +59,7 @@ export function reviewOf(inp: ReviewInput): ReviewResult {
   else if (extraRows === 1 || inp.degraded) delivery = Math.min(delivery, 3);
   if (choice === 'discount') delivery = Math.min(delivery, 2);
   if (choice === 'redo') delivery = Math.min(delivery, 4);
-  const front = inp.lap.issues.filter((x) => x.stage === 'intake' || x.stage === 'confirmation').reduce((s, x) => s + x.count, 0);
+  const front = inp.lap.issues.filter((x) => x.stage === 'create' || x.stage === 'confirmation').reduce((s, x) => s + x.count, 0);
   let ease = front === 0 ? 5 : front === 1 ? 4 : 3;
   if (choice === 'redo') ease = Math.min(ease, 2);
   if (choice === 'refund') ease = Math.min(ease, 1);
