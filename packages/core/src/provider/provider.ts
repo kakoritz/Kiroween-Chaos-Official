@@ -247,6 +247,8 @@ export class Provider {
         if (key !== null) this.responses.set(`${lane}|${kind}|${key}`, payload);
         // Wrong order found at confirmation: the email is sent, and the customer complains (design.md section 8).
         if (kind === 'email' && fault?.mode === 'typo') payload.complaint = 'wrong_order';
+        // Found while the store prepares the order (detect: process): the second store call carries the complaint.
+        if (kind === 'store' && fault?.mode === 'typo' && index === 2) payload.complaint = 'wrong_order';
         res = json(201, payload);
       }
       // Processed before any delay: a latency fault past the client timeout still leaves the row.
@@ -259,6 +261,7 @@ export class Provider {
     const recovery = h['x-haunt-phase'] === 'recovery';
     return this.gate(lane, 'tracking', shipment, recovery, {}, async (extraMs, fault) => {
       if (extraMs > 0) await this.clock.sleep(extraMs);
+      if (fault?.mode === 'typo') return json(200, { status: 'wrong_order' });
       if (fault?.mode === 'stall') return json(200, { status: 'in_transit', reroute: true });
       if (fault?.mode === 'no_driver') return json(200, { status: 'no_driver' });
       const k = `${lane}|${shipment}`;

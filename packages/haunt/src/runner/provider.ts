@@ -18,6 +18,9 @@ const STAGE_SERVICE: Record<string, Service> = {
   handoff: 'handoff',
 };
 
+/** Transit faults (V1_2 section 4): stalls and reroutes on the tracking poll. */
+const TRANSIT_FAULTS = new Set(['weather', 'road_hazard', 'delay', 'out_of_gas', 'not_on_truck']);
+
 /** Fault ids that act on every service of the lane, whatever the stage. */
 const ALL_SERVICES = new Set(['internet_outage', 'endpoint_down']);
 
@@ -37,22 +40,28 @@ export function faultBody(lane: string, stage: string | null, arm: ProviderArm):
     case 'http_500': base = { mode: 'status', value: 500, count: 2 }; break;
     case 'hazard_event': base = { mode: 'stall', value: 5000, forMs: 5000 }; break;
     case 'wrong_address': base = { mode: 'stall', value: 5000, forMs: 5000 }; break;
+    case 'weather': base = { mode: 'stall', value: 1800, forMs: 1800 }; break;
+    case 'road_hazard': base = { mode: 'stall', value: 4000, forMs: 4000 }; break;
+    case 'delay': base = { mode: 'stall', value: 600, forMs: 600 }; break;
+    case 'out_of_gas': base = { mode: 'stall', value: 7000, forMs: 7000 }; break;
+    case 'not_on_truck': base = { mode: 'no_driver', forMs: 4000 }; break;
     case 'no_answer': base = { mode: 'handoff_block', block: 'no_answer', forMs: 3000 }; break;
     case 'gated_house': base = { mode: 'handoff_block', block: 'gated', forMs: 3000 }; break;
     case 'car_accident': base = { mode: 'handoff_block', block: 'accident', forMs: 7000 }; break;
     case 'driver_unreachable': base = { mode: 'no_driver', forMs: 3000 }; break;
     // Wrong order (design.md section 8): the complaint comes back at confirmation (default) or handoff, once, for one order.
-    case 'order_typo': base = { mode: 'typo', count: 1, ...(arm.order ? { order: arm.order } : {}), ...(arm.detect === 'handoff' ? { block: 'wrong_order' as const } : {}) }; break;
+    case 'order_typo': base = { mode: 'typo', count: arm.detect === 'process' ? 2 : 1, ...(arm.order ? { order: arm.order } : {}), ...(arm.detect === 'handoff' ? { block: 'wrong_order' as const } : {}) }; break;
     default: return null;
   }
   // Fuzz faults (TV3-C4): an odd status replaces the catalog one, the body may be cut short, a clock jump rides in a header.
   if (arm.status !== undefined && base.mode === 'status') base = { ...base, value: arm.status };
   if (arm.truncated) base = { ...base, truncate: true };
   if (arm.clockJumpMs !== undefined) base = { ...base, headers: { ...(base.headers ?? {}), 'X-Haunt-Clock-Jump': String(arm.clockJumpMs) } };
-  const body: FaultSpec = { lane, service: arm.fault === 'hazard_event' || arm.fault === 'driver_unreachable' || arm.fault === 'wrong_address' ? 'tracking' : arm.fault === 'no_answer' || arm.fault === 'gated_house' || arm.fault === 'car_accident' || (arm.fault === 'order_typo' && arm.detect === 'handoff') ? 'handoff' : arm.fault === 'order_typo' ? 'email' : service, ...base };
+  const body: FaultSpec = { lane, service: arm.fault === 'hazard_event' || arm.fault === 'driver_unreachable' || arm.fault === 'wrong_address' || TRANSIT_FAULTS.has(arm.fault) ? 'tracking' : arm.fault === 'no_answer' || arm.fault === 'gated_house' || arm.fault === 'car_accident' || (arm.fault === 'order_typo' && arm.detect === 'handoff') ? 'handoff' : arm.fault === 'order_typo' ? (arm.detect === 'process' ? 'store' : arm.detect === 'transit' ? 'tracking' : 'email') : service, ...base };
   // The arm carries the (possibly speed-scaled) window or count and wins over the defaults.
-  if (arm.forMs !== undefined) { body.forMs = arm.forMs; delete body.count; }
-  else if (arm.count !== undefined) { body.count = arm.count; delete body.forMs; }
+  // order_typo is a call count (catalog forMs 0 is a placeholder), so its count survives.
+  if (arm.forMs !== undefined && arm.fault !== 'order_typo') { body.forMs = arm.forMs; delete body.count; }
+  else if (arm.count !== undefined && arm.fault !== 'order_typo') { body.count = arm.count; delete body.forMs; }
   if (arm.nextCaller) body.nextCaller = arm.nextCaller;
   return body;
 }

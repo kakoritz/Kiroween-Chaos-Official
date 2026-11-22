@@ -915,6 +915,8 @@
                 "detect": {
                   "enum": [
                     "confirmation",
+                    "process",
+                    "transit",
                     "handoff"
                   ]
                 }
@@ -2187,6 +2189,8 @@
                 "detectedAt": {
                   "enum": [
                     "confirmation",
+                    "process",
+                    "transit",
                     "handoff"
                   ]
                 },

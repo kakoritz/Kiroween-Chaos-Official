@@ -5,7 +5,7 @@
 import { DECISION_CHOICES, DECISION_TIMEOUT_MS, type DecisionChoice } from '../shared/catalog';
 
 export type DecisionSource = 'user' | 'default' | 'timeout';
-export type DetectedAt = 'confirmation' | 'handoff';
+export type DetectedAt = 'confirmation' | 'process' | 'transit' | 'handoff';
 
 /** What the bot sent. */
 export interface DecisionAsk {
@@ -137,5 +137,5 @@ export class DecisionBroker {
 export function parseAsk(msg: Record<string, unknown>): DecisionAsk | null {
   if (typeof msg.order !== 'string' || msg.order === '') return null;
   const defaultChoice = DECISION_CHOICES.find((c) => c === msg.defaultChoice) ?? 'refund';
-  return { order: msg.order, detectedAt: msg.detectedAt === 'handoff' ? 'handoff' : 'confirmation', defaultChoice };
+  return { order: msg.order, detectedAt: (['process', 'transit', 'handoff'] as const).find((d) => d === msg.detectedAt) ?? 'confirmation', defaultChoice };
 }

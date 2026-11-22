@@ -1,7 +1,7 @@
 // `haunt.policy`: the policy overlay a bot reads at start (spec 4, V1_2 section 5). A lesson is a small table, not code:
 // it only switches on behavior the bot's own parts already allow (a Rookie has no `retry` part, so it can learn nothing).
 
-export type PolicyAction = 'retry_backoff' | 'idempotency_key' | 'journal_replay' | 'breaker_park' | 'hold_and_reroute';
+export type PolicyAction = 'retry_backoff' | 'idempotency_key' | 'journal_replay' | 'breaker_park' | 'hold_and_reroute' | 'decision';
 
 /** What each action needs from the bot's parts. */
 export const ACTION_PARTS: Readonly<Record<PolicyAction, readonly string[]>> = {
@@ -10,6 +10,7 @@ export const ACTION_PARTS: Readonly<Record<PolicyAction, readonly string[]>> = {
   idempotency_key: ['idempotency'],
   breaker_park: ['breaker', 'offline_queue'],
   hold_and_reroute: ['offline_queue'],
+  decision: [],
 };
 
 /**
@@ -18,6 +19,7 @@ export const ACTION_PARTS: Readonly<Record<PolicyAction, readonly string[]>> = {
  * - idempotency_key: an effect of that stage the bot sent without a key gets one derived from the order (needs the `idempotency` part), so a repeat is found, not redone.
  * - journal_replay: when that stage ends in a failure the retries could not beat, replay the order from the journal after a cool-down instead of failing it (needs `journal`).
  * - breaker_park: that stage trips the breaker after two failed attempts instead of four, and the order is parked and resumed when the breaker closes (needs `breaker` and `offline_queue`).
+ * - decision: the wrong-order default of the lane (`choice`: refund, discount or redo). Any tier can learn it; it applies when nobody answers.
  * `hold_and_reroute` is recorded and shown only.
  */
 export const ENFORCED_ACTIONS: readonly PolicyAction[] = ['retry_backoff', 'idempotency_key', 'journal_replay', 'breaker_park'];
@@ -31,6 +33,8 @@ export interface PolicyRule {
   backoff?: 'exp';
   maxAttempts?: number;
   key?: 'order-id';
+  /** decision: the wrong-order choice the lane learned. */
+  choice?: 'refund' | 'discount' | 'redo';
 }
 
 export interface Policy { version: 1; rules: PolicyRule[] }
@@ -46,7 +50,8 @@ export function policyTakes(parts: readonly string[], action: PolicyAction): boo
 
 export function actionsFor(parts: readonly string[]): PolicyAction[] {
   const have = new Set(parts);
-  return (Object.keys(ACTION_PARTS) as PolicyAction[]).filter((a) => ACTION_PARTS[a].every((p) => have.has(p)));
+  // decision needs no part (any tier can learn a default), so it is not part of what the parts unlock.
+  return (Object.keys(ACTION_PARTS) as PolicyAction[]).filter((a) => a !== 'decision' && ACTION_PARTS[a].every((p) => have.has(p)));
 }
 
 /** Does a rule's fault answer this failed call? Status and message are all the bot sees. */
@@ -75,6 +80,11 @@ export function isTransient(status: number | null): boolean {
  */
 export function ruleFor(policy: Policy | undefined, action: PolicyAction, stage: string, status?: number | null, message = ''): PolicyRule | undefined {
   return policy?.rules.find((r) => r.action === action && (r.stage === stage || r.stage === '*') && (status === undefined || (isTransient(status) && r.fault !== 'crash') || faultMatches(r.fault, status, message)));
+}
+
+/** The learned wrong-order choice, if the lane has one. */
+export function decisionChoice(policy: Policy | undefined): 'refund' | 'discount' | 'redo' | undefined {
+  return policy?.rules.find((r) => r.action === 'decision' && r.choice !== undefined)?.choice;
 }
 
 /** The retry_backoff rule that answers a failed call at `stage`, if the bot has learned one. */

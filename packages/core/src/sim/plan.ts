@@ -38,7 +38,7 @@ export interface ArmSpec {
   scope?: 'inner' | 'outer';
   point?: string;
   /** order_typo: the stage that finds the wrong order (default confirmation) and the decision (default: tier policy). */
-  detect?: 'confirmation' | 'handoff';
+  detect?: 'confirmation' | 'process' | 'transit' | 'handoff';
   choice?: 'refund' | 'discount' | 'redo';
   /** Press time, plan ms since the lane started. */
   at?: number;
@@ -222,7 +222,8 @@ class Planner {
       case 'slow_link': add(spec.fault, 'all', 'slow'); break;
       case 'hazard_event': add(spec.fault, 'tracking', 'stall'); break;
       case 'driver_unreachable': add(spec.fault, 'tracking', 'no_driver'); break;
-      case 'wrong_address': add(spec.fault, 'tracking', 'stall'); break;
+      case 'wrong_address': case 'weather': case 'road_hazard': case 'delay': case 'out_of_gas': add(spec.fault, 'tracking', 'stall'); break;
+      case 'not_on_truck': add(spec.fault, 'tracking', 'no_driver'); break;
       case 'no_answer': add(spec.fault, 'handoff', 'handoff_block', { block: 'no_answer' }); break;
       case 'gated_house': add(spec.fault, 'handoff', 'handoff_block', { block: 'gated' }); break;
       case 'car_accident': add(spec.fault, 'handoff', 'handoff_block', { block: 'accident' }); break;

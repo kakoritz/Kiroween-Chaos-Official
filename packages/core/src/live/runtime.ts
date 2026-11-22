@@ -443,6 +443,9 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
         return decisions.ask(lane, ask, alive);
       },
       onEvent: botEvent = (lane, ev) => {
+        // A fault pressed by hand that waits for a later stage (director deferred) reaches the provider when the bot itself gets there:
+        // the bot runs ahead of what the arena shows, so waiting for the shown stage_start would be too late.
+        if (opts.post && ev.type === 'stage_start' && typeof ev.stage === 'string') for (const arm of engine.director.onStageStart(lane, ev.stage)) void postProviderArm(opts.post, lane, ev.stage, arm);
         if (opts.travel === false) { for (const e of norm.shape(lane, { detail: {}, ...ev, lane })) record?.({ ...e, lane } as unknown as HauntEvent); return; }
         const my = epoch;
         const lt = travelOf(lane);

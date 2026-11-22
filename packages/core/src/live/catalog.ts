@@ -31,9 +31,13 @@ const LABELS: Record<string, [string, string]> = {
   mummy: ['Mummy', 'The disk is full.'],
   werewolf: ['Werewolf', 'A hazard event hits delivery.'],
   will_o_wisp: ['Will-o-the-wisp', 'The driver cannot be reached.'],
-  scarecrow: ['Scarecrow', 'Points the scooter down the wrong road.'],
+  scarecrow: ['Scarecrow', 'Points the scooter down the wrong road, or holds it up.'],
   black_cat: ['Black Cat', 'Sits on the doorstep so nobody answers, or shuts the gate.'],
   phantom_car: ['Phantom Car', 'Crashes at the door and blocks the road.'],
+  storm_crow: ['Storm Crow', 'Calls a storm over the delivery road.'],
+  pothole_imp: ['Pothole Imp', 'Digs a pothole in the middle of the road.'],
+  fuel_wraith: ['Fuel Wraith', 'Drinks the scooter dry.'],
+  lost_parcel_ghoul: ['Lost Parcel Ghoul', 'Steals the parcel off the truck.'],
   prankster: ['Prankster', 'Swaps the items on the order so the wrong thing is made.'],
   lich: ['Lich', 'Boss: a long power outage on every lane.'],
   banshee_queen: ['Banshee Queen', 'Boss: a long internet outage on every lane.'],
@@ -47,7 +51,7 @@ const BOSS_CREATURE: Record<string, [string, string]> = {
 };
 
 /** World creatures that only exist in the orders app (contract/V1_1.md section 8). */
-const ORDERS_ONLY = new Set(['scarecrow', 'black_cat', 'phantom_car', 'prankster']);
+const ORDERS_ONLY = new Set(['scarecrow', 'black_cat', 'phantom_car', 'prankster', 'storm_crow', 'pothole_imp', 'fuel_wraith', 'lost_parcel_ghoul']);
 
 export function buildCreatures(): Creature[] {
   const out = new Map<string, Creature>();

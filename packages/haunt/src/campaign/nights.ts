@@ -10,7 +10,7 @@ export const NIGHT_COUNT = 7;
 
 /** World faults and creatures added by contract v1.1 section 8 that the engine catalog may not know yet. */
 const WORLD_FAULTS: Record<string, string> = {
-  sms_down: 'gargoyle', app_down: 'imp', updates_down: 'goblin', wrong_address: 'scarecrow',
+  sms_down: 'gargoyle', app_down: 'imp', updates_down: 'goblin', wrong_address: 'scarecrow', delay: 'scarecrow', weather: 'storm_crow', road_hazard: 'pothole_imp', out_of_gas: 'fuel_wraith', not_on_truck: 'lost_parcel_ghoul',
   no_answer: 'black_cat', gated_house: 'black_cat', car_accident: 'phantom_car', order_typo: 'prankster',
 };
 

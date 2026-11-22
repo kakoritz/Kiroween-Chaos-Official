@@ -121,6 +121,7 @@ export type FaultId =
   | 'hazard_event' | 'driver_unreachable'
   | 'sms_down' | 'app_down' | 'updates_down'
   | 'wrong_address' | 'no_answer' | 'gated_house' | 'car_accident'
+  | 'weather' | 'road_hazard' | 'delay' | 'out_of_gas' | 'not_on_truck'
   | 'order_typo';
 export type BossFaultId = 'boss_power_outage' | 'boss_internet_outage' | 'boss_hazard_storm';
 
@@ -129,6 +130,7 @@ export const FAULTS: FaultId[] = [
   'http_404', 'http_429', 'http_500', 'missing_file', 'duplicate_request', 'malformed_payload', 'disk_full',
   'hazard_event', 'driver_unreachable', 'sms_down', 'app_down', 'updates_down',
   'wrong_address', 'no_answer', 'gated_house', 'car_accident',
+  'weather', 'road_hazard', 'delay', 'out_of_gas', 'not_on_truck',
   'order_typo',
 ];
 export const BOSS_FAULTS: BossFaultId[] = ['boss_power_outage', 'boss_internet_outage', 'boss_hazard_storm'];
@@ -171,7 +173,11 @@ export const CREATURES: CreatureDef[] = [
   { id: 'mummy', label: 'Mummy', family: 'process', sprite: 'mummy', causes: ['disk_full'], boss: false, apps: both, description: 'Fills the disk so one journal write fails.' },
   { id: 'werewolf', label: 'Werewolf', family: 'world', sprite: 'werewolf', causes: ['hazard_event'], boss: false, apps: ['orders'], description: 'Stalls the delivery feed.' },
   { id: 'will_o_wisp', label: "Will-o'-the-Wisp", family: 'world', sprite: 'will_o_wisp', causes: ['driver_unreachable'], boss: false, apps: ['orders'], description: 'Leads the delivery driver astray.' },
-  { id: 'scarecrow', label: 'Scarecrow', family: 'world', sprite: 'scarecrow', causes: ['wrong_address'], boss: false, apps: ['orders'], description: 'Points the scooter down the wrong road.' },
+  { id: 'scarecrow', label: 'Scarecrow', family: 'world', sprite: 'scarecrow', causes: ['wrong_address', 'delay'], boss: false, apps: ['orders'], description: 'Points the scooter down the wrong road, or holds it up.' },
+  { id: 'storm_crow', label: 'Storm Crow', family: 'world', sprite: 'storm_crow', causes: ['weather'], boss: false, apps: ['orders'], description: 'Calls a storm over the delivery road.' },
+  { id: 'pothole_imp', label: 'Pothole Imp', family: 'world', sprite: 'pothole_imp', causes: ['road_hazard'], boss: false, apps: ['orders'], description: 'Digs a pothole in the middle of the road.' },
+  { id: 'fuel_wraith', label: 'Fuel Wraith', family: 'world', sprite: 'fuel_wraith', causes: ['out_of_gas'], boss: false, apps: ['orders'], description: 'Drinks the scooter dry.' },
+  { id: 'lost_parcel_ghoul', label: 'Lost Parcel Ghoul', family: 'world', sprite: 'lost_parcel_ghoul', causes: ['not_on_truck'], boss: false, apps: ['orders'], description: 'Steals the parcel off the truck.' },
   { id: 'black_cat', label: 'Black Cat', family: 'world', sprite: 'black_cat', causes: ['no_answer', 'gated_house'], boss: false, apps: ['orders'], description: 'Sits on the doorstep so nobody answers, or shuts the gate.' },
   { id: 'phantom_car', label: 'Phantom Car', family: 'world', sprite: 'phantom_car', causes: ['car_accident'], boss: false, apps: ['orders'], description: 'Crashes at the door and blocks the road.' },
   { id: 'prankster', label: 'Prankster', family: 'world', sprite: 'prankster', causes: ['order_typo'], boss: false, apps: ['orders'], description: 'Swaps the items on the order so the wrong thing is made.' },
@@ -186,7 +192,7 @@ export function creatureForFault(fault: string): CreatureDef | undefined {
 
 /** Which roles a fault can hit (runtime.md section 9). A fault that cannot hit the current stage is deferred. */
 /** World faults that only land on one orders stage (design.md section 7). Others defer to it. */
-export const WORLD_FAULT_STAGE: Record<string, string> = { sms_down: 'confirmation', app_down: 'ship', updates_down: 'updates', wrong_address: 'transit', no_answer: 'handoff', gated_house: 'handoff', car_accident: 'handoff', order_typo: 'create' };
+export const WORLD_FAULT_STAGE: Record<string, string> = { sms_down: 'confirmation', app_down: 'ship', updates_down: 'updates', wrong_address: 'transit', weather: 'transit', road_hazard: 'transit', delay: 'transit', out_of_gas: 'transit', not_on_truck: 'transit', no_answer: 'handoff', gated_house: 'handoff', car_accident: 'handoff', order_typo: 'create' };
 const WORLD_STAGE_ROLE: Record<string, StageRole> = { transit: 'poll', handoff: 'final', create: 'input' } as Record<string, StageRole>;
 
 export function faultApplies(fault: string, role: StageRole, stageId?: string): boolean {
@@ -242,6 +248,11 @@ export const FAULT_PARAMS: Record<string, { count?: number; forMs?: number; late
   app_down: { forMs: 8000, status: 503 },
   updates_down: { forMs: 8000, status: 503 },
   wrong_address: { forMs: 5000 },
+  weather: { forMs: 1800 },
+  road_hazard: { forMs: 4000 },
+  delay: { forMs: 600 },
+  out_of_gas: { forMs: 7000 },
+  not_on_truck: { forMs: 4000 },
   no_answer: { forMs: 3000 },
   gated_house: { forMs: 3000 },
   car_accident: { forMs: 7000 },
