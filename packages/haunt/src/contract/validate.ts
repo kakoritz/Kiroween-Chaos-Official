@@ -339,6 +339,17 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
         if (!(Number.isInteger(d.level) && d.level >= 1 && d.level <= 11)) bad('R56', ev, `intensity level ${d.level} is not an integer from 1 to 11`);
         return;
       }
+      case 'pattern': {
+        // Rule 64 (V1_2 section 5): a pattern names its signature, a count and one of the six statuses.
+        if (typeof d.id !== 'string' || typeof d.signature !== 'string' || d.signature.split(' + ').length !== 3) bad('R64', ev, 'pattern needs an id and a signature "stage + fault + consequence"');
+        if (!['new', 'suggested', 'accepted', 'applied', 'verified', 'rejected'].includes(d.status)) bad('R64', ev, 'pattern status ' + d.status + ' is not one of the six');
+        if (!Number.isInteger(d.count) || d.count < 0 || typeof d.downtimeMsTotal !== 'number') bad('R64', ev, 'pattern needs a count and downtimeMsTotal');
+        return;
+      }
+      case 'spec_written': {
+        if (typeof d.runId !== 'string' || typeof d.path !== 'string' || !Array.isArray(d.patterns)) bad('R65', ev, 'spec_written needs runId, path and patterns[]');
+        return;
+      }
       case 'round_start': {
         // V1_2 section 2: round_start comes once per round, inside its wave, naming the live lanes.
         if (!Number.isInteger(d.round) || d.round < 1) bad('R57', ev, 'round_start needs a round number');

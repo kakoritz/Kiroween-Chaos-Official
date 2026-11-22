@@ -6,6 +6,8 @@ import { join, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import { loadHauntConfig } from '../config';
 import { writeBadgeFiles } from '../share';
+import { PatternStore, qualifies, costOf } from '../miner/patterns';
+import { lintSpecDir, listSpecs, writeFixSpec } from '../miner/specs';
 
 export interface McpOptions { root: string; cliEntry?: string; runTimeoutMs?: number }
 type Json = Record<string, unknown>;
@@ -24,6 +26,7 @@ export const TOOLS: Tool[] = [
   { name: 'haunt_sweep', description: 'Run a graded fault sweep (one creature fault per stage) and return the matrix and grade.', inputSchema: { type: 'object', properties: runProps } },
   { name: 'haunt_ramp', description: 'Run a load ramp and return the knee, break point and grade.', inputSchema: { type: 'object', properties: runProps } },
   { name: 'haunt_report', description: 'Read a saved sweep or ramp report JSON (latest in .haunt if no path is given).', inputSchema: { type: 'object', properties: { kind: { type: 'string', enum: ['sweep', 'ramp'] }, path: str('string', 'Report file path') } } },
+  { name: 'haunt_specs', description: 'Fix specs of the pattern miner: list the qualifying patterns and hardening folders, write .kiro/specs/hardening-<run> for the patterns still new, or lint a spec folder (evidence, patch, test, no rewrite).', inputSchema: { type: 'object', properties: { action: { type: 'string', enum: ['list', 'write', 'lint'], description: 'list (default), write or lint' }, run: str('string', 'Run id for write'), dir: str('string', 'Spec folder for lint') } } },
   { name: 'haunt_badge', description: 'Write the grade badge and scorecard (SVG and HTML) for a saved run into a local folder.', inputSchema: { type: 'object', properties: { run: str('string', 'Report path or run name under .haunt/sweeps'), out: str('string', 'Output folder (default .)') }, required: ['run'] } },
 ];
 
@@ -65,6 +68,33 @@ export async function callTool(opts: McpOptions, name: string, a: Json): Promise
     const path = a.path ? resolve(opts.root, String(a.path)) : latestReport(opts.root, kind);
     if (!path || !existsSync(path)) return text('no report found', true);
     try { return text(JSON.stringify(JSON.parse(readFileSync(path, 'utf8')))); } catch (e) { return text(`unreadable report: ${String(e)}`, true); }
+  }
+  if (name === 'haunt_specs') {
+    const action = String(a.action ?? 'list');
+    const specsDir = join(opts.root, '.kiro', 'specs');
+    const store = new PatternStore(join(opts.root, '.haunt', 'patterns.json'));
+    if (action === 'list') {
+      const patterns = store.list().filter(qualifies).sort((x, y) => costOf(y) - costOf(x)).map((p) => ({ id: p.id, signature: p.signature, status: p.status, count: p.count, downtimeMsTotal: p.downtimeMsTotal, lostOrders: p.lostOrders, repeats: p.repeats }));
+      return text(JSON.stringify({ patterns, specs: listSpecs(specsDir) }));
+    }
+    if (action === 'lint') {
+      if (typeof a.dir !== 'string' || !a.dir) return text('dir required', true);
+      const dir = resolve(opts.root, a.dir);
+      if (!existsSync(dir)) return text(`not found: ${dir}`, true);
+      const r = lintSpecDir(dir);
+      return text(JSON.stringify(r), !r.ok);
+    }
+    if (action === 'write') {
+      if (typeof a.run !== 'string' || !a.run) return text('run required', true);
+      const todo = store.list().filter((p) => qualifies(p) && p.status === 'new');
+      if (!todo.length) return text('no qualifying pattern is waiting for a spec', true);
+      try {
+        const w = writeFixSpec(specsDir, { runId: a.run, patterns: todo });
+        store.setStatuses(w.included.map((p) => p.id), 'suggested');
+        return text(JSON.stringify({ dir: w.dir, patterns: w.included.map((p) => p.id), refused: w.refused.map((r) => r.pattern.signature), lint: w.lint }), !w.lint.ok);
+      } catch (e) { return text(String(e instanceof Error ? e.message : e), true); }
+    }
+    return text(`unknown action: ${action}`, true);
   }
   if (name === 'haunt_badge') {
     if (typeof a.run !== 'string' || !a.run) return text('run required', true);

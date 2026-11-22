@@ -56,6 +56,15 @@ describe('cases: the normalised signature stage + fault + consequence', () => {
     expect(signatureOf('a', 'b', 'c')).toBe('a + b + c');
   });
 
+  it('an order lost with no fault of its own is blamed on the outage still in force from an earlier press, at the stage where it failed', () => {
+    const evs = [
+      ...orderEvents([e('chaos', 2, { fault: 'endpoint_down' }, { stage: 'payment' }), e('order_done', 2)]),
+      e('order_start', 2, {}, { order: 'ord-0002' }), e('stage_start', 2, {}, { order: 'ord-0002', stage: 'ship' }), e('order_failed', 2, { reason: 'x' }, { order: 'ord-0002' }),
+    ];
+    const cases = laneCases(evs, 2, 1);
+    expect(cases.map((c) => [c.order, c.signature, c.outcome])).toEqual([['ord-0001', 'payment + endpoint_down + absorbed', 'solved'], ['ord-0002', 'ship + endpoint_down + order_lost', 'lost']]);
+  });
+
   it('ignores other lanes and flushes an order left open at the end of the wave as lost', () => {
     const evs = [...orderEvents([e('chaos', 2, { fault: 'timeout' })]), e('chaos', 3, { fault: 'timeout' })];
     const c = laneCases(evs, 2, 1);

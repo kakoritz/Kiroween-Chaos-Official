@@ -1,0 +1,42 @@
+improve started on http://127.0.0.1:7081
+phase: before
+phase: after
+phase: done
+# Improve: closed 0 of 5 patterns
+
+| | Before | After |
+|---|---|---|
+| Grade | C | C |
+| Reliability | 72 | 69 |
+| Round points | 1929 | 814 |
+| Lost orders | 8 | 10 |
+| Repeated effects | 9 | 8 |
+
+## Patterns
+
+| Pattern | Handled by | Before | After | Status |
+|---|---|---|---|---|
+| `payment + http_404 + order_lost` | overlay+spec | 5 | 5 | applied |
+| `payment + crash + order_lost` | spec | 3 | 1 | suggested |
+| `account + slow_link + outage` | spec | 4 | 4 | suggested |
+| `payment + endpoint_failure_rate + degraded` | spec | 30 | 28 | suggested |
+| `payment + http_404 + retry_storm` | spec | 4 | 4 | suggested |
+
+## Applied as policy (lessons)
+
+- lane 2 (retrier): `retry_backoff` for payment + http_404 (already learned in a round)
+- lane 3 (journaler): `retry_backoff` for payment + http_404 (already learned in a round)
+- lane 4 (reconciler): `retry_backoff` for payment + http_404 (already learned in a round)
+
+## Spec for the rest (not applied)
+
+- `.kiro/specs/<run>`: 5 requirements, lint ok. Kiro applies it with the review step.
+
+## New in the rerun
+
+- `payment + http_429 + order_lost`
+- `account + http_429 + order_lost`
+- `account + http_429 + retry_storm`
+
+A pattern is verified only when the rerun shows it gone. Lessons learned in the first run carry into the rerun.
+

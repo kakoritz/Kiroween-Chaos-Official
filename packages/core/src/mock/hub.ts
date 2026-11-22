@@ -63,6 +63,8 @@ export class Hub {
   /** Tournament state (TV3-C7), rebuilt from events: corpses, whether the server waits for Next, the round and the champion. */
   corpses: { lane: number; stage: string; kind: string; round: number; epitaph: string }[] = [];
   awaitingNext = false;
+  /** Patterns by id, rebuilt from `pattern` events. */
+  patterns = new Map<string, Record<string, unknown>>();
   /** Lessons by lane, rebuilt from `lesson` events (the mock keeps no files). */
   lessons = new Map<number, { signature: string; mechanism: string; via: string; learnedRound: number; stage?: string }[]>();
   tournament: { round: number; total: number; phase: string; alive: number[]; champion?: number } | null = null;
@@ -145,6 +147,7 @@ export class Hub {
         break;
       }
       case 'lesson': { const a = this.lessons.get(d.lane) ?? []; a.push({ signature: d.signature, mechanism: d.mechanism, via: d.via, learnedRound: d.round, ...(e.stage ? { stage: e.stage } : {}) }); this.lessons.set(d.lane, a); break; }
+      case 'pattern': this.patterns.set(d.id, { ...d }); break;
       case 'corpse': this.corpses.push({ lane: d.lane, stage: d.stage, kind: d.kind, round: d.round, epitaph: d.epitaph }); break;
       case 'awaiting_next': this.awaitingNext = true; if (this.tournament) this.tournament.phase = 'awaiting_next'; break;
       case 'tournament_end': if (this.tournament) { this.tournament.phase = 'done'; this.tournament.champion = d.champion; } break;

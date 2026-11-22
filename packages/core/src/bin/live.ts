@@ -40,6 +40,8 @@ const server = new LiveServer({
   engine: rt.live,
   ledger: rt.ledger,
   hardening: () => readHardening(specsDir),
+  runDir,
+  specsDir,
 });
 const { url } = await server.listen(port);
 console.log(`live server on ${url}, provider on ${provider.url}`);

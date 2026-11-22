@@ -6,6 +6,7 @@ import { roundPlan, tierOfLane, type RoundCfg } from '../../../haunt/src/tournam
 import { emptyLessons, lessonEvent, learnRound, type LaneLessons } from '../../../haunt/src/tournament/lessons';
 import { laneCases, type Case } from '../../../haunt/src/tournament/signature';
 import { caseEvents } from '../../../haunt/src/tournament/casebook';
+import { PatternStore, minePatterns, patternEvent, qualifies } from '../../../haunt/src/miner/patterns';
 import type { ArmSpec } from './plan';
 import { assembleWave, assignSeq, BASE_TS, planWave } from './wave';
 
@@ -39,6 +40,7 @@ export function mockTournament(o: MockTournamentOpts = {}): HauntEvent[] {
   const t = new Tournament({ seed: SEED, rounds: o.rounds });
   const out: HauntEvent[] = [];
   const known = new Map<number, LaneLessons>();
+  const patterns = new PatternStore('');
   let ts0 = BASE_TS;
   const limit = o.upTo ?? t.total;
   while (t.phase !== 'done' && t.round < limit) {
@@ -81,9 +83,12 @@ export function mockTournament(o: MockTournamentOpts = {}): HauntEvent[] {
       for (const l of r.newLessons) { lessons.push({ lane, ...l }); learned.push({ lane, lesson: l }); }
       for (const g of r.newSuggestions) lessons.push({ lane, suggestion: true, ...g });
     }
+    // Mine the round into the pattern store and publish the qualifying changes, as the live server does.
+    const patEvs: unknown[] = [];
+    for (const ch of patterns.ingest(minePatterns({ run: 'mock', round: rs.round, events: evs as never, cases: roundCases, reportLink: '/api/waves/' + rs.round + '/report' }), 'mock#r' + rs.round)) if (qualifies(ch.pattern)) patEvs.push(patternEvent(ch.pattern, ch.kind));
     const fin = t.finishRound(evs as never, { wave: rs.round, lessonsBonus, lessons, cases: roundCases });
     const withLessons: unknown[] = [];
-    fin.forEach((e, i) => { withLessons.push(e); if (i === 0) { for (const l of learned) withLessons.push(lessonEvent(l.lane, l.lesson)); for (const c of caseEvents(roundCases)) withLessons.push(c); } });
+    fin.forEach((e, i) => { withLessons.push(e); if (i === 0) { for (const l of learned) withLessons.push(lessonEvent(l.lane, l.lesson)); for (const c of caseEvents(roundCases)) withLessons.push(c); for (const p of patEvs) withLessons.push(p); } });
     withLessons.forEach((e, i) => out.push({ seq: 0, ts: endTs + 100 + i * 20, wave: rs.round, ...(e as object) } as HauntEvent));
     if ((t.phase as string) === 'done') out.push({ seq: 0, ts: endTs + 100 + withLessons.length * 20 + 20, wave: rs.round, ...(t.endEvent() as object) } as HauntEvent);
     ts0 = endTs + GAP_MS;
