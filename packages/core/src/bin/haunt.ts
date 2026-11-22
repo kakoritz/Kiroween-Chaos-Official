@@ -16,6 +16,7 @@ import { ciExitCode, bossTargets, rampTargets, renderTargetLines, soakTargets, s
 import { parseCommandLine } from '../../../haunt/src/adapters';
 import { writeBadgeFiles } from '../../../haunt/src/share';
 import { startProvider } from '../provider/server';
+import { lintSpecDir, renderLint } from '../../../haunt/src/miner/specs';
 
 const argv = process.argv.slice(2);
 const cmd = argv[0];
@@ -299,8 +300,51 @@ function badge(): number {
   for (const p of r.files) console.log(`wrote ${p}`);
   return 0;
 }
+/** `haunt spec-lint <dir>`: exit 1 when a requirement lacks evidence, a patch or a test, or a task says rewrite. */
+function specLint(): number {
+  const dir = argv[1];
+  if (!dir || dir.startsWith('--')) { console.error('usage: npm run haunt -- spec-lint <.kiro/specs/hardening-run>'); return 2; }
+  const path = resolve(dir);
+  if (!existsSync(path)) { console.error(`not found: ${path}`); return 2; }
+  const r = lintSpecDir(path);
+  console.log(renderLint(r, dir));
+  return r.ok ? 0 : 1;
+}
+/**
+ * `haunt improve [--url http://127.0.0.1:7070] [--seed N] [--rounds '[{"lanes":5,"orders":4,"intensity":3}]'] [--speed N] [--pace slow]`:
+ * asks a running live server (`npm run live`) to run, mine, apply the cheap patterns as policy overlay, write a spec for the rest, rerun the same plan
+ * and seed, and compare. Prints the report ("closed n of m patterns"). Nothing is applied to code.
+ */
+async function improveCmd(): Promise<number> {
+  const base = (opt('url', 'http://127.0.0.1:7070') as string).replace(/[/]$/, '');
+  const body: Record<string, unknown> = {};
+  if (opt('seed')) body.seed = Number(opt('seed'));
+  if (opt('speed')) body.speed = Number(opt('speed'));
+  if (opt('pace')) body.pace = opt('pace');
+  if (opt('rounds')) { try { body.rounds = JSON.parse(opt('rounds')!); } catch { console.error('--rounds must be JSON'); return 2; } }
+  const started = await fetch(`${base}/api/improve`, { method: 'POST', body: JSON.stringify(body) }).catch(() => undefined);
+  if (!started) { console.error(`no server at ${base} (start one with npm run live)`); return 2; }
+  const first = await started.json() as { error?: { message?: string } };
+  if (!started.ok) { console.error(first.error?.message ?? `HTTP ${started.status}`); return 2; }
+  console.log(`improve started on ${base}`);
+  let last = '';
+  const deadline = Date.now() + Number(opt('timeout-min', '60')) * 60_000;
+  while (Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, 2000));
+    const j = await (await fetch(`${base}/api/improve`)).json() as { phase: string; error?: string; report?: { text: string; closed: number; of: number } };
+    if (j.phase !== last) { last = j.phase; console.log(`phase: ${j.phase}`); }
+    if (j.phase === 'error') { console.error(j.error ?? 'improve failed'); return 1; }
+    if (j.phase === 'done' && j.report) { console.log(j.report.text); return 0; }
+  }
+  console.error('timed out');
+  return 1;
+}
 if (cmd === 'badge') {
   process.exitCode = badge();
+} else if (cmd === 'improve') {
+  process.exitCode = await improveCmd();
+} else if (cmd === 'spec-lint') {
+  process.exitCode = specLint();
 } else if (cmd === 'sweep') {
   process.exitCode = await sweep();
 } else if (cmd === 'stack') {
@@ -317,5 +361,7 @@ if (cmd === 'badge') {
   console.log(`usage: npm run haunt -- ramp|sweep|stack|soak|boss [--boss lich|banshee_queen|horseman] [--tier rookie|retrier|journaler|reconciler|phoenix] [--seed N] [--orders N] [--speed N] [--config path] [--bot path] [--out dir] [--no-gate]`);
   console.log('       npm run haunt -- compare <runA> <runB> [--out file]');
   console.log('       npm run haunt -- badge <run-id> [--out dir]');
+  console.log('       npm run haunt -- spec-lint <.kiro/specs/hardening-run>');
+  console.log('       npm run haunt -- improve [--url http://127.0.0.1:7070] [--seed N] [--rounds JSON] [--speed N] [--pace slow]');
   process.exitCode = cmd ? 2 : 0;
 }

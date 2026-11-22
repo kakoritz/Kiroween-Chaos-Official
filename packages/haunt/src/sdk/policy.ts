@@ -12,6 +12,9 @@ export const ACTION_PARTS: Readonly<Record<PolicyAction, readonly string[]>> = {
   hold_and_reroute: ['offline_queue'],
 };
 
+/** The actions the SDK enforces today. The others are recorded and shown, but a tier's own parts already do them. */
+export const ENFORCED_ACTIONS: readonly PolicyAction[] = ['retry_backoff'];
+
 export interface PolicyRule {
   stage: string;
   /** The fault the rule answers: `timeout`, `endpoint_down`, `http_500`, ... or `*`. */
@@ -28,6 +31,12 @@ export interface Policy { version: 1; rules: PolicyRule[] }
 export const EMPTY_POLICY: Policy = { version: 1, rules: [] };
 
 /** The actions a bot with these parts can learn. Rookie none, Retrier retry, Journaler retry and journal, Reconciler adds idempotency, Phoenix all. */
+/** Does a policy overlay change what a bot with these parts does? Only an enforced action does, and a breaker bot already backs off on its own. */
+export function policyTakes(parts: readonly string[], action: PolicyAction): boolean {
+  if (!ENFORCED_ACTIONS.includes(action) || !actionsFor(parts).includes(action)) return false;
+  return !(action === 'retry_backoff' && parts.includes('breaker'));
+}
+
 export function actionsFor(parts: readonly string[]): PolicyAction[] {
   const have = new Set(parts);
   return (Object.keys(ACTION_PARTS) as PolicyAction[]).filter((a) => ACTION_PARTS[a].every((p) => have.has(p)));

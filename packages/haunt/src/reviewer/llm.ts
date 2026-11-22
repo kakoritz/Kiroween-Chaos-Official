@@ -13,6 +13,8 @@ export type ReviewSource = 'llm' | 'rules';
 export interface LlmReviewResult extends ReviewResult { source: ReviewSource; fallbackReason?: string; provider?: string }
 export interface LlmReviewOptions extends ReviewOptions {
   botFile?: string;
+  /** Write the serious spec of the pattern miner (TV3-C12) instead of the rule-based hardening text. */
+  fixSpec?: boolean;
   /** Injected provider. When omitted, `pickProvider(env)` is used. */
   provider?: LlmProvider;
   providerName?: string;

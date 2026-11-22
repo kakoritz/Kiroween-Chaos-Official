@@ -1,0 +1,398 @@
+{
+  "version": 1,
+  "note": "excerpt of .haunt/patterns.json (evidence trimmed)",
+  "patterns": [
+    {
+      "id": "p-85d0a239",
+      "signature": "payment + http_404 + order_lost",
+      "shapes": [
+        "case"
+      ],
+      "count": 10,
+      "lanes": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "downtimeMsTotal": 39,
+      "lostOrders": 10,
+      "repeats": 0,
+      "firstSeen": {
+        "run": "tmwrw6vu7",
+        "round": 1,
+        "order": "ord-0004",
+        "lane": 1
+      },
+      "lastSeen": {
+        "run": "tmwrw7v53",
+        "round": 1,
+        "order": "ord-0004",
+        "lane": 1
+      },
+      "status": "applied",
+      "runs": [
+        "tmwrw6vu7#r1",
+        "tmwrw7v53#r1"
+      ]
+    },
+    {
+      "id": "p-9643d1b6",
+      "signature": "account + crash + duplicate_effect",
+      "shapes": [
+        "case"
+      ],
+      "count": 4,
+      "lanes": [
+        1,
+        2
+      ],
+      "downtimeMsTotal": 0,
+      "lostOrders": 0,
+      "repeats": 8,
+      "firstSeen": {
+        "run": "tmwrw6vu7",
+        "round": 1,
+        "order": "ord-0001",
+        "lane": 1
+      },
+      "lastSeen": {
+        "run": "tmwrw7v53",
+        "round": 1,
+        "order": "ord-0001",
+        "lane": 1
+      },
+      "status": "new",
+      "runs": [
+        "tmwrw6vu7#r1",
+        "tmwrw7v53#r1"
+      ]
+    },
+    {
+      "id": "p-e98c1c44",
+      "signature": "payment + endpoint_failure_rate + degraded",
+      "shapes": [
+        "failure_rate"
+      ],
+      "count": 58,
+      "lanes": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "downtimeMsTotal": 0,
+      "lostOrders": 0,
+      "repeats": 0,
+      "firstSeen": {
+        "run": "tmwrw6vu7",
+        "round": 1,
+        "lane": 3
+      },
+      "lastSeen": {
+        "run": "tmwrw7v53",
+        "round": 2,
+        "lane": 5
+      },
+      "status": "suggested",
+      "runs": [
+        "tmwrw6vu7#r1",
+        "tmwrw6vu7#r2",
+        "tmwrw7v53#r1",
+        "tmwrw7v53#r2"
+      ]
+    },
+    {
+      "id": "p-f5ee5642",
+      "signature": "payment + http_404 + retry_storm",
+      "shapes": [
+        "retry_storm"
+      ],
+      "count": 8,
+      "lanes": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "downtimeMsTotal": 0,
+      "lostOrders": 0,
+      "repeats": 0,
+      "firstSeen": {
+        "run": "tmwrw6vu7",
+        "round": 1,
+        "order": "ord-0004",
+        "lane": 3
+      },
+      "lastSeen": {
+        "run": "tmwrw7v53",
+        "round": 1,
+        "order": "ord-0004",
+        "lane": 3
+      },
+      "status": "suggested",
+      "runs": [
+        "tmwrw6vu7#r1",
+        "tmwrw7v53#r1"
+      ]
+    },
+    {
+      "id": "p-0b7b06ed",
+      "signature": "payment + crash + order_lost",
+      "shapes": [
+        "case"
+      ],
+      "count": 4,
+      "lanes": [
+        2,
+        3,
+        4
+      ],
+      "downtimeMsTotal": 138,
+      "lostOrders": 4,
+      "repeats": 0,
+      "firstSeen": {
+        "run": "tmwrw6vu7",
+        "round": 2,
+        "order": "ord-0004",
+        "lane": 2
+      },
+      "lastSeen": {
+        "run": "tmwrw7v53",
+        "round": 2,
+        "order": "ord-0004",
+        "lane": 2
+      },
+      "status": "suggested",
+      "runs": [
+        "tmwrw6vu7#r2",
+        "tmwrw7v53#r2"
+      ]
+    },
+    {
+      "id": "p-7f80339d",
+      "signature": "account + slow_link + outage",
+      "shapes": [
+        "outage"
+      ],
+      "count": 8,
+      "lanes": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "downtimeMsTotal": 20680,
+      "lostOrders": 0,
+      "repeats": 0,
+      "firstSeen": {
+        "run": "tmwrw6vu7",
+        "round": 2,
+        "lane": 2
+      },
+      "lastSeen": {
+        "run": "tmwrw7v53",
+        "round": 2,
+        "lane": 2
+      },
+      "status": "suggested",
+      "runs": [
+        "tmwrw6vu7#r2",
+        "tmwrw7v53#r2"
+      ]
+    },
+    {
+      "id": "p-3cb7dd7b",
+      "signature": "account + endpoint_failure_rate + degraded",
+      "shapes": [
+        "failure_rate"
+      ],
+      "count": 20,
+      "lanes": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "downtimeMsTotal": 0,
+      "lostOrders": 0,
+      "repeats": 0,
+      "firstSeen": {
+        "run": "tmwrw6vu7",
+        "round": 2,
+        "lane": 5
+      },
+      "lastSeen": {
+        "run": "tmwrw7v53",
+        "round": 2,
+        "lane": 5
+      },
+      "status": "new",
+      "runs": [
+        "tmwrw6vu7#r2",
+        "tmwrw7v53#r2"
+      ]
+    },
+    {
+      "id": "p-121a1440",
+      "signature": "account + http_429 + retry_storm",
+      "shapes": [
+        "retry_storm"
+      ],
+      "count": 4,
+      "lanes": [
+        3,
+        4,
+        5
+      ],
+      "downtimeMsTotal": 0,
+      "lostOrders": 0,
+      "repeats": 0,
+      "firstSeen": {
+        "run": "tmwrw6vu7",
+        "round": 2,
+        "order": "ord-0003",
+        "lane": 5
+      },
+      "lastSeen": {
+        "run": "tmwrw7v53",
+        "round": 2,
+        "order": "ord-0003",
+        "lane": 5
+      },
+      "status": "new",
+      "runs": [
+        "tmwrw6vu7#r2",
+        "tmwrw7v53#r2"
+      ]
+    },
+    {
+      "id": "p-bfcb8956",
+      "signature": "payment + crash + retry_storm",
+      "shapes": [
+        "retry_storm"
+      ],
+      "count": 6,
+      "lanes": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "downtimeMsTotal": 0,
+      "lostOrders": 0,
+      "repeats": 0,
+      "firstSeen": {
+        "run": "tmwrw6vu7",
+        "round": 2,
+        "order": "ord-0004",
+        "lane": 5
+      },
+      "lastSeen": {
+        "run": "tmwrw7v53",
+        "round": 2,
+        "order": "ord-0004",
+        "lane": 5
+      },
+      "status": "new",
+      "runs": [
+        "tmwrw6vu7#r2",
+        "tmwrw7v53#r2"
+      ]
+    },
+    {
+      "id": "p-493c2bba",
+      "signature": "payment + http_429 + order_lost",
+      "shapes": [
+        "case"
+      ],
+      "count": 2,
+      "lanes": [
+        3,
+        4
+      ],
+      "downtimeMsTotal": 17,
+      "lostOrders": 2,
+      "repeats": 0,
+      "firstSeen": {
+        "run": "tmwrw7v53",
+        "round": 2,
+        "order": "ord-0005",
+        "lane": 3
+      },
+      "lastSeen": {
+        "run": "tmwrw7v53",
+        "round": 2,
+        "order": "ord-0005",
+        "lane": 3
+      },
+      "status": "new",
+      "runs": [
+        "tmwrw7v53#r2"
+      ]
+    },
+    {
+      "id": "p-478df4b3",
+      "signature": "account + http_429 + order_lost",
+      "shapes": [
+        "case"
+      ],
+      "count": 2,
+      "lanes": [
+        3,
+        4
+      ],
+      "downtimeMsTotal": 13,
+      "lostOrders": 2,
+      "repeats": 0,
+      "firstSeen": {
+        "run": "tmwrw7v53",
+        "round": 2,
+        "order": "ord-0003",
+        "lane": 3
+      },
+      "lastSeen": {
+        "run": "tmwrw7v53",
+        "round": 2,
+        "order": "ord-0003",
+        "lane": 3
+      },
+      "status": "new",
+      "runs": [
+        "tmwrw7v53#r2"
+      ]
+    },
+    {
+      "id": "p-f1c5e9e7",
+      "signature": "payment + http_429 + retry_storm",
+      "shapes": [
+        "retry_storm"
+      ],
+      "count": 2,
+      "lanes": [
+        3,
+        4
+      ],
+      "downtimeMsTotal": 0,
+      "lostOrders": 0,
+      "repeats": 0,
+      "firstSeen": {
+        "run": "tmwrw7v53",
+        "round": 2,
+        "order": "ord-0005",
+        "lane": 4
+      },
+      "lastSeen": {
+        "run": "tmwrw7v53",
+        "round": 2,
+        "order": "ord-0005",
+        "lane": 4
+      },
+      "status": "new",
+      "runs": [
+        "tmwrw7v53#r2"
+      ]
+    }
+  ]
+}

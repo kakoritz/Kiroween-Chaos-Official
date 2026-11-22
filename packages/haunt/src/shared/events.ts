@@ -18,7 +18,7 @@ export interface HauntEvent {
 }
 
 /** Events without a lane (PROTOCOL rule 16). */
-export const GLOBAL_TYPES = ['hello', 'reset', 'wave_start', 'wave_end', 'boss_warning', 'boss_start', 'boss_end', 'hardening_spec', 'fix_applied', 'intensity', 'round_start', 'round_end', 'awaiting_next', 'tournament_end'] as const;
+export const GLOBAL_TYPES = ['hello', 'reset', 'wave_start', 'wave_end', 'boss_warning', 'boss_start', 'boss_end', 'hardening_spec', 'fix_applied', 'intensity', 'round_start', 'round_end', 'awaiting_next', 'tournament_end', 'pattern', 'spec_written'] as const;
 
 /** Lane level events. */
 export const LANE_TYPES = [
