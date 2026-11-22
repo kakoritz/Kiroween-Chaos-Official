@@ -8,11 +8,15 @@ import type { Part } from '../sdk';
 import { tiersForLanes, type TierMode } from './lanes';
 import { postProviderArm, type PostFault } from './provider';
 import { IssueFloor, gremlinVariant } from './floor';
+import { tierOfLane } from '../tournament/rounds';
+import { tierById } from '../pipeline/pipeline';
 import { OUTAGE_FAULTS, drawOutageMs, initialDial, isLevel, type DialState, type FuzzFault } from './intensity';
 
-export interface EngineChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string; forMs?: number; detect?: 'confirmation' | 'handoff'; source?: 'manual' | 'random' | 'boss' | 'fuzz' | 'gremlin'; fuzz?: FuzzFault; count?: number }
+export interface EngineChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string; forMs?: number; detect?: 'confirmation' | 'handoff'; source?: 'manual' | 'random' | 'boss' | 'fuzz' | 'gremlin'; fuzz?: FuzzFault; count?: number; outageMs?: number }
 export interface EngineChaosResult { chaosId: string; creature: string; fault: string; depth: number; deferred: boolean }
-export interface EngineWaveSettings { orders: number; seed: number; tiers: TierMode; lanes: number; speed: number; pace: 'normal' | 'show' | 'slow'; app: string; campaign?: { night: number; parts: readonly Part[] } }
+/** A tournament round (TV3-C7): the live lanes are the survivors, lane n runs tier n, and `script` is the one storm every lane meets. */
+export interface EngineTournament { round: number; lanes: number[]; level: number; script: unknown }
+export interface EngineWaveSettings { orders: number; seed: number; tiers: TierMode; lanes: number; speed: number; pace: 'normal' | 'show' | 'slow'; app: string; campaign?: { night: number; parts: readonly Part[] }; tournament?: EngineTournament }
 export interface EngineChaosMode { mode: 'off' | 'manual' | 'random'; frequency: number; seed: number }
 
 export interface RunnerEngineOptions {
@@ -59,9 +63,14 @@ export class RunnerEngine {
     this.speed = settings.speed;
     this.seq = 0;
     this.rampOrders.clear();
-    const tiers = tiersForLanes(settings.lanes, settings.tiers, settings.campaign ? { parts: settings.campaign.parts } : undefined);
-    this.lanes = tiers.map((_, i) => String(i + 1));
-    tiers.forEach((t, i) => this.director.addLane(String(i + 1), t.use));
+    if (settings.tournament) {
+      this.lanes = settings.tournament.lanes.map(String);
+      for (const l of settings.tournament.lanes) this.director.addLane(String(l), tierById(tierOfLane(l)).use);
+    } else {
+      const tiers = tiersForLanes(settings.lanes, settings.tiers, settings.campaign ? { parts: settings.campaign.parts } : undefined);
+      this.lanes = tiers.map((_, i) => String(i + 1));
+      tiers.forEach((t, i) => this.director.addLane(String(i + 1), t.use));
+    }
     this.floor.reset(this.lanes);
     this.opts.onWaveStart?.(wave, settings, this.lanes);
   };
@@ -128,7 +137,7 @@ export class RunnerEngine {
     // Outage timer (spec 5.4): unless the press fixes its window, draw it from the dial level. The window is 1x ms; real ms is divided by speed.
     const fz = req.fuzz;
     const fixedMs = fz?.forMs !== undefined ? Math.max(50, Math.round(fz.forMs / (this.speed || 1))) : req.forMs;
-    const outageMs = fixedMs === undefined && OUTAGE_FAULTS.has(req.fault) ? drawOutageMs(this.seed, lane, nextId, this.level) : undefined;
+    const outageMs = req.outageMs !== undefined ? req.outageMs : fixedMs === undefined && OUTAGE_FAULTS.has(req.fault) ? drawOutageMs(this.seed, lane, nextId, this.level) : undefined;
     const forMs = outageMs !== undefined ? Math.max(50, Math.round(outageMs / (this.speed || 1))) : fixedMs;
     const r = this.director.arm(lane, {
       fault: req.fault, scope: req.scope, point: req.point as never, forMs, detect: req.detect,

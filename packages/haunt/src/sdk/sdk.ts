@@ -1,6 +1,7 @@
 // SDK: order(), stage(), effect(), journal replay and reconcile.
 // Semantics: .kiro/specs/engine/runtime.md sections 1, 3, 6, 7, 28 (they win over design.md).
 import { TIER_DECISION_DEFAULT } from '../shared/catalog';
+import { backoffRule, type Policy } from './policy';
 import {
   Journal, JournalWriteError, applyRecord, readJournal, replay,
   type DecisionChoice, type EffectState, type JournalRecord, type JournalState, type OrderOutcome,
@@ -113,6 +114,8 @@ export interface SdkOptions {
   pid?: number;
   /** What the bot does when nobody answers a wrong order (`defineBot` option). Defaults to the tier policy. */
   onWrongOrder?: DecisionChoice;
+  /** The lessons overlay (`haunt.policy`): switches on retry with backoff for the stages and faults it names, if the bot has the `retry` part. */
+  policy?: Policy;
 }
 
 /** Append-only record sink. The node Journal and the browser worker store both fit. */
@@ -417,7 +420,9 @@ export class Sdk {
   private async call(order: string, stage: string, kind: string, body: Record<string, unknown>, key: string | null, recovery: boolean): Promise<unknown> {
     const { host } = this.o;
     const breaker = this.use.has('breaker');
-    const max = breaker ? BREAKER.attempts : this.use.has('retry') ? RETRY.attempts : 1;
+    const baseMax = breaker ? BREAKER.attempts : this.use.has('retry') ? RETRY.attempts : 1;
+    let max = baseMax;
+    let learned = false;
     for (let attempt = 1; ; attempt++) {
       if (breaker) this.checkBreaker(kind);
       let err: CallError;
@@ -434,14 +439,20 @@ export class Sdk {
       }
       if (breaker) this.noteFailure(kind);
       this.ev('stage_fail', order, stage, { attempt, status: err.status });
+      // A learned lesson (spec 4): retry with exponential backoff for this stage and fault, only for a bot that has the retry part and no breaker.
+      if (!breaker && this.use.has('retry') && !learned) {
+        const rule = backoffRule(this.o.policy, stage, err.status, err.message);
+        if (rule) { learned = true; max = Math.max(baseMax, rule.maxAttempts ?? 5); }
+      }
       if (attempt >= max) throw err;
       if (breaker && this.use.has('offline_queue') && this.isOpen(kind)) throw new ParkSignal('breaker_open');
-      const delay = breaker ? Math.max(BREAKER.baseMs * 2 ** (attempt - 1), err.retryAfterMs ?? 0) : RETRY.delayMs;
+      const backoff = breaker || learned;
+      const delay = backoff ? Math.max(BREAKER.baseMs * 2 ** (attempt - 1), err.retryAfterMs ?? 0) : RETRY.delayMs;
       recovery = true;
-      this.ev('recover_start', order, stage, { action: breaker ? 'backoff' : 'retry', attempt });
+      this.ev('recover_start', order, stage, { action: backoff ? 'backoff' : 'retry', attempt });
       await host.hook('during_backoff', { order, stage });
       await host.sleep(delay);
-      this.ev('recover_done', order, stage, { action: breaker ? 'backoff' : 'retry', attempt });
+      this.ev('recover_done', order, stage, { action: backoff ? 'backoff' : 'retry', attempt });
     }
   }
 

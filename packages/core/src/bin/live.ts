@@ -11,7 +11,7 @@ const provider = await startProvider({ port: Number(process.env.HAUNT_PROVIDER_P
 const loop = process.argv.includes('--loop');
 // Lanes spawn dist/bots/<tier>.js per lane (npm run build:bots). A tier with no built bot is left unspawned; demos and chaos still arm the director.
 const botCommand = makeBotCommand({
-  root: process.cwd(), runDir, providerUrl: provider.url,
+  root: process.cwd(), runDir, providerUrl: provider.url, policyDir: join(runDir, 'lessons'),
   onWave: () => provider.provider.reset(),
   bundleFor: (lane, wave, tier) => (loop && lane === '1' && tier === 'rookie' && wave >= 2 ? 'rookie.hardened' : undefined),
 });

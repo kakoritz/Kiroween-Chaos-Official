@@ -19,7 +19,7 @@ const types = (ev: HauntEvent[]): string[] => ev.map((e) => e.type);
 describe('fixtures (C1, C2)', () => {
   it('has every fixture named in contract/CONTRACT.md', () => {
     expect([...FIXTURE_NAMES].sort()).toEqual(
-      ['absorbed', 'boss-internet', 'boss-power', 'boss-recovered', 'boss-storm', 'breaker', 'calm', 'cancelled', 'deferred', 'downtime', 'full', 'hero-crash', 'inbox', 'intensity-11', 'laps-reviews', 'loop', 'meltdown', 'parked', 'part-added', 'stacked-chaos', 'stress', 'typo-discount', 'typo-redo', 'typo-refund', 'world-events'].sort(),
+      ['absorbed', 'awaiting-next', 'boss-internet', 'boss-power', 'boss-recovered', 'boss-storm', 'breaker', 'calm', 'cancelled', 'deferred', 'downtime', 'elimination-corpse', 'full', 'hero-crash', 'inbox', 'intensity-11', 'laps-reviews', 'loop', 'meltdown', 'parked', 'part-added', 'stacked-chaos', 'stress', 'tournament-r1-r4', 'typo-discount', 'typo-redo', 'typo-refund', 'wall-corpse', 'world-events'].sort(),
     );
   });
 
@@ -39,7 +39,8 @@ describe('fixtures (C1, C2)', () => {
       expect(formatViolations(v)).toBe('');
       expect(events[0].type).toBe('hello');
       expect(events[1].type).toBe('wave_start');
-      expect(events[events.length - 1].type).toBe('wave_end');
+      // A tournament stream ends with the review events that follow the last wave_end (round_end, corpse, awaiting_next, tournament_end).
+      expect(['wave_end', 'awaiting_next', 'tournament_end']).toContain(events[events.length - 1].type);
     });
   }
 
