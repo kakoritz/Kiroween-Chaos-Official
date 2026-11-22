@@ -102,6 +102,8 @@ export class RoundCard extends Card {
   onEvent(ev: ArenaEvent): void {
     applyTournamentEvent(this.t, ev as never);
     if (ev.type === 'reset' || ev.type === 'round_start' || ev.type === 'wave_start' || ev.type === 'tournament_end') { if (this.isOpen) this.close(); return; }
+    // The engine sends lane_eliminated and corpse after round_end: repaint so the reason and epitaph show up.
+    if ((ev.type === 'lane_eliminated' || ev.type === 'corpse') && this.isOpen) { const r = this.t.results[this.t.results.length - 1]; if (r) { r.eliminated = [...r.eliminated.filter((e) => !this.t.fallen[e.lane]), ...Object.entries(this.t.fallen).filter(([, f]) => f.round === r.round).map(([lane, f]) => ({ lane: Number(lane), stage: f.stage, cause: f.cause, epitaph: f.epitaph }))]; this.paint(r); } return; }
     if (ev.type === 'round_end') {
       const r = this.t.results[this.t.results.length - 1];
       if (r) this.paint(r);
@@ -153,7 +155,7 @@ export class RoundCard extends Card {
       }
     }
     dlg.append(table);
-    dlg.append(el('p', 'tv-rule', `Tie-break: ${TIE_BREAK_RULE}`));
+    dlg.append(el('p', 'tv-rule', `Rule: ${this.t.rule || TIE_BREAK_RULE}`));
     const more = this.extra?.(r);
     if (more) dlg.append(more);
 

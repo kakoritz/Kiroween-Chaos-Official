@@ -58,7 +58,7 @@ export function caseTitle(sig: string, stageLabel: (id: string) => string = (s) 
 }
 
 const MECHANISM_WORD: Record<string, string> = {
-  retry: 'retry with backoff', backoff: 'retry with backoff', retry_backoff: 'retry with backoff', idempotency: 'idempotency key', idempotency_key: 'idempotency key',
+  retry: 'retry with backoff', restart: 'restart', absorbed: 'absorbed', breaker_park: 'breaker and park', backoff: 'retry with backoff', retry_backoff: 'retry with backoff', idempotency: 'idempotency key', idempotency_key: 'idempotency key',
   breaker: 'circuit breaker', queue: 'queue and replay', offline_queue: 'queue and replay', reconcile: 'reconcile', compensate: 'compensate', journal: 'journal replay',
   hold_and_reroute: 'hold and reroute', timeout_fallback: 'timeout and fallback',
 };
@@ -144,17 +144,41 @@ export function solvedCounts(cb: Pick<CasebookVM, 'entries'>): Map<number, numbe
   return new Map([...seen].map(([lane, s]) => [lane, s.size] as const));
 }
 
+/** Words for an engine `recommendedFix {action?, part, rule?, mechanism?}`. */
+function fixWord(f: Record<string, unknown>): string {
+  const m = str(f.mechanism ?? f.action);
+  const part = str(f.part);
+  const base = m ? cap(mechanismWord(m)) : cap(words(part));
+  return part && part !== 'none' && m ? `${base} (${words(part)} part)` : base;
+}
+
 /** `GET /api/casebook`: an array or `{cases | entries | casebook}` of per-lane entries, or of groups `{signature, entries | lanes, recommended}`. */
 export function loadCasebook(cb: CasebookVM, raw: unknown): void {
   const r = rec(raw);
-  const list = Array.isArray(raw) ? raw : Array.isArray(r.cases) ? r.cases : Array.isArray(r.entries) ? r.entries : Array.isArray(r.casebook) ? r.casebook : [];
+  const list = Array.isArray(raw) ? raw : Array.isArray(r.cases) && r.cases.length > 0 ? r.cases : Array.isArray(r.open) && Array.isArray(r.cases) ? r.cases : Array.isArray(r.entries) ? r.entries : Array.isArray(r.casebook) ? r.casebook : [];
   const entries: CaseEntry[] = [];
   const recommended: Record<string, string> = {};
   for (const x of list) {
     const g = rec(x);
     const signature = str(g.signature);
+    const fixObj = rec(g.recommendedFix);
+    const fixText = str(g.recommended ?? g.fix) || (Object.keys(fixObj).length ? fixWord(fixObj) : str(g.recommendedFix));
+    if (signature && fixText) recommended[signature] = fixText;
+    // Engine row (C10): lanes[] are numbers, solvedBy[] says who solved it, cost is {downtimeMs, points}.
+    if (signature && Array.isArray(g.lanes) && g.lanes.every((n) => typeof n === 'number')) {
+      const solved = Array.isArray(g.solvedBy) ? g.solvedBy.map(rec) : [];
+      const cost = rec(g.cost);
+      const first = rec(g.firstSeen);
+      (g.lanes as number[]).forEach((lane, i) => {
+        const s = solved.find((x) => num(x.lane) === lane);
+        entries.push({
+          signature, lane, round: num(s?.round ?? first.round), order: str(first.order), outcome: s ? 'solved' : 'lost', mechanism: str(s?.mechanism),
+          costMs: i === 0 ? num(cost.downtimeMs) : 0, costPoints: i === 0 ? num(cost.points) : 0, unknown: g.unknown === true,
+        });
+      });
+      continue;
+    }
     const nested = Array.isArray(g.entries) ? g.entries : Array.isArray(g.lanes) ? g.lanes : null;
-    if (signature && str(g.recommended ?? g.recommendedFix ?? g.fix)) recommended[signature] = str(g.recommended ?? g.recommendedFix ?? g.fix);
     if (nested) {
       for (const n of nested) {
         const nr = rec(n);

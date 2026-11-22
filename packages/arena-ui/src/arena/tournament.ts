@@ -33,6 +33,8 @@ export interface TournamentVM {
   corpses: Corpse[];
   fallen: Record<number, Fallen>;
   results: RoundResult[];
+  /** The engine's tie-break rule text from the last round_end, if it sent one. */
+  rule: string;
   champion: number | null;
   awards: Award[];
   casebookRef: string;
@@ -40,7 +42,7 @@ export interface TournamentVM {
 
 export const emptyTournament = (): TournamentVM => ({
   active: false, round: 0, total: 0, live: [], roster: [], orders: 0, intensity: 0, phase: 'idle', awaitingNext: false,
-  corpses: [], fallen: {}, results: [], champion: null, awards: [], casebookRef: '',
+  corpses: [], fallen: {}, results: [], rule: '', champion: null, awards: [], casebookRef: '',
 });
 
 const rec = (v: unknown): Record<string, unknown> => (v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
@@ -71,7 +73,7 @@ export function awardsOf(v: unknown): Award[] {
   const add = (id: string, x: unknown) => {
     const r = rec(x);
     const lane = typeof x === 'number' ? x : typeof r.lane === 'number' ? r.lane : null;
-    out.push({ id: str(r.id, id), label: str(r.label, AWARD_LABEL[id] ?? id), lane, detail: str(r.detail ?? r.why) });
+    out.push({ id: str(r.id, id), label: str(r.label, AWARD_LABEL[id] ?? id), lane, detail: str(r.text ?? r.detail ?? r.why) });
   };
   if (Array.isArray(v)) v.forEach((x) => add(str(rec(x).id ?? rec(x).award ?? rec(x).kind, 'award'), x));
   else for (const [k, x] of Object.entries(rec(v))) add(k, x);
@@ -153,6 +155,7 @@ export function applyTournamentEvent(t: TournamentVM, ev: { type: string; lane?:
       const eliminated = eliminatedOf(d.eliminated, t);
       for (const e of standings.filter((s) => s.eliminated)) if (!eliminated.some((x) => x.lane === e.lane)) eliminated.push(...eliminatedOf(e.lane, t));
       const result: RoundResult = { round, standings, eliminated, awards: awardsOf(d.awards), lessons: Array.isArray(d.lessons) ? d.lessons : [], cases: Array.isArray(d.cases) ? d.cases : [] };
+      if (typeof d.rule === 'string' && d.rule) t.rule = d.rule;
       const at = t.results.findIndex((r) => r.round === round);
       if (at >= 0) t.results[at] = result; else t.results.push(result);
       return true;
@@ -173,7 +176,7 @@ export function applyTournamentEvent(t: TournamentVM, ev: { type: string; lane?:
 }
 
 /** Late joiner (page load or reload): corpses from `state.corpses`, fallen from `state.lanes[].fallen`, rounds from `state.tournament` or `GET /api/tournament`. */
-export function loadTournament(t: TournamentVM, s: { corpses?: unknown; lanes?: unknown; tournament?: unknown }, extra?: unknown): void {
+export function loadTournament(t: TournamentVM, s: { corpses?: unknown; lanes?: unknown; tournament?: unknown; awaitingNext?: unknown }, extra?: unknown): void {
   const fresh = emptyTournament();
   const lanes = Array.isArray(s.lanes) ? s.lanes : [];
   for (const x of lanes) {
@@ -193,12 +196,13 @@ export function loadTournament(t: TournamentVM, s: { corpses?: unknown; lanes?: 
     addRoster(fresh, [lane]);
   }
   const info = { ...rec(s.tournament), ...rec(extra) };
-  const rounds = Array.isArray(info.rounds) ? info.rounds : [];
+  const rounds = Array.isArray(info.history) ? info.history : Array.isArray(info.rounds) ? info.rounds.filter((x) => 'round' in rec(x)) : [];
   fresh.round = num(info.round, rounds.length > 0 ? num(rec(rounds[rounds.length - 1]).round, rounds.length) : 0);
   fresh.total = num(info.total, 0);
+  if (typeof info.rule === 'string') fresh.rule = info.rule;
   fresh.orders = num(info.orders, 0);
   fresh.intensity = num(info.intensity, 0);
-  fresh.live = laneList(info.lanes ?? info.live);
+  fresh.live = laneList(info.alive ?? info.lanes ?? info.live);
   for (const x of rounds) {
     const r = rec(x);
     const round = num(r.round);
@@ -208,8 +212,8 @@ export function loadTournament(t: TournamentVM, s: { corpses?: unknown; lanes?: 
       lessons: Array.isArray(r.lessons) ? r.lessons : [], cases: Array.isArray(r.cases) ? r.cases : [],
     });
   }
-  if (info.awaitingNext === true || info.phase === 'review' || info.phase === 'awaiting_next') { fresh.phase = 'review'; fresh.awaitingNext = true; }
-  else if (info.phase === 'ended' || info.phase === 'over' || info.champion !== undefined) fresh.phase = 'ended';
+  if (info.awaitingNext === true || s.awaitingNext === true || info.phase === 'review' || info.phase === 'awaiting_next') { fresh.phase = 'review'; fresh.awaitingNext = true; }
+  else if (info.phase === 'ended' || info.phase === 'done' || info.phase === 'over' || info.champion !== undefined) fresh.phase = 'ended';
   else if (fresh.round > 0) fresh.phase = 'running';
   if (info.champion !== undefined) { fresh.champion = laneList([info.champion])[0] ?? null; fresh.awards = awardsOf(info.awards); }
   fresh.active = fresh.round > 0 || fresh.corpses.length > 0 || Object.keys(fresh.fallen).length > 0 || info.active === true;

@@ -37,6 +37,13 @@ export function casebookTable(cb: Pick<CasebookVM, 'entries' | 'recommended'>, h
   return wrap;
 }
 
+/** "restart: Journaler, Reconciler +1": solvers grouped by the mechanism that worked. */
+function solvedText(r: CaseRow, host: CasebookHost): string {
+  const by = new Map<string, number[]>();
+  for (const s of r.solvedBy) { const k = s.mechanism || 'solved'; by.set(k, [...(by.get(k) ?? []), s.lane]); }
+  return [...by].map(([m, lanes]) => `${mechanismWord(m)}: ${lanesText(lanes, host, 2)}`).join('; ');
+}
+
 function caseRow(r: CaseRow, host: CasebookHost): HTMLElement {
   const row = el('div', `cbk-row${r.open ? ' cbk-row--open' : ''}`); row.setAttribute('role', 'row');
   const c = el('span', 'cbk-case'); c.setAttribute('role', 'cell');
@@ -45,8 +52,9 @@ function caseRow(r: CaseRow, host: CasebookHost): HTMLElement {
   const met = el('span', 'cbk-met', lanesText(r.lanes, host)); met.setAttribute('role', 'cell'); met.title = r.lanes.map((n) => host.laneTitle(n) || `Lane ${n}`).join(', ');
   const solved = el('span', 'cbk-solved'); solved.setAttribute('role', 'cell');
   if (r.open) solved.append(el('b', 'cbk-openTag', '⚠ OPEN'), document.createTextNode(' nobody solved it'));
-  else solved.append(document.createTextNode(r.solvedBy.map((s) => `${host.laneTitle(s.lane) || `Lane ${s.lane}`}${s.mechanism ? ` (${mechanismWord(s.mechanism)})` : ''}`).join(', ')));
-  const cost = el('span', 'cbk-cost', `${r.costMs > 0 ? sec(r.costMs, 1) : '-'}${r.costPoints !== 0 ? `, ${r.costPoints > 0 ? '-' : ''}${Math.abs(r.costPoints)} pts` : ''}`); cost.setAttribute('role', 'cell');
+  else solved.append(document.createTextNode(solvedText(r, host)));
+  const costBits = [r.costMs > 0 ? sec(r.costMs, 1) : '', r.costPoints !== 0 ? `${r.costPoints > 0 ? '-' : ''}${Math.abs(r.costPoints)} pts` : ''].filter(Boolean);
+  const cost = el('span', 'cbk-cost', costBits.length ? costBits.join(', ') : '-'); cost.setAttribute('role', 'cell');
   const fix = el('span', 'cbk-fix', r.recommended); fix.setAttribute('role', 'cell'); fix.title = r.recommended;
   row.append(c, met, solved, cost, fix);
   return row;

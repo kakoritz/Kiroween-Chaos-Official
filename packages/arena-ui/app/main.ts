@@ -327,6 +327,7 @@ function onEvent(ev: ArenaEvent) {
   if (TOURNAMENT_EVENTS.has(ev.type)) tourActive = true;
   if (ev.type === 'reset') tourActive = false;
   applyCasebookEvent(casebook, ev, performance.now());
+  if ((ev.type === 'round_end' || ev.type === 'tournament_end') && ev.detail?.casebook) loadCasebook(casebook, ev.detail.casebook);
   roundCard.onEvent(ev);
   finalScreen.onEvent(ev);
   campaignResults.onEvent(ev);
