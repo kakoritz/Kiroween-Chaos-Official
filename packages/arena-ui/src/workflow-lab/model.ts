@@ -13,6 +13,7 @@ export const PRESETS: readonly { id: string; label: string }[] = [
   { id: 'inbox', label: 'Inbox' },
   { id: 'payments', label: 'Payments' },
   { id: 'report', label: 'Report generator' },
+  { id: 'streaming', label: 'Streaming service (model-based pack)' },
 ];
 
 export const PART_LABEL: Record<LabPart, string> = {
@@ -24,6 +25,7 @@ export const HONEST_LABEL = 'Model-based what-if. Results come from rules over t
 export function cloneModel(m: LabModel): LabModel {
   return {
     name: m.name,
+    ...(m.pack ? { pack: m.pack } : {}),
     stages: m.stages.map((s) => ({ ...s, ...(s.effects ? { effects: s.effects.map((e) => ({ ...e })) } : {}) })),
     parts: { ...(m.parts ?? {}) },
     ...(m.seed !== undefined ? { seed: m.seed } : {}),
@@ -106,5 +108,17 @@ export function labFiles(report: LabReport): LabFile[] {
   return [
     { name: 'haunt.yaml', mime: 'text/yaml', label: 'haunt.yaml', text: report.yaml },
     ...shareFiles(report).map((f) => ({ name: f.name as string, mime: f.mime, label: f.label, text: f.text })),
+  ];
+}
+
+/** Pack labels for a report: the pack title, creature names, the review name and sub-scores. Empty for plain presets. */
+export function packLines(report: Pick<LabReport, 'pack' | 'creatureLabels'>): string[] {
+  const p = report.pack;
+  if (!p) return [];
+  const names = [...new Set(p.faults.map((f) => f.creature))];
+  return [
+    `${p.title}${p.modelBased ? ' (model-based demo)' : ''}`,
+    `Creatures: ${names.join(', ')}`,
+    `${p.review.label}: ${p.review.subscores.map((s) => s.replace(/_/g, ' ')).join(', ')}`,
   ];
 }

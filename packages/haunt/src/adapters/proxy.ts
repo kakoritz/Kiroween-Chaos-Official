@@ -16,6 +16,10 @@ export interface ProxyFault {
   pathPrefix?: string;
   /** Fire at most this many times, then the rule expires. Omitted means unlimited. */
   count?: number;
+  /** Inject on this percent of matching requests (0 to 100). Omitted means every matching request. */
+  percent?: number;
+  /** Only requests that carry this header (for example the synthetic-traffic tag). */
+  header?: string;
   /** Expire this many ms after being added. */
   forMs?: number;
 }
@@ -48,11 +52,17 @@ export interface FaultProxyOptions {
   upstream: string;
   port?: number;
   now?: () => number;
+  /** Random source in [0,1) for percent rules (tests inject a fixed one). */
+  random?: () => number;
+  /** Header added to every injected or delayed request and response so it can be filtered. Default x-haunt-injected. */
+  injectedHeader?: string;
 }
 
 export async function startFaultProxy(opts: FaultProxyOptions): Promise<FaultProxy> {
   const upstream = new URL(opts.upstream);
   const now = opts.now ?? Date.now;
+  const random = opts.random ?? Math.random;
+  const tag = (opts.injectedHeader ?? 'x-haunt-injected').toLowerCase();
   const rules: Rule[] = [];
   let nextId = 1;
   const stats: ProxyStats = { forwarded: 0, injected: 0, byKind: { status: 0, drop: 0, latency: 0 } };
@@ -62,6 +72,8 @@ export async function startFaultProxy(opts: FaultProxyOptions): Promise<FaultPro
     if (r.count !== undefined && r.fired >= r.count) return false;
     if (r.method && r.method.toUpperCase() !== (req.method ?? 'GET').toUpperCase()) return false;
     if (r.pathPrefix && !(req.url ?? '/').startsWith(r.pathPrefix)) return false;
+    if (r.header && req.headers[r.header.toLowerCase()] === undefined) return false;
+    if (r.percent !== undefined && random() * 100 >= r.percent) return false;
     return true;
   };
 
@@ -100,10 +112,11 @@ export async function startFaultProxy(opts: FaultProxyOptions): Promise<FaultPro
     }
     if (rule.kind === 'status') {
       req.resume();
-      res.writeHead(rule.status ?? 500, { 'content-type': 'application/json' });
+      res.writeHead(rule.status ?? 500, { 'content-type': 'application/json', [tag]: rule.kind });
       res.end(JSON.stringify({ error: 'haunt_injected', status: rule.status ?? 500 }));
       return;
     }
+    req.headers[tag] = rule.kind;
     setTimeout(() => forward(req, res), rule.ms ?? 0);
   });
 

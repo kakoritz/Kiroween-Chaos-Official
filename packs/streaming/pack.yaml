@@ -1,0 +1,46 @@
+# Streaming service pack. Model-based demo: results come from rules over declared protections, not real code.
+id: streaming
+title: Haunted Stream
+modelBased: true
+stages:
+  - { id: login, label: Account or login, kind: effect, effects: [{ kind: session, keyed: true }] }
+  - { id: profile, label: Profile pick, kind: work }
+  - { id: browse, label: Browse, kind: input }
+  - { id: title_select, label: Title select, kind: work }
+  - { id: entitlement, label: Entitlement check, kind: effect, effects: [{ kind: purchase, keyed: true }] }
+  - { id: license, label: License or DRM, kind: effect, effects: [{ kind: license, keyed: true }] }
+  - { id: start_stream, label: Start stream, kind: effect, effects: [{ kind: playback, keyed: true }] }
+  - { id: buffering, label: Buffering and bitrate, kind: poll }
+  - { id: render, label: Render, kind: work }
+  - { id: ads, label: Ads and pause or resume, kind: effect, effects: [{ kind: ad_impression, keyed: true }] }
+  - { id: finish, label: Finish and history, kind: effect, effects: [{ kind: history, keyed: true }] }
+ledger:
+  - { id: sessions }
+  - { id: entitlements }
+  - { id: playbacks }
+  - { id: history }
+faults:
+  - { id: buffering, stage: buffering, creature: Buffer Wraith, art: wraith, mode: stall, behavior: "Lower the bitrate, prefetch, do not restart the stream" }
+  - { id: cdn_timeout, stage: start_stream, creature: CDN Kraken, art: zombie, mode: timeout, behavior: "Failover to a second CDN, circuit breaker" }
+  - { id: drm_denied, stage: license, creature: DRM Gatekeeper, art: ghost, mode: status, behavior: "Refresh the token once, then show a clear message" }
+  - { id: render_fail, stage: render, creature: Render Gremlin, art: imp, mode: crash, behavior: "Restart the player, keep the position" }
+  - { id: remote_server_down, stage: any, creature: Cloud Banshee, art: banshee, mode: outage, behavior: "Offline queue of watch events, resume later" }
+  - { id: region_lock, stage: entitlement, creature: Region Warden, art: goblin, mode: status, behavior: "Clear message; no retry storm" }
+  - { id: double_play, stage: start_stream, creature: Doppelganger, art: doppelganger, mode: duplicate, behavior: "Idempotent session, one stream per account" }
+  - { id: watch_history_dup, stage: finish, creature: Poltergeist, art: poltergeist, mode: duplicate, behavior: "Idempotency key on the history write" }
+  - { id: token_expired, stage: any, creature: Reaper, art: reaper, mode: expire, behavior: "Refresh token, do not duplicate the purchase" }
+curses:
+  - { id: cursed_404, endpoint: catalog }
+  - { id: cursed_manifest, endpoint: manifest }
+reviews:
+  label: Viewer rating
+  subscores: [startup_time, buffering, render, ads, ease]
+bosses:
+  - { id: cdn_kraken, label: Kraken, hits: [start_stream, buffering, render], story: "CDN plus buffering plus render in one night" }
+  - { id: server_lich, label: Server Lich, hits: [login, entitlement, license, start_stream, finish], story: "The whole backend down for 30 s" }
+tiers:
+  retry: "Retry the manifest and segment fetches with backoff"
+  journal: "Remember the playback position and the session across a crash"
+  idempotency: "One stream per account and one history write per play (keys), so a retry never double-streams or re-buys"
+  breaker: "Fail over to a second CDN after a few failures instead of hammering the first"
+  offline_queue: "Queue watch events while the backend is down and resume later"

@@ -1,0 +1,40 @@
+# Ticket desk pack (data only). Model-based; the runnable app is apps/haunted-inbox (PK-C3).
+id: ticketing
+title: Haunted Desk
+modelBased: true
+stages:
+  - { id: login, label: Login or SSO, kind: effect, effects: [{ kind: session, keyed: true }] }
+  - { id: create, label: Create or ingest request, kind: input }
+  - { id: validate, label: Validate and enrich, kind: work }
+  - { id: dedupe, label: Deduplicate, kind: work }
+  - { id: triage, label: Triage and classify, kind: work }
+  - { id: assign, label: Assign, kind: effect, effects: [{ kind: assignment, keyed: true }] }
+  - { id: sla, label: SLA timer, kind: poll }
+  - { id: notify, label: Notify, kind: effect, effects: [{ kind: notice, keyed: true }] }
+  - { id: escalate, label: Escalate or update, kind: effect, effects: [{ kind: escalation, keyed: true }] }
+  - { id: resolve, label: Resolve, kind: effect, effects: [{ kind: resolution, keyed: true }] }
+  - { id: close, label: Close and satisfaction survey, kind: final }
+ledger:
+  - { id: tickets }
+  - { id: assignments }
+  - { id: notices }
+faults:
+  - { id: webhook_retry_storm, stage: create, creature: Doppelganger, art: doppelganger, mode: duplicate, behavior: "Dedupe on external id; one ticket" }
+  - { id: field_mapping_error, stage: validate, creature: Witch, art: witch, mode: corrupt, behavior: "Park, report the field, do not drop the ticket" }
+  - { id: rate_limited, stage: assign, creature: Goblin, art: goblin, mode: status, behavior: "Honour Retry-After, queue" }
+  - { id: assignee_deleted, stage: assign, creature: Ghost, art: ghost, mode: status, behavior: "Reassign to the queue owner" }
+  - { id: sla_breach, stage: sla, creature: Banshee, art: banshee, mode: outage, behavior: "Escalate once, not every minute" }
+  - { id: wrong_queue, stage: triage, creature: Poltergeist, art: poltergeist, mode: misroute, behavior: "Reclassify with the audit trail" }
+  - { id: sso_expired, stage: login, creature: Reaper, art: reaper, mode: expire, behavior: "Refresh, never create a second account" }
+  - { id: notify_down, stage: notify, creature: Banshee Queen, art: wraith, mode: outage, behavior: "Retry later; a missed notice is logged, not lost" }
+reviews:
+  label: Requester CSAT
+  subscores: [first_response, resolution_time, reassignments, sla, ease]
+bosses:
+  - { id: queue_lich, label: Queue Lich, hits: [create, assign, notify], story: "Tracker down while mail floods in" }
+tiers:
+  retry: "Retry tracker calls honouring Retry-After"
+  journal: "Audit trail of every ticket step, replayed after a crash"
+  idempotency: "Idempotency key is the external ticket id: one ticket, one notice"
+  breaker: "Stop calling a failing tracker and probe before resuming"
+  offline_queue: "Park requests and notices while a tracker is down"

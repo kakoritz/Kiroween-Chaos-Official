@@ -7,7 +7,7 @@ import type { Finding } from '../report/builder';
 import type { HauntEvent } from '../score/score';
 import { runSweep, type CellDetail, type SweepReport } from '../sweep/executor';
 import type { CellOutcome, SweepPlan } from '../sweep/matrix';
-import { LAB_COMMANDS, labToYaml, partSet, validateLabModel, type LabModel, type LabPart, type LabStage, type PartSet } from './model';
+import { LAB_COMMANDS, labToYaml, partSet, validateLabModel, type LabPackMeta, type LabModel, type LabPart, type LabStage, type PartSet } from './model';
 
 export const LAB_LABEL = 'Model-based what-if: results come from rules over the protections you declare, not from running your real code.';
 
@@ -154,6 +154,10 @@ export function suggestionsFrom(findings: Finding[], p: PartSet, model: LabModel
 
 export interface LabReport {
   modelBased: true;
+  /** Pack labels (creature names, review name, tier text) when the model came from a scenario pack. */
+  pack?: LabPackMeta;
+  /** Creature id to the label to show (pack names override the defaults). */
+  creatureLabels: Record<string, string>;
   label: string;
   name: string;
   seed: number;
@@ -201,6 +205,8 @@ export async function labRun(model: LabModel): Promise<LabReport> {
 
   return {
     modelBased: true, label: LAB_LABEL, name: model.name, seed, parts: p,
+    ...(model.pack ? { pack: model.pack } : {}),
+    creatureLabels: { ...Object.fromEntries(LAB_CREATURES.map((c) => [c.id, c.label])), ...(model.pack?.creatures ?? {}) },
     grade: report.grade, reliability: report.reliability, matrix: report.matrix, cells: report.cells,
     findings, suggestions, gradeWithSuggestions: after.grade,
     yaml: labToYaml(model), commands: LAB_COMMANDS, elapsedMs: Math.max(0, Math.round(nowMs() - t0)),

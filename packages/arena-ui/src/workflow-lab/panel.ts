@@ -2,7 +2,7 @@
 // copy goes to the clipboard. Nothing is sent anywhere.
 import { copyText } from '../share/share-panel';
 import {
-  HONEST_LABEL, LAB_PARTS, PART_LABEL, PRESETS, ROLES, blankStage, cloneModel, labFiles, matrixView, modelFromYaml, presetModel, setAllParts, setRole, worstFindings,
+  HONEST_LABEL, LAB_PARTS, PART_LABEL, PRESETS, ROLES, blankStage, cloneModel, labFiles, matrixView, modelFromYaml, packLines, presetModel, setAllParts, setRole, worstFindings,
   type LabFile, type LabModel, type LabReport,
 } from './model';
 
@@ -120,6 +120,7 @@ export function mountWorkflowLab(root: HTMLElement, run: RunLab, reduced = false
   async function renderReport(r: LabReport): Promise<void> {
     out.replaceChildren();
     out.append(el('h2', undefined, 'Report'), el('p', 'wl-honest', r.label));
+    for (const line of packLines(r)) out.append(el('p', 'wl-pack', line));
     const head = el('div', 'wl-head');
     const grade = el('div', `wl-grade wl-grade-${r.grade}`, r.grade); grade.setAttribute('aria-label', `Grade ${r.grade}`);
     head.append(grade, el('div', undefined, `Reliability ${Math.round(r.reliability * 100)}%. With the suggested parts: grade ${r.gradeWithSuggestions}.`));

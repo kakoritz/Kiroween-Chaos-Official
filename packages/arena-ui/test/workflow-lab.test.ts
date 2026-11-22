@@ -4,8 +4,8 @@ import { labToYaml } from '../../haunt/src/lab/model';
 import { blankStage, labFiles, matrixView, modelFromYaml, presetModel, setAllParts, setRole, worstFindings, PRESETS } from '../src/workflow-lab/model';
 
 describe('workflow lab model (SH-U1)', () => {
-  it('has the four presets from the spec', () => {
-    expect(PRESETS.map((p) => p.label)).toEqual(['Orders', 'Inbox', 'Payments', 'Report generator']);
+  it('has the four presets from the spec plus the streaming pack', () => {
+    expect(PRESETS.map((p) => p.label)).toEqual(['Orders', 'Inbox', 'Payments', 'Report generator', 'Streaming service (model-based pack)']);
     for (const p of PRESETS) expect(presetModel(p.id).stages.length).toBeGreaterThan(0);
   });
   it('preset copies do not share state', () => {
@@ -46,5 +46,18 @@ describe('workflow lab model (SH-U1)', () => {
     expect(files[0]!.text).toContain('name: inbox-lab');
     expect(files[1]!.text).toContain('<svg');
     expect(labFiles(r)).toEqual(files);
+  });
+});
+
+describe('streaming pack preset (PK-UI)', () => {
+  it('keeps pack labels through clone and shows them in the report lines', async () => {
+    const { labRun } = await import('../../haunt/src/lab/engine');
+    const { packLines, cloneModel } = await import('../src/workflow-lab/model');
+    const m = presetModel('streaming');
+    expect(cloneModel(m).pack?.id).toBe('streaming');
+    const lines = packLines(await labRun(cloneModel(m)));
+    expect(lines[0]).toMatch(/Haunted Stream.*model-based/);
+    expect(lines.join('\n')).toMatch(/CDN Kraken/);
+    expect(lines.join('\n')).toMatch(/Viewer rating/);
   });
 });
