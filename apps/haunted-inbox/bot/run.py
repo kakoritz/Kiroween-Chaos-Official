@@ -1,4 +1,4 @@
-"""Haunted Inbox bot: triages a support mailbox, six stages, driven by the Haunt runner (no engine change).
+"""Haunted Inbox bot, the Ticket Desk: triages a support mailbox, ten stages, driven by the Haunt runner (no engine change).
 
 Reads the standard HAUNT_* environment (.kiro/specs/engine/runtime.md section 1). The tier decides the parts.
 `python run.py --parts` prints the parts the tier uses and exits.
@@ -15,15 +15,20 @@ import threading
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import haunt_py as hp  # noqa: E402
+import desk  # noqa: E402
 
 # id, label, min ms, max ms. Kept in step with apps/haunted-inbox/haunt.yaml (a test checks it).
 STAGES = (
-    ("fetch", "Fetch mail", 400, 800),
-    ("classify", "Classify", 500, 1000),
-    ("ticket", "File ticket", 500, 1000),
-    ("draft", "Draft reply", 500, 1000),
-    ("reply", "Send reply", 500, 1000),
-    ("archive", "Archive", 300, 600),
+    ("login", "SSO login", 300, 600),
+    ("ingest", "Ingest request", 400, 700),
+    ("validate", "Validate", 300, 600),
+    ("dedupe", "Deduplicate", 300, 600),
+    ("triage", "Triage", 400, 800),
+    ("assign", "Assign ticket", 500, 900),
+    ("notify", "Notify requester", 400, 800),
+    ("escalate", "Escalate", 300, 600),
+    ("resolve", "Resolve", 300, 600),
+    ("close", "Close and survey", 300, 500),
 )
 CLASSES = ("billing", "bug", "account", "spam")
 ORDER_FILE = re.compile(r"^ord-(\d{4})(\.dup)?\.json$")
@@ -174,56 +179,80 @@ def main() -> None:
     def key(s: hp.StageCtx, name: str) -> str | None:
         return s.key(name) if idem else None
 
+    desk_fake = desk.Desk(seed, lane, lambda mode, order, prov: send({"type": "desk_fault", "order": order, "detail": {"mode": mode, "provider": prov}}))
+    transport.gate = lambda kind, body: desk_fake.gate(body.get("provider", ""), body.get("order", ""), body) if kind == "ticket" else None
+
     def stages(oid: str) -> None:
         mail: dict = {}
-        cls = {"v": ""}
+        cls = {"v": "", "dup": None}
 
-        def fetch(s: hp.StageCtx) -> None:
-            s.work(duration("fetch", oid))
-            host.hook("input_read", {"order": oid, "stage": "fetch"})
-            host.send({"k": "at_point", "point": "input_read", "order": oid, "stage": "fetch"})
+        def load() -> None:
+            try:
+                mail.update(read_mail())
+            except Exception as e:  # noqa: BLE001
+                raise input_failure(e) from e
+
+        def do_login(s: hp.StageCtx) -> None:
+            s.work(duration("login", oid))  # SSO refresh: a session token, never a second account
+
+        def ingest(s: hp.StageCtx) -> None:
+            s.work(duration("ingest", oid))
+            host.hook("input_read", {"order": oid, "stage": "ingest"})
+            host.send({"k": "at_point", "point": "input_read", "order": oid, "stage": "ingest"})
             host.proceed.clear()
             host.wait_for(host.proceed, 2000)
-            try:
-                mail.update(read_mail())
-            except Exception as e:  # noqa: BLE001
-                raise input_failure(e) from e
+            load()
 
-        sdk.stage("fetch", fetch)
+        sdk.stage("login", do_login)
+        sdk.stage("ingest", ingest)
         if not mail:  # skipped by a journal replay: read the file again for its data only
-            try:
-                mail.update(read_mail())
-            except Exception as e:  # noqa: BLE001
-                raise input_failure(e) from e
+            load()
 
-        def do_classify(s: hp.StageCtx) -> None:
-            s.work(duration("classify", oid))
-            cls["v"] = classify(mail["subject"], mail["body"])
+        def do_validate(s: hp.StageCtx) -> None:
+            s.work(duration("validate", oid))
 
-        def do_ticket(s: hp.StageCtx) -> None:
-            s.work(duration("ticket", oid))
+        def do_dedupe(s: hp.StageCtx) -> None:
+            s.work(duration("dedupe", oid))
+
+        def do_triage(s: hp.StageCtx) -> None:
+            s.work(duration("triage", oid))
+
+        def prov() -> str:
+            return desk.provider_for(mail["id"])
+
+        def do_assign(s: hp.StageCtx) -> None:
+            s.work(duration("assign", oid))
             if cls["v"] != "spam":
-                s.effect("ticket", key(s, "ticket"), {"class": cls["v"]})
+                body = desk.map_ticket(prov(), mail, cls["v"], cls["dup"])
+                s.effect("ticket", key(s, "ticket"), body)
 
-        def do_draft(s: hp.StageCtx) -> None:
-            s.work(duration("draft", oid))
-
-        def do_reply(s: hp.StageCtx) -> None:
-            s.work(duration("reply", oid))
+        def do_notify(s: hp.StageCtx) -> None:
+            s.work(duration("notify", oid))
             if cls["v"] != "spam":
                 s.effect("reply", key(s, "reply"), {"text": TEMPLATES.get(cls["v"], TEMPLATES["account"])})
 
-        def do_archive(s: hp.StageCtx) -> None:
-            s.work(duration("archive", oid))
+        def do_escalate(s: hp.StageCtx) -> None:
+            s.work(duration("escalate", oid))
+            if cls["v"] == "bug":  # once per ticket: the key is the ticket, not the minute
+                s.effect("notify", key(s, "escalate"), {"queue": "engineering", "provider": prov()})
 
-        # classification is deterministic and free, so it also re-runs on a journal replay
-        sdk.stage("classify", do_classify)
-        if not cls["v"]:
-            cls["v"] = classify(mail["subject"], mail["body"])
-        sdk.stage("ticket", do_ticket)
-        sdk.stage("draft", do_draft)
-        sdk.stage("reply", do_reply)
-        sdk.stage("archive", do_archive)
+        def do_resolve(s: hp.StageCtx) -> None:
+            s.work(duration("resolve", oid))
+
+        def do_close(s: hp.StageCtx) -> None:
+            s.work(duration("close", oid))
+
+        # validation, dedupe and triage are deterministic and free, so they also re-run on a journal replay
+        sdk.stage("validate", do_validate)
+        sdk.stage("dedupe", do_dedupe)
+        cls["dup"] = desk_fake.dedupe(mail, oid)
+        sdk.stage("triage", do_triage)
+        cls["v"] = classify(mail["subject"], mail["body"])
+        sdk.stage("assign", do_assign)
+        sdk.stage("notify", do_notify)
+        sdk.stage("escalate", do_escalate)
+        sdk.stage("resolve", do_resolve)
+        sdk.stage("close", do_close)
 
     def run_order(oid: str) -> str:
         halted = {"v": False}
@@ -252,7 +281,7 @@ def main() -> None:
     parked: dict[str, str] = {}
 
     def breakers_clear() -> bool:
-        for svc in ("ticket", "reply"):
+        for svc in ("ticket", "reply", "notify"):
             until = sdk.breaker_open_until(svc)
             if (until or 0) > host.now():
                 return False

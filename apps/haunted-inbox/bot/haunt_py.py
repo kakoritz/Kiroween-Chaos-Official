@@ -21,7 +21,7 @@ RECOVERY_POINTS = ("during_replay", "during_reconcile", "during_backoff")
 PROCESS_FAULTS = ("crash", "out_of_memory", "power_outage")
 RETRY = {"attempts": 3, "delay_ms": 500}
 BREAKER = {"attempts": 5, "base_ms": 500, "open_after": 4, "open_ms": 5000}
-PATHS = {"ticket": "/tickets", "reply": "/replies"}
+PATHS = {"ticket": "/tickets", "reply": "/replies", "notify": "/notifications"}
 
 # Tier table, same five tiers and parts as App 1.
 TIERS = {
@@ -276,6 +276,7 @@ class Host:
 class Transport:
     def __init__(self, provider: str, lane: str, host: Host):
         self.provider = provider.rstrip("/")
+        self.gate: Callable[[str, dict], None] | None = None
         self.lane = lane
         self.host = host
 
@@ -292,6 +293,13 @@ class Transport:
         path = PATHS.get(kind)
         if path is None:
             raise ValueError(f"unknown effect kind {kind}")
+        if self.gate is not None:  # in-process adapter fault (desk.py): fails before anything is sent
+            try:
+                self.gate(kind, body)
+            except CallError as e:
+                if e.status is None:
+                    raise OSError(str(e)) from e
+                return e.status, {}, ({"retry-after": str((e.retry_after_ms or 0) / 1000)} if e.retry_after_ms else {})
         headers = {"content-type": "application/json", "x-haunt-phase": "recovery" if recovery else "normal"}
         if key is not None:
             headers["idempotency-key"] = key

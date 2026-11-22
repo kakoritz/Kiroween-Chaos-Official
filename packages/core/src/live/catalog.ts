@@ -1,6 +1,6 @@
 // Static catalogs served by the live server: creatures, apps, stages, gear (contract/CONTRACT.md, PROTOCOL.md rule 19).
 import { FAULTS, BOSSES } from '../../../haunt/src/chaos/catalog';
-import { ORDERS_STAGES, stageKind, type StageKind } from '../../../haunt/src/shared/catalog';
+import { INBOX_STAGES, ORDERS_STAGES, stageKind, type StageKind } from '../../../haunt/src/shared/catalog';
 
 export const CONTRACT_VERSION = 1;
 export type AppId = 'orders' | 'inbox';
@@ -78,14 +78,7 @@ export interface StageView { id: string; label: string; icon: string; workAnimat
 export const APP_STAGES: Record<AppId, StageView[]> = {
   // The orders list comes from the one stage table (haunt/shared/catalog), so ids, labels and kinds cannot drift.
   orders: ORDERS_STAGES.map((d) => ({ id: d.id, label: d.label, icon: d.icon, workAnimation: d.workAnimation, kind: stageKind(d.role) })),
-  inbox: [
-    { id: 'fetch', label: 'Fetch', icon: 'mail', workAnimation: 'read_mail', kind: 'read' },
-    { id: 'classify', label: 'Classify', icon: 'brain', workAnimation: 'think', kind: 'read' },
-    { id: 'ticket', label: 'Ticket', icon: 'ticket', workAnimation: 'file_ticket', kind: 'effect' },
-    { id: 'draft', label: 'Draft', icon: 'envelope', workAnimation: 'write_letter', kind: 'read' },
-    { id: 'reply', label: 'Reply', icon: 'plane', workAnimation: 'send_letter', kind: 'effect' },
-    { id: 'archive', label: 'Archive', icon: 'archive', workAnimation: 'archive_box', kind: 'final' },
-  ],
+  inbox: INBOX_STAGES.map((d) => ({ id: d.id, label: d.label, icon: d.icon, workAnimation: d.workAnimation, kind: stageKind(d.role) })),
 };
 
 export const APPS = [

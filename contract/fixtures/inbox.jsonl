@@ -3,410 +3,424 @@
 {"seq":3,"ts":1760000000150,"type":"lane_ready","wave":1,"lane":1,"detail":{"tier":"rookie","label":"Rookie","parts":[]}}
 {"seq":4,"ts":1760000000155,"type":"lane_ready","wave":1,"lane":2,"detail":{"tier":"phoenix","label":"Phoenix","parts":["retry","journal","idempotency","breaker","offline_queue"]}}
 {"seq":5,"ts":1760000001000,"type":"order_start","wave":1,"lane":1,"order":"msg-0001","detail":{"index":1,"total":4}}
-{"seq":6,"ts":1760000001000,"type":"stage_start","wave":1,"lane":1,"order":"msg-0001","stage":"fetch","detail":{"attempt":1}}
+{"seq":6,"ts":1760000001000,"type":"stage_start","wave":1,"lane":1,"order":"msg-0001","stage":"login","detail":{"attempt":1}}
 {"seq":7,"ts":1760000001000,"type":"order_start","wave":1,"lane":2,"order":"msg-0001","detail":{"index":1,"total":4}}
-{"seq":8,"ts":1760000001000,"type":"stage_start","wave":1,"lane":2,"order":"msg-0001","stage":"fetch","detail":{"attempt":1}}
-{"seq":9,"ts":1760000001320,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"fetch","detail":{"pct":40,"label":"Fetching mail"}}
-{"seq":10,"ts":1760000001320,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"fetch","detail":{"pct":39,"label":"Fetching mail"}}
-{"seq":11,"ts":1760000001690,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"fetch","detail":{"pct":90,"label":"Fetching mail"}}
-{"seq":12,"ts":1760000001709,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"fetch","detail":{"pct":89,"label":"Fetching mail"}}
-{"seq":13,"ts":1760000001769,"type":"stage_done","wave":1,"lane":1,"order":"msg-0001","stage":"fetch","detail":{"ms":769,"skipped":false}}
-{"seq":14,"ts":1760000001769,"type":"stage_start","wave":1,"lane":1,"order":"msg-0001","stage":"classify","detail":{"attempt":1}}
-{"seq":15,"ts":1760000001807,"type":"stage_done","wave":1,"lane":2,"order":"msg-0001","stage":"fetch","detail":{"ms":807,"skipped":false}}
-{"seq":16,"ts":1760000001807,"type":"stage_start","wave":1,"lane":2,"order":"msg-0001","stage":"classify","detail":{"attempt":1}}
-{"seq":17,"ts":1760000002069,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"classify","detail":{"pct":15,"label":"Classifying"}}
-{"seq":18,"ts":1760000002107,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"classify","detail":{"pct":17,"label":"Classifying"}}
-{"seq":19,"ts":1760000002369,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"classify","detail":{"pct":29,"label":"Classifying"}}
-{"seq":20,"ts":1760000002407,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"classify","detail":{"pct":34,"label":"Classifying"}}
-{"seq":21,"ts":1760000002669,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"classify","detail":{"pct":44,"label":"Classifying"}}
-{"seq":22,"ts":1760000002998,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"classify","detail":{"pct":67,"label":"Classifying"}}
-{"seq":23,"ts":1760000003089,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"classify","detail":{"pct":65,"label":"Classifying"}}
-{"seq":24,"ts":1760000003298,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"classify","detail":{"pct":84,"label":"Classifying"}}
-{"seq":25,"ts":1760000003389,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"classify","detail":{"pct":79,"label":"Classifying"}}
-{"seq":26,"ts":1760000003596,"type":"stage_done","wave":1,"lane":2,"order":"msg-0001","stage":"classify","detail":{"ms":1789,"skipped":false}}
-{"seq":27,"ts":1760000003596,"type":"stage_start","wave":1,"lane":2,"order":"msg-0001","stage":"ticket","detail":{"attempt":1}}
-{"seq":28,"ts":1760000003689,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"classify","detail":{"pct":94,"label":"Classifying"}}
-{"seq":29,"ts":1760000003818,"type":"stage_done","wave":1,"lane":1,"order":"msg-0001","stage":"classify","detail":{"ms":2049,"skipped":false}}
-{"seq":30,"ts":1760000003818,"type":"stage_start","wave":1,"lane":1,"order":"msg-0001","stage":"ticket","detail":{"attempt":1}}
-{"seq":31,"ts":1760000003896,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"ticket","detail":{"pct":9,"label":"Filing ticket"}}
-{"seq":32,"ts":1760000004118,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"ticket","detail":{"pct":10,"label":"Filing ticket"}}
-{"seq":33,"ts":1760000004196,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"ticket","detail":{"pct":18,"label":"Filing ticket"}}
-{"seq":34,"ts":1760000004418,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"ticket","detail":{"pct":20,"label":"Filing ticket"}}
-{"seq":35,"ts":1760000004496,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"ticket","detail":{"pct":27,"label":"Filing ticket"}}
-{"seq":36,"ts":1760000004718,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"ticket","detail":{"pct":30,"label":"Filing ticket"}}
-{"seq":37,"ts":1760000004796,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"ticket","detail":{"pct":37,"label":"Filing ticket"}}
-{"seq":38,"ts":1760000005018,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"ticket","detail":{"pct":39,"label":"Filing ticket"}}
-{"seq":39,"ts":1760000005096,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"ticket","detail":{"pct":46,"label":"Filing ticket"}}
-{"seq":40,"ts":1760000005318,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"ticket","detail":{"pct":49,"label":"Filing ticket"}}
-{"seq":41,"ts":1760000005396,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"ticket","detail":{"pct":55,"label":"Filing ticket"}}
-{"seq":42,"ts":1760000005618,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"ticket","detail":{"pct":59,"label":"Filing ticket"}}
-{"seq":43,"ts":1760000005629,"type":"effect","wave":1,"lane":2,"order":"msg-0001","detail":{"kind":"ticket","key":"msg-0001:ticket","replayed":false}}
-{"seq":44,"ts":1760000005648,"type":"stage_done","wave":1,"lane":2,"order":"msg-0001","stage":"ticket","detail":{"ms":2052,"skipped":false}}
-{"seq":45,"ts":1760000005648,"type":"stage_start","wave":1,"lane":2,"order":"msg-0001","stage":"draft","detail":{"attempt":1}}
-{"seq":46,"ts":1760000005697,"type":"effect","wave":1,"lane":1,"order":"msg-0001","detail":{"kind":"ticket","key":"msg-0001:ticket","replayed":false}}
-{"seq":47,"ts":1760000005716,"type":"stage_done","wave":1,"lane":1,"order":"msg-0001","stage":"ticket","detail":{"ms":1898,"skipped":false}}
-{"seq":48,"ts":1760000005716,"type":"stage_start","wave":1,"lane":1,"order":"msg-0001","stage":"draft","detail":{"attempt":1}}
-{"seq":49,"ts":1760000005948,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"draft","detail":{"pct":15,"label":"Drafting reply"}}
-{"seq":50,"ts":1760000006016,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"draft","detail":{"pct":15,"label":"Drafting reply"}}
-{"seq":51,"ts":1760000006248,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"draft","detail":{"pct":29,"label":"Drafting reply"}}
-{"seq":52,"ts":1760000006316,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"draft","detail":{"pct":30,"label":"Drafting reply"}}
-{"seq":53,"ts":1760000006548,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"draft","detail":{"pct":44,"label":"Drafting reply"}}
-{"seq":54,"ts":1760000006616,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"draft","detail":{"pct":45,"label":"Drafting reply"}}
-{"seq":55,"ts":1760000006981,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"draft","detail":{"pct":65,"label":"Drafting reply"}}
-{"seq":56,"ts":1760000007017,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"draft","detail":{"pct":65,"label":"Drafting reply"}}
-{"seq":57,"ts":1760000007281,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"draft","detail":{"pct":79,"label":"Drafting reply"}}
-{"seq":58,"ts":1760000007317,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"draft","detail":{"pct":80,"label":"Drafting reply"}}
-{"seq":59,"ts":1760000007581,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"draft","detail":{"pct":94,"label":"Drafting reply"}}
-{"seq":60,"ts":1760000007617,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"draft","detail":{"pct":95,"label":"Drafting reply"}}
-{"seq":61,"ts":1760000007721,"type":"stage_done","wave":1,"lane":2,"order":"msg-0001","stage":"draft","detail":{"ms":2074,"skipped":false}}
-{"seq":62,"ts":1760000007721,"type":"stage_start","wave":1,"lane":2,"order":"msg-0001","stage":"reply","detail":{"attempt":1}}
-{"seq":63,"ts":1760000007727,"type":"stage_done","wave":1,"lane":1,"order":"msg-0001","stage":"draft","detail":{"ms":2011,"skipped":false}}
-{"seq":64,"ts":1760000007727,"type":"stage_start","wave":1,"lane":1,"order":"msg-0001","stage":"reply","detail":{"attempt":1}}
-{"seq":65,"ts":1760000008021,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"reply","detail":{"pct":10,"label":"Sending reply"}}
-{"seq":66,"ts":1760000008027,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"reply","detail":{"pct":9,"label":"Sending reply"}}
-{"seq":67,"ts":1760000008321,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"reply","detail":{"pct":19,"label":"Sending reply"}}
-{"seq":68,"ts":1760000008327,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"reply","detail":{"pct":19,"label":"Sending reply"}}
-{"seq":69,"ts":1760000008621,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"reply","detail":{"pct":29,"label":"Sending reply"}}
-{"seq":70,"ts":1760000008627,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"reply","detail":{"pct":28,"label":"Sending reply"}}
-{"seq":71,"ts":1760000008921,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"reply","detail":{"pct":39,"label":"Sending reply"}}
-{"seq":72,"ts":1760000008927,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"reply","detail":{"pct":37,"label":"Sending reply"}}
-{"seq":73,"ts":1760000009221,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"reply","detail":{"pct":48,"label":"Sending reply"}}
-{"seq":74,"ts":1760000009227,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"reply","detail":{"pct":47,"label":"Sending reply"}}
-{"seq":75,"ts":1760000009521,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"reply","detail":{"pct":58,"label":"Sending reply"}}
-{"seq":76,"ts":1760000009527,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"reply","detail":{"pct":56,"label":"Sending reply"}}
-{"seq":77,"ts":1760000009652,"type":"effect","wave":1,"lane":2,"order":"msg-0001","detail":{"kind":"email","key":"msg-0001:reply","replayed":false}}
-{"seq":78,"ts":1760000009671,"type":"stage_done","wave":1,"lane":2,"order":"msg-0001","stage":"reply","detail":{"ms":1949,"skipped":false}}
-{"seq":79,"ts":1760000009671,"type":"stage_start","wave":1,"lane":2,"order":"msg-0001","stage":"archive","detail":{"attempt":1}}
-{"seq":80,"ts":1760000009717,"type":"effect","wave":1,"lane":1,"order":"msg-0001","detail":{"kind":"email","key":"msg-0001:reply","replayed":false}}
-{"seq":81,"ts":1760000009736,"type":"stage_done","wave":1,"lane":1,"order":"msg-0001","stage":"reply","detail":{"ms":2009,"skipped":false}}
-{"seq":82,"ts":1760000009736,"type":"stage_start","wave":1,"lane":1,"order":"msg-0001","stage":"archive","detail":{"attempt":1}}
-{"seq":83,"ts":1760000009971,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"archive","detail":{"pct":30,"label":"Archiving"}}
-{"seq":84,"ts":1760000010036,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"archive","detail":{"pct":40,"label":"Archiving"}}
-{"seq":85,"ts":1760000010413,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"archive","detail":{"pct":90,"label":"Archiving"}}
-{"seq":86,"ts":1760000010469,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"archive","detail":{"pct":80,"label":"Archiving"}}
-{"seq":87,"ts":1760000010498,"type":"stage_done","wave":1,"lane":1,"order":"msg-0001","stage":"archive","detail":{"ms":762,"skipped":false}}
-{"seq":88,"ts":1760000010499,"type":"order_done","wave":1,"lane":1,"order":"msg-0001","detail":{"clean":true,"ms":9498,"repeats":0}}
-{"seq":89,"ts":1760000010499,"type":"score","wave":1,"lane":1,"detail":{"delta":100,"total":100,"reason":"order clean"}}
-{"seq":90,"ts":1760000010499,"type":"score","wave":1,"lane":1,"detail":{"delta":20,"total":120,"reason":"speed bonus"}}
-{"seq":91,"ts":1760000010499,"type":"order_start","wave":1,"lane":1,"order":"msg-0002","detail":{"index":2,"total":4}}
-{"seq":92,"ts":1760000010499,"type":"stage_start","wave":1,"lane":1,"order":"msg-0002","stage":"fetch","detail":{"attempt":1}}
-{"seq":93,"ts":1760000010676,"type":"stage_done","wave":1,"lane":2,"order":"msg-0001","stage":"archive","detail":{"ms":1005,"skipped":false}}
-{"seq":94,"ts":1760000010677,"type":"order_done","wave":1,"lane":2,"order":"msg-0001","detail":{"clean":true,"ms":9676,"repeats":0}}
-{"seq":95,"ts":1760000010677,"type":"score","wave":1,"lane":2,"detail":{"delta":100,"total":100,"reason":"order clean"}}
-{"seq":96,"ts":1760000010677,"type":"score","wave":1,"lane":2,"detail":{"delta":20,"total":120,"reason":"speed bonus"}}
-{"seq":97,"ts":1760000010677,"type":"order_start","wave":1,"lane":2,"order":"msg-0002","detail":{"index":2,"total":4}}
-{"seq":98,"ts":1760000010677,"type":"stage_start","wave":1,"lane":2,"order":"msg-0002","stage":"fetch","detail":{"attempt":1}}
-{"seq":99,"ts":1760000010819,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"fetch","detail":{"pct":36,"label":"Fetching mail"}}
-{"seq":100,"ts":1760000010997,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"fetch","detail":{"pct":23,"label":"Fetching mail"}}
-{"seq":101,"ts":1760000011238,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"fetch","detail":{"pct":86,"label":"Fetching mail"}}
-{"seq":102,"ts":1760000011297,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"fetch","detail":{"pct":47,"label":"Fetching mail"}}
-{"seq":103,"ts":1760000011366,"type":"stage_done","wave":1,"lane":1,"order":"msg-0002","stage":"fetch","detail":{"ms":867,"skipped":false}}
-{"seq":104,"ts":1760000011366,"type":"stage_start","wave":1,"lane":1,"order":"msg-0002","stage":"classify","detail":{"attempt":1}}
-{"seq":105,"ts":1760000011638,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"fetch","detail":{"pct":73,"label":"Fetching mail"}}
-{"seq":106,"ts":1760000011666,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"classify","detail":{"pct":23,"label":"Classifying"}}
-{"seq":107,"ts":1760000011938,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"fetch","detail":{"pct":97,"label":"Fetching mail"}}
-{"seq":108,"ts":1760000011966,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"classify","detail":{"pct":46,"label":"Classifying"}}
-{"seq":109,"ts":1760000011987,"type":"stage_done","wave":1,"lane":2,"order":"msg-0002","stage":"fetch","detail":{"ms":1310,"skipped":false}}
-{"seq":110,"ts":1760000011987,"type":"stage_start","wave":1,"lane":2,"order":"msg-0002","stage":"classify","detail":{"attempt":1}}
-{"seq":111,"ts":1760000012287,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"classify","detail":{"pct":14,"label":"Classifying"}}
-{"seq":112,"ts":1760000012316,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"classify","detail":{"pct":73,"label":"Classifying"}}
-{"seq":113,"ts":1760000012587,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"classify","detail":{"pct":29,"label":"Classifying"}}
-{"seq":114,"ts":1760000012616,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"classify","detail":{"pct":96,"label":"Classifying"}}
-{"seq":115,"ts":1760000012675,"type":"stage_done","wave":1,"lane":1,"order":"msg-0002","stage":"classify","detail":{"ms":1309,"skipped":false}}
-{"seq":116,"ts":1760000012675,"type":"stage_start","wave":1,"lane":1,"order":"msg-0002","stage":"ticket","detail":{"attempt":1}}
-{"seq":117,"ts":1760000012887,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"classify","detail":{"pct":43,"label":"Classifying"}}
-{"seq":118,"ts":1760000012975,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"ticket","detail":{"pct":12,"label":"Filing ticket"}}
-{"seq":119,"ts":1760000013275,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"ticket","detail":{"pct":25,"label":"Filing ticket"}}
-{"seq":120,"ts":1760000013335,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"classify","detail":{"pct":64,"label":"Classifying"}}
-{"seq":121,"ts":1760000013575,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"ticket","detail":{"pct":37,"label":"Filing ticket"}}
-{"seq":122,"ts":1760000013635,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"classify","detail":{"pct":79,"label":"Classifying"}}
-{"seq":123,"ts":1760000013875,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"ticket","detail":{"pct":49,"label":"Filing ticket"}}
-{"seq":124,"ts":1760000013935,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"classify","detail":{"pct":93,"label":"Classifying"}}
-{"seq":125,"ts":1760000014091,"type":"stage_done","wave":1,"lane":2,"order":"msg-0002","stage":"classify","detail":{"ms":2105,"skipped":false}}
-{"seq":126,"ts":1760000014091,"type":"stage_start","wave":1,"lane":2,"order":"msg-0002","stage":"ticket","detail":{"attempt":1}}
-{"seq":127,"ts":1760000014187,"type":"effect","wave":1,"lane":1,"order":"msg-0002","detail":{"kind":"ticket","key":"msg-0002:ticket","replayed":false}}
-{"seq":128,"ts":1760000014206,"type":"stage_done","wave":1,"lane":1,"order":"msg-0002","stage":"ticket","detail":{"ms":1532,"skipped":false}}
-{"seq":129,"ts":1760000014206,"type":"stage_start","wave":1,"lane":1,"order":"msg-0002","stage":"draft","detail":{"attempt":1}}
-{"seq":130,"ts":1760000014391,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"ticket","detail":{"pct":10,"label":"Filing ticket"}}
-{"seq":131,"ts":1760000014506,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"draft","detail":{"pct":12,"label":"Drafting reply"}}
-{"seq":132,"ts":1760000014691,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"ticket","detail":{"pct":19,"label":"Filing ticket"}}
-{"seq":133,"ts":1760000014806,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"draft","detail":{"pct":24,"label":"Drafting reply"}}
-{"seq":134,"ts":1760000014991,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"ticket","detail":{"pct":29,"label":"Filing ticket"}}
-{"seq":135,"ts":1760000015106,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"draft","detail":{"pct":36,"label":"Drafting reply"}}
-{"seq":136,"ts":1760000015291,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"ticket","detail":{"pct":38,"label":"Filing ticket"}}
-{"seq":137,"ts":1760000015406,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"draft","detail":{"pct":48,"label":"Drafting reply"}}
-{"seq":138,"ts":1760000015591,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"ticket","detail":{"pct":48,"label":"Filing ticket"}}
-{"seq":139,"ts":1760000015746,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"draft","detail":{"pct":62,"label":"Drafting reply"}}
-{"seq":140,"ts":1760000015891,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"ticket","detail":{"pct":57,"label":"Filing ticket"}}
-{"seq":141,"ts":1760000016042,"type":"effect","wave":1,"lane":2,"order":"msg-0002","detail":{"kind":"ticket","key":"msg-0002:ticket","replayed":false}}
-{"seq":142,"ts":1760000016046,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"draft","detail":{"pct":74,"label":"Drafting reply"}}
-{"seq":143,"ts":1760000016061,"type":"stage_done","wave":1,"lane":2,"order":"msg-0002","stage":"ticket","detail":{"ms":1969,"skipped":false}}
-{"seq":144,"ts":1760000016061,"type":"stage_start","wave":1,"lane":2,"order":"msg-0002","stage":"draft","detail":{"attempt":1}}
-{"seq":145,"ts":1760000016346,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"draft","detail":{"pct":86,"label":"Drafting reply"}}
-{"seq":146,"ts":1760000016361,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"draft","detail":{"pct":14,"label":"Drafting reply"}}
-{"seq":147,"ts":1760000016646,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"draft","detail":{"pct":98,"label":"Drafting reply"}}
-{"seq":148,"ts":1760000016661,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"draft","detail":{"pct":27,"label":"Drafting reply"}}
-{"seq":149,"ts":1760000016694,"type":"stage_done","wave":1,"lane":1,"order":"msg-0002","stage":"draft","detail":{"ms":2487,"skipped":false}}
-{"seq":150,"ts":1760000016694,"type":"stage_start","wave":1,"lane":1,"order":"msg-0002","stage":"reply","detail":{"attempt":1}}
-{"seq":151,"ts":1760000016961,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"draft","detail":{"pct":41,"label":"Drafting reply"}}
-{"seq":152,"ts":1760000016994,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"reply","detail":{"pct":9,"label":"Sending reply"}}
-{"seq":153,"ts":1760000017294,"type":"chaos","wave":1,"lane":1,"detail":{"creature":"reaper","fault":"crash","scope":"outer","depth":1,"injectedAt":"after_effect","source":"demo","point":"after_effect_before_journal"}}
-{"seq":154,"ts":1760000017294,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"reply","detail":{"pct":18,"label":"Sending reply"}}
-{"seq":155,"ts":1760000017457,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"draft","detail":{"pct":64,"label":"Drafting reply"}}
-{"seq":156,"ts":1760000017594,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"reply","detail":{"pct":27,"label":"Sending reply"}}
-{"seq":157,"ts":1760000017757,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"draft","detail":{"pct":77,"label":"Drafting reply"}}
-{"seq":158,"ts":1760000017894,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"reply","detail":{"pct":36,"label":"Sending reply"}}
-{"seq":159,"ts":1760000018057,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"draft","detail":{"pct":91,"label":"Drafting reply"}}
-{"seq":160,"ts":1760000018194,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"reply","detail":{"pct":45,"label":"Sending reply"}}
-{"seq":161,"ts":1760000018262,"type":"stage_done","wave":1,"lane":2,"order":"msg-0002","stage":"draft","detail":{"ms":2201,"skipped":false}}
-{"seq":162,"ts":1760000018262,"type":"stage_start","wave":1,"lane":2,"order":"msg-0002","stage":"reply","detail":{"attempt":1}}
-{"seq":163,"ts":1760000018494,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"reply","detail":{"pct":54,"label":"Sending reply"}}
-{"seq":164,"ts":1760000018562,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"reply","detail":{"pct":14,"label":"Sending reply"}}
-{"seq":165,"ts":1760000018752,"type":"effect","wave":1,"lane":1,"order":"msg-0002","detail":{"kind":"email","key":"msg-0002:reply","replayed":false}}
-{"seq":166,"ts":1760000018755,"type":"process_dead","wave":1,"lane":1,"detail":{"reason":"process killed (crash)","restartInMs":1000}}
-{"seq":167,"ts":1760000018862,"type":"chaos","wave":1,"lane":2,"detail":{"creature":"reaper","fault":"crash","scope":"outer","depth":1,"injectedAt":"after_effect","source":"demo","point":"after_effect_before_journal"}}
-{"seq":168,"ts":1760000018862,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"reply","detail":{"pct":27,"label":"Sending reply"}}
-{"seq":169,"ts":1760000019162,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"reply","detail":{"pct":41,"label":"Sending reply"}}
-{"seq":170,"ts":1760000019462,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"reply","detail":{"pct":54,"label":"Sending reply"}}
-{"seq":171,"ts":1760000019653,"type":"effect","wave":1,"lane":2,"order":"msg-0002","detail":{"kind":"email","key":"msg-0002:reply","replayed":false}}
-{"seq":172,"ts":1760000019656,"type":"process_dead","wave":1,"lane":2,"detail":{"reason":"process killed (crash)","restartInMs":1000}}
-{"seq":173,"ts":1760000019755,"type":"process_up","wave":1,"lane":1,"detail":{"attempt":2}}
-{"seq":174,"ts":1760000019755,"type":"recover_start","wave":1,"lane":1,"detail":{"action":"restart","depth":0}}
-{"seq":175,"ts":1760000019775,"type":"recover_done","wave":1,"lane":1,"detail":{"action":"restart","ms":20,"depth":0}}
-{"seq":176,"ts":1760000019775,"type":"stage_start","wave":1,"lane":1,"order":"msg-0002","stage":"fetch","detail":{"attempt":2}}
-{"seq":177,"ts":1760000020095,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"fetch","detail":{"pct":31,"label":"Fetching mail"}}
-{"seq":178,"ts":1760000020584,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"fetch","detail":{"pct":81,"label":"Fetching mail"}}
-{"seq":179,"ts":1760000020656,"type":"process_up","wave":1,"lane":2,"detail":{"attempt":2}}
-{"seq":180,"ts":1760000020656,"type":"recover_start","wave":1,"lane":2,"detail":{"action":"replay","depth":0}}
-{"seq":181,"ts":1760000020656,"type":"stage_start","wave":1,"lane":2,"order":"msg-0002","stage":"fetch","detail":{"attempt":2}}
-{"seq":182,"ts":1760000020662,"type":"stage_done","wave":1,"lane":2,"order":"msg-0002","stage":"fetch","detail":{"ms":6,"skipped":true}}
-{"seq":183,"ts":1760000020668,"type":"stage_start","wave":1,"lane":2,"order":"msg-0002","stage":"classify","detail":{"attempt":2}}
-{"seq":184,"ts":1760000020674,"type":"stage_done","wave":1,"lane":2,"order":"msg-0002","stage":"classify","detail":{"ms":6,"skipped":true}}
-{"seq":185,"ts":1760000020680,"type":"stage_start","wave":1,"lane":2,"order":"msg-0002","stage":"ticket","detail":{"attempt":2}}
-{"seq":186,"ts":1760000020686,"type":"stage_done","wave":1,"lane":2,"order":"msg-0002","stage":"ticket","detail":{"ms":6,"skipped":true}}
-{"seq":187,"ts":1760000020692,"type":"stage_start","wave":1,"lane":2,"order":"msg-0002","stage":"draft","detail":{"attempt":2}}
-{"seq":188,"ts":1760000020698,"type":"stage_done","wave":1,"lane":2,"order":"msg-0002","stage":"draft","detail":{"ms":6,"skipped":true}}
-{"seq":189,"ts":1760000020704,"type":"stage_start","wave":1,"lane":2,"order":"msg-0002","stage":"reply","detail":{"attempt":2}}
-{"seq":190,"ts":1760000020704,"type":"recover_start","wave":1,"lane":2,"detail":{"action":"reconcile","depth":0}}
-{"seq":191,"ts":1760000020734,"type":"effect","wave":1,"lane":2,"order":"msg-0002","detail":{"kind":"email","key":"msg-0002:reply","replayed":true}}
-{"seq":192,"ts":1760000020755,"type":"recover_done","wave":1,"lane":2,"detail":{"action":"reconcile","ms":51,"depth":0}}
-{"seq":193,"ts":1760000020774,"type":"stage_done","wave":1,"lane":2,"order":"msg-0002","stage":"reply","detail":{"ms":70,"skipped":false,"reconciled":true}}
-{"seq":194,"ts":1760000020774,"type":"recover_done","wave":1,"lane":2,"detail":{"action":"replay","ms":118,"depth":0}}
-{"seq":195,"ts":1760000020774,"type":"stage_start","wave":1,"lane":2,"order":"msg-0002","stage":"archive","detail":{"attempt":1}}
-{"seq":196,"ts":1760000020782,"type":"stage_done","wave":1,"lane":1,"order":"msg-0002","stage":"fetch","detail":{"ms":1007,"skipped":false}}
-{"seq":197,"ts":1760000020782,"type":"stage_start","wave":1,"lane":1,"order":"msg-0002","stage":"classify","detail":{"attempt":2}}
-{"seq":198,"ts":1760000021074,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"archive","detail":{"pct":25,"label":"Archiving"}}
-{"seq":199,"ts":1760000021082,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"classify","detail":{"pct":14,"label":"Classifying"}}
-{"seq":200,"ts":1760000021382,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"classify","detail":{"pct":28,"label":"Classifying"}}
-{"seq":201,"ts":1760000021671,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"archive","detail":{"pct":75,"label":"Archiving"}}
-{"seq":202,"ts":1760000021682,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"classify","detail":{"pct":43,"label":"Classifying"}}
-{"seq":203,"ts":1760000021977,"type":"stage_done","wave":1,"lane":2,"order":"msg-0002","stage":"archive","detail":{"ms":1204,"skipped":false}}
-{"seq":204,"ts":1760000021978,"type":"order_done","wave":1,"lane":2,"order":"msg-0002","detail":{"clean":true,"ms":11300,"repeats":0}}
-{"seq":205,"ts":1760000021978,"type":"score","wave":1,"lane":2,"detail":{"delta":100,"total":220,"reason":"order clean"}}
-{"seq":206,"ts":1760000021978,"type":"score","wave":1,"lane":2,"detail":{"delta":25,"total":245,"reason":"survived depth 1"}}
-{"seq":207,"ts":1760000021978,"type":"score","wave":1,"lane":2,"detail":{"delta":20,"total":265,"reason":"speed bonus"}}
-{"seq":208,"ts":1760000021978,"type":"order_start","wave":1,"lane":2,"order":"msg-0003","detail":{"index":3,"total":4}}
-{"seq":209,"ts":1760000021978,"type":"stage_start","wave":1,"lane":2,"order":"msg-0003","stage":"fetch","detail":{"attempt":1}}
-{"seq":210,"ts":1760000022135,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"classify","detail":{"pct":64,"label":"Classifying"}}
-{"seq":211,"ts":1760000022298,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"fetch","detail":{"pct":39,"label":"Fetching mail"}}
-{"seq":212,"ts":1760000022435,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"classify","detail":{"pct":78,"label":"Classifying"}}
-{"seq":213,"ts":1760000022684,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"fetch","detail":{"pct":89,"label":"Fetching mail"}}
-{"seq":214,"ts":1760000022735,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"classify","detail":{"pct":93,"label":"Classifying"}}
-{"seq":215,"ts":1760000022777,"type":"stage_done","wave":1,"lane":2,"order":"msg-0003","stage":"fetch","detail":{"ms":799,"skipped":false}}
-{"seq":216,"ts":1760000022777,"type":"stage_start","wave":1,"lane":2,"order":"msg-0003","stage":"classify","detail":{"attempt":1}}
-{"seq":217,"ts":1760000022897,"type":"stage_done","wave":1,"lane":1,"order":"msg-0002","stage":"classify","detail":{"ms":2115,"skipped":false}}
-{"seq":218,"ts":1760000022897,"type":"stage_start","wave":1,"lane":1,"order":"msg-0002","stage":"ticket","detail":{"attempt":2}}
-{"seq":219,"ts":1760000023077,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"classify","detail":{"pct":15,"label":"Classifying"}}
-{"seq":220,"ts":1760000023197,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"ticket","detail":{"pct":12,"label":"Filing ticket"}}
-{"seq":221,"ts":1760000023377,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"classify","detail":{"pct":29,"label":"Classifying"}}
-{"seq":222,"ts":1760000023497,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"ticket","detail":{"pct":24,"label":"Filing ticket"}}
-{"seq":223,"ts":1760000023677,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"classify","detail":{"pct":44,"label":"Classifying"}}
-{"seq":224,"ts":1760000023797,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"ticket","detail":{"pct":36,"label":"Filing ticket"}}
-{"seq":225,"ts":1760000024097,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"ticket","detail":{"pct":48,"label":"Filing ticket"}}
-{"seq":226,"ts":1760000024106,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"classify","detail":{"pct":65,"label":"Classifying"}}
-{"seq":227,"ts":1760000024397,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"ticket","detail":{"pct":60,"label":"Filing ticket"}}
-{"seq":228,"ts":1760000024406,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"classify","detail":{"pct":79,"label":"Classifying"}}
-{"seq":229,"ts":1760000024454,"type":"effect","wave":1,"lane":1,"order":"msg-0002","detail":{"kind":"ticket","key":"msg-0002:ticket","replayed":false}}
-{"seq":230,"ts":1760000024454,"type":"repeat","wave":1,"lane":1,"order":"msg-0002","detail":{"kind":"ticket","key":"msg-0002:ticket","count":2}}
-{"seq":231,"ts":1760000024454,"type":"score","wave":1,"lane":1,"detail":{"delta":-150,"total":-30,"reason":"duplicate ticket"}}
-{"seq":232,"ts":1760000024473,"type":"stage_done","wave":1,"lane":1,"order":"msg-0002","stage":"ticket","detail":{"ms":1576,"skipped":false}}
-{"seq":233,"ts":1760000024473,"type":"stage_start","wave":1,"lane":1,"order":"msg-0002","stage":"draft","detail":{"attempt":2}}
-{"seq":234,"ts":1760000024706,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"classify","detail":{"pct":94,"label":"Classifying"}}
-{"seq":235,"ts":1760000024773,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"draft","detail":{"pct":12,"label":"Drafting reply"}}
-{"seq":236,"ts":1760000024843,"type":"stage_done","wave":1,"lane":2,"order":"msg-0003","stage":"classify","detail":{"ms":2067,"skipped":false}}
-{"seq":237,"ts":1760000024843,"type":"stage_start","wave":1,"lane":2,"order":"msg-0003","stage":"ticket","detail":{"attempt":1}}
-{"seq":238,"ts":1760000025073,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"draft","detail":{"pct":24,"label":"Drafting reply"}}
-{"seq":239,"ts":1760000025143,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"ticket","detail":{"pct":16,"label":"Filing ticket"}}
-{"seq":240,"ts":1760000025373,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"draft","detail":{"pct":37,"label":"Drafting reply"}}
-{"seq":241,"ts":1760000025443,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"ticket","detail":{"pct":32,"label":"Filing ticket"}}
-{"seq":242,"ts":1760000025673,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"draft","detail":{"pct":49,"label":"Drafting reply"}}
-{"seq":243,"ts":1760000025743,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"ticket","detail":{"pct":48,"label":"Filing ticket"}}
-{"seq":244,"ts":1760000026005,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"draft","detail":{"pct":62,"label":"Drafting reply"}}
-{"seq":245,"ts":1760000026024,"type":"effect","wave":1,"lane":2,"order":"msg-0003","detail":{"kind":"ticket","key":"msg-0003:ticket","replayed":false}}
-{"seq":246,"ts":1760000026043,"type":"stage_done","wave":1,"lane":2,"order":"msg-0003","stage":"ticket","detail":{"ms":1199,"skipped":false}}
-{"seq":247,"ts":1760000026043,"type":"stage_start","wave":1,"lane":2,"order":"msg-0003","stage":"draft","detail":{"attempt":1}}
-{"seq":248,"ts":1760000026305,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"draft","detail":{"pct":74,"label":"Drafting reply"}}
-{"seq":249,"ts":1760000026343,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"draft","detail":{"pct":17,"label":"Drafting reply"}}
-{"seq":250,"ts":1760000026605,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"draft","detail":{"pct":87,"label":"Drafting reply"}}
-{"seq":251,"ts":1760000026643,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"draft","detail":{"pct":33,"label":"Drafting reply"}}
-{"seq":252,"ts":1760000026905,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"draft","detail":{"pct":99,"label":"Drafting reply"}}
-{"seq":253,"ts":1760000026943,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"draft","detail":{"pct":50,"label":"Drafting reply"}}
-{"seq":254,"ts":1760000026945,"type":"stage_done","wave":1,"lane":1,"order":"msg-0002","stage":"draft","detail":{"ms":2473,"skipped":false}}
-{"seq":255,"ts":1760000026945,"type":"stage_start","wave":1,"lane":1,"order":"msg-0002","stage":"reply","detail":{"attempt":2}}
-{"seq":256,"ts":1760000027244,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"draft","detail":{"pct":67,"label":"Drafting reply"}}
-{"seq":257,"ts":1760000027245,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"reply","detail":{"pct":11,"label":"Sending reply"}}
-{"seq":258,"ts":1760000027544,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"draft","detail":{"pct":83,"label":"Drafting reply"}}
-{"seq":259,"ts":1760000027545,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"reply","detail":{"pct":22,"label":"Sending reply"}}
-{"seq":260,"ts":1760000027844,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"draft","detail":{"pct":99,"label":"Drafting reply"}}
-{"seq":261,"ts":1760000027845,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"reply","detail":{"pct":33,"label":"Sending reply"}}
-{"seq":262,"ts":1760000027853,"type":"stage_done","wave":1,"lane":2,"order":"msg-0003","stage":"draft","detail":{"ms":1811,"skipped":false}}
-{"seq":263,"ts":1760000027853,"type":"stage_start","wave":1,"lane":2,"order":"msg-0003","stage":"reply","detail":{"attempt":1}}
-{"seq":264,"ts":1760000028145,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"reply","detail":{"pct":44,"label":"Sending reply"}}
-{"seq":265,"ts":1760000028153,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"reply","detail":{"pct":10,"label":"Sending reply"}}
-{"seq":266,"ts":1760000028445,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"reply","detail":{"pct":55,"label":"Sending reply"}}
-{"seq":267,"ts":1760000028453,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"reply","detail":{"pct":21,"label":"Sending reply"}}
-{"seq":268,"ts":1760000028641,"type":"effect","wave":1,"lane":1,"order":"msg-0002","detail":{"kind":"email","key":"msg-0002:reply","replayed":false}}
-{"seq":269,"ts":1760000028641,"type":"repeat","wave":1,"lane":1,"order":"msg-0002","detail":{"kind":"email","key":"msg-0002:reply","count":2}}
-{"seq":270,"ts":1760000028641,"type":"score","wave":1,"lane":1,"detail":{"delta":-150,"total":-180,"reason":"duplicate email"}}
-{"seq":271,"ts":1760000028660,"type":"stage_done","wave":1,"lane":1,"order":"msg-0002","stage":"reply","detail":{"ms":1714,"skipped":false}}
-{"seq":272,"ts":1760000028660,"type":"stage_start","wave":1,"lane":1,"order":"msg-0002","stage":"archive","detail":{"attempt":1}}
-{"seq":273,"ts":1760000028753,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"reply","detail":{"pct":31,"label":"Sending reply"}}
-{"seq":274,"ts":1760000028960,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"archive","detail":{"pct":45,"label":"Archiving"}}
-{"seq":275,"ts":1760000029053,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"reply","detail":{"pct":41,"label":"Sending reply"}}
-{"seq":276,"ts":1760000029290,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"archive","detail":{"pct":95,"label":"Archiving"}}
-{"seq":277,"ts":1760000029328,"type":"stage_done","wave":1,"lane":1,"order":"msg-0002","stage":"archive","detail":{"ms":668,"skipped":false}}
-{"seq":278,"ts":1760000029329,"type":"order_done","wave":1,"lane":1,"order":"msg-0002","detail":{"clean":false,"ms":18829,"repeats":2}}
-{"seq":279,"ts":1760000029329,"type":"score","wave":1,"lane":1,"detail":{"delta":40,"total":-140,"reason":"order with repeats"}}
-{"seq":280,"ts":1760000029329,"type":"order_start","wave":1,"lane":1,"order":"msg-0003","detail":{"index":3,"total":4}}
-{"seq":281,"ts":1760000029329,"type":"stage_start","wave":1,"lane":1,"order":"msg-0003","stage":"fetch","detail":{"attempt":1}}
-{"seq":282,"ts":1760000029353,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"reply","detail":{"pct":51,"label":"Sending reply"}}
-{"seq":283,"ts":1760000029649,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"fetch","detail":{"pct":44,"label":"Fetching mail"}}
-{"seq":284,"ts":1760000029661,"type":"effect","wave":1,"lane":2,"order":"msg-0003","detail":{"kind":"email","key":"msg-0003:reply","replayed":false}}
-{"seq":285,"ts":1760000029680,"type":"stage_done","wave":1,"lane":2,"order":"msg-0003","stage":"reply","detail":{"ms":1827,"skipped":false}}
-{"seq":286,"ts":1760000029680,"type":"stage_start","wave":1,"lane":2,"order":"msg-0003","stage":"archive","detail":{"attempt":1}}
-{"seq":287,"ts":1760000029980,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"archive","detail":{"pct":42,"label":"Archiving"}}
-{"seq":288,"ts":1760000029991,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"fetch","detail":{"pct":94,"label":"Fetching mail"}}
-{"seq":289,"ts":1760000030041,"type":"stage_done","wave":1,"lane":1,"order":"msg-0003","stage":"fetch","detail":{"ms":712,"skipped":false}}
-{"seq":290,"ts":1760000030041,"type":"stage_start","wave":1,"lane":1,"order":"msg-0003","stage":"classify","detail":{"attempt":1}}
-{"seq":291,"ts":1760000030339,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"archive","detail":{"pct":92,"label":"Archiving"}}
-{"seq":292,"ts":1760000030341,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"classify","detail":{"pct":16,"label":"Classifying"}}
-{"seq":293,"ts":1760000030407,"type":"stage_done","wave":1,"lane":2,"order":"msg-0003","stage":"archive","detail":{"ms":726,"skipped":false}}
-{"seq":294,"ts":1760000030408,"type":"order_done","wave":1,"lane":2,"order":"msg-0003","detail":{"clean":true,"ms":8428,"repeats":0}}
-{"seq":295,"ts":1760000030408,"type":"score","wave":1,"lane":2,"detail":{"delta":100,"total":365,"reason":"order clean"}}
-{"seq":296,"ts":1760000030408,"type":"score","wave":1,"lane":2,"detail":{"delta":20,"total":385,"reason":"speed bonus"}}
-{"seq":297,"ts":1760000030408,"type":"order_start","wave":1,"lane":2,"order":"msg-0004","detail":{"index":4,"total":4}}
-{"seq":298,"ts":1760000030408,"type":"stage_start","wave":1,"lane":2,"order":"msg-0004","stage":"fetch","detail":{"attempt":1}}
-{"seq":299,"ts":1760000030641,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"classify","detail":{"pct":33,"label":"Classifying"}}
-{"seq":300,"ts":1760000030728,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"fetch","detail":{"pct":38,"label":"Fetching mail"}}
-{"seq":301,"ts":1760000030941,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"classify","detail":{"pct":49,"label":"Classifying"}}
-{"seq":302,"ts":1760000031124,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"fetch","detail":{"pct":88,"label":"Fetching mail"}}
-{"seq":303,"ts":1760000031228,"type":"stage_done","wave":1,"lane":2,"order":"msg-0004","stage":"fetch","detail":{"ms":820,"skipped":false}}
-{"seq":304,"ts":1760000031228,"type":"stage_start","wave":1,"lane":2,"order":"msg-0004","stage":"classify","detail":{"attempt":1}}
-{"seq":305,"ts":1760000031261,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"classify","detail":{"pct":66,"label":"Classifying"}}
-{"seq":306,"ts":1760000031528,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"classify","detail":{"pct":20,"label":"Classifying"}}
-{"seq":307,"ts":1760000031561,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"classify","detail":{"pct":83,"label":"Classifying"}}
-{"seq":308,"ts":1760000031828,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"classify","detail":{"pct":39,"label":"Classifying"}}
-{"seq":309,"ts":1760000031861,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"classify","detail":{"pct":99,"label":"Classifying"}}
-{"seq":310,"ts":1760000031889,"type":"stage_done","wave":1,"lane":1,"order":"msg-0003","stage":"classify","detail":{"ms":1847,"skipped":false}}
-{"seq":311,"ts":1760000031889,"type":"stage_start","wave":1,"lane":1,"order":"msg-0003","stage":"ticket","detail":{"attempt":1}}
-{"seq":312,"ts":1760000032189,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"ticket","detail":{"pct":12,"label":"Filing ticket"}}
-{"seq":313,"ts":1760000032290,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"classify","detail":{"pct":70,"label":"Classifying"}}
-{"seq":314,"ts":1760000032489,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"ticket","detail":{"pct":25,"label":"Filing ticket"}}
-{"seq":315,"ts":1760000032590,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"classify","detail":{"pct":89,"label":"Classifying"}}
-{"seq":316,"ts":1760000032761,"type":"stage_done","wave":1,"lane":2,"order":"msg-0004","stage":"classify","detail":{"ms":1533,"skipped":false}}
-{"seq":317,"ts":1760000032761,"type":"stage_start","wave":1,"lane":2,"order":"msg-0004","stage":"ticket","detail":{"attempt":1}}
-{"seq":318,"ts":1760000032789,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"ticket","detail":{"pct":37,"label":"Filing ticket"}}
-{"seq":319,"ts":1760000033061,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"ticket","detail":{"pct":11,"label":"Filing ticket"}}
-{"seq":320,"ts":1760000033089,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"ticket","detail":{"pct":49,"label":"Filing ticket"}}
-{"seq":321,"ts":1760000033361,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"ticket","detail":{"pct":22,"label":"Filing ticket"}}
-{"seq":322,"ts":1760000033420,"type":"effect","wave":1,"lane":1,"order":"msg-0003","detail":{"kind":"ticket","key":"msg-0003:ticket","replayed":false}}
-{"seq":323,"ts":1760000033439,"type":"stage_done","wave":1,"lane":1,"order":"msg-0003","stage":"ticket","detail":{"ms":1550,"skipped":false}}
-{"seq":324,"ts":1760000033439,"type":"stage_start","wave":1,"lane":1,"order":"msg-0003","stage":"draft","detail":{"attempt":1}}
-{"seq":325,"ts":1760000033661,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"ticket","detail":{"pct":33,"label":"Filing ticket"}}
-{"seq":326,"ts":1760000033739,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"draft","detail":{"pct":13,"label":"Drafting reply"}}
-{"seq":327,"ts":1760000033961,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"ticket","detail":{"pct":44,"label":"Filing ticket"}}
-{"seq":328,"ts":1760000034039,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"draft","detail":{"pct":25,"label":"Drafting reply"}}
-{"seq":329,"ts":1760000034261,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"ticket","detail":{"pct":55,"label":"Filing ticket"}}
-{"seq":330,"ts":1760000034339,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"draft","detail":{"pct":38,"label":"Drafting reply"}}
-{"seq":331,"ts":1760000034453,"type":"effect","wave":1,"lane":2,"order":"msg-0004","detail":{"kind":"ticket","key":"msg-0004:ticket","replayed":false}}
-{"seq":332,"ts":1760000034472,"type":"stage_done","wave":1,"lane":2,"order":"msg-0004","stage":"ticket","detail":{"ms":1711,"skipped":false}}
-{"seq":333,"ts":1760000034472,"type":"stage_start","wave":1,"lane":2,"order":"msg-0004","stage":"draft","detail":{"attempt":1}}
-{"seq":334,"ts":1760000034772,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"draft","detail":{"pct":17,"label":"Drafting reply"}}
-{"seq":335,"ts":1760000034920,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"draft","detail":{"pct":63,"label":"Drafting reply"}}
-{"seq":336,"ts":1760000035072,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"draft","detail":{"pct":34,"label":"Drafting reply"}}
-{"seq":337,"ts":1760000035220,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"draft","detail":{"pct":75,"label":"Drafting reply"}}
-{"seq":338,"ts":1760000035520,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"draft","detail":{"pct":88,"label":"Drafting reply"}}
-{"seq":339,"ts":1760000035645,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"draft","detail":{"pct":67,"label":"Drafting reply"}}
-{"seq":340,"ts":1760000035810,"type":"stage_done","wave":1,"lane":1,"order":"msg-0003","stage":"draft","detail":{"ms":2371,"skipped":false}}
-{"seq":341,"ts":1760000035810,"type":"stage_start","wave":1,"lane":1,"order":"msg-0003","stage":"reply","detail":{"attempt":1}}
-{"seq":342,"ts":1760000035945,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"draft","detail":{"pct":84,"label":"Drafting reply"}}
-{"seq":343,"ts":1760000036110,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"reply","detail":{"pct":11,"label":"Sending reply"}}
-{"seq":344,"ts":1760000036225,"type":"stage_done","wave":1,"lane":2,"order":"msg-0004","stage":"draft","detail":{"ms":1753,"skipped":false}}
-{"seq":345,"ts":1760000036225,"type":"stage_start","wave":1,"lane":2,"order":"msg-0004","stage":"reply","detail":{"attempt":1}}
-{"seq":346,"ts":1760000036410,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"reply","detail":{"pct":21,"label":"Sending reply"}}
-{"seq":347,"ts":1760000036525,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"reply","detail":{"pct":15,"label":"Sending reply"}}
-{"seq":348,"ts":1760000036710,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"reply","detail":{"pct":32,"label":"Sending reply"}}
-{"seq":349,"ts":1760000036825,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"reply","detail":{"pct":30,"label":"Sending reply"}}
-{"seq":350,"ts":1760000037010,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"reply","detail":{"pct":42,"label":"Sending reply"}}
-{"seq":351,"ts":1760000037125,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"reply","detail":{"pct":45,"label":"Sending reply"}}
-{"seq":352,"ts":1760000037310,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"reply","detail":{"pct":53,"label":"Sending reply"}}
-{"seq":353,"ts":1760000037425,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"reply","detail":{"pct":59,"label":"Sending reply"}}
-{"seq":354,"ts":1760000037490,"type":"effect","wave":1,"lane":2,"order":"msg-0004","detail":{"kind":"email","key":"msg-0004:reply","replayed":false}}
-{"seq":355,"ts":1760000037509,"type":"stage_done","wave":1,"lane":2,"order":"msg-0004","stage":"reply","detail":{"ms":1284,"skipped":false}}
-{"seq":356,"ts":1760000037509,"type":"stage_start","wave":1,"lane":2,"order":"msg-0004","stage":"archive","detail":{"attempt":1}}
-{"seq":357,"ts":1760000037576,"type":"effect","wave":1,"lane":1,"order":"msg-0003","detail":{"kind":"email","key":"msg-0003:reply","replayed":false}}
-{"seq":358,"ts":1760000037595,"type":"stage_done","wave":1,"lane":1,"order":"msg-0003","stage":"reply","detail":{"ms":1786,"skipped":false}}
-{"seq":359,"ts":1760000037595,"type":"stage_start","wave":1,"lane":1,"order":"msg-0003","stage":"archive","detail":{"attempt":1}}
-{"seq":360,"ts":1760000037809,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"archive","detail":{"pct":25,"label":"Archiving"}}
-{"seq":361,"ts":1760000037895,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"archive","detail":{"pct":26,"label":"Archiving"}}
-{"seq":362,"ts":1760000038404,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"archive","detail":{"pct":75,"label":"Archiving"}}
-{"seq":363,"ts":1760000038466,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"archive","detail":{"pct":76,"label":"Archiving"}}
-{"seq":364,"ts":1760000038706,"type":"stage_done","wave":1,"lane":2,"order":"msg-0004","stage":"archive","detail":{"ms":1198,"skipped":false}}
-{"seq":365,"ts":1760000038707,"type":"order_done","wave":1,"lane":2,"order":"msg-0004","detail":{"clean":true,"ms":8299,"repeats":0}}
-{"seq":366,"ts":1760000038707,"type":"score","wave":1,"lane":2,"detail":{"delta":100,"total":485,"reason":"order clean"}}
-{"seq":367,"ts":1760000038707,"type":"score","wave":1,"lane":2,"detail":{"delta":20,"total":505,"reason":"speed bonus"}}
-{"seq":368,"ts":1760000038745,"type":"stage_done","wave":1,"lane":1,"order":"msg-0003","stage":"archive","detail":{"ms":1149,"skipped":false}}
-{"seq":369,"ts":1760000038746,"type":"order_done","wave":1,"lane":1,"order":"msg-0003","detail":{"clean":true,"ms":9416,"repeats":0}}
-{"seq":370,"ts":1760000038746,"type":"score","wave":1,"lane":1,"detail":{"delta":100,"total":-40,"reason":"order clean"}}
-{"seq":371,"ts":1760000038746,"type":"score","wave":1,"lane":1,"detail":{"delta":20,"total":-20,"reason":"speed bonus"}}
-{"seq":372,"ts":1760000038746,"type":"order_start","wave":1,"lane":1,"order":"msg-0004","detail":{"index":4,"total":4}}
-{"seq":373,"ts":1760000038746,"type":"stage_start","wave":1,"lane":1,"order":"msg-0004","stage":"fetch","detail":{"attempt":1}}
-{"seq":374,"ts":1760000039066,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"fetch","detail":{"pct":34,"label":"Fetching mail"}}
-{"seq":375,"ts":1760000039512,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"fetch","detail":{"pct":84,"label":"Fetching mail"}}
-{"seq":376,"ts":1760000039665,"type":"stage_done","wave":1,"lane":1,"order":"msg-0004","stage":"fetch","detail":{"ms":919,"skipped":false}}
-{"seq":377,"ts":1760000039665,"type":"stage_start","wave":1,"lane":1,"order":"msg-0004","stage":"classify","detail":{"attempt":1}}
-{"seq":378,"ts":1760000039965,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"classify","detail":{"pct":20,"label":"Classifying"}}
-{"seq":379,"ts":1760000040265,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"classify","detail":{"pct":39,"label":"Classifying"}}
-{"seq":380,"ts":1760000040726,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"classify","detail":{"pct":70,"label":"Classifying"}}
-{"seq":381,"ts":1760000041026,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"classify","detail":{"pct":89,"label":"Classifying"}}
-{"seq":382,"ts":1760000041195,"type":"stage_done","wave":1,"lane":1,"order":"msg-0004","stage":"classify","detail":{"ms":1530,"skipped":false}}
-{"seq":383,"ts":1760000041195,"type":"stage_start","wave":1,"lane":1,"order":"msg-0004","stage":"ticket","detail":{"attempt":1}}
-{"seq":384,"ts":1760000041495,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"ticket","detail":{"pct":9,"label":"Filing ticket"}}
-{"seq":385,"ts":1760000041795,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"ticket","detail":{"pct":19,"label":"Filing ticket"}}
-{"seq":386,"ts":1760000042095,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"ticket","detail":{"pct":28,"label":"Filing ticket"}}
-{"seq":387,"ts":1760000042395,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"ticket","detail":{"pct":38,"label":"Filing ticket"}}
-{"seq":388,"ts":1760000042695,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"ticket","detail":{"pct":47,"label":"Filing ticket"}}
-{"seq":389,"ts":1760000042995,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"ticket","detail":{"pct":57,"label":"Filing ticket"}}
-{"seq":390,"ts":1760000043158,"type":"effect","wave":1,"lane":1,"order":"msg-0004","detail":{"kind":"ticket","key":"msg-0004:ticket","replayed":false}}
-{"seq":391,"ts":1760000043177,"type":"stage_done","wave":1,"lane":1,"order":"msg-0004","stage":"ticket","detail":{"ms":1982,"skipped":false}}
-{"seq":392,"ts":1760000043177,"type":"stage_start","wave":1,"lane":1,"order":"msg-0004","stage":"draft","detail":{"attempt":1}}
-{"seq":393,"ts":1760000043477,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"draft","detail":{"pct":17,"label":"Drafting reply"}}
-{"seq":394,"ts":1760000043777,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"draft","detail":{"pct":34,"label":"Drafting reply"}}
-{"seq":395,"ts":1760000044358,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"draft","detail":{"pct":67,"label":"Drafting reply"}}
-{"seq":396,"ts":1760000044658,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"draft","detail":{"pct":84,"label":"Drafting reply"}}
-{"seq":397,"ts":1760000044947,"type":"stage_done","wave":1,"lane":1,"order":"msg-0004","stage":"draft","detail":{"ms":1770,"skipped":false}}
-{"seq":398,"ts":1760000044947,"type":"stage_start","wave":1,"lane":1,"order":"msg-0004","stage":"reply","detail":{"attempt":1}}
-{"seq":399,"ts":1760000045247,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"reply","detail":{"pct":13,"label":"Sending reply"}}
-{"seq":400,"ts":1760000045547,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"reply","detail":{"pct":27,"label":"Sending reply"}}
-{"seq":401,"ts":1760000045847,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"reply","detail":{"pct":40,"label":"Sending reply"}}
-{"seq":402,"ts":1760000046147,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"reply","detail":{"pct":54,"label":"Sending reply"}}
-{"seq":403,"ts":1760000046346,"type":"effect","wave":1,"lane":1,"order":"msg-0004","detail":{"kind":"email","key":"msg-0004:reply","replayed":false}}
-{"seq":404,"ts":1760000046365,"type":"stage_done","wave":1,"lane":1,"order":"msg-0004","stage":"reply","detail":{"ms":1418,"skipped":false}}
-{"seq":405,"ts":1760000046365,"type":"stage_start","wave":1,"lane":1,"order":"msg-0004","stage":"archive","detail":{"attempt":1}}
-{"seq":406,"ts":1760000046665,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"archive","detail":{"pct":29,"label":"Archiving"}}
-{"seq":407,"ts":1760000047175,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"archive","detail":{"pct":79,"label":"Archiving"}}
-{"seq":408,"ts":1760000047394,"type":"stage_done","wave":1,"lane":1,"order":"msg-0004","stage":"archive","detail":{"ms":1029,"skipped":false}}
-{"seq":409,"ts":1760000047395,"type":"order_done","wave":1,"lane":1,"order":"msg-0004","detail":{"clean":true,"ms":8648,"repeats":0}}
-{"seq":410,"ts":1760000047395,"type":"score","wave":1,"lane":1,"detail":{"delta":100,"total":80,"reason":"order clean"}}
-{"seq":411,"ts":1760000047395,"type":"score","wave":1,"lane":1,"detail":{"delta":20,"total":100,"reason":"speed bonus"}}
-{"seq":412,"ts":1760000047895,"type":"wave_end","wave":1,"detail":{"summary":{"1":{"score":100,"grade":"F","completed":4,"failed":0,"parked":0,"quarantined":0,"repeats":2},"2":{"score":505,"grade":"A","completed":4,"failed":0,"parked":0,"quarantined":0,"repeats":0}}}}
+{"seq":8,"ts":1760000001000,"type":"stage_start","wave":1,"lane":2,"order":"msg-0001","stage":"login","detail":{"attempt":1}}
+{"seq":9,"ts":1760000001300,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"login","detail":{"pct":43,"label":"Refreshing SSO"}}
+{"seq":10,"ts":1760000001300,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"login","detail":{"pct":34,"label":"Refreshing SSO"}}
+{"seq":11,"ts":1760000001649,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"login","detail":{"pct":93,"label":"Refreshing SSO"}}
+{"seq":12,"ts":1760000001706,"type":"stage_done","wave":1,"lane":1,"order":"msg-0001","stage":"login","detail":{"ms":706,"skipped":false}}
+{"seq":13,"ts":1760000001706,"type":"stage_start","wave":1,"lane":1,"order":"msg-0001","stage":"ingest","detail":{"attempt":1}}
+{"seq":14,"ts":1760000001745,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"login","detail":{"pct":84,"label":"Refreshing SSO"}}
+{"seq":15,"ts":1760000001897,"type":"stage_done","wave":1,"lane":2,"order":"msg-0001","stage":"login","detail":{"ms":897,"skipped":false}}
+{"seq":16,"ts":1760000001897,"type":"stage_start","wave":1,"lane":2,"order":"msg-0001","stage":"ingest","detail":{"attempt":1}}
+{"seq":17,"ts":1760000002026,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"ingest","detail":{"pct":32,"label":"Ingesting request"}}
+{"seq":18,"ts":1760000002217,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"ingest","detail":{"pct":27,"label":"Ingesting request"}}
+{"seq":19,"ts":1760000002493,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"ingest","detail":{"pct":82,"label":"Ingesting request"}}
+{"seq":20,"ts":1760000002668,"type":"stage_done","wave":1,"lane":1,"order":"msg-0001","stage":"ingest","detail":{"ms":962,"skipped":false}}
+{"seq":21,"ts":1760000002668,"type":"stage_start","wave":1,"lane":1,"order":"msg-0001","stage":"validate","detail":{"attempt":1}}
+{"seq":22,"ts":1760000002764,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"ingest","detail":{"pct":77,"label":"Ingesting request"}}
+{"seq":23,"ts":1760000002968,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"validate","detail":{"pct":40,"label":"Validating fields"}}
+{"seq":24,"ts":1760000003018,"type":"stage_done","wave":1,"lane":2,"order":"msg-0001","stage":"ingest","detail":{"ms":1121,"skipped":false}}
+{"seq":25,"ts":1760000003018,"type":"stage_start","wave":1,"lane":2,"order":"msg-0001","stage":"validate","detail":{"attempt":1}}
+{"seq":26,"ts":1760000003318,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"validate","detail":{"pct":33,"label":"Validating fields"}}
+{"seq":27,"ts":1760000003341,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"validate","detail":{"pct":90,"label":"Validating fields"}}
+{"seq":28,"ts":1760000003421,"type":"stage_done","wave":1,"lane":1,"order":"msg-0001","stage":"validate","detail":{"ms":753,"skipped":false}}
+{"seq":29,"ts":1760000003421,"type":"stage_start","wave":1,"lane":1,"order":"msg-0001","stage":"dedupe","detail":{"attempt":1}}
+{"seq":30,"ts":1760000003721,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"dedupe","detail":{"pct":28,"label":"Checking duplicates"}}
+{"seq":31,"ts":1760000003776,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"validate","detail":{"pct":83,"label":"Validating fields"}}
+{"seq":32,"ts":1760000003941,"type":"stage_done","wave":1,"lane":2,"order":"msg-0001","stage":"validate","detail":{"ms":923,"skipped":false}}
+{"seq":33,"ts":1760000003941,"type":"stage_start","wave":1,"lane":2,"order":"msg-0001","stage":"dedupe","detail":{"attempt":1}}
+{"seq":34,"ts":1760000004241,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"dedupe","detail":{"pct":36,"label":"Checking duplicates"}}
+{"seq":35,"ts":1760000004253,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"dedupe","detail":{"pct":78,"label":"Checking duplicates"}}
+{"seq":36,"ts":1760000004493,"type":"stage_done","wave":1,"lane":1,"order":"msg-0001","stage":"dedupe","detail":{"ms":1072,"skipped":false}}
+{"seq":37,"ts":1760000004493,"type":"stage_start","wave":1,"lane":1,"order":"msg-0001","stage":"triage","detail":{"attempt":1}}
+{"seq":38,"ts":1760000004657,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"dedupe","detail":{"pct":86,"label":"Checking duplicates"}}
+{"seq":39,"ts":1760000004780,"type":"stage_done","wave":1,"lane":2,"order":"msg-0001","stage":"dedupe","detail":{"ms":839,"skipped":false}}
+{"seq":40,"ts":1760000004780,"type":"stage_start","wave":1,"lane":2,"order":"msg-0001","stage":"triage","detail":{"attempt":1}}
+{"seq":41,"ts":1760000004793,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"triage","detail":{"pct":21,"label":"Triaging"}}
+{"seq":42,"ts":1760000005080,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"triage","detail":{"pct":20,"label":"Triaging"}}
+{"seq":43,"ts":1760000005093,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"triage","detail":{"pct":43,"label":"Triaging"}}
+{"seq":44,"ts":1760000005380,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"triage","detail":{"pct":39,"label":"Triaging"}}
+{"seq":45,"ts":1760000005495,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"triage","detail":{"pct":71,"label":"Triaging"}}
+{"seq":46,"ts":1760000005795,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"triage","detail":{"pct":93,"label":"Triaging"}}
+{"seq":47,"ts":1760000005842,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"triage","detail":{"pct":70,"label":"Triaging"}}
+{"seq":48,"ts":1760000005904,"type":"stage_done","wave":1,"lane":1,"order":"msg-0001","stage":"triage","detail":{"ms":1411,"skipped":false}}
+{"seq":49,"ts":1760000005904,"type":"stage_start","wave":1,"lane":1,"order":"msg-0001","stage":"assign","detail":{"attempt":1}}
+{"seq":50,"ts":1760000006142,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"triage","detail":{"pct":89,"label":"Triaging"}}
+{"seq":51,"ts":1760000006204,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"assign","detail":{"pct":14,"label":"Filing ticket"}}
+{"seq":52,"ts":1760000006311,"type":"stage_done","wave":1,"lane":2,"order":"msg-0001","stage":"triage","detail":{"ms":1531,"skipped":false}}
+{"seq":53,"ts":1760000006311,"type":"stage_start","wave":1,"lane":2,"order":"msg-0001","stage":"assign","detail":{"attempt":1}}
+{"seq":54,"ts":1760000006504,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"assign","detail":{"pct":29,"label":"Filing ticket"}}
+{"seq":55,"ts":1760000006611,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"assign","detail":{"pct":11,"label":"Filing ticket"}}
+{"seq":56,"ts":1760000006804,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"assign","detail":{"pct":43,"label":"Filing ticket"}}
+{"seq":57,"ts":1760000006911,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"assign","detail":{"pct":22,"label":"Filing ticket"}}
+{"seq":58,"ts":1760000007104,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"assign","detail":{"pct":58,"label":"Filing ticket"}}
+{"seq":59,"ts":1760000007205,"type":"effect","wave":1,"lane":1,"order":"msg-0001","detail":{"kind":"ticket","key":"msg-0001:ticket","replayed":false}}
+{"seq":60,"ts":1760000007211,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"assign","detail":{"pct":33,"label":"Filing ticket"}}
+{"seq":61,"ts":1760000007224,"type":"stage_done","wave":1,"lane":1,"order":"msg-0001","stage":"assign","detail":{"ms":1319,"skipped":false}}
+{"seq":62,"ts":1760000007224,"type":"stage_start","wave":1,"lane":1,"order":"msg-0001","stage":"notify","detail":{"attempt":1}}
+{"seq":63,"ts":1760000007511,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"assign","detail":{"pct":44,"label":"Filing ticket"}}
+{"seq":64,"ts":1760000007524,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"notify","detail":{"pct":12,"label":"Sending reply"}}
+{"seq":65,"ts":1760000007811,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"assign","detail":{"pct":55,"label":"Filing ticket"}}
+{"seq":66,"ts":1760000007824,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"notify","detail":{"pct":24,"label":"Sending reply"}}
+{"seq":67,"ts":1760000008014,"type":"effect","wave":1,"lane":2,"order":"msg-0001","detail":{"kind":"ticket","key":"msg-0001:ticket","replayed":false}}
+{"seq":68,"ts":1760000008033,"type":"stage_done","wave":1,"lane":2,"order":"msg-0001","stage":"assign","detail":{"ms":1722,"skipped":false}}
+{"seq":69,"ts":1760000008033,"type":"stage_start","wave":1,"lane":2,"order":"msg-0001","stage":"notify","detail":{"attempt":1}}
+{"seq":70,"ts":1760000008124,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"notify","detail":{"pct":36,"label":"Sending reply"}}
+{"seq":71,"ts":1760000008333,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"notify","detail":{"pct":11,"label":"Sending reply"}}
+{"seq":72,"ts":1760000008424,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"notify","detail":{"pct":47,"label":"Sending reply"}}
+{"seq":73,"ts":1760000008633,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"notify","detail":{"pct":23,"label":"Sending reply"}}
+{"seq":74,"ts":1760000008724,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"notify","detail":{"pct":59,"label":"Sending reply"}}
+{"seq":75,"ts":1760000008806,"type":"effect","wave":1,"lane":1,"order":"msg-0001","detail":{"kind":"email","key":"msg-0001:reply","replayed":false}}
+{"seq":76,"ts":1760000008825,"type":"stage_done","wave":1,"lane":1,"order":"msg-0001","stage":"notify","detail":{"ms":1601,"skipped":false}}
+{"seq":77,"ts":1760000008825,"type":"stage_start","wave":1,"lane":1,"order":"msg-0001","stage":"escalate","detail":{"attempt":1}}
+{"seq":78,"ts":1760000008933,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"notify","detail":{"pct":34,"label":"Sending reply"}}
+{"seq":79,"ts":1760000009125,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"escalate","detail":{"pct":17,"label":"Escalating"}}
+{"seq":80,"ts":1760000009233,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"notify","detail":{"pct":45,"label":"Sending reply"}}
+{"seq":81,"ts":1760000009425,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"escalate","detail":{"pct":35,"label":"Escalating"}}
+{"seq":82,"ts":1760000009533,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"notify","detail":{"pct":57,"label":"Sending reply"}}
+{"seq":83,"ts":1760000009682,"type":"effect","wave":1,"lane":2,"order":"msg-0001","detail":{"kind":"email","key":"msg-0001:reply","replayed":false}}
+{"seq":84,"ts":1760000009701,"type":"stage_done","wave":1,"lane":2,"order":"msg-0001","stage":"notify","detail":{"ms":1668,"skipped":false}}
+{"seq":85,"ts":1760000009701,"type":"stage_start","wave":1,"lane":2,"order":"msg-0001","stage":"escalate","detail":{"attempt":1}}
+{"seq":86,"ts":1760000009725,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"escalate","detail":{"pct":52,"label":"Escalating"}}
+{"seq":87,"ts":1760000009926,"type":"effect","wave":1,"lane":1,"order":"msg-0001","detail":{"kind":"notify","key":"msg-0001:escalate","replayed":false}}
+{"seq":88,"ts":1760000009945,"type":"stage_done","wave":1,"lane":1,"order":"msg-0001","stage":"escalate","detail":{"ms":1121,"skipped":false}}
+{"seq":89,"ts":1760000009945,"type":"stage_start","wave":1,"lane":1,"order":"msg-0001","stage":"resolve","detail":{"attempt":1}}
+{"seq":90,"ts":1760000010001,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"escalate","detail":{"pct":19,"label":"Escalating"}}
+{"seq":91,"ts":1760000010245,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"resolve","detail":{"pct":41,"label":"Resolving"}}
+{"seq":92,"ts":1760000010301,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"escalate","detail":{"pct":38,"label":"Escalating"}}
+{"seq":93,"ts":1760000010601,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"escalate","detail":{"pct":57,"label":"Escalating"}}
+{"seq":94,"ts":1760000010611,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"resolve","detail":{"pct":91,"label":"Resolving"}}
+{"seq":95,"ts":1760000010684,"type":"stage_done","wave":1,"lane":1,"order":"msg-0001","stage":"resolve","detail":{"ms":739,"skipped":false}}
+{"seq":96,"ts":1760000010684,"type":"stage_start","wave":1,"lane":1,"order":"msg-0001","stage":"close","detail":{"attempt":1}}
+{"seq":97,"ts":1760000010724,"type":"effect","wave":1,"lane":2,"order":"msg-0001","detail":{"kind":"notify","key":"msg-0001:escalate","replayed":false}}
+{"seq":98,"ts":1760000010743,"type":"stage_done","wave":1,"lane":2,"order":"msg-0001","stage":"escalate","detail":{"ms":1043,"skipped":false}}
+{"seq":99,"ts":1760000010743,"type":"stage_start","wave":1,"lane":2,"order":"msg-0001","stage":"resolve","detail":{"attempt":1}}
+{"seq":100,"ts":1760000010984,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"close","detail":{"pct":31,"label":"Closing"}}
+{"seq":101,"ts":1760000011043,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"resolve","detail":{"pct":46,"label":"Resolving"}}
+{"seq":102,"ts":1760000011367,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"resolve","detail":{"pct":96,"label":"Resolving"}}
+{"seq":103,"ts":1760000011400,"type":"stage_done","wave":1,"lane":2,"order":"msg-0001","stage":"resolve","detail":{"ms":656,"skipped":false}}
+{"seq":104,"ts":1760000011400,"type":"stage_start","wave":1,"lane":2,"order":"msg-0001","stage":"close","detail":{"attempt":1}}
+{"seq":105,"ts":1760000011470,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0001","stage":"close","detail":{"pct":81,"label":"Closing"}}
+{"seq":106,"ts":1760000011663,"type":"stage_done","wave":1,"lane":1,"order":"msg-0001","stage":"close","detail":{"ms":979,"skipped":false}}
+{"seq":107,"ts":1760000011664,"type":"order_done","wave":1,"lane":1,"order":"msg-0001","detail":{"clean":true,"ms":10663,"repeats":0}}
+{"seq":108,"ts":1760000011664,"type":"score","wave":1,"lane":1,"detail":{"delta":100,"total":100,"reason":"order clean"}}
+{"seq":109,"ts":1760000011664,"type":"score","wave":1,"lane":1,"detail":{"delta":20,"total":120,"reason":"speed bonus"}}
+{"seq":110,"ts":1760000011664,"type":"order_start","wave":1,"lane":1,"order":"msg-0002","detail":{"index":2,"total":4}}
+{"seq":111,"ts":1760000011664,"type":"stage_start","wave":1,"lane":1,"order":"msg-0002","stage":"login","detail":{"attempt":1}}
+{"seq":112,"ts":1760000011700,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"close","detail":{"pct":37,"label":"Closing"}}
+{"seq":113,"ts":1760000011964,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"login","detail":{"pct":38,"label":"Refreshing SSO"}}
+{"seq":114,"ts":1760000012109,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0001","stage":"close","detail":{"pct":87,"label":"Closing"}}
+{"seq":115,"ts":1760000012226,"type":"stage_done","wave":1,"lane":2,"order":"msg-0001","stage":"close","detail":{"ms":826,"skipped":false}}
+{"seq":116,"ts":1760000012227,"type":"order_done","wave":1,"lane":2,"order":"msg-0001","detail":{"clean":true,"ms":11226,"repeats":0}}
+{"seq":117,"ts":1760000012227,"type":"score","wave":1,"lane":2,"detail":{"delta":100,"total":100,"reason":"order clean"}}
+{"seq":118,"ts":1760000012227,"type":"score","wave":1,"lane":2,"detail":{"delta":20,"total":120,"reason":"speed bonus"}}
+{"seq":119,"ts":1760000012227,"type":"order_start","wave":1,"lane":2,"order":"msg-0002","detail":{"index":2,"total":4}}
+{"seq":120,"ts":1760000012227,"type":"stage_start","wave":1,"lane":2,"order":"msg-0002","stage":"login","detail":{"attempt":1}}
+{"seq":121,"ts":1760000012364,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"login","detail":{"pct":88,"label":"Refreshing SSO"}}
+{"seq":122,"ts":1760000012472,"type":"stage_done","wave":1,"lane":1,"order":"msg-0002","stage":"login","detail":{"ms":808,"skipped":false}}
+{"seq":123,"ts":1760000012472,"type":"stage_start","wave":1,"lane":1,"order":"msg-0002","stage":"ingest","detail":{"attempt":1}}
+{"seq":124,"ts":1760000012527,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"login","detail":{"pct":44,"label":"Refreshing SSO"}}
+{"seq":125,"ts":1760000012792,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"ingest","detail":{"pct":26,"label":"Ingesting request"}}
+{"seq":126,"ts":1760000012870,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"login","detail":{"pct":94,"label":"Refreshing SSO"}}
+{"seq":127,"ts":1760000012921,"type":"stage_done","wave":1,"lane":2,"order":"msg-0002","stage":"login","detail":{"ms":694,"skipped":false}}
+{"seq":128,"ts":1760000012921,"type":"stage_start","wave":1,"lane":2,"order":"msg-0002","stage":"ingest","detail":{"attempt":1}}
+{"seq":129,"ts":1760000013241,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"ingest","detail":{"pct":28,"label":"Ingesting request"}}
+{"seq":130,"ts":1760000013359,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"ingest","detail":{"pct":76,"label":"Ingesting request"}}
+{"seq":131,"ts":1760000013633,"type":"stage_done","wave":1,"lane":1,"order":"msg-0002","stage":"ingest","detail":{"ms":1161,"skipped":false}}
+{"seq":132,"ts":1760000013633,"type":"stage_start","wave":1,"lane":1,"order":"msg-0002","stage":"validate","detail":{"attempt":1}}
+{"seq":133,"ts":1760000013773,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"ingest","detail":{"pct":78,"label":"Ingesting request"}}
+{"seq":134,"ts":1760000013933,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"validate","detail":{"pct":41,"label":"Validating fields"}}
+{"seq":135,"ts":1760000014012,"type":"stage_done","wave":1,"lane":2,"order":"msg-0002","stage":"ingest","detail":{"ms":1091,"skipped":false}}
+{"seq":136,"ts":1760000014012,"type":"stage_start","wave":1,"lane":2,"order":"msg-0002","stage":"validate","detail":{"attempt":1}}
+{"seq":137,"ts":1760000014302,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"validate","detail":{"pct":91,"label":"Validating fields"}}
+{"seq":138,"ts":1760000014312,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"validate","detail":{"pct":25,"label":"Validating fields"}}
+{"seq":139,"ts":1760000014380,"type":"stage_done","wave":1,"lane":1,"order":"msg-0002","stage":"validate","detail":{"ms":747,"skipped":false}}
+{"seq":140,"ts":1760000014380,"type":"stage_start","wave":1,"lane":1,"order":"msg-0002","stage":"dedupe","detail":{"attempt":1}}
+{"seq":141,"ts":1760000014680,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"dedupe","detail":{"pct":33,"label":"Checking duplicates"}}
+{"seq":142,"ts":1760000014908,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"validate","detail":{"pct":75,"label":"Validating fields"}}
+{"seq":143,"ts":1760000015131,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"dedupe","detail":{"pct":83,"label":"Checking duplicates"}}
+{"seq":144,"ts":1760000015211,"type":"stage_done","wave":1,"lane":2,"order":"msg-0002","stage":"validate","detail":{"ms":1199,"skipped":false}}
+{"seq":145,"ts":1760000015211,"type":"stage_start","wave":1,"lane":2,"order":"msg-0002","stage":"dedupe","detail":{"attempt":1}}
+{"seq":146,"ts":1760000015291,"type":"stage_done","wave":1,"lane":1,"order":"msg-0002","stage":"dedupe","detail":{"ms":911,"skipped":false}}
+{"seq":147,"ts":1760000015291,"type":"stage_start","wave":1,"lane":1,"order":"msg-0002","stage":"triage","detail":{"attempt":1}}
+{"seq":148,"ts":1760000015511,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"dedupe","detail":{"pct":34,"label":"Checking duplicates"}}
+{"seq":149,"ts":1760000015591,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"triage","detail":{"pct":22,"label":"Triaging"}}
+{"seq":150,"ts":1760000015891,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"triage","detail":{"pct":44,"label":"Triaging"}}
+{"seq":151,"ts":1760000015952,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"dedupe","detail":{"pct":84,"label":"Checking duplicates"}}
+{"seq":152,"ts":1760000016101,"type":"stage_done","wave":1,"lane":2,"order":"msg-0002","stage":"dedupe","detail":{"ms":889,"skipped":false}}
+{"seq":153,"ts":1760000016101,"type":"stage_start","wave":1,"lane":2,"order":"msg-0002","stage":"triage","detail":{"attempt":1}}
+{"seq":154,"ts":1760000016274,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"triage","detail":{"pct":72,"label":"Triaging"}}
+{"seq":155,"ts":1760000016401,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"triage","detail":{"pct":34,"label":"Triaging"}}
+{"seq":156,"ts":1760000016574,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"triage","detail":{"pct":94,"label":"Triaging"}}
+{"seq":157,"ts":1760000016664,"type":"stage_done","wave":1,"lane":1,"order":"msg-0002","stage":"triage","detail":{"ms":1374,"skipped":false}}
+{"seq":158,"ts":1760000016664,"type":"stage_start","wave":1,"lane":1,"order":"msg-0002","stage":"assign","detail":{"attempt":1}}
+{"seq":159,"ts":1760000016844,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"triage","detail":{"pct":84,"label":"Triaging"}}
+{"seq":160,"ts":1760000016964,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"assign","detail":{"pct":15,"label":"Filing ticket"}}
+{"seq":161,"ts":1760000016996,"type":"stage_done","wave":1,"lane":2,"order":"msg-0002","stage":"triage","detail":{"ms":895,"skipped":false}}
+{"seq":162,"ts":1760000016996,"type":"stage_start","wave":1,"lane":2,"order":"msg-0002","stage":"assign","detail":{"attempt":1}}
+{"seq":163,"ts":1760000017264,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"assign","detail":{"pct":30,"label":"Filing ticket"}}
+{"seq":164,"ts":1760000017296,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"assign","detail":{"pct":17,"label":"Filing ticket"}}
+{"seq":165,"ts":1760000017564,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"assign","detail":{"pct":45,"label":"Filing ticket"}}
+{"seq":166,"ts":1760000017596,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"assign","detail":{"pct":33,"label":"Filing ticket"}}
+{"seq":167,"ts":1760000017896,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"assign","detail":{"pct":50,"label":"Filing ticket"}}
+{"seq":168,"ts":1760000017931,"type":"effect","wave":1,"lane":1,"order":"msg-0002","detail":{"kind":"ticket","key":"msg-0002:ticket","replayed":false}}
+{"seq":169,"ts":1760000017950,"type":"stage_done","wave":1,"lane":1,"order":"msg-0002","stage":"assign","detail":{"ms":1285,"skipped":false}}
+{"seq":170,"ts":1760000017950,"type":"stage_start","wave":1,"lane":1,"order":"msg-0002","stage":"notify","detail":{"attempt":1}}
+{"seq":171,"ts":1760000018140,"type":"effect","wave":1,"lane":2,"order":"msg-0002","detail":{"kind":"ticket","key":"msg-0002:ticket","replayed":false}}
+{"seq":172,"ts":1760000018159,"type":"stage_done","wave":1,"lane":2,"order":"msg-0002","stage":"assign","detail":{"ms":1163,"skipped":false}}
+{"seq":173,"ts":1760000018159,"type":"stage_start","wave":1,"lane":2,"order":"msg-0002","stage":"notify","detail":{"attempt":1}}
+{"seq":174,"ts":1760000018250,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"notify","detail":{"pct":17,"label":"Sending reply"}}
+{"seq":175,"ts":1760000018459,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"notify","detail":{"pct":14,"label":"Sending reply"}}
+{"seq":176,"ts":1760000018550,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"notify","detail":{"pct":35,"label":"Sending reply"}}
+{"seq":177,"ts":1760000018759,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"notify","detail":{"pct":27,"label":"Sending reply"}}
+{"seq":178,"ts":1760000018850,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"notify","detail":{"pct":52,"label":"Sending reply"}}
+{"seq":179,"ts":1760000019041,"type":"effect","wave":1,"lane":1,"order":"msg-0002","detail":{"kind":"email","key":"msg-0002:reply","replayed":false}}
+{"seq":180,"ts":1760000019059,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"notify","detail":{"pct":41,"label":"Sending reply"}}
+{"seq":181,"ts":1760000019060,"type":"stage_done","wave":1,"lane":1,"order":"msg-0002","stage":"notify","detail":{"ms":1111,"skipped":false}}
+{"seq":182,"ts":1760000019060,"type":"stage_start","wave":1,"lane":1,"order":"msg-0002","stage":"escalate","detail":{"attempt":1}}
+{"seq":183,"ts":1760000019359,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"notify","detail":{"pct":55,"label":"Sending reply"}}
+{"seq":184,"ts":1760000019360,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"escalate","detail":{"pct":22,"label":"Escalating"}}
+{"seq":185,"ts":1760000019526,"type":"effect","wave":1,"lane":2,"order":"msg-0002","detail":{"kind":"email","key":"msg-0002:reply","replayed":false}}
+{"seq":186,"ts":1760000019545,"type":"stage_done","wave":1,"lane":2,"order":"msg-0002","stage":"notify","detail":{"ms":1386,"skipped":false}}
+{"seq":187,"ts":1760000019545,"type":"stage_start","wave":1,"lane":2,"order":"msg-0002","stage":"escalate","detail":{"attempt":1}}
+{"seq":188,"ts":1760000019660,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"escalate","detail":{"pct":44,"label":"Escalating"}}
+{"seq":189,"ts":1760000019845,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"escalate","detail":{"pct":26,"label":"Escalating"}}
+{"seq":190,"ts":1760000019931,"type":"effect","wave":1,"lane":1,"order":"msg-0002","detail":{"kind":"notify","key":"msg-0002:escalate","replayed":false}}
+{"seq":191,"ts":1760000019950,"type":"stage_done","wave":1,"lane":1,"order":"msg-0002","stage":"escalate","detail":{"ms":890,"skipped":false}}
+{"seq":192,"ts":1760000019950,"type":"stage_start","wave":1,"lane":1,"order":"msg-0002","stage":"resolve","detail":{"attempt":1}}
+{"seq":193,"ts":1760000020145,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"escalate","detail":{"pct":52,"label":"Escalating"}}
+{"seq":194,"ts":1760000020250,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"resolve","detail":{"pct":33,"label":"Resolving"}}
+{"seq":195,"ts":1760000020288,"type":"effect","wave":1,"lane":2,"order":"msg-0002","detail":{"kind":"notify","key":"msg-0002:escalate","replayed":false}}
+{"seq":196,"ts":1760000020307,"type":"stage_done","wave":1,"lane":2,"order":"msg-0002","stage":"escalate","detail":{"ms":762,"skipped":false}}
+{"seq":197,"ts":1760000020307,"type":"stage_start","wave":1,"lane":2,"order":"msg-0002","stage":"resolve","detail":{"attempt":1}}
+{"seq":198,"ts":1760000020607,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"resolve","detail":{"pct":41,"label":"Resolving"}}
+{"seq":199,"ts":1760000020700,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"resolve","detail":{"pct":83,"label":"Resolving"}}
+{"seq":200,"ts":1760000020857,"type":"stage_done","wave":1,"lane":1,"order":"msg-0002","stage":"resolve","detail":{"ms":907,"skipped":false}}
+{"seq":201,"ts":1760000020857,"type":"stage_start","wave":1,"lane":1,"order":"msg-0002","stage":"close","detail":{"attempt":1}}
+{"seq":202,"ts":1760000020968,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"resolve","detail":{"pct":91,"label":"Resolving"}}
+{"seq":203,"ts":1760000021038,"type":"stage_done","wave":1,"lane":2,"order":"msg-0002","stage":"resolve","detail":{"ms":731,"skipped":false}}
+{"seq":204,"ts":1760000021038,"type":"stage_start","wave":1,"lane":2,"order":"msg-0002","stage":"close","detail":{"attempt":1}}
+{"seq":205,"ts":1760000021157,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"close","detail":{"pct":39,"label":"Closing"}}
+{"seq":206,"ts":1760000021338,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"close","detail":{"pct":42,"label":"Closing"}}
+{"seq":207,"ts":1760000021547,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0002","stage":"close","detail":{"pct":89,"label":"Closing"}}
+{"seq":208,"ts":1760000021644,"type":"stage_done","wave":1,"lane":1,"order":"msg-0002","stage":"close","detail":{"ms":787,"skipped":false}}
+{"seq":209,"ts":1760000021645,"type":"order_done","wave":1,"lane":1,"order":"msg-0002","detail":{"clean":true,"ms":9980,"repeats":0}}
+{"seq":210,"ts":1760000021645,"type":"score","wave":1,"lane":1,"detail":{"delta":100,"total":220,"reason":"order clean"}}
+{"seq":211,"ts":1760000021645,"type":"score","wave":1,"lane":1,"detail":{"delta":20,"total":240,"reason":"speed bonus"}}
+{"seq":212,"ts":1760000021645,"type":"order_start","wave":1,"lane":1,"order":"msg-0003","detail":{"index":3,"total":4}}
+{"seq":213,"ts":1760000021645,"type":"stage_start","wave":1,"lane":1,"order":"msg-0003","stage":"login","detail":{"attempt":1}}
+{"seq":214,"ts":1760000021693,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0002","stage":"close","detail":{"pct":92,"label":"Closing"}}
+{"seq":215,"ts":1760000021757,"type":"stage_done","wave":1,"lane":2,"order":"msg-0002","stage":"close","detail":{"ms":718,"skipped":false}}
+{"seq":216,"ts":1760000021758,"type":"order_done","wave":1,"lane":2,"order":"msg-0002","detail":{"clean":true,"ms":9530,"repeats":0}}
+{"seq":217,"ts":1760000021758,"type":"score","wave":1,"lane":2,"detail":{"delta":100,"total":220,"reason":"order clean"}}
+{"seq":218,"ts":1760000021758,"type":"score","wave":1,"lane":2,"detail":{"delta":20,"total":240,"reason":"speed bonus"}}
+{"seq":219,"ts":1760000021758,"type":"order_start","wave":1,"lane":2,"order":"msg-0003","detail":{"index":3,"total":4}}
+{"seq":220,"ts":1760000021758,"type":"stage_start","wave":1,"lane":2,"order":"msg-0003","stage":"login","detail":{"attempt":1}}
+{"seq":221,"ts":1760000021945,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"login","detail":{"pct":31,"label":"Refreshing SSO"}}
+{"seq":222,"ts":1760000022058,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"login","detail":{"pct":35,"label":"Refreshing SSO"}}
+{"seq":223,"ts":1760000022423,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"login","detail":{"pct":81,"label":"Refreshing SSO"}}
+{"seq":224,"ts":1760000022485,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"login","detail":{"pct":85,"label":"Refreshing SSO"}}
+{"seq":225,"ts":1760000022609,"type":"stage_done","wave":1,"lane":1,"order":"msg-0003","stage":"login","detail":{"ms":964,"skipped":false}}
+{"seq":226,"ts":1760000022609,"type":"stage_start","wave":1,"lane":1,"order":"msg-0003","stage":"ingest","detail":{"attempt":1}}
+{"seq":227,"ts":1760000022620,"type":"stage_done","wave":1,"lane":2,"order":"msg-0003","stage":"login","detail":{"ms":863,"skipped":false}}
+{"seq":228,"ts":1760000022620,"type":"stage_start","wave":1,"lane":2,"order":"msg-0003","stage":"ingest","detail":{"attempt":1}}
+{"seq":229,"ts":1760000022929,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"ingest","detail":{"pct":36,"label":"Ingesting request"}}
+{"seq":230,"ts":1760000022940,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"ingest","detail":{"pct":24,"label":"Ingesting request"}}
+{"seq":231,"ts":1760000023240,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"ingest","detail":{"pct":47,"label":"Ingesting request"}}
+{"seq":232,"ts":1760000023341,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"ingest","detail":{"pct":86,"label":"Ingesting request"}}
+{"seq":233,"ts":1760000023462,"type":"stage_done","wave":1,"lane":1,"order":"msg-0003","stage":"ingest","detail":{"ms":853,"skipped":false}}
+{"seq":234,"ts":1760000023462,"type":"stage_start","wave":1,"lane":1,"order":"msg-0003","stage":"validate","detail":{"attempt":1}}
+{"seq":235,"ts":1760000023577,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"ingest","detail":{"pct":74,"label":"Ingesting request"}}
+{"seq":236,"ts":1760000023762,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"validate","detail":{"pct":31,"label":"Validating fields"}}
+{"seq":237,"ts":1760000023877,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"ingest","detail":{"pct":97,"label":"Ingesting request"}}
+{"seq":238,"ts":1760000023921,"type":"stage_done","wave":1,"lane":2,"order":"msg-0003","stage":"ingest","detail":{"ms":1301,"skipped":false}}
+{"seq":239,"ts":1760000023921,"type":"stage_start","wave":1,"lane":2,"order":"msg-0003","stage":"validate","detail":{"attempt":1}}
+{"seq":240,"ts":1760000024221,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"validate","detail":{"pct":31,"label":"Validating fields"}}
+{"seq":241,"ts":1760000024249,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"validate","detail":{"pct":81,"label":"Validating fields"}}
+{"seq":242,"ts":1760000024443,"type":"stage_done","wave":1,"lane":1,"order":"msg-0003","stage":"validate","detail":{"ms":982,"skipped":false}}
+{"seq":243,"ts":1760000024443,"type":"stage_start","wave":1,"lane":1,"order":"msg-0003","stage":"dedupe","detail":{"attempt":1}}
+{"seq":244,"ts":1760000024699,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"validate","detail":{"pct":81,"label":"Validating fields"}}
+{"seq":245,"ts":1760000024743,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"dedupe","detail":{"pct":26,"label":"Checking duplicates"}}
+{"seq":246,"ts":1760000024884,"type":"stage_done","wave":1,"lane":2,"order":"msg-0003","stage":"validate","detail":{"ms":962,"skipped":false}}
+{"seq":247,"ts":1760000024884,"type":"stage_start","wave":1,"lane":2,"order":"msg-0003","stage":"dedupe","detail":{"attempt":1}}
+{"seq":248,"ts":1760000025184,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"dedupe","detail":{"pct":34,"label":"Checking duplicates"}}
+{"seq":249,"ts":1760000025330,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"dedupe","detail":{"pct":76,"label":"Checking duplicates"}}
+{"seq":250,"ts":1760000025624,"type":"stage_done","wave":1,"lane":1,"order":"msg-0003","stage":"dedupe","detail":{"ms":1181,"skipped":false}}
+{"seq":251,"ts":1760000025624,"type":"stage_start","wave":1,"lane":1,"order":"msg-0003","stage":"triage","detail":{"attempt":1}}
+{"seq":252,"ts":1760000025629,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"dedupe","detail":{"pct":84,"label":"Checking duplicates"}}
+{"seq":253,"ts":1760000025783,"type":"stage_done","wave":1,"lane":2,"order":"msg-0003","stage":"dedupe","detail":{"ms":899,"skipped":false}}
+{"seq":254,"ts":1760000025783,"type":"stage_start","wave":1,"lane":2,"order":"msg-0003","stage":"triage","detail":{"attempt":1}}
+{"seq":255,"ts":1760000025924,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"triage","detail":{"pct":26,"label":"Triaging"}}
+{"seq":256,"ts":1760000026083,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"triage","detail":{"pct":19,"label":"Triaging"}}
+{"seq":257,"ts":1760000026383,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"triage","detail":{"pct":39,"label":"Triaging"}}
+{"seq":258,"ts":1760000026510,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"triage","detail":{"pct":76,"label":"Triaging"}}
+{"seq":259,"ts":1760000026803,"type":"stage_done","wave":1,"lane":1,"order":"msg-0003","stage":"triage","detail":{"ms":1179,"skipped":false}}
+{"seq":260,"ts":1760000026803,"type":"stage_start","wave":1,"lane":1,"order":"msg-0003","stage":"assign","detail":{"attempt":1}}
+{"seq":261,"ts":1760000026861,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"triage","detail":{"pct":69,"label":"Triaging"}}
+{"seq":262,"ts":1760000027103,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"assign","detail":{"pct":15,"label":"Filing ticket"}}
+{"seq":263,"ts":1760000027161,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"triage","detail":{"pct":89,"label":"Triaging"}}
+{"seq":264,"ts":1760000027348,"type":"stage_done","wave":1,"lane":2,"order":"msg-0003","stage":"triage","detail":{"ms":1564,"skipped":false}}
+{"seq":265,"ts":1760000027348,"type":"stage_start","wave":1,"lane":2,"order":"msg-0003","stage":"assign","detail":{"attempt":1}}
+{"seq":266,"ts":1760000027403,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"assign","detail":{"pct":29,"label":"Filing ticket"}}
+{"seq":267,"ts":1760000027648,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"assign","detail":{"pct":12,"label":"Filing ticket"}}
+{"seq":268,"ts":1760000027703,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"assign","detail":{"pct":44,"label":"Filing ticket"}}
+{"seq":269,"ts":1760000027948,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"assign","detail":{"pct":25,"label":"Filing ticket"}}
+{"seq":270,"ts":1760000028003,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"assign","detail":{"pct":59,"label":"Filing ticket"}}
+{"seq":271,"ts":1760000028100,"type":"effect","wave":1,"lane":1,"order":"msg-0003","detail":{"kind":"ticket","key":"msg-0003:ticket","replayed":false}}
+{"seq":272,"ts":1760000028119,"type":"stage_done","wave":1,"lane":1,"order":"msg-0003","stage":"assign","detail":{"ms":1315,"skipped":false}}
+{"seq":273,"ts":1760000028119,"type":"stage_start","wave":1,"lane":1,"order":"msg-0003","stage":"notify","detail":{"attempt":1}}
+{"seq":274,"ts":1760000028248,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"assign","detail":{"pct":37,"label":"Filing ticket"}}
+{"seq":275,"ts":1760000028419,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"notify","detail":{"pct":13,"label":"Sending reply"}}
+{"seq":276,"ts":1760000028548,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"assign","detail":{"pct":49,"label":"Filing ticket"}}
+{"seq":277,"ts":1760000028719,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"notify","detail":{"pct":26,"label":"Sending reply"}}
+{"seq":278,"ts":1760000028879,"type":"effect","wave":1,"lane":2,"order":"msg-0003","detail":{"kind":"ticket","key":"msg-0003:ticket","replayed":false}}
+{"seq":279,"ts":1760000028898,"type":"stage_done","wave":1,"lane":2,"order":"msg-0003","stage":"assign","detail":{"ms":1550,"skipped":false}}
+{"seq":280,"ts":1760000028898,"type":"stage_start","wave":1,"lane":2,"order":"msg-0003","stage":"notify","detail":{"attempt":1}}
+{"seq":281,"ts":1760000029019,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"notify","detail":{"pct":39,"label":"Sending reply"}}
+{"seq":282,"ts":1760000029198,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"notify","detail":{"pct":20,"label":"Sending reply"}}
+{"seq":283,"ts":1760000029319,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"notify","detail":{"pct":53,"label":"Sending reply"}}
+{"seq":284,"ts":1760000029498,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"notify","detail":{"pct":41,"label":"Sending reply"}}
+{"seq":285,"ts":1760000029545,"type":"effect","wave":1,"lane":1,"order":"msg-0003","detail":{"kind":"email","key":"msg-0003:reply","replayed":false}}
+{"seq":286,"ts":1760000029564,"type":"stage_done","wave":1,"lane":1,"order":"msg-0003","stage":"notify","detail":{"ms":1446,"skipped":false}}
+{"seq":287,"ts":1760000029564,"type":"stage_start","wave":1,"lane":1,"order":"msg-0003","stage":"escalate","detail":{"attempt":1}}
+{"seq":288,"ts":1760000029834,"type":"effect","wave":1,"lane":2,"order":"msg-0003","detail":{"kind":"email","key":"msg-0003:reply","replayed":false}}
+{"seq":289,"ts":1760000029853,"type":"stage_done","wave":1,"lane":2,"order":"msg-0003","stage":"notify","detail":{"ms":956,"skipped":false}}
+{"seq":290,"ts":1760000029853,"type":"stage_start","wave":1,"lane":2,"order":"msg-0003","stage":"escalate","detail":{"attempt":1}}
+{"seq":291,"ts":1760000029864,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"escalate","detail":{"pct":24,"label":"Escalating"}}
+{"seq":292,"ts":1760000030153,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"escalate","detail":{"pct":16,"label":"Escalating"}}
+{"seq":293,"ts":1760000030164,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"escalate","detail":{"pct":48,"label":"Escalating"}}
+{"seq":294,"ts":1760000030376,"type":"effect","wave":1,"lane":1,"order":"msg-0003","detail":{"kind":"notify","key":"msg-0003:escalate","replayed":false}}
+{"seq":295,"ts":1760000030395,"type":"stage_done","wave":1,"lane":1,"order":"msg-0003","stage":"escalate","detail":{"ms":831,"skipped":false}}
+{"seq":296,"ts":1760000030395,"type":"stage_start","wave":1,"lane":1,"order":"msg-0003","stage":"resolve","detail":{"attempt":1}}
+{"seq":297,"ts":1760000030453,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"escalate","detail":{"pct":32,"label":"Escalating"}}
+{"seq":298,"ts":1760000030695,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"resolve","detail":{"pct":41,"label":"Resolving"}}
+{"seq":299,"ts":1760000030753,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"escalate","detail":{"pct":47,"label":"Escalating"}}
+{"seq":300,"ts":1760000031054,"type":"effect","wave":1,"lane":2,"order":"msg-0003","detail":{"kind":"notify","key":"msg-0003:escalate","replayed":false}}
+{"seq":301,"ts":1760000031059,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"resolve","detail":{"pct":91,"label":"Resolving"}}
+{"seq":302,"ts":1760000031073,"type":"stage_done","wave":1,"lane":2,"order":"msg-0003","stage":"escalate","detail":{"ms":1220,"skipped":false}}
+{"seq":303,"ts":1760000031073,"type":"stage_start","wave":1,"lane":2,"order":"msg-0003","stage":"resolve","detail":{"attempt":1}}
+{"seq":304,"ts":1760000031131,"type":"stage_done","wave":1,"lane":1,"order":"msg-0003","stage":"resolve","detail":{"ms":736,"skipped":false}}
+{"seq":305,"ts":1760000031131,"type":"stage_start","wave":1,"lane":1,"order":"msg-0003","stage":"close","detail":{"attempt":1}}
+{"seq":306,"ts":1760000031373,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"resolve","detail":{"pct":49,"label":"Resolving"}}
+{"seq":307,"ts":1760000031431,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"close","detail":{"pct":34,"label":"Closing"}}
+{"seq":308,"ts":1760000031680,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"resolve","detail":{"pct":99,"label":"Resolving"}}
+{"seq":309,"ts":1760000031694,"type":"stage_done","wave":1,"lane":2,"order":"msg-0003","stage":"resolve","detail":{"ms":621,"skipped":false}}
+{"seq":310,"ts":1760000031694,"type":"stage_start","wave":1,"lane":2,"order":"msg-0003","stage":"close","detail":{"attempt":1}}
+{"seq":311,"ts":1760000031871,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0003","stage":"close","detail":{"pct":84,"label":"Closing"}}
+{"seq":312,"ts":1760000031994,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"close","detail":{"pct":32,"label":"Closing"}}
+{"seq":313,"ts":1760000032020,"type":"stage_done","wave":1,"lane":1,"order":"msg-0003","stage":"close","detail":{"ms":889,"skipped":false}}
+{"seq":314,"ts":1760000032021,"type":"order_done","wave":1,"lane":1,"order":"msg-0003","detail":{"clean":true,"ms":10375,"repeats":0}}
+{"seq":315,"ts":1760000032021,"type":"score","wave":1,"lane":1,"detail":{"delta":100,"total":340,"reason":"order clean"}}
+{"seq":316,"ts":1760000032021,"type":"score","wave":1,"lane":1,"detail":{"delta":20,"total":360,"reason":"speed bonus"}}
+{"seq":317,"ts":1760000032021,"type":"order_start","wave":1,"lane":1,"order":"msg-0004","detail":{"index":4,"total":4}}
+{"seq":318,"ts":1760000032021,"type":"stage_start","wave":1,"lane":1,"order":"msg-0004","stage":"login","detail":{"attempt":1}}
+{"seq":319,"ts":1760000032321,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"login","detail":{"pct":29,"label":"Refreshing SSO"}}
+{"seq":320,"ts":1760000032459,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0003","stage":"close","detail":{"pct":82,"label":"Closing"}}
+{"seq":321,"ts":1760000032633,"type":"stage_done","wave":1,"lane":2,"order":"msg-0003","stage":"close","detail":{"ms":938,"skipped":false}}
+{"seq":322,"ts":1760000032634,"type":"order_done","wave":1,"lane":2,"order":"msg-0003","detail":{"clean":true,"ms":10875,"repeats":0}}
+{"seq":323,"ts":1760000032634,"type":"score","wave":1,"lane":2,"detail":{"delta":100,"total":340,"reason":"order clean"}}
+{"seq":324,"ts":1760000032634,"type":"score","wave":1,"lane":2,"detail":{"delta":20,"total":360,"reason":"speed bonus"}}
+{"seq":325,"ts":1760000032634,"type":"order_start","wave":1,"lane":2,"order":"msg-0004","detail":{"index":4,"total":4}}
+{"seq":326,"ts":1760000032634,"type":"stage_start","wave":1,"lane":2,"order":"msg-0004","stage":"login","detail":{"attempt":1}}
+{"seq":327,"ts":1760000032847,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"login","detail":{"pct":79,"label":"Refreshing SSO"}}
+{"seq":328,"ts":1760000032934,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"login","detail":{"pct":43,"label":"Refreshing SSO"}}
+{"seq":329,"ts":1760000033081,"type":"stage_done","wave":1,"lane":1,"order":"msg-0004","stage":"login","detail":{"ms":1060,"skipped":false}}
+{"seq":330,"ts":1760000033081,"type":"stage_start","wave":1,"lane":1,"order":"msg-0004","stage":"ingest","detail":{"attempt":1}}
+{"seq":331,"ts":1760000033282,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"login","detail":{"pct":93,"label":"Refreshing SSO"}}
+{"seq":332,"ts":1760000033337,"type":"stage_done","wave":1,"lane":2,"order":"msg-0004","stage":"login","detail":{"ms":704,"skipped":false}}
+{"seq":333,"ts":1760000033337,"type":"stage_start","wave":1,"lane":2,"order":"msg-0004","stage":"ingest","detail":{"attempt":1}}
+{"seq":334,"ts":1760000033401,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"ingest","detail":{"pct":28,"label":"Ingesting request"}}
+{"seq":335,"ts":1760000033657,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"ingest","detail":{"pct":25,"label":"Ingesting request"}}
+{"seq":336,"ts":1760000033932,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"ingest","detail":{"pct":78,"label":"Ingesting request"}}
+{"seq":337,"ts":1760000033957,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"ingest","detail":{"pct":49,"label":"Ingesting request"}}
+{"seq":338,"ts":1760000034170,"type":"stage_done","wave":1,"lane":1,"order":"msg-0004","stage":"ingest","detail":{"ms":1089,"skipped":false}}
+{"seq":339,"ts":1760000034170,"type":"stage_start","wave":1,"lane":1,"order":"msg-0004","stage":"validate","detail":{"attempt":1}}
+{"seq":340,"ts":1760000034264,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"ingest","detail":{"pct":75,"label":"Ingesting request"}}
+{"seq":341,"ts":1760000034470,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"validate","detail":{"pct":27,"label":"Validating fields"}}
+{"seq":342,"ts":1760000034564,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"ingest","detail":{"pct":99,"label":"Ingesting request"}}
+{"seq":343,"ts":1760000034578,"type":"stage_done","wave":1,"lane":2,"order":"msg-0004","stage":"ingest","detail":{"ms":1240,"skipped":false}}
+{"seq":344,"ts":1760000034578,"type":"stage_start","wave":1,"lane":2,"order":"msg-0004","stage":"validate","detail":{"attempt":1}}
+{"seq":345,"ts":1760000034878,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"validate","detail":{"pct":40,"label":"Validating fields"}}
+{"seq":346,"ts":1760000035035,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"validate","detail":{"pct":77,"label":"Validating fields"}}
+{"seq":347,"ts":1760000035251,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"validate","detail":{"pct":90,"label":"Validating fields"}}
+{"seq":348,"ts":1760000035307,"type":"stage_done","wave":1,"lane":1,"order":"msg-0004","stage":"validate","detail":{"ms":1137,"skipped":false}}
+{"seq":349,"ts":1760000035307,"type":"stage_start","wave":1,"lane":1,"order":"msg-0004","stage":"dedupe","detail":{"attempt":1}}
+{"seq":350,"ts":1760000035332,"type":"stage_done","wave":1,"lane":2,"order":"msg-0004","stage":"validate","detail":{"ms":754,"skipped":false}}
+{"seq":351,"ts":1760000035332,"type":"stage_start","wave":1,"lane":2,"order":"msg-0004","stage":"dedupe","detail":{"attempt":1}}
+{"seq":352,"ts":1760000035607,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"dedupe","detail":{"pct":29,"label":"Checking duplicates"}}
+{"seq":353,"ts":1760000035632,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"dedupe","detail":{"pct":25,"label":"Checking duplicates"}}
+{"seq":354,"ts":1760000036126,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"dedupe","detail":{"pct":79,"label":"Checking duplicates"}}
+{"seq":355,"ts":1760000036228,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"dedupe","detail":{"pct":75,"label":"Checking duplicates"}}
+{"seq":356,"ts":1760000036352,"type":"stage_done","wave":1,"lane":1,"order":"msg-0004","stage":"dedupe","detail":{"ms":1045,"skipped":false}}
+{"seq":357,"ts":1760000036352,"type":"stage_start","wave":1,"lane":1,"order":"msg-0004","stage":"triage","detail":{"attempt":1}}
+{"seq":358,"ts":1760000036531,"type":"stage_done","wave":1,"lane":2,"order":"msg-0004","stage":"dedupe","detail":{"ms":1198,"skipped":false}}
+{"seq":359,"ts":1760000036531,"type":"stage_start","wave":1,"lane":2,"order":"msg-0004","stage":"triage","detail":{"attempt":1}}
+{"seq":360,"ts":1760000036652,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"triage","detail":{"pct":34,"label":"Triaging"}}
+{"seq":361,"ts":1760000036831,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"triage","detail":{"pct":19,"label":"Triaging"}}
+{"seq":362,"ts":1760000037092,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"triage","detail":{"pct":84,"label":"Triaging"}}
+{"seq":363,"ts":1760000037131,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"triage","detail":{"pct":38,"label":"Triaging"}}
+{"seq":364,"ts":1760000037239,"type":"stage_done","wave":1,"lane":1,"order":"msg-0004","stage":"triage","detail":{"ms":887,"skipped":false}}
+{"seq":365,"ts":1760000037239,"type":"stage_start","wave":1,"lane":1,"order":"msg-0004","stage":"assign","detail":{"attempt":1}}
+{"seq":366,"ts":1760000037539,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"assign","detail":{"pct":17,"label":"Filing ticket"}}
+{"seq":367,"ts":1760000037630,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"triage","detail":{"pct":69,"label":"Triaging"}}
+{"seq":368,"ts":1760000037839,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"assign","detail":{"pct":34,"label":"Filing ticket"}}
+{"seq":369,"ts":1760000037930,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"triage","detail":{"pct":88,"label":"Triaging"}}
+{"seq":370,"ts":1760000038136,"type":"stage_done","wave":1,"lane":2,"order":"msg-0004","stage":"triage","detail":{"ms":1606,"skipped":false}}
+{"seq":371,"ts":1760000038136,"type":"stage_start","wave":1,"lane":2,"order":"msg-0004","stage":"assign","detail":{"attempt":1}}
+{"seq":372,"ts":1760000038139,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"assign","detail":{"pct":51,"label":"Filing ticket"}}
+{"seq":373,"ts":1760000038347,"type":"effect","wave":1,"lane":1,"order":"msg-0004","detail":{"kind":"ticket","key":"msg-0004:ticket","replayed":false}}
+{"seq":374,"ts":1760000038366,"type":"stage_done","wave":1,"lane":1,"order":"msg-0004","stage":"assign","detail":{"ms":1127,"skipped":false}}
+{"seq":375,"ts":1760000038366,"type":"stage_start","wave":1,"lane":1,"order":"msg-0004","stage":"notify","detail":{"attempt":1}}
+{"seq":376,"ts":1760000038436,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"assign","detail":{"pct":12,"label":"Filing ticket"}}
+{"seq":377,"ts":1760000038666,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"notify","detail":{"pct":12,"label":"Sending reply"}}
+{"seq":378,"ts":1760000038736,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"assign","detail":{"pct":24,"label":"Filing ticket"}}
+{"seq":379,"ts":1760000038966,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"notify","detail":{"pct":25,"label":"Sending reply"}}
+{"seq":380,"ts":1760000039036,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"assign","detail":{"pct":36,"label":"Filing ticket"}}
+{"seq":381,"ts":1760000039266,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"notify","detail":{"pct":37,"label":"Sending reply"}}
+{"seq":382,"ts":1760000039336,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"assign","detail":{"pct":49,"label":"Filing ticket"}}
+{"seq":383,"ts":1760000039566,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"notify","detail":{"pct":50,"label":"Sending reply"}}
+{"seq":384,"ts":1760000039689,"type":"effect","wave":1,"lane":2,"order":"msg-0004","detail":{"kind":"ticket","key":"msg-0004:ticket","replayed":false}}
+{"seq":385,"ts":1760000039708,"type":"stage_done","wave":1,"lane":2,"order":"msg-0004","stage":"assign","detail":{"ms":1571,"skipped":false}}
+{"seq":386,"ts":1760000039708,"type":"stage_start","wave":1,"lane":2,"order":"msg-0004","stage":"notify","detail":{"attempt":1}}
+{"seq":387,"ts":1760000039867,"type":"effect","wave":1,"lane":1,"order":"msg-0004","detail":{"kind":"email","key":"msg-0004:reply","replayed":false}}
+{"seq":388,"ts":1760000039886,"type":"stage_done","wave":1,"lane":1,"order":"msg-0004","stage":"notify","detail":{"ms":1520,"skipped":false}}
+{"seq":389,"ts":1760000039886,"type":"stage_start","wave":1,"lane":1,"order":"msg-0004","stage":"escalate","detail":{"attempt":1}}
+{"seq":390,"ts":1760000040008,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"notify","detail":{"pct":17,"label":"Sending reply"}}
+{"seq":391,"ts":1760000040186,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"escalate","detail":{"pct":22,"label":"Escalating"}}
+{"seq":392,"ts":1760000040308,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"notify","detail":{"pct":34,"label":"Sending reply"}}
+{"seq":393,"ts":1760000040486,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"escalate","detail":{"pct":45,"label":"Escalating"}}
+{"seq":394,"ts":1760000040608,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"notify","detail":{"pct":52,"label":"Sending reply"}}
+{"seq":395,"ts":1760000040756,"type":"effect","wave":1,"lane":1,"order":"msg-0004","detail":{"kind":"notify","key":"msg-0004:escalate","replayed":false}}
+{"seq":396,"ts":1760000040775,"type":"stage_done","wave":1,"lane":1,"order":"msg-0004","stage":"escalate","detail":{"ms":889,"skipped":false}}
+{"seq":397,"ts":1760000040775,"type":"stage_start","wave":1,"lane":1,"order":"msg-0004","stage":"resolve","detail":{"attempt":1}}
+{"seq":398,"ts":1760000040814,"type":"effect","wave":1,"lane":2,"order":"msg-0004","detail":{"kind":"email","key":"msg-0004:reply","replayed":false}}
+{"seq":399,"ts":1760000040833,"type":"stage_done","wave":1,"lane":2,"order":"msg-0004","stage":"notify","detail":{"ms":1125,"skipped":false}}
+{"seq":400,"ts":1760000040833,"type":"stage_start","wave":1,"lane":2,"order":"msg-0004","stage":"escalate","detail":{"attempt":1}}
+{"seq":401,"ts":1760000041075,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"resolve","detail":{"pct":28,"label":"Resolving"}}
+{"seq":402,"ts":1760000041133,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"escalate","detail":{"pct":20,"label":"Escalating"}}
+{"seq":403,"ts":1760000041433,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"escalate","detail":{"pct":41,"label":"Escalating"}}
+{"seq":404,"ts":1760000041613,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"resolve","detail":{"pct":78,"label":"Resolving"}}
+{"seq":405,"ts":1760000041787,"type":"effect","wave":1,"lane":2,"order":"msg-0004","detail":{"kind":"notify","key":"msg-0004:escalate","replayed":false}}
+{"seq":406,"ts":1760000041806,"type":"stage_done","wave":1,"lane":2,"order":"msg-0004","stage":"escalate","detail":{"ms":973,"skipped":false}}
+{"seq":407,"ts":1760000041806,"type":"stage_start","wave":1,"lane":2,"order":"msg-0004","stage":"resolve","detail":{"attempt":1}}
+{"seq":408,"ts":1760000041859,"type":"stage_done","wave":1,"lane":1,"order":"msg-0004","stage":"resolve","detail":{"ms":1084,"skipped":false}}
+{"seq":409,"ts":1760000041859,"type":"stage_start","wave":1,"lane":1,"order":"msg-0004","stage":"close","detail":{"attempt":1}}
+{"seq":410,"ts":1760000042106,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"resolve","detail":{"pct":35,"label":"Resolving"}}
+{"seq":411,"ts":1760000042159,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"close","detail":{"pct":46,"label":"Closing"}}
+{"seq":412,"ts":1760000042482,"type":"stage_progress","wave":1,"lane":1,"order":"msg-0004","stage":"close","detail":{"pct":96,"label":"Closing"}}
+{"seq":413,"ts":1760000042514,"type":"stage_done","wave":1,"lane":1,"order":"msg-0004","stage":"close","detail":{"ms":654,"skipped":false}}
+{"seq":414,"ts":1760000042515,"type":"order_done","wave":1,"lane":1,"order":"msg-0004","detail":{"clean":true,"ms":10493,"repeats":0}}
+{"seq":415,"ts":1760000042515,"type":"score","wave":1,"lane":1,"detail":{"delta":100,"total":460,"reason":"order clean"}}
+{"seq":416,"ts":1760000042515,"type":"score","wave":1,"lane":1,"detail":{"delta":20,"total":480,"reason":"speed bonus"}}
+{"seq":417,"ts":1760000042528,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"resolve","detail":{"pct":85,"label":"Resolving"}}
+{"seq":418,"ts":1760000042659,"type":"stage_done","wave":1,"lane":2,"order":"msg-0004","stage":"resolve","detail":{"ms":853,"skipped":false}}
+{"seq":419,"ts":1760000042659,"type":"stage_start","wave":1,"lane":2,"order":"msg-0004","stage":"close","detail":{"attempt":1}}
+{"seq":420,"ts":1760000042959,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"close","detail":{"pct":32,"label":"Closing"}}
+{"seq":421,"ts":1760000043422,"type":"stage_progress","wave":1,"lane":2,"order":"msg-0004","stage":"close","detail":{"pct":82,"label":"Closing"}}
+{"seq":422,"ts":1760000043594,"type":"stage_done","wave":1,"lane":2,"order":"msg-0004","stage":"close","detail":{"ms":935,"skipped":false}}
+{"seq":423,"ts":1760000043595,"type":"order_done","wave":1,"lane":2,"order":"msg-0004","detail":{"clean":true,"ms":10960,"repeats":0}}
+{"seq":424,"ts":1760000043595,"type":"score","wave":1,"lane":2,"detail":{"delta":100,"total":460,"reason":"order clean"}}
+{"seq":425,"ts":1760000043595,"type":"score","wave":1,"lane":2,"detail":{"delta":20,"total":480,"reason":"speed bonus"}}
+{"seq":426,"ts":1760000044095,"type":"wave_end","wave":1,"detail":{"summary":{"1":{"score":480,"grade":"A","completed":4,"failed":0,"parked":0,"quarantined":0,"repeats":0},"2":{"score":480,"grade":"A","completed":4,"failed":0,"parked":0,"quarantined":0,"repeats":0}}}}
