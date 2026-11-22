@@ -7,6 +7,7 @@ import { decorateV11 } from './v11';
 import { V11_FIXTURES } from './fixtures-v11';
 import { TOURNAMENT_FIXTURES } from './tournament-fixtures';
 import { drawOutageMs, fuzzFault } from '../../../haunt/src/runner/intensity';
+import type { CurseClass } from '../../../haunt/src/tournament/curses';
 
 const SEED = 7;
 const when = (order: number, stage: string, delay: number, attempt = 1): ArmSpec['when'] => ({ order, stage, attempt, delay });
@@ -31,6 +32,36 @@ const stackedArms = (order: number): ArmSpec[] => [
   arm('stack-2', 'http_404', { creature: 'ghost', scope: 'inner', when: when(order, 'payment', 2500) }),
   arm('stack-3', 'crash', { creature: 'reaper', when: when(order, 'payment', 4000) }),
 ];
+
+/**
+ * Curses 404 (TV3-C9): a Cursed 404 on the payment endpoint of lanes 1, 2, 3 and 4. How each tier answered the lie: the Rookie reported (it failed the
+ * order) and crashed once, the Retrier handled it with a retry, the Journaler swallowed it on one order (the step was skipped), the Reconciler handled it.
+ */
+function curses404(): HauntEvent[] {
+  const events = assembleWave(planWave(spec({ orders: 3 })), BASE_TS);
+  const cursed: Record<number, string> = { 1: 'cu-1-1', 2: 'cu-1-2', 3: 'cu-1-3', 4: 'cu-1-4' };
+  const answers: Record<number, CurseClass[]> = { 1: ['reported', 'crashed', 'reported'], 2: ['handled', 'handled', 'handled'], 3: ['handled', 'swallowed', 'handled'], 4: ['handled', 'handled', 'handled'] };
+  const out: HauntEvent[] = [];
+  const ready = events.filter((e) => e.type === 'lane_ready').map((e) => e.ts);
+  const startTs = Math.max(...ready) + 1;
+  for (const e of events) {
+    out.push(e);
+    if (e.type === 'lane_ready' && e.ts === Math.max(...ready)) {
+      for (const lane of [1, 2, 3, 4]) out.push({ seq: 0, ts: startTs, type: 'curse_start', wave: 1, lane, detail: { id: cursed[lane]!, kind: '404', endpoint: 'charge', rate: 0.3, source: 'plan' } });
+    }
+  }
+  const idx = new Map<number, number>();
+  const final: HauntEvent[] = [];
+  for (const e of out) {
+    if ((e.type === 'order_done' || e.type === 'order_failed') && e.lane !== undefined && answers[e.lane as number]) {
+      const n = idx.get(e.lane as number) ?? 0;
+      idx.set(e.lane as number, n + 1);
+      final.push({ seq: 0, ts: e.ts, type: 'curse_response', wave: 1, lane: e.lane, order: e.order, stage: 'payment', detail: { order: e.order, stage: 'payment', curse: '404', class: answers[e.lane as number]![n]!, id: cursed[e.lane as number], endpoint: 'charge', status: 404 } });
+    }
+    final.push(e);
+  }
+  return assignSeq(final);
+}
 
 /**
  * Intensity 11 (THROW EVERYTHING): a fault on every effect stage of every order of every lane, unknown (fuzz) faults among them with a
@@ -62,6 +93,7 @@ function intensity11(): HauntEvent[] {
 }
 
 export const FIXTURES: Record<string, () => HauntEvent[]> = {
+  'curses-404': curses404,
   'intensity-11': intensity11,
 
   calm: () => single(spec({ orders: 4 })),

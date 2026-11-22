@@ -76,7 +76,7 @@ export function matchesOneOf(ev: unknown): boolean {
   return cached!(ev);
 }
 
-const IGNORABLE = new Set(['score', 'effect', 'repeat', 'chaos', 'chaos_absorbed', 'breaker', 'outage']);
+const IGNORABLE = new Set(['score', 'effect', 'repeat', 'chaos', 'chaos_absorbed', 'breaker', 'outage', 'curse_start', 'curse_end', 'curse_response']);
 const CLOSERS = new Set(['chaos_absorbed', 'stage_fail', 'process_dead', 'recover_start', 'lane_halted', 'order_parked', 'order_failed', 'order_quarantined', 'order_abandoned']);
 
 type LaneState = 'idle' | 'running' | 'failed' | 'degraded_failed' | 'continuing' | 'dead' | 'halted';
@@ -160,6 +160,7 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
   let tourneyLanes = new Set<number>();
   let eliminatedNow = new Set<number>();
   const fallenLanes = new Set<number>();
+  const cursesOpen = new Set<string>();
   let awaiting = false;
 
   /** Rule 41: the lap object of order_done and order_failed. */
@@ -382,6 +383,21 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
       case 'lane_eliminated': {
         if (!eliminatedNow.has(d.lane)) bad('R59', ev, 'lane_eliminated for lane ' + d.lane + ' that round_end did not drop');
         if (typeof d.stage !== 'string' || typeof d.epitaph !== 'string') bad('R59', ev, 'lane_eliminated needs stage and epitaph');
+        return;
+      }
+      case 'curse_start': {
+        // Rule 66 (V1_2 section 5): a curse names its id, one of the five kinds and an endpoint; a curse_end names a curse that was started.
+        if (typeof d.id !== 'string' || !['404', 'slow', 'flaky500', 'clock_skew', 'rate_limit'].includes(d.kind) || typeof d.endpoint !== 'string') bad('R66', ev, 'curse_start needs an id, a kind (404, slow, flaky500, clock_skew, rate_limit) and an endpoint');
+        else cursesOpen.add(String(ev.lane) + '|' + d.id);
+        return;
+      }
+      case 'curse_end': {
+        if (!cursesOpen.delete(String(ev.lane) + '|' + d.id)) bad('R66', ev, 'curse_end for a curse that is not in force');
+        return;
+      }
+      case 'curse_response': {
+        if (!['handled', 'reported', 'swallowed', 'crashed'].includes(d.class)) bad('R66', ev, 'curse_response class must be handled, reported, swallowed or crashed');
+        if (!['404', 'slow', 'flaky500', 'clock_skew', 'rate_limit'].includes(d.curse) || typeof d.order !== 'string' || typeof d.stage !== 'string') bad('R66', ev, 'curse_response needs the curse kind, the order and the stage');
         return;
       }
       case 'case': {

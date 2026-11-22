@@ -147,6 +147,15 @@
     },
     {
       "$ref": "#/$defs/spec_written"
+    },
+    {
+      "$ref": "#/$defs/curse_start"
+    },
+    {
+      "$ref": "#/$defs/curse_end"
+    },
+    {
+      "$ref": "#/$defs/curse_response"
     }
   ],
   "$defs": {
@@ -2851,6 +2860,160 @@
                 },
                 "lint": {
                   "type": "object"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "curse_start": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "lane",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "curse_start"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "id",
+                "kind",
+                "endpoint"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "404",
+                    "slow",
+                    "flaky500",
+                    "clock_skew",
+                    "rate_limit"
+                  ]
+                },
+                "endpoint": {
+                  "type": "string"
+                },
+                "rate": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "delayMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "source": {
+                  "enum": [
+                    "plan",
+                    "player"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "curse_end": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "lane",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "curse_end"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "id"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "curse_response": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "lane",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "curse_response"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "order",
+                "stage",
+                "curse",
+                "class"
+              ],
+              "properties": {
+                "order": {
+                  "type": "string"
+                },
+                "stage": {
+                  "type": "string"
+                },
+                "curse": {
+                  "enum": [
+                    "404",
+                    "slow",
+                    "flaky500",
+                    "clock_skew",
+                    "rate_limit"
+                  ]
+                },
+                "class": {
+                  "enum": [
+                    "handled",
+                    "reported",
+                    "swallowed",
+                    "crashed"
+                  ]
+                },
+                "id": {
+                  "type": "string"
+                },
+                "endpoint": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "number"
                 }
               }
             }

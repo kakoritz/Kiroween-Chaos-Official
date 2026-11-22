@@ -63,6 +63,8 @@ export class Hub {
   /** Tournament state (TV3-C7), rebuilt from events: corpses, whether the server waits for Next, the round and the champion. */
   corpses: { lane: number; stage: string; kind: string; round: number; epitaph: string }[] = [];
   awaitingNext = false;
+  /** Curses in force, rebuilt from `curse_start` and `curse_end`. */
+  curses: { id: string; lane: number; kind: string; endpoint: string; rate?: number; delayMs?: number; source?: string }[] = [];
   /** Patterns by id, rebuilt from `pattern` events. */
   patterns = new Map<string, Record<string, unknown>>();
   /** Lessons by lane, rebuilt from `lesson` events (the mock keeps no files). */
@@ -87,6 +89,7 @@ export class Hub {
     this.boss = { next: 'boss_power_outage', startsInMs: null, active: false };
     this.demoRunning = null;
     this.corpses = [];
+    this.curses = [];
     this.awaitingNext = false;
     this.tournament = null;
     this.emit({ type: 'reset', detail: {} });
@@ -148,6 +151,8 @@ export class Hub {
       }
       case 'lesson': { const a = this.lessons.get(d.lane) ?? []; a.push({ signature: d.signature, mechanism: d.mechanism, via: d.via, learnedRound: d.round, ...(e.stage ? { stage: e.stage } : {}) }); this.lessons.set(d.lane, a); break; }
       case 'pattern': this.patterns.set(d.id, { ...d }); break;
+      case 'curse_start': this.curses.push({ id: d.id, lane: e.lane!, kind: d.kind, endpoint: d.endpoint, ...(d.rate !== undefined ? { rate: d.rate } : {}), ...(d.delayMs !== undefined ? { delayMs: d.delayMs } : {}), ...(d.source ? { source: d.source } : {}) }); break;
+      case 'curse_end': this.curses = this.curses.filter((c) => !(c.id === d.id && c.lane === e.lane)); break;
       case 'corpse': this.corpses.push({ lane: d.lane, stage: d.stage, kind: d.kind, round: d.round, epitaph: d.epitaph }); break;
       case 'awaiting_next': this.awaitingNext = true; if (this.tournament) this.tournament.phase = 'awaiting_next'; break;
       case 'tournament_end': if (this.tournament) { this.tournament.phase = 'done'; this.tournament.champion = d.champion; } break;

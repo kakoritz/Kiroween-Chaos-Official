@@ -36,7 +36,21 @@ export interface LedgerRow {
   ts: number;
 }
 
-export type FaultMode = 'latency' | 'status' | 'drop' | 'stall' | 'no_driver' | 'handoff_block' | 'typo';
+export type FaultMode = 'latency' | 'status' | 'drop' | 'stall' | 'no_driver' | 'handoff_block' | 'typo' | 'curse';
+
+/** Curses (spec 5.2, TV3-C9): a persistent trait of one endpoint of one lane. */
+export type CurseKind = '404' | 'slow' | 'flaky500' | 'clock_skew' | 'rate_limit';
+export interface CurseSpec {
+  id: string;
+  kind: CurseKind;
+  /** The endpoint (provider service) it lies on. */
+  service: string;
+  /** Share of calls it hits (404, 500 and 429 curses). */
+  rate?: number;
+  /** Slow Hand: every call takes this many extra ms. */
+  delayMs?: number;
+}
+export interface CurseHit { lane: string; service: string; order: string; index?: number; curse: CurseKind; id: string; status: number }
 export type HandoffBlock = 'no_answer' | 'gated' | 'accident' | 'wrong_order';
 
 export interface FaultSpec {
@@ -53,6 +67,8 @@ export interface FaultSpec {
   /** Or for a time window in ms. One of count or forMs. */
   forMs?: number;
   headers?: Record<string, string>;
+  /** `mode: "curse"` replaces the lane's whole curse list. */
+  curses?: CurseSpec[];
   /** Fuzz (TV3-C4): the answer is cut short, status mode answers with a body that is not JSON-complete. */
   truncate?: boolean;
   /** Only calls with phase "recovery". */
@@ -123,6 +139,9 @@ export class Provider {
   onRow?: (row: LedgerRow) => void;
   /** Called when a keyed request returns the existing row (idempotent replay, no new row). */
   onReplay?: (row: LedgerRow) => void;
+  /** Called whenever a curse lied on a call (the engine classifies how the bot reacted). */
+  onCurse?: (hit: CurseHit) => void;
+  private curses = new Map<string, CurseSpec[]>();
 
   constructor(opts: ProviderOptions = {}) {
     this.seed = opts.seed ?? 'haunt';
@@ -147,6 +166,8 @@ export class Provider {
   }
 
   addFault(spec: FaultSpec): void {
+    // A curse list replaces the lane's curses; it is not a fault that runs out.
+    if (spec.mode === 'curse') { this.curses.set(spec.lane, Array.isArray(spec.curses) ? spec.curses : []); return; }
     const hasCount = spec.count !== undefined;
     this.faults.push({
       spec,
@@ -169,6 +190,7 @@ export class Provider {
         if (!spec || typeof spec.lane !== 'string' || typeof spec.service !== 'string' || typeof spec.mode !== 'string') {
           return json(400, { error: 'bad fault' });
         }
+        if (spec.mode === 'curse') { this.curses.set(spec.lane, Array.isArray(spec.curses) ? spec.curses : []); return json(200, {}); }
         this.addFault(spec);
         return json(200, {});
       }
@@ -203,7 +225,7 @@ export class Provider {
     if (typeof lane !== 'string' || typeof order !== 'string') return json(400, { error: 'lane and order required' });
     const key = h['idempotency-key'] ?? null;
     const recovery = h['x-haunt-phase'] === 'recovery';
-    return this.gate(lane, kind, order, recovery, async (extraMs, fault) => {
+    return this.gate(lane, kind, order, recovery, { index: typeof body.index === 'number' ? body.index : undefined }, async (extraMs, fault) => {
       const known = key !== null ? this.responses.get(`${lane}|${kind}|${key}`) : undefined;
       let res: ProviderResponse;
       if (known !== undefined) {
@@ -235,7 +257,7 @@ export class Provider {
 
   private async tracking(shipment: string, lane: string, h: Record<string, string>): Promise<ProviderResponse> {
     const recovery = h['x-haunt-phase'] === 'recovery';
-    return this.gate(lane, 'tracking', shipment, recovery, async (extraMs, fault) => {
+    return this.gate(lane, 'tracking', shipment, recovery, {}, async (extraMs, fault) => {
       if (extraMs > 0) await this.clock.sleep(extraMs);
       if (fault?.mode === 'stall') return json(200, { status: 'in_transit', reroute: true });
       if (fault?.mode === 'no_driver') return json(200, { status: 'no_driver' });
@@ -248,19 +270,38 @@ export class Provider {
 
   private async handoff(shipment: string, lane: string, h: Record<string, string>): Promise<ProviderResponse> {
     const recovery = h['x-haunt-phase'] === 'recovery';
-    return this.gate(lane, 'handoff', shipment, recovery, async (extraMs, fault) => {
+    return this.gate(lane, 'handoff', shipment, recovery, {}, async (extraMs, fault) => {
       if (extraMs > 0) await this.clock.sleep(extraMs);
       if (fault?.mode === 'handoff_block' || fault?.mode === 'typo') return json(200, { status: fault.block ?? 'no_answer' });
       return json(200, { status: 'delivered' });
     });
   }
 
-  /** Capacity model, then fault matching, then the handler. Rows are only written inside run(). */
+  /** Skewed Clock curse: the answer is the same but the server clock jumps (a header); a bot must not rely on local time. */
   private async gate(
     lane: string,
     service: Kind | 'tracking' | 'handoff',
     order: string,
     recovery: boolean,
+    meta: { index?: number },
+    run: (extraMs: number, fault: FaultSpec | null) => Promise<ProviderResponse>,
+  ): Promise<ProviderResponse> {
+    const res = await this.gateInner(lane, service, order, recovery, meta, run);
+    for (const c of (this.curses.get(lane) ?? []).filter((x) => x.service === service && x.kind === 'clock_skew')) {
+      const n = this.next(`curse|${lane}|${c.id}`);
+      this.onCurse?.({ lane, service, order, ...(meta.index !== undefined ? { index: meta.index } : {}), curse: c.kind, id: c.id, status: res.status });
+      return { ...res, headers: { ...res.headers, 'X-Haunt-Clock-Jump': String(3_600_000 + Math.floor(unit(this.seed, 'curse', lane, c.id, n) * 86_400_000)) } };
+    }
+    return res;
+  }
+
+  /** Capacity model, then curses, then fault matching, then the handler. Rows are only written inside run(). */
+  private async gateInner(
+    lane: string,
+    service: Kind | 'tracking' | 'handoff',
+    order: string,
+    recovery: boolean,
+    meta: { index?: number },
     run: (extraMs: number, fault: FaultSpec | null) => Promise<ProviderResponse>,
   ): Promise<ProviderResponse> {
     const n = (this.inflight.get(lane) ?? 0) + 1;
@@ -271,7 +312,20 @@ export class Provider {
       const base = 20 + unit(this.seed, 'latency', lane, order, service, callNo) * 80;
       const over = n > CAPACITY_BASE ? (n - CAPACITY_BASE) * CAPACITY_PENALTY_MS : 0;
       const fault = this.matchFault(lane, service, recovery, order);
-      const baseMs = Math.floor(base + over);
+      let baseMs = Math.floor(base + over);
+      // Curses (spec 5.2): persistent lies of one endpoint of this lane, seeded per call so a replay lies the same way.
+      for (const c of (this.curses.get(lane) ?? []).filter((x) => x.service === service && x.kind !== 'clock_skew')) {
+        const k = this.next(`curse|${lane}|${c.id}`);
+        const u = unit(this.seed, 'curse', lane, c.id, k);
+        const hit = (status: number): void => this.onCurse?.({ lane, service, order, ...(meta.index !== undefined ? { index: meta.index } : {}), curse: c.kind, id: c.id, status });
+        if (c.kind === 'slow') { baseMs += c.delayMs ?? 4000; hit(200); }
+        else if (u < (c.rate ?? 0.3)) {
+          const status = c.kind === '404' ? 404 : c.kind === 'flaky500' ? 500 : 429;
+          hit(status);
+          await this.clock.sleep(baseMs);
+          return json(status, { error: `curse ${c.kind}` }, status === 429 ? { 'Retry-After': '1' } : {});
+        }
+      }
       if (fault) {
         const v = fault.value ?? 0;
         if (fault.mode === 'drop') {

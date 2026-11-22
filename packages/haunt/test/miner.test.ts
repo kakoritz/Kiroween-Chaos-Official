@@ -100,14 +100,15 @@ describe('time shapes', () => {
 
   it('swallowed and crashed curse answers are patterns; handled ones are not; outage windows add their downtime', () => {
     const evs = [
-      e('curse_response', 1, { class: 'swallowed', curse: 'cursed_404', stage: 'payment', order: 'ord-0001' }), e('curse_response', 1, { class: 'handled', curse: 'cursed_404', stage: 'payment' }),
-      e('curse_response', 2, { class: 'crashed', curse: 'flaky500', stage: 'ship', order: 'ord-0002' }),
+      e('order_start', 1, {}, { order: 'ord-0001' }), e('curse_response', 1, { class: 'swallowed', curse: '404', stage: 'payment', order: 'ord-0001' }), e('order_done', 1, {}, { order: 'ord-0001' }),
+      e('order_start', 1, {}, { order: 'ord-0002' }), e('curse_response', 1, { class: 'handled', curse: '404', stage: 'payment' }), e('order_done', 1, {}, { order: 'ord-0002' }),
+      e('order_start', 2, {}, { order: 'ord-0002' }), e('curse_response', 2, { class: 'crashed', curse: 'flaky500', stage: 'ship', order: 'ord-0002' }), e('order_done', 2, {}, { order: 'ord-0002' }),
       e('outage', 3, { outageMs: 21_000, fault: 'endpoint_down', seed: 7 }, { stage: 'payment' }), e('outage', 3, { outageMs: 15_000, fault: 'endpoint_down', seed: 7 }, { stage: 'payment' }),
     ];
     const m = Object.fromEntries(minePatterns({ run: 'r', events: evs }).map((p) => [p.signature, p]));
-    expect(m['payment + curse_cursed_404 + swallowed']).toMatchObject({ count: 1, lostOrders: 0 });
-    expect(m['ship + curse_flaky500 + crashed']).toMatchObject({ lostOrders: 1 });
-    expect(m['payment + curse_cursed_404 + handled']).toBeUndefined();
+    expect(m['payment + curse_404 + swallowed']).toMatchObject({ count: 1, lostOrders: 1, shape: 'curse' });
+    expect(m['ship + curse_flaky500 + crashed']).toMatchObject({ lostOrders: 1, shape: 'curse' });
+    expect(m['payment + curse_404 + handled']).toBeUndefined();
     expect(m['payment + endpoint_down + outage']).toMatchObject({ count: 2, downtimeMs: 36_000 });
     expect(qualifies({ count: 2, lostOrders: 0, downtimeMsTotal: 36_000 })).toBe(true);
   });

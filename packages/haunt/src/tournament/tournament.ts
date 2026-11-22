@@ -56,6 +56,8 @@ export interface FinishExtras {
   cases?: unknown[];
   awards?: unknown;
   casebook?: unknown;
+  /** "What each lane returned when the API lied" for the round (TV3-C9). */
+  curseTable?: unknown[];
   wave?: number;
 }
 
@@ -138,7 +140,7 @@ export class Tournament {
       detail: {
         round: this.round, total: this.total, standings: standings.map((s) => ({ ...s })),
         ...(eliminated.length ? { eliminated: eliminated[0], eliminatedLanes: eliminated } : {}),
-        rule: TIE_RULE, lessons: extras.lessons ?? [], cases: extras.cases ?? [],
+        rule: TIE_RULE, lessons: extras.lessons ?? [], cases: extras.cases ?? [], curseTable: extras.curseTable ?? [],
       },
     };
     out_.push(roundEnd);
