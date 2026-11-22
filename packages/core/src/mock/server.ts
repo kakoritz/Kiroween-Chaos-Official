@@ -101,6 +101,8 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
     return out;
   }
 
+  let dial = { level: 3, autoRamp: false, everyN: 4, max: 11 };
+
   function stateBody() {
     const w = hub.wave;
     const stages = APPS[hub.app].stages;
@@ -108,6 +110,7 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
       contractVersion: advertised(), mode: 'mock', app: hub.app,
       wave: w ? { n: w.n, running: hub.running, seed: w.seed, speed: hub.speed, orders: w.orders, tiers: w.tiers, startedAt: w.startedAt } : null,
       chaos: hub.chaosMode,
+      intensity: { ...dial },
       stages: stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role, kind: stageKind(s.role) })),
       lanes: [...hub.lanes.values()].sort((a, b) => a.lane - b.lane),
       boss: hub.boss,
@@ -273,6 +276,13 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
       if (!need) return fail(res, 409, 'no_decision', 'no decision is pending for that order');
       if (!(need.detail?.options ?? []).includes(b.choice)) return fail(res, 400, 'bad_request', 'choice is not one of the options');
       return send(res, 200, {});
+    }
+    if (path === '/api/intensity') {
+      if (!(Number.isInteger(b.level) && b.level >= 1 && b.level <= 11)) return fail(res, 400, 'bad_request', 'level must be an integer from 1 to 11');
+      if (b.autoRamp !== undefined && typeof b.autoRamp !== 'boolean') return fail(res, 400, 'bad_request', 'autoRamp must be a boolean');
+      dial = { ...dial, level: b.level, ...(b.autoRamp !== undefined ? { autoRamp: b.autoRamp } : {}) };
+      hub.emit({ type: 'intensity', ...(hub.waveNo > 0 ? { wave: hub.waveNo } : {}), detail: { level: dial.level, source: 'player', autoRamp: dial.autoRamp } });
+      return send(res, 200, { ...dial });
     }
     if (path === '/api/chaos') return send(res, 200, chaos.inject(b));
 

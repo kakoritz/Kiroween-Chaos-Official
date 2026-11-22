@@ -45,6 +45,10 @@ export function faultBody(lane: string, stage: string | null, arm: ProviderArm):
     case 'order_typo': base = { mode: 'typo', count: 1, ...(arm.order ? { order: arm.order } : {}), ...(arm.detect === 'handoff' ? { block: 'wrong_order' as const } : {}) }; break;
     default: return null;
   }
+  // Fuzz faults (TV3-C4): an odd status replaces the catalog one, the body may be cut short, a clock jump rides in a header.
+  if (arm.status !== undefined && base.mode === 'status') base = { ...base, value: arm.status };
+  if (arm.truncated) base = { ...base, truncate: true };
+  if (arm.clockJumpMs !== undefined) base = { ...base, headers: { ...(base.headers ?? {}), 'X-Haunt-Clock-Jump': String(arm.clockJumpMs) } };
   const body: FaultSpec = { lane, service: arm.fault === 'hazard_event' || arm.fault === 'driver_unreachable' || arm.fault === 'wrong_address' ? 'tracking' : arm.fault === 'no_answer' || arm.fault === 'gated_house' || arm.fault === 'car_accident' || (arm.fault === 'order_typo' && arm.detect === 'handoff') ? 'handoff' : arm.fault === 'order_typo' ? 'email' : service, ...base };
   // The arm carries the (possibly speed-scaled) window or count and wins over the defaults.
   if (arm.forMs !== undefined) { body.forMs = arm.forMs; delete body.count; }

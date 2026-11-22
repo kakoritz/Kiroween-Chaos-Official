@@ -444,7 +444,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
       norm.begin(settings.orders);
       const g = new SettleGate((e) => rec(e as unknown as HauntEvent));
       gate = g;
-      record = (e) => { g.push(e as unknown as Record<string, any>); demo?.observe(e as never); for (const p of night) p.observe(e as never); trackNight(e as never); };
+      record = (e) => { engine.observe(e as unknown as HauntEvent); g.push(e as unknown as Record<string, any>); demo?.observe(e as never); for (const p of night) p.observe(e as never); trackNight(e as never); };
       endWave = end;
       engine.startWave(wave, settings, record);
       startNight(settings);
@@ -455,6 +455,8 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
     chaos: (req) => engine.chaos(req),
     decide: (lane, order, choice) => decisions.answer(String(lane), order, choice),
     setChaosMode: (m) => engine.setChaosMode(m),
+    setIntensity: (level, o) => engine.setIntensity(level, o),
+    getIntensity: () => engine.getIntensity(),
     startDemo(script, speed) {
       if (!record) throw new Error('start a wave before the demo');
       demo?.stop();

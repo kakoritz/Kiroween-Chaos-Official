@@ -1,6 +1,8 @@
 // Intensity dial and outage timer. Spec: .kiro/specs/tournament-v3/spec.md sections 5.1 and 5.4; contract V1_2.md section 5.
 // Pure and seeded: the same seed gives the same draws.
-import { unit } from '../shared/rng';
+import { faultById, FAULTS, MAX_DEPTH } from '../chaos/catalog';
+import { fnv1a32, mulberry32, unit } from '../shared/rng';
+import { COOLDOWN_MS, ORDER_MS, TICK_MS } from './schedule';
 
 export const MIN_LEVEL = 1;
 export const MAX_LEVEL = 11;
@@ -59,3 +61,114 @@ export function drawOutageMs(seed: string | number, lane: string | number, key: 
   const max = intensityRow(level).outageMaxMs;
   return Math.round(OUTAGE_MIN_MS + unit(seed, 'outage', lane, key) * (max - OUTAGE_MIN_MS));
 }
+
+// ---------------------------------------------------------------------------------------------------------- unknown faults
+
+/** A fault the player and the bots have not seen: a known provider fault with a strange shape. Tagged `unknown` on the chaos event. */
+export interface FuzzFault {
+  /** The known fault it is built on (it decides where it can land and which provider mode acts). */
+  fault: string;
+  /** Odd window in ms at 1x, for window faults. */
+  forMs?: number;
+  /** Odd call count, for count faults. */
+  count?: number;
+  /** Odd HTTP status (418, 507, 522, ...). */
+  status?: number;
+  /** The answer is cut off mid-body. */
+  truncated?: boolean;
+  /** The provider clock jumps by this many ms (a header on the answer). */
+  clockJumpMs?: number;
+  /** Stable id of the shape, `fz-xxxxxxxx`, so the Casebook can recognise a repeat of the same unknown. */
+  fingerprint: string;
+}
+
+export const ODD_STATUS: readonly number[] = [402, 409, 418, 422, 451, 499, 502, 504, 507, 508, 520, 522, 599];
+const FUZZ_BASES: readonly string[] = ['timeout', 'slow_link', 'http_404', 'http_429', 'http_500', 'endpoint_down', 'internet_outage'];
+const STATUS_FAULTS: ReadonlySet<string> = new Set(['http_404', 'http_429', 'http_500', 'endpoint_down']);
+const WINDOW_FAULTS: ReadonlySet<string> = new Set(['slow_link', 'endpoint_down', 'internet_outage']);
+
+/** One fuzz fault for `stage`, drawn from `rng`. Null when no provider fault can land on that stage (create, handoff). */
+export function fuzzFromRng(rng: () => number, stage: string): FuzzFault | null {
+  const pool = FUZZ_BASES.filter((id) => faultById(id)?.stages.includes(stage));
+  if (pool.length === 0) return null;
+  const fault = pool[Math.floor(rng() * pool.length)]!;
+  const f: Omit<FuzzFault, 'fingerprint'> = { fault };
+  if (STATUS_FAULTS.has(fault)) f.status = ODD_STATUS[Math.floor(rng() * ODD_STATUS.length)]!;
+  if (WINDOW_FAULTS.has(fault)) f.forMs = 80 + Math.floor(rng() * 6000);
+  else f.count = 1 + Math.floor(rng() * 4);
+  if (rng() < 0.4) f.truncated = true;
+  if (rng() < 0.3) f.clockJumpMs = (rng() < 0.5 ? -1 : 1) * (60_000 + Math.floor(rng() * 86_000_000));
+  const shape = `${f.fault}|${f.status ?? ''}|${f.forMs ?? ''}|${f.count ?? ''}|${f.truncated ? 1 : 0}|${f.clockJumpMs ?? ''}`;
+  return { ...f, fingerprint: `fz-${fnv1a32(shape).toString(16).padStart(8, '0')}` };
+}
+
+/** Seeded: the same (seed, lane, key, stage) always gives the same unknown fault. */
+export function fuzzFault(seed: string | number, lane: string | number, key: string, stage: string): FuzzFault | null {
+  return fuzzFromRng(mulberry32(fnv1a32([seed, 'fuzz', lane, key].join('|'))), stage);
+}
+
+// ---------------------------------------------------------------------------------------------------------- dial chaos
+
+export interface DialPress {
+  fault: string;
+  /** Set when the press is an unknown (fuzz) fault; `fault` is then its base. */
+  fuzz?: FuzzFault;
+}
+
+/** Ticks per order at any speed: an order is ORDER_MS long and a tick is TICK_MS, both divided by speed. */
+const TICKS_PER_ORDER = ORDER_MS / TICK_MS;
+
+/**
+ * The chaos plan scaled by the dial (spec 5.1). One `tick` per lane per clock tick returns the faults to press now:
+ * rate per order, simultaneous faults, unknown share and nested depth come from the level's row; level 11 presses every
+ * fault the stage takes on every tick, with no cooldown. Same seed and same call timing give the same plan.
+ */
+export class DialChaos {
+  private readonly rng: () => number;
+  private readonly last = new Map<string, number>();
+
+  constructor(seed: string | number) {
+    this.rng = mulberry32(typeof seed === 'number' ? seed : fnv1a32(seed));
+  }
+
+  /** `depth` is the chaos stack depth of the lane now. */
+  tick(lane: string, stage: string | null, nowMs: number, level: number, depth = 0): DialPress[] {
+    if (stage === null) return [];
+    const row = intensityRow(level);
+    const prev = this.last.get(lane);
+    if (!row.continuous && prev !== undefined && nowMs - prev < COOLDOWN_MS) return [];
+    const p = row.continuous ? 1 : Math.min(1, row.rate / TICKS_PER_ORDER);
+    if (this.rng() >= p) return [];
+    const room = Math.max(0, Math.min(row.depth, MAX_DEPTH) - depth);
+    const applicable = FAULTS.filter((f) => f.stages.includes(stage) && f.id !== 'order_typo');
+    const n = Math.min(row.continuous ? applicable.length : row.simultaneous, room, applicable.length);
+    if (n <= 0) return [];
+    // Partial seeded shuffle: n distinct faults.
+    const pool = [...applicable];
+    const out: DialPress[] = [];
+    for (let i = 0; i < n; i++) {
+      const pick = pool.splice(Math.floor(this.rng() * pool.length), 1)[0]!;
+      if (this.rng() < row.unknown) {
+        const fuzz = fuzzFromRng(this.rng, stage);
+        if (fuzz) { out.push({ fault: fuzz.fault, fuzz }); continue; }
+      }
+      out.push({ fault: pick.id });
+    }
+    this.last.set(lane, nowMs);
+    return out;
+  }
+}
+
+// ---------------------------------------------------------------------------------------------------------- dial state
+
+export interface DialState {
+  level: number;
+  /** Raise the level by one every `everyN` finished orders until `max`. */
+  autoRamp: boolean;
+  everyN: number;
+  max: number;
+}
+
+export const DEFAULT_RAMP_EVERY = 4;
+
+export const initialDial = (): DialState => ({ level: DEFAULT_LEVEL, autoRamp: false, everyN: DEFAULT_RAMP_EVERY, max: MAX_LEVEL });

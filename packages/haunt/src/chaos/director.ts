@@ -24,6 +24,11 @@ export interface ArmRequest {
   forMs?: number;
   /** order_typo: where the wrong order is found, `confirmation` (default) or `handoff`. */
   detect?: 'confirmation' | 'handoff';
+  /** Fuzz faults (TV3-C4): an odd HTTP status, a truncated body, a clock jump, a call count that replace the catalog defaults. */
+  status?: number;
+  truncated?: boolean;
+  clockJumpMs?: number;
+  count?: number;
 }
 
 /** The `chaos` event detail. It is emitted at the press, never at the kill. */
@@ -53,6 +58,9 @@ export interface ProviderArm {
   /** order_typo: the order whose file was swapped, and the stage that finds it (default confirmation). */
   order?: string;
   detect?: 'confirmation' | 'handoff';
+  status?: number;
+  truncated?: boolean;
+  clockJumpMs?: number;
 }
 
 interface Entry {
@@ -66,6 +74,7 @@ interface Entry {
   detect: 'confirmation' | 'handoff' | null;
   /** Waiting for this stage (deferral). Null when ready. */
   waitStage: string | null;
+  fuzz: Pick<ArmRequest, 'status' | 'truncated' | 'clockJumpMs' | 'count'>;
 }
 
 interface Lane {
@@ -121,7 +130,8 @@ export class ChaosDirector {
     const scope: Scope = req.scope ?? (recovering ? 'inner' : 'outer');
     // A dead lane has no stage hook to reach: whatever is armed lands in recovery.
     const eff: Scope = info.state === 'dead' ? 'inner' : scope;
-    const entry: Entry = { id: this.nextId++, def, scope: eff, point: req.point ?? null, fired: false, forMs: req.forMs ?? null, detect: req.detect ?? null, waitStage: null };
+    const entry: Entry = { id: this.nextId++, def, scope: eff, point: req.point ?? null, fired: false, forMs: req.forMs ?? null, detect: req.detect ?? null, waitStage: null,
+      fuzz: { ...(req.status !== undefined ? { status: req.status } : {}), ...(req.truncated ? { truncated: true } : {}), ...(req.clockJumpMs !== undefined ? { clockJumpMs: req.clockJumpMs } : {}), ...(req.count !== undefined ? { count: req.count } : {}) } };
 
     const detail: ChaosDetail = {
       fault: def.id, scope: eff, depth: L.entries.length + 1,
@@ -249,7 +259,11 @@ function providerArm(e: Entry): ProviderArm {
   const a: ProviderArm = { id: e.id, fault: e.def.id };
   const forMs = e.forMs ?? e.def.forMs;
   if (forMs !== undefined) a.forMs = forMs;
-  if (e.def.count !== undefined) a.count = e.scope === 'inner' ? 1 : e.def.count;
+  const count = e.fuzz.count ?? e.def.count;
+  if (count !== undefined) a.count = e.scope === 'inner' ? 1 : count;
+  if (e.fuzz.status !== undefined) a.status = e.fuzz.status;
+  if (e.fuzz.truncated) a.truncated = true;
+  if (e.fuzz.clockJumpMs !== undefined) a.clockJumpMs = e.fuzz.clockJumpMs;
   if (e.scope === 'inner') a.nextCaller = 'recovery';
   if (e.detect !== null) a.detect = e.detect;
   return a;

@@ -44,6 +44,9 @@ export interface LiveEngine {
 o_decision when nothing is pending for that order. */
   decide?(lane: number, order: string, choice: string): 'ok' | 'no_decision' | 'bad_choice';
   setChaosMode?(mode: ChaosMode): void;
+  /** Intensity dial (TV3-C4). The engine owns the level; the server mirrors it for `state`. */
+  setIntensity?(level: number, opts?: { autoRamp?: boolean; everyN?: number; max?: number }): { level: number; autoRamp: boolean; everyN: number; max: number };
+  getIntensity?(): { level: number; autoRamp: boolean; everyN: number; max: number };
   startDemo?(script: string, speed?: number): void;
   stopDemo?(): void;
 }
@@ -81,6 +84,8 @@ export class LiveServer {
   app: AppId;
   settings?: WaveSettings & { startedAt: number };
   chaosMode: ChaosMode = { mode: 'manual', frequency: 0.3, seed: 7 };
+  /** Intensity dial (V1_2 section 5): default level 3. Moved by POST /api/intensity and by auto-ramp. */
+  intensity = { level: 3, autoRamp: false, everyN: 4, max: 11 };
   demoRunning: string | null = null;
   private chaosCount = 0;
   private readonly staticDir?: string;
@@ -104,6 +109,10 @@ export class LiveServer {
     this.log.subscribe((ev) => {
       applyEvent(this.lanes, ev, APP_STAGES[this.app]);
       if (ev.type === 'wave_end') this.demoRunning = null;
+      if (ev.type === 'intensity') {
+        const d = (ev.detail ?? {}) as { level?: number; autoRamp?: boolean };
+        if (typeof d.level === 'number') this.intensity = { ...this.intensity, level: d.level, ...(typeof d.autoRamp === 'boolean' ? { autoRamp: d.autoRamp } : {}) };
+      }
       const line = `data: ${JSON.stringify(toWire(ev))}\n\n`;
       for (const c of this.clients) c.write(line);
     });
@@ -160,6 +169,7 @@ export class LiveServer {
       contractVersion: CONTRACT_VERSION, mode: 'live', app: this.app,
       wave: s ? { n: this.waves.n, running, seed: s.seed, speed: s.speed, orders: s.orders, tiers: s.tiers, startedAt: s.startedAt } : null,
       chaos: { ...this.chaosMode },
+      intensity: { ...this.intensity },
       stages: this.stages,
       lanes: this.laneList(),
       boss: { next: null, startsInMs: null, active: false },
@@ -310,6 +320,20 @@ export class LiveServer {
     this.log.emit({ type: 'reset', detail: {} });
   }
 
+  /** POST /api/intensity {level 1..11, autoRamp?, everyN?, max?}. Emits `intensity {source: "player"}` (V1_2 section 5). */
+  private setIntensity(body: Record<string, any>) {
+    const level = body.level;
+    if (!(typeof level === 'number' && Number.isInteger(level) && level >= 1 && level <= 11)) fail(400, 'bad_request', 'level must be an integer from 1 to 11');
+    if (body.autoRamp !== undefined && typeof body.autoRamp !== 'boolean') fail(400, 'bad_request', 'autoRamp must be a boolean');
+    if (body.everyN !== undefined && !(Number.isInteger(body.everyN) && body.everyN >= 1)) fail(400, 'bad_request', 'everyN must be a positive integer');
+    const opts = { ...(body.autoRamp !== undefined ? { autoRamp: body.autoRamp as boolean } : {}), ...(body.everyN !== undefined ? { everyN: body.everyN as number } : {}), ...(body.max !== undefined ? { max: body.max as number } : {}) };
+    const next = this.engine.setIntensity?.(level, opts) ?? { ...this.intensity, level, ...opts };
+    this.intensity = { ...this.intensity, ...next };
+    const wave = this.waves.n > 0 ? this.waves.n : undefined;
+    this.log.emit({ type: 'intensity', ...(wave !== undefined ? { wave } : {}), detail: { level, source: 'player', autoRamp: this.intensity.autoRamp } } as HauntEvent);
+    return { ...this.intensity };
+  }
+
   private chaos(body: Record<string, any>): ChaosResult {
     if (!this.waves.active) fail(409, 'no_wave', 'no wave is running');
     const isBoss = (f: string) => f.startsWith('boss_');
@@ -446,6 +470,7 @@ export class LiveServer {
       }
       case '/api/chaos': return { json: this.chaos(body) };
       case '/api/chaos/mode': return { json: this.setChaosMode(body) };
+      case '/api/intensity': return { json: this.setIntensity(body) };
       case '/api/decision': return { json: this.decision(body) };
       case '/api/demo/start':
         if (!(DEMO_SCRIPTS as readonly string[]).includes(body.script)) fail(400, 'bad_request', 'bad script');
