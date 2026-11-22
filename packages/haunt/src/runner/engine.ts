@@ -7,6 +7,7 @@ import type { HauntEvent } from '../score/score';
 import type { Part } from '../sdk';
 import { tiersForLanes, type TierMode } from './lanes';
 import { postProviderArm, type PostFault } from './provider';
+import { IssueFloor, gremlinVariant } from './floor';
 import { OUTAGE_FAULTS, drawOutageMs, initialDial, isLevel, type DialState, type FuzzFault } from './intensity';
 
 export interface EngineChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string; forMs?: number; detect?: 'confirmation' | 'handoff'; source?: 'manual' | 'random' | 'boss' | 'fuzz' | 'gremlin'; fuzz?: FuzzFault; count?: number }
@@ -41,6 +42,8 @@ export class RunnerEngine {
   /** True once the dial was set: the random plan then follows the level table instead of the chaos-mode frequency. */
   dialTouched = false;
   private rampOrders = new Set<string>();
+  /** Per-lane issue counter for the never-perfect floor (spec 5.3). */
+  readonly floor = new IssueFloor();
   /** The outage length of an `endpoint_down` or service-down press is drawn from the dial level. */
   get level(): number { return this.dial.level; }
   set level(n: number) { this.dial.level = n; this.dialTouched = true; }
@@ -59,6 +62,7 @@ export class RunnerEngine {
     const tiers = tiersForLanes(settings.lanes, settings.tiers, settings.campaign ? { parts: settings.campaign.parts } : undefined);
     this.lanes = tiers.map((_, i) => String(i + 1));
     tiers.forEach((t, i) => this.director.addLane(String(i + 1), t.use));
+    this.floor.reset(this.lanes);
     this.opts.onWaveStart?.(wave, settings, this.lanes);
   };
 
@@ -92,6 +96,7 @@ export class RunnerEngine {
    * every `everyN` of them until `max`, emitting `intensity {source: "ramp"}`.
    */
   observe = (ev: HauntEvent): void => {
+    this.floor.observe(ev);
     if (!this.dial.autoRamp || !ev.order) return;
     if (ev.type !== 'order_done' && ev.type !== 'order_failed' && ev.type !== 'order_quarantined') return;
     this.rampOrders.add(String(ev.order));
@@ -99,6 +104,21 @@ export class RunnerEngine {
     this.dial = { ...this.dial, level: this.dial.level + 1 };
     this.record?.({ type: 'intensity', detail: { level: this.dial.level, source: 'ramp', autoRamp: true } });
   };
+
+  /**
+   * Floor rule (spec 5.3): inject the lane's gremlin, a mild known fault with a call count of one (slow call, one 500 or a duplicate
+   * delivery, seeded by wave and lane). The chaos event reads `fault: "gremlin"`, `creature: "gremlin"`, `source: "gremlin"` with the
+   * known fault as `variant`. Returns the variant.
+   */
+  gremlin = (lane: string): string => {
+    const variant = gremlinVariant(this.seed, lane, this.wave);
+    this.chaos({ lane: Number(lane), fault: variant, source: 'gremlin', creature: 'gremlin', count: 1 });
+    this.floor.markGremlin(lane); // only once it landed: a lane at its depth limit is tried again on the next tick
+    return variant;
+  };
+
+  /** The engine's assertion of property P19: lanes that have no issue yet. Empty means the floor holds. */
+  assertFloor = (): string[] => this.floor.violations();
 
   chaos = (req: EngineChaosRequest): EngineChaosResult => {
     const lane = String(req.lane ?? this.lanes[0] ?? '1');
@@ -119,7 +139,8 @@ export class RunnerEngine {
     const chaosId = nextId;
     this.seq++;
     const creature = req.creature ?? FAULTS.find((f) => f.id === req.fault)?.creature ?? req.fault;
-    this.record?.({ type: 'chaos', lane, detail: { id: chaosId, creature, ...(req.source ? { source: req.source } : {}), ...r.detail,
+    const gremlin = req.source === 'gremlin';
+    this.record?.({ type: 'chaos', lane, detail: { id: chaosId, creature, ...(req.source ? { source: req.source } : {}), ...r.detail, ...(gremlin ? { fault: 'gremlin', variant: req.fault } : {}),
       ...(fz ? { unknown: true, fingerprint: fz.fingerprint, fuzz: { fault: fz.fault, ...(fz.status !== undefined ? { status: fz.status } : {}), ...(fz.forMs !== undefined ? { forMs: fz.forMs } : {}), ...(fz.count !== undefined ? { count: fz.count } : {}), ...(fz.truncated ? { truncated: true } : {}), ...(fz.clockJumpMs !== undefined ? { clockJumpMs: fz.clockJumpMs } : {}) } } : {}) } });
     if (outageMs !== undefined) {
       const stage = r.detail.deferredTo ?? info.stage;

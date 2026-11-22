@@ -457,6 +457,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
     setChaosMode: (m) => engine.setChaosMode(m),
     setIntensity: (level, o) => engine.setIntensity(level, o),
     getIntensity: () => engine.getIntensity(),
+    assertFloor: () => engine.assertFloor(),
     startDemo(script, speed) {
       if (!record) throw new Error('start a wave before the demo');
       demo?.stop();

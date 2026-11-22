@@ -8,6 +8,7 @@ import type { RunnerEngine } from './engine';
 import { RepeatDetector } from './provider';
 import { RandomChaos, planBoss, TICK_MS, type BossPlan } from './schedule';
 import { DialChaos } from './intensity';
+import { FLOOR_FRACTION } from './floor';
 
 /** Boss window length at 1x; real ms is this divided by speed. */
 export const BOSS_DURATION_MS = 17000;
@@ -27,6 +28,8 @@ export interface WaveClockOptions {
   randomEnabled?: () => boolean;
   /** Boss schedule runs in random and demo mode. Defaults to the same test as random chaos. */
   bossEnabled?: () => boolean;
+  /** Floor rule (spec 5.3): inject a gremlin for a lane that has had no issue by mid-round. Default true. */
+  floor?: boolean;
 }
 
 export class WaveClock {
@@ -58,6 +61,14 @@ export class WaveClock {
     const { engine, record } = this.o;
     const speed = this.o.speed ?? engine.speed;
     const tickMs = TICK_MS / speed;
+    if (this.o.floor !== false && elapsedMs >= this.boss.expectedMs * FLOOR_FRACTION) {
+      for (const lane of engine.lanes) {
+        if (engine.floor.count(lane) > 0 || engine.floor.gremlined(lane)) continue;
+        const info = this.info(lane);
+        if (info.stage === null || info.state === 'dead') continue;
+        try { engine.gremlin(lane); } catch { /* depth limit: try again next tick */ }
+      }
+    }
     while (this.nextTick <= elapsedMs) {
       const at = this.nextTick;
       this.nextTick += tickMs;

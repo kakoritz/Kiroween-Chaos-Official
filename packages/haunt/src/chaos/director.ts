@@ -258,7 +258,8 @@ function armMsg(e: Entry): ArmMsg {
 function providerArm(e: Entry): ProviderArm {
   const a: ProviderArm = { id: e.id, fault: e.def.id };
   const forMs = e.forMs ?? e.def.forMs;
-  if (forMs !== undefined) a.forMs = forMs;
+  // An explicit call count (fuzz, gremlin) replaces the catalog window.
+  if (forMs !== undefined && e.fuzz.count === undefined) a.forMs = forMs;
   const count = e.fuzz.count ?? e.def.count;
   if (count !== undefined) a.count = e.scope === 'inner' ? 1 : count;
   if (e.fuzz.status !== undefined) a.status = e.fuzz.status;

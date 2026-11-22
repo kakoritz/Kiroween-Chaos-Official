@@ -47,6 +47,8 @@ o_decision when nothing is pending for that order. */
   /** Intensity dial (TV3-C4). The engine owns the level; the server mirrors it for `state`. */
   setIntensity?(level: number, opts?: { autoRamp?: boolean; everyN?: number; max?: number }): { level: number; autoRamp: boolean; everyN: number; max: number };
   getIntensity?(): { level: number; autoRamp: boolean; everyN: number; max: number };
+  /** Property P19: lanes with no issue this wave. Empty means the never-perfect floor held. */
+  assertFloor?(): string[];
   startDemo?(script: string, speed?: number): void;
   stopDemo?(): void;
 }
@@ -310,7 +312,8 @@ export class LiveServer {
 
   private endWave(stopped = false) {
     const t = this.tracker;
-    this.waves.end(stopped, t ? (lane, row) => ({ ...t.summary(lane), orders: { ...(t.summary(lane).orders as object), parked: row.parked } }) : undefined);
+    const bad = new Set(this.engine.assertFloor?.() ?? []);
+    this.waves.end(stopped, t ? (lane, row) => ({ ...t.summary(lane), ...(bad.has(String(lane)) ? { floorOk: false } : {}), orders: { ...(t.summary(lane).orders as object), parked: row.parked } }) : undefined);
   }
 
   private switchApp(app: AppId) {
