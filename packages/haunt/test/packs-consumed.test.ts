@@ -210,3 +210,15 @@ describe('haunt pack new / init (reusable skeleton)', () => {
     expect(initCommand(['--pack', 'nope', '--dir', mk(), '--packs', PACKS], log)).toBe(2);
   });
 });
+
+describe('lab commands follow the pack', () => {
+  it('pack presets show pack commands; plain presets keep the generic ones', async () => {
+    for (const id of ['streaming', 'ticketing']) {
+      const r = await labRun(LAB_PRESETS[id]!);
+      expect(r.commands).toEqual([`npx haunt init --pack ${id}`, `npx haunt pack check ${id}`, 'haunt validate', 'haunt sweep']);
+    }
+    for (const id of ['orders', 'inbox']) {
+      expect((await labRun(LAB_PRESETS[id]!)).commands).toEqual(['npx haunt init', 'haunt validate', 'haunt sweep']);
+    }
+  });
+});
