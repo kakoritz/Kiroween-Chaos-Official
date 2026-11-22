@@ -64,6 +64,7 @@ root.innerHTML = `
       <span class="pill hidden" id="demo-pill">DEMO</span>
       <span class="badge badge--offline" id="badge" role="status"></span>
       <button class="btn btn--ghost hidden" id="demo-stop" type="button">&#9632; Stop demo</button>
+      <button class="btn hidden" id="next-btn" type="button" title="Review the logs first. Press N or Space for the next wave.">&#9654; Next wave</button>
       <button class="btn" id="demo-open" type="button">&#9654; Play demo</button>
     </header>
     <div id="chaos-mode"></div>
@@ -94,6 +95,7 @@ const stageEl = $('stage');
 const canvas = $<HTMLCanvasElement>('arena');
 const demoPill = $('demo-pill');
 const demoStop = $('demo-stop');
+const nextBtn = $('next-btn');
 const demoBtns = [$<HTMLButtonElement>('demo-open'), $<HTMLButtonElement>('demo-big')];
 
 let mode: string | null = null;
@@ -109,6 +111,8 @@ let waveRunning = false;
 let chainDemo = false;
 let currentScript: string | null = null;
 let lastDemoStart = 0;
+// TV3-U2: after a wave ends the show waits in a review state until the player presses Next (button, N or Space).
+let awaitingNext = false;
 let demoScripts: string[] | null = null;
 
 function paintBadge() {
@@ -243,7 +247,7 @@ const waveSummary = new WaveSummary(stageEl, {
   stageLabel: (id) => vm.stages.find((s) => s.id === id)?.label ?? id,
   laneTitle: (n) => vm.lanes.find((l) => l.lane === n)?.tier ?? '',
   fetchStars: (n) => api.getWaveStars(n),
-  nextWave: () => { api.startWave().catch(showError); },
+  nextWave: () => { awaitingNext = true; void goNext(); },
   playDemo: () => { void startDemo(pickScript(currentScript, demoScripts) ?? 'hero'); },
   reportUrl: (n) => `report.html?live=1#/report/${n}`,
 }); // PT-U6
@@ -285,13 +289,16 @@ function onEvent(ev: ArenaEvent) {
     mode = typeof ev.mode === 'string' ? ev.mode : mode;
     if (ev.contractVersion !== 1) errEl.textContent = 'Update the UI: the server speaks contract version ' + String(ev.contractVersion) + '.';
   } else if (ev.type === 'reset') {
-    waveNo = 0; waveRunning = false; demoRunning = false;
+    waveNo = 0; waveRunning = false; demoRunning = false; awaitingNext = false; nextBtn.classList.add('hidden');
   } else if (ev.type === 'wave_start') {
     waveNo = typeof ev.wave === 'number' ? ev.wave : waveNo + 1;
     waveRunning = true;
+    awaitingNext = false; nextBtn.classList.add('hidden');
     errEl.textContent = '';
   } else if (ev.type === 'wave_end') {
     waveRunning = false;
+    awaitingNext = !(ev.detail && (ev.detail as { stopped?: unknown }).stopped);
+    nextBtn.classList.toggle('hidden', !awaitingNext);
     void reconcile();
   }
   waveEl.textContent = waveLabel(waveNo);
@@ -389,7 +396,7 @@ async function boot() {
   if (plan.start) void startDemo(plan.start);
   // Chain the playlist: when a script ends, start the next one so the show never goes quiet.
   window.setInterval(async () => {
-    if (!chainDemo || performance.now() - lastDemoStart < 6000) return;
+    if (!chainDemo || awaitingNext || performance.now() - lastDemoStart < 6000) return;
     try {
       const s = await api.getState();
       if (s.demo?.running || s.wave?.running) return;
@@ -398,6 +405,28 @@ async function boot() {
     } catch { /* retry on the next tick */ }
   }, 3000);
 }
+
+// Next wave (TV3-U2): the only thing that starts the next wave after a wave ends.
+async function goNext() {
+  if (!awaitingNext) return;
+  awaitingNext = false; nextBtn.classList.add('hidden');
+  try {
+    if (chainDemo) {
+      const s = await api.getState();
+      const next = pickScript(currentScript, Array.isArray(s.demo?.scripts) ? s.demo.scripts : demoScripts);
+      if (next) { void startDemo(next); return; }
+    }
+    await api.startWave();
+  } catch (e) { showError(e); }
+}
+nextBtn.addEventListener('click', () => void goNext());
+window.addEventListener('keydown', (e) => {
+  if (!awaitingNext || e.ctrlKey || e.metaKey || e.altKey) return;
+  const t = e.target as HTMLElement | null;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA' || t.tagName === 'BUTTON' || t.isContentEditable)) return;
+  if (document.querySelector('dialog[open], .lp-dlg:not(.hidden)')) return;
+  if (e.key === 'n' || e.key === 'N' || e.key === ' ') { e.preventDefault(); void goNext(); }
+});
 
 // ?inspect=<lane>:<stage id> opens the inspector once the lane exists (used for screenshots).
 let pendingInspect = new URLSearchParams(window.location.search).get('inspect');
