@@ -71,12 +71,17 @@ export function laneCases(events: readonly Ev[], lane: number, round: number): C
   const out: Case[] = [];
   let ctx: Ctx | null = null;
   let curStage = '';
+  // A fault that was pressed in an earlier order can still be in force (an outage window): an order lost with no fault of its own is blamed on it.
+  let lastChaos: { fault: string; unknown?: boolean; fingerprint?: string } | null = null;
   const close = (end: 'order_done' | 'order_failed' | 'order_quarantined' | 'halted' | 'open', ts?: unknown): void => {
     void ts;
     if (!ctx) return;
     const c = ctx;
     ctx = null;
-    for (const f of c.faults) {
+    const faults = c.faults.length === 0 && lastChaos && (end === 'order_failed' || end === 'halted' || end === 'order_quarantined')
+      ? [{ fault: lastChaos.fault, stage: curStage || 'payment', ...(lastChaos.unknown ? { unknown: true, fingerprint: lastChaos.fingerprint } : {}) }]
+      : c.faults;
+    for (const f of faults) {
       const lost = end === 'order_failed' || end === 'halted' || end === 'open';
       const consequence: Consequence = end === 'halted' ? 'lane_halted'
         : end === 'order_quarantined' ? 'order_quarantined'
@@ -104,6 +109,7 @@ export function laneCases(events: readonly Ev[], lane: number, round: number): C
       case 'chaos': {
         if (!ctx) break;
         const stage = String(d.deferredTo ?? e.stage ?? (curStage || 'payment'));
+        lastChaos = { fault: normaliseFault(d), ...(d.unknown ? { unknown: true, fingerprint: String(d.fingerprint ?? '') } : {}) };
         ctx.faults.push({ fault: normaliseFault(d), stage, ...(d.unknown ? { unknown: true, fingerprint: String(d.fingerprint ?? '') } : {}) });
         break;
       }

@@ -310,8 +310,39 @@ function specLint(): number {
   console.log(renderLint(r, dir));
   return r.ok ? 0 : 1;
 }
+/**
+ * `haunt improve [--url http://127.0.0.1:7070] [--seed N] [--rounds '[{"lanes":5,"orders":4,"intensity":3}]'] [--speed N] [--pace slow]`:
+ * asks a running live server (`npm run live`) to run, mine, apply the cheap patterns as policy overlay, write a spec for the rest, rerun the same plan
+ * and seed, and compare. Prints the report ("closed n of m patterns"). Nothing is applied to code.
+ */
+async function improveCmd(): Promise<number> {
+  const base = (opt('url', 'http://127.0.0.1:7070') as string).replace(/[/]$/, '');
+  const body: Record<string, unknown> = {};
+  if (opt('seed')) body.seed = Number(opt('seed'));
+  if (opt('speed')) body.speed = Number(opt('speed'));
+  if (opt('pace')) body.pace = opt('pace');
+  if (opt('rounds')) { try { body.rounds = JSON.parse(opt('rounds')!); } catch { console.error('--rounds must be JSON'); return 2; } }
+  const started = await fetch(`${base}/api/improve`, { method: 'POST', body: JSON.stringify(body) }).catch(() => undefined);
+  if (!started) { console.error(`no server at ${base} (start one with npm run live)`); return 2; }
+  const first = await started.json() as { error?: { message?: string } };
+  if (!started.ok) { console.error(first.error?.message ?? `HTTP ${started.status}`); return 2; }
+  console.log(`improve started on ${base}`);
+  let last = '';
+  const deadline = Date.now() + Number(opt('timeout-min', '60')) * 60_000;
+  while (Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, 2000));
+    const j = await (await fetch(`${base}/api/improve`)).json() as { phase: string; error?: string; report?: { text: string; closed: number; of: number } };
+    if (j.phase !== last) { last = j.phase; console.log(`phase: ${j.phase}`); }
+    if (j.phase === 'error') { console.error(j.error ?? 'improve failed'); return 1; }
+    if (j.phase === 'done' && j.report) { console.log(j.report.text); return 0; }
+  }
+  console.error('timed out');
+  return 1;
+}
 if (cmd === 'badge') {
   process.exitCode = badge();
+} else if (cmd === 'improve') {
+  process.exitCode = await improveCmd();
 } else if (cmd === 'spec-lint') {
   process.exitCode = specLint();
 } else if (cmd === 'sweep') {
@@ -331,5 +362,6 @@ if (cmd === 'badge') {
   console.log('       npm run haunt -- compare <runA> <runB> [--out file]');
   console.log('       npm run haunt -- badge <run-id> [--out dir]');
   console.log('       npm run haunt -- spec-lint <.kiro/specs/hardening-run>');
+  console.log('       npm run haunt -- improve [--url http://127.0.0.1:7070] [--seed N] [--rounds JSON] [--speed N] [--pace slow]');
   process.exitCode = cmd ? 2 : 0;
 }

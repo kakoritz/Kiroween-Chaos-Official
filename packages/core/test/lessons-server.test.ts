@@ -2,6 +2,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { existsSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { spawn } from 'node:child_process';
 import { join } from 'node:path';
 import { LiveServer, type LiveEngine } from '../src/live';
 import type { HauntEvent } from '../../haunt/src/score/score';
@@ -10,7 +11,7 @@ let srv: LiveServer | undefined;
 afterEach(async () => { await srv?.close(); srv = undefined; });
 
 /** Round 1: lane 2 loses an order to an outage at Payment, lane 3 rides one out with a backoff, the others are calm. */
-function engine(): LiveEngine {
+function engine(policy?: string): LiveEngine {
   return {
     startWave(_wave, settings, record, end) {
       const lanes: number[] = settings.tournament!.lanes;
@@ -22,7 +23,7 @@ function engine(): LiveEngine {
           const order = `ord-${String(i).padStart(4, '0')}`;
           ev('order_start', lane, { index: i, total: 6 }, { order });
           ev('stage_start', lane, { attempt: 1 }, { order, stage: 'payment' });
-          if (round === 1 && i === 1 && lane === 2) {
+          if (round === 1 && i === 1 && lane === 2 && !(policy && existsSync(policy))) {
             ev('chaos', lane, { fault: 'endpoint_down', creature: 'gargoyle', scope: 'outer', depth: 1, injectedAt: 'during', source: 'random' }, { stage: 'payment' });
             ev('stage_fail', lane, { error: 'x', attempt: 1 }, { order, stage: 'payment' });
             ev('order_failed', lane, { reason: 'charge failed' }, { order });
@@ -45,13 +46,13 @@ function engine(): LiveEngine {
 
 async function boot() {
   const lessonsDir = join(mkdtempSync(join(tmpdir(), 'haunt-ls-')), 'lessons');
-  srv = new LiveServer({ engine: engine(), staticDir: '/nonexistent', lessonsDir, patternsFile: join(lessonsDir, '..', 'patterns.json'), runDir: join(lessonsDir, '..'), specsDir: join(lessonsDir, '..', 'specs') });
+  srv = new LiveServer({ engine: engine(join(lessonsDir, 'lane-2.policy.json')), staticDir: '/nonexistent', lessonsDir, patternsFile: join(lessonsDir, '..', 'patterns.json'), runDir: join(lessonsDir, '..'), specsDir: join(lessonsDir, '..', 'specs') });
   const { url } = await srv.listen(0);
   const get = async (p: string) => { const r = await fetch(url + p); return { status: r.status, body: await r.json() as any }; };
   const post = async (p: string, b?: unknown) => { const r = await fetch(url + p, { method: 'POST', body: JSON.stringify(b ?? {}) }); return { status: r.status, body: await r.json() as any }; };
   const del = async (p: string) => { const r = await fetch(url + p, { method: 'DELETE' }); return { status: r.status, body: await r.json() as any }; };
   const until = async (fn: () => boolean) => { for (let i = 0; i < 300 && !fn(); i++) await new Promise((r) => setTimeout(r, 10)); expect(fn()).toBe(true); };
-  return { lessonsDir, specsDir: join(lessonsDir, '..', 'specs'), get, post, del, until };
+  return { url, lessonsDir, specsDir: join(lessonsDir, '..', 'specs'), get, post, del, until };
 }
 
 describe('lessons in a live tournament', () => {
@@ -185,4 +186,59 @@ describe('fix specs from a live tournament (TV3-C12)', () => {
     expect(d.lint.ok).toBe(true);
     expect(existsSync(join(specsDir, 'hardening-' + d.runId, 'README.md'))).toBe(true);
   });
+});
+
+describe('improve loop on the live server (TV3-C13)', () => {
+  it('POST /api/improve runs the plan, applies the overlay, reruns the same plan and reports closed n of m with a verified pattern', async () => {
+    const { get, post, until } = await boot();
+    expect((await get('/api/improve')).body).toEqual({ phase: 'idle' });
+    expect((await post('/api/improve', { rounds: [{ lanes: 9 }] })).status).toBe(400);
+    const start = await post('/api/improve', { seed: 7, rounds: [{ lanes: 5, orders: 6, intensity: 3 }] });
+    expect(start.status).toBe(200);
+    expect(start.body.improve).toMatch(/^imp-/);
+    expect((await post('/api/improve', {})).status).toBe(409);
+    for (let i = 0; i < 400; i++) { const j = (await get('/api/improve')).body; if (j.phase === 'done' || j.phase === 'error') break; await new Promise((r) => setTimeout(r, 25)); }
+    const job = (await get('/api/improve')).body;
+    expect(job.error).toBeUndefined();
+    expect(job.phase).toBe('done');
+    const r = job.report;
+    expect(r.summary).toBe('closed 1 of 1 patterns');
+    expect(r.patterns[0]).toMatchObject({ signature: 'payment + endpoint_down + order_lost', status: 'verified', closed: true, before: 1, after: 0 });
+    expect(r.overlays[0]).toMatchObject({ lane: 2, tier: 'retrier', action: 'retry_backoff' });
+    expect(r.lost).toEqual({ before: 1, after: 0 });
+    expect(r.reliability.after).toBeGreaterThan(r.reliability.before);
+    expect(r.runs.before).toMatch(/-before$/);
+    expect(r.text).toMatch(/closed 1 of 1 patterns/);
+    // Two tournaments ran on one server, the second after the first (rule 49 pressed by the loop), and the specs step had nothing that needs code.
+    expect(srv!.log.events.filter((e) => e.type === 'tournament_end')).toHaveLength(2);
+    expect(r.spec).toBeNull();
+    expect((await get('/api/patterns')).body.patterns.find((p: any) => p.signature === 'payment + endpoint_down + order_lost').status).toBe('verified');
+    expect(srv!.log.events.some((e) => e.type === 'pattern' && (e.detail as any).status === 'verified')).toBe(true);
+    void until;
+  });
+});
+
+describe('haunt improve (CLI)', () => {
+  it('asks a running server, follows the job and prints the report', async () => {
+    const { url } = await boot();
+    const root = process.cwd();
+    const out = await new Promise<{ code: number | null; stdout: string }>((resolve) => {
+      const c = spawn(process.execPath, [join(root, 'tools', 'run-ts.mjs'), join(root, 'packages', 'core', 'src', 'bin', 'haunt.ts'), 'improve', '--url', url, '--seed', '7', '--rounds', JSON.stringify([{ lanes: 5, orders: 6, intensity: 3 }])], { cwd: root });
+      let stdout = '';
+      c.stdout.on('data', (d) => { stdout += d; });
+      c.on('close', (code) => resolve({ code, stdout }));
+    });
+    expect(out.code).toBe(0);
+    expect(out.stdout).toMatch(/improve started/);
+    expect(out.stdout).toMatch(/# Improve: closed 1 of 1 patterns/);
+  }, 60000);
+
+  it('says so when no server answers', async () => {
+    const root = process.cwd();
+    const code = await new Promise<number | null>((resolve) => {
+      const c = spawn(process.execPath, [join(root, 'tools', 'run-ts.mjs'), join(root, 'packages', 'core', 'src', 'bin', 'haunt.ts'), 'improve', '--url', 'http://127.0.0.1:9'], { cwd: root });
+      c.on('close', resolve);
+    });
+    expect(code).toBe(2);
+  }, 30000);
 });

@@ -19,7 +19,7 @@ const ODD = pat({ id: 'p-00000004', signature: 'process + weird + order_degraded
 
 describe('patches', () => {
   it('every proposed patch fits its diff budget and names a file, a risk, a rollback and a test', () => {
-    for (const p of [pat({}), DUP, HANG, pat({ consequence: 'retry_storm', shapes: ['retry_storm'] }), pat({ consequence: 'lane_halted' }), pat({ consequence: 'swallowed', fault: 'curse_cursed_404', shapes: ['curse'] }), pat({ consequence: 'outage', shapes: ['outage'] })]) {
+    for (const p of [pat({}), pat({ id: 'p-0000000c', signature: 'payment + crash + order_lost', fault: 'crash', lanes: [1, 2] }), DUP, HANG, pat({ consequence: 'retry_storm', shapes: ['retry_storm'] }), pat({ consequence: 'lane_halted' }), pat({ consequence: 'swallowed', fault: 'curse_cursed_404', shapes: ['curse'] }), pat({ consequence: 'outage', shapes: ['outage'] })]) {
       const patch = patchFor(p)!;
       expect(patch, p.signature).not.toBeNull();
       expect(patch.budgetLines).toBeLessThanOrEqual(DIFF_BUDGET_MAX);
@@ -35,6 +35,13 @@ describe('patches', () => {
     expect(rookie.files).toContain('apps/haunted-orders/src/bots/rookie.ts');
     expect(rookie.summary).toMatch(/\`retry\` part/);
     expect(patchFor(DUP)!.part).toBe('idempotency');
+  });
+
+  it('refuses a patch that would change nothing: every lane that met the pattern already has the part, and the SDK does not enforce it as policy (or a breaker bot already backs off)', () => {
+    expect(patchFor(pat({ consequence: 'retry_storm', shapes: ['retry_storm'], lanes: [5] }))).toBeNull();
+    expect(patchFor(pat({ lanes: [5] }))).toBeNull();
+    expect(patchFor(pat({ lanes: [2, 5] }))).not.toBeNull();
+    expect(renderFixSpec({ runId: 'r', patterns: [pat({ lanes: [5] })] }).refused).toHaveLength(1);
   });
 
   it('refuses a shape with no small patch instead of proposing a rewrite', () => {
@@ -185,5 +192,17 @@ describe('haunt spec-lint (CLI) and haunt_specs (MCP)', () => {
     expect((await callTool({ root: work }, 'haunt_specs', { action: 'lint', dir: '.kiro/specs/hardening-mcp1' })).isError).toBe(false);
     expect((await callTool({ root: work }, 'haunt_specs', { action: 'lint', dir: 'nope' })).isError).toBe(true);
     expect(JSON.parse(((await callTool({ root: work }, 'haunt_specs', {})).content as { text: string }[])[0]!.text).specs).toEqual(['hardening-mcp1']);
+  });
+});
+
+describe('the worked sample from a real run (docs/proof/sample-hardening-spec)', () => {
+  it('passes its own lint and every requirement names evidence, a patch within budget and a test', () => {
+    const dir = join(process.cwd(), 'docs', 'proof', 'sample-hardening-spec');
+    const r = lintSpecDir(dir);
+    expect(r.issues).toEqual([]);
+    expect(r.requirements).toBeGreaterThanOrEqual(3);
+    const design = readFileSync(join(dir, 'design.md'), 'utf8');
+    for (const m of design.matchAll(new RegExp('[*][*]Diff budget:[*][*] under ([0-9]+) lines', 'g'))) expect(Number(m[1])).toBeLessThanOrEqual(DIFF_BUDGET_MAX);
+    expect(readFileSync(join(dir, 'tasks.md'), 'utf8')).not.toMatch(/rewrite/i);
   });
 });

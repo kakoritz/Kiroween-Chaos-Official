@@ -30,6 +30,7 @@ import { laneCases } from '../../../haunt/src/tournament/signature';
 import { caseEvents } from '../../../haunt/src/tournament/casebook';
 import { PatternStore, THRESHOLDS, costOf, minePatterns, patternEvent, qualifies } from '../../../haunt/src/miner/patterns';
 import { lintSpecDir, writeFixSpec } from '../../../haunt/src/miner/specs';
+import { improve as runImprove, type ImproveReport, type RunResult } from '../../../haunt/src/miner/improve';
 import { join as joinPath } from 'node:path';
 
 export const LIVE_HOST = '127.0.0.1';
@@ -108,7 +109,9 @@ export class LiveServer {
   intensity = { level: 3, autoRamp: false, everyN: 4, max: 11 };
   demoRunning: string | null = null;
   /** The running tournament (TV3-C7), if any. */
-  tourney?: { t: Tournament; speed: number; pace: 'normal' | 'show' | 'slow'; wave: number; id: string };
+  tourney?: { t: Tournament; speed: number; pace: 'normal' | 'show' | 'slow'; wave: number; id: string; firstWave?: number; autoSpecs?: boolean };
+  /** The improve loop (TV3-C13): one job at a time. */
+  improveJob?: { id: string; phase: string; startedAt: number; request: Record<string, unknown>; report?: ImproveReport; error?: string; spec?: unknown };
   /** Corpses of the tournament, rebuilt from `corpse` events so a late page sees them (rule 51). */
   corpses: Corpse[] = [];
   private chaosCount = 0;
@@ -371,7 +374,7 @@ export class LiveServer {
     this.engine.setChaosMode?.({ mode: 'manual', frequency: 0.3, seed });
     this.chaosMode = { mode: 'manual', frequency: 0.3, seed };
     if (body.resetLessons === true) this.lessons.reset();
-    this.tourney = { t, speed, pace, wave: 0, id: 't' + Date.now().toString(36) };
+    this.tourney = { t, speed, pace, wave: 0, id: 't' + Date.now().toString(36), firstWave: this.waves.n + 1, ...(body.autoSpecs === false ? { autoSpecs: false } : {}) };
     return { tournament: true, ...this.beginRound() };
   }
 
@@ -407,7 +410,7 @@ export class LiveServer {
     this.minePatterns(tn.id, tn.t.round, n, evs, evs.map((e) => Number(e.lane)).filter((l) => Number.isInteger(l)));
     if ((tn.t.phase as string) === 'done') {
       this.log.emit({ ...(tn.t.endEvent(this.finalExtras(tn.t)) as HauntEvent), wave: n });
-      if (this.specsDir && this.patterns.list().some((p) => qualifies(p) && (p.status === 'new'))) { try { this.writeSpecs(tn.id, n); } catch { /* a spec that cannot be written must not stop the tournament */ } }
+      if (this.specsDir && tn.autoSpecs !== false && this.patterns.list().some((p) => qualifies(p) && (p.status === 'new'))) { try { this.writeSpecs(tn.id, n); } catch { /* a spec that cannot be written must not stop the tournament */ } }
     }
   }
 
@@ -435,6 +438,71 @@ export class LiveServer {
     const result = { runId, path: '.kiro/specs/hardening-' + runId, patterns: ids, refused: out.refused.map((r) => r.pattern.signature), lint: { ok: out.lint.ok, issues: out.lint.issues } };
     this.log.emit({ type: 'spec_written', wave: w, detail: result } as unknown as HauntEvent);
     return result;
+  }
+
+  /**
+   * POST /api/improve {seed?, rounds?, speed?, pace?} (TV3-C13): run the plan, mine, apply the cheap patterns as policy overlay, write a spec for the
+   * rest, rerun the same plan and seed and compare. Answers at once; `GET /api/improve` follows the job. Never applies code.
+   */
+  private startImprove(body: Record<string, any>) {
+    if (this.waves.active) fail(409, 'wave_running', 'a wave is running');
+    if (this.improveJob && !['done', 'error'].includes(this.improveJob.phase)) fail(409, 'wave_running', 'an improve run is already going');
+    const seed = body.seed ?? 7;
+    const rounds = body.rounds;
+    // Validate the request now (a bad plan is a 400, not a failed job).
+    try { new Tournament({ seed, rounds }); } catch (e) { fail(400, 'bad_request', e instanceof Error ? e.message : 'bad rounds'); }
+    if (!Number.isInteger(seed)) fail(400, 'bad_request', 'bad seed');
+    const job = { id: 'imp-' + Date.now().toString(36), phase: 'before', startedAt: Date.now(), request: { seed, ...(rounds ? { rounds } : {}), speed: body.speed ?? 1, pace: body.pace ?? 'slow' } };
+    this.improveJob = job;
+    void this.improveRun(job, { seed, rounds, speed: body.speed ?? 1, pace: body.pace ?? 'slow' });
+    return { improve: job.id, phase: job.phase };
+  }
+
+  private async improveRun(job: NonNullable<LiveServer['improveJob']>, plan: { seed: number; rounds?: unknown; speed: number; pace: string }): Promise<void> {
+    const planText = 'the tournament with seed ' + plan.seed + (plan.rounds ? ' and the same rounds' : ' and the default rounds');
+    const runPlan = (label: 'before' | 'after'): Promise<RunResult> => this.runTournamentToEnd({ ...plan, resetLessons: label === 'before', autoSpecs: false }, job.id + '-' + label);
+    try {
+      const report = await runImprove({
+        runPlan, store: this.patterns, lessons: this.lessons, ...(this.specsDir ? { specsDir: this.specsDir } : {}), plan: planText, specRunId: job.id,
+        onPhase: (p) => { job.phase = p; },
+        onStatus: (p) => this.log.emit({ ...(patternEvent(p, 'updated') as unknown as HauntEvent), wave: this.waves.n }),
+        onSpec: (s) => { this.log.emit({ type: 'spec_written', wave: this.waves.n, detail: s } as unknown as HauntEvent); job.spec = s; },
+      });
+      job.report = report;
+      job.phase = 'done';
+    } catch (e) {
+      job.error = e instanceof Error ? e.message : String(e);
+      job.phase = 'error';
+    }
+  }
+
+  /** Run a whole tournament, pressing Next itself (the improve loop is the explicit "auto-continue"), and return what the loop needs to judge it. */
+  private runTournamentToEnd(body: Record<string, any>, run: string): Promise<RunResult> {
+    return new Promise((resolve, reject) => {
+      let first = 0;
+      const unsub = this.log.subscribe((ev) => {
+        if (ev.type === 'awaiting_next') setTimeout(() => { try { this.tournamentNext(); } catch (e) { unsub(); reject(e); } }, 0);
+        if (ev.type === 'tournament_end') {
+          unsub();
+          setTimeout(() => {
+            const last = ev.wave ?? this.waves.n;
+            const evs = this.log.events.filter((e) => typeof e.wave === 'number' && e.wave >= first && e.wave <= last);
+            const roundEnds = evs.filter((e) => e.type === 'round_end');
+            const lanes = (e: HauntEvent) => (e.detail as { lanes?: number[] } | undefined)?.lanes ?? [];
+            const orders = evs.filter((e) => e.type === 'round_start').reduce((n, e) => n + lanes(e).length * Number((e.detail as { orders?: number }).orders ?? 0), 0);
+            const score = roundEnds.reduce((n, e) => n + ((e.detail as { standings?: { rp: number }[] }).standings ?? []).reduce((m, s) => m + s.rp, 0), 0);
+            resolve({
+              run, events: evs as never, orders, ok: evs.filter((e) => e.type === 'order_done').length, lost: evs.filter((e) => e.type === 'order_failed').length,
+              repeats: evs.filter((e) => e.type === 'repeat').length, score, reports: [...new Set(evs.filter((e) => e.type === 'wave_end').map((e) => '/api/waves/' + e.wave + '/report'))].slice(0, 3),
+            });
+          }, 0);
+        }
+      });
+      try {
+        this.startTournament(body);
+        first = this.tourney?.firstWave ?? this.waves.n;
+      } catch (e) { unsub(); reject(e); }
+    });
   }
 
   /** Hooks for lessons and the Casebook (TV3-C8, C10). */
@@ -588,6 +656,10 @@ export class LiveServer {
         const dir = joinPath(this.specsDir!, seg[2]!);
         return { json: lintSpecDir(dir) };
       }
+      if (p === '/api/improve') {
+        const j = this.improveJob;
+        return { json: j ? { id: j.id, phase: j.phase, startedAt: j.startedAt, request: j.request, ...(j.report ? { report: j.report } : {}), ...(j.error ? { error: j.error } : {}), ...(j.spec ? { spec: j.spec } : {}) } : { phase: 'idle' } };
+      }
       if (p === '/api/patterns') {
         const all = this.patterns.list().map((x) => ({ ...x, qualifies: qualifies(x), cost: costOf(x) })).sort((a, b) => b.cost - a.cost || a.signature.localeCompare(b.signature));
         return { json: { thresholds: THRESHOLDS, patterns: all, qualifying: all.filter((x) => x.qualifies).length } };
@@ -647,6 +719,7 @@ export class LiveServer {
       case '/api/chaos/mode': return { json: this.setChaosMode(body) };
       case '/api/intensity': return { json: this.setIntensity(body) };
       case '/api/specs': return { json: this.writeSpecs(typeof body.runId === 'string' && body.runId ? body.runId : (this.tourney?.id ?? 'run-' + Date.now().toString(36))) };
+      case '/api/improve': return { json: this.startImprove(body) };
       case '/api/tournament/start': return { json: this.startTournament(body) };
       case '/api/next': return { json: this.tournamentNext() };
       case '/api/decision': return { json: this.decision(body) };

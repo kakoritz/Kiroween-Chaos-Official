@@ -4,7 +4,7 @@
 // Nothing here changes code: Kiro applies a spec with the review step (AGENTS.md).
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { actionsFor } from '../sdk/policy';
+import { actionsFor, policyTakes, type PolicyAction } from '../sdk/policy';
 import { gradeFor, TIERS } from '../shared/catalog';
 import { qualifies, type Pattern } from './patterns';
 import { tierOfLane } from '../tournament/rounds';
@@ -33,14 +33,37 @@ const faultText = (f: string): string => f.replace(/_/g, ' ');
 
 /** The smallest patch for a pattern, or null when no small patch is known (the pattern is refused, never "rewritten"). */
 export function patchFor(p: Pattern): Patch | null {
+  const patch = rawPatchFor(p);
+  // If every lane that met it already has the parts for the action and the SDK does not enforce it as policy, adding the part changes nothing:
+  // the cause is tuning, which needs a design discussion, so no patch is proposed.
+  if (patch?.action && p.lanes.length > 0) {
+    const act = patch.action as PolicyAction;
+    const has = p.lanes.every((l) => actionsFor(TIERS[tierOfLane(l)].parts).includes(act));
+    if (has && !p.lanes.some((l) => policyTakes(TIERS[tierOfLane(l)].parts, act))) return null;
+  }
+  return patch;
+}
+
+/** The lanes of the pattern whose tier lacks any of these parts (all of them when none lacks: the change is then tuning). */
+function lacking(p: Pattern, parts: readonly string[]): number[] {
+  const ls = p.lanes.filter((l) => !parts.every((x) => (TIERS[tierOfLane(l)].parts as readonly string[]).includes(x)));
+  return ls.length ? ls : p.lanes;
+}
+const botsOfLanes = (ls: readonly number[]): string[] => [...new Set(ls.map(bot))];
+const tiersOfLanes = (ls: readonly number[]): string => [...new Set(ls.map((l) => TIERS[tierOfLane(l)].label))].join(', ') || 'the bot';
+
+function rawPatchFor(p: Pattern): Patch | null {
   const stage = p.stage;
   const when = `WHEN ${faultText(p.fault)} hits the ${stage} stage`;
-  const bots = botsOf(p);
-  const tiers = tiersOf(p);
+  let bots = botsOf(p);
+  let tiers = tiersOf(p);
+  /** Narrow the files and the tier names to the lanes that really lack the parts. */
+  const narrow = (parts: readonly string[]): void => { const ls = lacking(p, parts); bots = botsOfLanes(ls); tiers = tiersOfLanes(ls); };
   const probe = (title: string, how: string, kind: 'property' | 'fixture' = 'property'): Patch['test'] => ({ kind, title, how, file: `packages/haunt/test/hardening-${p.id}.test.ts` });
   const c = p.consequence;
 
   if (c === 'duplicate_effect') {
+    narrow(['idempotency']);
     return {
       part: 'idempotency', files: [...bots, 'packages/haunt/src/pipeline/pipeline.ts'], budgetLines: 6, action: 'idempotency_key',
       summary: `Add \`idempotency\` to the \`use\` list of ${tiers} so the ${stage} effect is sent with its order key (\`this.key(s, ...)\` in \`Pipeline.stages\` already forwards it).`,
@@ -51,7 +74,8 @@ export function patchFor(p: Pattern): Patch | null {
     };
   }
   if (c === 'order_lost' && ['timeout', 'comm_timeout', 'slow_link', 'http_404', 'http_429', 'http_500', 'endpoint_down', 'internet_outage', 'sms_down', 'app_down', 'updates_down'].includes(p.fault)) {
-    const haveRetry = p.lanes.every((l) => actionsFor(TIERS[tierOfLane(l)].parts).includes('retry_backoff'));
+    const haveRetry = p.lanes.every((l) => policyTakes(TIERS[tierOfLane(l)].parts, 'retry_backoff'));
+    narrow(['retry']);
     return {
       part: 'retry', files: haveRetry ? ['.haunt/lessons/<lane>.json (haunt.policy overlay)'] : [...bots, 'packages/haunt/src/sdk/sdk.ts'], budgetLines: haveRetry ? 8 : 5, action: 'retry_backoff',
       summary: haveRetry
@@ -63,7 +87,19 @@ export function patchFor(p: Pattern): Patch | null {
       test: probe(`order survives ${p.fault} at ${stage}`, `fixture replay: arm ${p.fault} at ${stage} for 3 s on a lane with the change; expect order_done and one row per effect.`, 'fixture'),
     };
   }
+  if (c === 'order_lost' && ['crash', 'power_outage', 'out_of_memory'].includes(p.fault)) {
+    narrow(['journal']);
+    return {
+      part: 'journal', files: [...bots, 'packages/haunt/src/sdk/sdk.ts'], budgetLines: 5, action: 'journal_replay',
+      summary: `Add the \`journal\` part to the \`use\` list of ${tiers} so a restarted process replays the ${stage} stage from the journal (\`Sdk.stage\` already skips journaled stages) instead of losing the order.`,
+      ears: `${when} and the process dies, THE bot SHALL resume the order from its journal after the restart instead of cancelling it.`,
+      hypothesis: `${tiers} keeps no journal, so a crash at ${stage} forgets what the order already did and the restart cannot finish it.`,
+      risk: 'Low: the journal is an append-only file per lane; a disk-full fault is already absorbed.', rollback: 'Remove `journal` from the `use` list.',
+      test: probe(`order survives a crash at ${stage}`, `fast-check: for any seed and a ${p.fault} at ${stage} (any crash point), the order ends done with one row per effect.`),
+    };
+  }
   if (c === 'lane_halted' || c === 'order_parked' || c === 'order_quarantined') {
+    narrow(['breaker', 'offline_queue']);
     return {
       part: 'offline_queue', files: [...bots, 'packages/haunt/src/pipeline/pipeline.ts'], budgetLines: 10, action: 'breaker_park',
       summary: `Add \`breaker\` and \`offline_queue\` to the \`use\` list of ${tiers} so a stuck ${stage} parks the order and the lane keeps running (\`Pipeline.inputFailure\` already maps input errors to park or quarantine).`,
@@ -84,6 +120,7 @@ export function patchFor(p: Pattern): Patch | null {
     };
   }
   if (c === 'retry_storm' || p.shapes.includes('retry_storm') || p.shapes.includes('failure_rate')) {
+    narrow(['breaker']);
     return {
       part: 'breaker', files: [...bots, 'packages/haunt/src/sdk/sdk.ts'], budgetLines: 6, action: 'breaker_park',
       summary: `Add the \`breaker\` part to the \`use\` list of ${tiers} so repeated failures at ${stage} open the circuit and back off (\`Sdk.noteFailure\` counts them).`,
@@ -104,6 +141,7 @@ export function patchFor(p: Pattern): Patch | null {
     };
   }
   if (c === 'outage') {
+    narrow(['breaker', 'offline_queue']);
     return {
       part: 'offline_queue', files: [...bots], budgetLines: 8, action: 'breaker_park',
       summary: `Add \`breaker\` and \`offline_queue\` to the \`use\` list of ${tiers} so orders wait out a ${stage} outage parked.`,
@@ -118,7 +156,7 @@ export function patchFor(p: Pattern): Patch | null {
 
 /** What a lesson (a policy overlay) already covers for a pattern: the lanes whose tier can take the patch's action, and who already solved it. */
 export function lessonCover(p: Pattern, patch: Patch | null): { lanes: number[]; solved: string[] } {
-  const lanes = patch?.action ? p.lanes.filter((l) => actionsFor(TIERS[tierOfLane(l)].parts).includes(patch.action as never)) : [];
+  const lanes = patch?.action ? p.lanes.filter((l) => policyTakes(TIERS[tierOfLane(l)].parts, patch.action as PolicyAction)) : [];
   return { lanes, solved: p.solvedBy.map((s) => `${TIERS[tierOfLane(s.lane)].label} (${s.mechanism})`) };
 }
 
@@ -214,7 +252,7 @@ export function renderFixSpec(input: FixSpecInput): FixSpec {
   const readme = [
     `# Hardening ${runId}`, '',
     `${included.length} fix${included.length === 1 ? '' : 'es'} for the patterns above the threshold (count 3, any lost order, or over 30 s of downtime), sorted by downtime cost. Written by the pattern miner; Kiro applies a spec with the review step, never automatically.`, '',
-    '| # | Pattern | Downtime | Lost | Repeats | Status | Lessons cover it |', '|---|---|---|---|---|---|---|', ...(rows.length ? rows : ['| - | none | - | - | - | - | - |']), '',
+    '| # | Pattern | Downtime | Lost | Repeats | Status when written | Lessons cover it |', '|---|---|---|---|---|---|---|', ...(rows.length ? rows : ['| - | none | - | - | - | - | - |']), '',
     '## Expected grade change', '',
     orders && nowRel !== undefined
       ? `Over ${orders} orders these patterns cost ${lostTotal} lost orders and ${repeatTotal} repeated effects: reliability ${nowRel} (grade ${gradeFor(nowRel)}) now, about 100 (grade A) once every requirement holds. Rerun ${plan} to verify; a pattern is verified only when the rerun shows it gone.`

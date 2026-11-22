@@ -2,7 +2,7 @@
 // journals) into patterns keyed by signature `stage + fault + consequence`, and keeps them in `.haunt/patterns.json` across runs and rounds.
 // Rule-based and deterministic: the same events always mine the same patterns.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { dirname, relative, isAbsolute } from 'node:path';
 import { fnv1a32 } from '../shared/rng';
 import { laneCases, normaliseFault, signatureOf, type Case } from '../tournament/signature';
 import type { Ev } from '../tournament/rp';
@@ -109,7 +109,9 @@ export function journalRefs(path: string, order: string, stage: string, max = 3)
   for (let i = 0; i < lines.length && out.length < max; i++) {
     const l = lines[i]!;
     if (!l.includes(order) || !l.includes(stage)) continue;
-    out.push(`${path.replace(/\\/g, '/')}:${i + 1}`);
+    // Relative to the working folder when it lives under it, so a spec does not carry one machine's paths.
+    const rel = isAbsolute(path) ? relative(process.cwd(), path) : path;
+    out.push(`${(rel.startsWith('..') || isAbsolute(rel) ? path : rel).split('\\').join('/')}:${i + 1}`);
   }
   return out;
 }
