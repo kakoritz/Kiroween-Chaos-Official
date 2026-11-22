@@ -52,13 +52,16 @@ export class RoundIndicator {
 }
 
 /** Shared modal frame: dim, dialog, focus trap, Escape. */
-abstract class Card {
+export abstract class Card {
   protected dim: HTMLElement | null = null;
+  /** The player closed it: a late `adopt` (hydrate after reload) must not bring it back. */
+  protected dismissed = false;
   private returnFocus: HTMLElement | null = null;
   constructor(protected readonly stage: HTMLElement) {}
   get isOpen(): boolean { return this.dim !== null; }
 
   close(): void {
+    this.dismissed = true;
     this.dim?.remove();
     this.dim = null;
     this.onClose();
@@ -69,6 +72,7 @@ abstract class Card {
 
   protected mount(dlg: HTMLElement, focus: HTMLElement | null, titleId: string): void {
     this.dim?.remove();
+    this.dismissed = false;
     this.returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const dim = el('div', 'tv-dim');
     dlg.setAttribute('role', 'dialog');
@@ -114,7 +118,7 @@ export class RoundCard extends Card {
   adopt(t: TournamentVM): void {
     this.t = { ...t, results: [...t.results] };
     const r = t.results[t.results.length - 1];
-    if (t.phase === 'review' && r) this.paint(r);
+    if (t.phase === 'review' && r && !this.dismissed) this.paint(r);
   }
 
   private title(lane: number): string { return this.host.laneTitle(lane) || `Lane ${lane}`; }
@@ -222,7 +226,7 @@ export class FinalScreen extends Card {
   /** A page that loads after the end shows the final screen again. */
   adopt(t: TournamentVM): void {
     this.t = { ...t, results: [...t.results] };
-    if (t.phase === 'ended') this.paint();
+    if (t.phase === 'ended' && !this.dismissed) this.paint();
   }
 
   /** Re-open the final screen (from the header pill after it was closed). */

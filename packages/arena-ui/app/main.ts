@@ -19,7 +19,10 @@ import '../src/arena/dial.css';
 import { RoundIndicator, RoundCard, FinalScreen, type TournamentHost } from '../src/arena/tournament-view';
 import '../src/arena/tournament.css';
 import { applyCasebookEvent, emptyCasebook, lessonsTip, loadCasebook, loadLessons, mechanismWord } from '../src/arena/casebook';
-import { awardsRow, casebookTable, fallbackAwards } from '../src/arena/casebook-view';
+import { awardsRow, casebookTable, curseTableEl, fallbackAwards } from '../src/arena/casebook-view';
+import { countAnswer, emptyCurseLedger, isClass } from '../src/arena/curses';
+import { PatternsPanel } from '../src/arena/patterns-view';
+import '../src/arena/patterns.css';
 import { LegendModal } from '../src/arena/legend-modal';
 import { ArenaSound } from '../src/sound';
 import { FrameSampler, perfSecondsFromQuery } from '../src/perf';
@@ -65,6 +68,7 @@ root.innerHTML = `
       <span class="total" id="total" title="Total score"></span>
       <button class="btn btn--ghost" id="tour-open" type="button" title="Guided tour">Tour</button>
       <button class="btn btn--ghost" id="keys-btn" type="button" aria-expanded="false" aria-controls="keys-pop" title="Keyboard and state legend (?)">&#9000; Keys</button>
+      <button class="btn btn--ghost" id="patterns-btn" type="button" title="Recurring trouble, fix specs and the improve loop">Patterns<span class="pt-badge hidden" id="patterns-badge"></span></button>
       <button class="btn btn--ghost" id="legend-btn" type="button" aria-expanded="false" title="What do R J I B Q mean?">?</button>
       <span class="gear-wrap" id="gear-wrap"><button class="btn btn--ghost" id="gear-btn" type="button" title="Settings: chaos, pace, speed, sound, motion" aria-label="Settings">&#9881;</button></span>
       <span class="pace-tag" id="pace-tag" title="Slow pace is on"></span>
@@ -257,6 +261,7 @@ muteBtn.addEventListener('click', () => {
 const captionPlayer = new CaptionPlayer(freezeFromQuery(window.location.search));
 const captionOverlay = new CaptionOverlay(stageEl, captionPlayer, { demoRunning: new URLSearchParams(window.location.search).get('demo') !== 'off' });
 
+let curseLedger = emptyCurseLedger();
 const waveSummary = new WaveSummary(stageEl, {
   stageIds: () => vm.stages.map((s) => s.id),
   stageLabel: (id) => vm.stages.find((s) => s.id === id)?.label ?? id,
@@ -265,6 +270,7 @@ const waveSummary = new WaveSummary(stageEl, {
   nextWave: () => { awaitingNext = true; void goNext(); },
   playDemo: () => { void startDemo(pickScript(currentScript, demoScripts) ?? 'hero'); },
   reportUrl: (n) => `report.html?live=1#/report/${n}`,
+  extra: () => curseTableEl(curseLedger, casebookHost),
 }); // PT-U6
 const shopStart = gearShopStarter(stageEl, { getCampaign: () => api.getCampaign(), startWave: async (o) => {
   // The attract demo (or a leftover wave) plays behind the splash; a night cannot start until it stops.
@@ -297,6 +303,14 @@ const roundInd = new RoundIndicator($('round-ind'));
 const roundCard = new RoundCard(stageEl, tournamentHost);
 const finalScreen = new FinalScreen(stageEl, tournamentHost);
 // TV3-U9: lessons ledger and Casebook, fed straight from the event stream (the DOM cards need them the moment round_end lands).
+const patternsBtn = $<HTMLButtonElement>('patterns-btn');
+const patternsBadge = $('patterns-badge');
+const patternsPanel = new PatternsPanel(stageEl, {
+  getPatterns: () => api.getPatterns(), writeSpecs: () => api.writeSpecs(), startImprove: () => api.startImprove({ speed: 4, pace: 'normal' }), getImprove: () => api.getImprove(),
+  stageLabel: tournamentHost.stageLabel, laneTitle: tournamentHost.laneTitle, onError: showError,
+  onBadge: (n, running) => { patternsBadge.textContent = running ? '\u21BB' : String(n); patternsBadge.classList.toggle('hidden', !running && n === 0); patternsBadge.classList.toggle('run', running); },
+}, () => reduceMotion.matches || document.body.classList.contains('reduced-motion'));
+patternsBtn.addEventListener('click', () => void patternsPanel.open());
 const casebook = emptyCasebook();
 const casebookHost = { laneTitle: tournamentHost.laneTitle, stageLabel: tournamentHost.stageLabel };
 scene.lessonInfo = (lane) => {
@@ -312,6 +326,8 @@ roundCard.extra = (r) => {
     p.textContent = `Learned this round: ${learned.map((x) => `${tournamentHost.laneTitle(x.lane) || `Lane ${x.lane}`} +${x.n}`).join(', ')}`;
     box.append(p);
   }
+  const crs = curseTableEl(curseLedger, casebookHost);
+  if (crs) box.append(crs);
   box.append(casebookTable(casebook, casebookHost, { max: 4, title: 'Casebook so far' }));
   return box;
 };
@@ -328,6 +344,9 @@ function onEvent(ev: ArenaEvent) {
   if (ev.type === 'reset') tourActive = false;
   applyCasebookEvent(casebook, ev, performance.now());
   if ((ev.type === 'round_end' || ev.type === 'tournament_end') && ev.detail?.casebook) loadCasebook(casebook, ev.detail.casebook);
+  if (ev.type === 'wave_start' || ev.type === 'reset') curseLedger = emptyCurseLedger();
+  if (ev.type === 'curse_response' && typeof ev.lane === 'number' && isClass(ev.detail?.class)) countAnswer(curseLedger, ev.lane, ev.detail!.class as never);
+  patternsPanel.onEvent(ev);
   roundCard.onEvent(ev);
   finalScreen.onEvent(ev);
   campaignResults.onEvent(ev);
@@ -403,6 +422,7 @@ async function loadState() {
       void hydrateCasebook().then(() => { roundCard.adopt(vm.tournament); finalScreen.adopt(vm.tournament); });
     }
     await reconcile();
+    void patternsPanel.hydrate();
   } catch (e) { showError(e); }
   paintBadge();
   paintDemo();

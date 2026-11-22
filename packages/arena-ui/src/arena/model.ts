@@ -9,6 +9,7 @@ import { applyLap, lapMotion, newLap, START_X, type LapVM } from './lap';
 import { foldHeat, newHeat, chipState, type ChipInfo, type Heat } from './chips';
 import { applyIntensity, defaultDial, readDial, type DialState } from './dial';
 import { applyTournamentEvent, emptyTournament, loadTournament, type Fallen, type TournamentVM } from './tournament';
+import { applyCurseEvent, type CursePop, type CurseVM } from './curses';
 import { endOutage, openOutage, pruneOutages, type OutageVM } from './outage';
 import { absorb, actAll, addCreature, exitAll, exitDepth, exitStage, prune, PUFF_MS, type CreatureVM } from './creatures';
 
@@ -66,6 +67,9 @@ export interface LaneVM {
   heatFolded?: boolean;
   /** Set once the lane is eliminated (TV3-U8): the row greys out and its corpse stays on the death stage. */
   fallen?: Fallen | null;
+  /** Active curses and the last answers to cursed calls (TV3-U11). Cosmetic, not restorable from a snapshot. */
+  curses?: CurseVM[];
+  cursepops?: CursePop[];
   /** Outage countdown rings, one per stage at most (TV3-U7). Cosmetic, not restorable from a snapshot. */
   outages?: OutageVM[];
   /** Live star tracker (PT-U6): cum of the last review in this wave and that review's stars. */
@@ -231,7 +235,14 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
     if (roster.length > 0) {
       // In a tournament the fallen lanes stay on the board; only the live lanes start fresh (contract rule 50).
       const old = new Map(vm.lanes.map((l) => [l.lane, l] as const));
-      vm.lanes = roster.map((n2) => (vm.tournament.fallen[n2] && old.get(n2) ? old.get(n2)! : newLane(n2, vm.stages.length, now)));
+      vm.lanes = roster.map((n2) => {
+        if (vm.tournament.fallen[n2] && old.get(n2)) return old.get(n2)!;
+        const nl = newLane(n2, vm.stages.length, now);
+        // A curse lasts until the plan removes it, across rounds.
+        const carried = old.get(n2)?.curses;
+        if (carried?.length) nl.curses = carried;
+        return nl;
+      });
       for (const l of vm.lanes) if (vm.tournament.fallen[l.lane]) fallLane(l, vm.tournament.fallen[l.lane]!, now);
       return;
     }
@@ -292,6 +303,7 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
       if (si >= 0) l.chips[si] = 'failed';
       setMode(l, 'fail', now);
       break;
+    case 'curse_start': case 'curse_end': case 'curse_response': applyCurseEvent(l, ev, now, vm.stages.map((s) => s.id), vm.speed); break;
     case 'outage': openOutage(l, now, vm.speed, ev.stage, d); break;
     case 'chaos': l.depth = num(d.depth, l.depth + 1); addCreature(l, now, d, ev.stage ?? vm.stages[l.stageIndex]?.id ?? ''); break;
     case 'chaos_absorbed': l.depth = Math.max(0, l.depth - 1); absorb(l, now, typeof d.creature === 'string' ? d.creature : undefined); break;

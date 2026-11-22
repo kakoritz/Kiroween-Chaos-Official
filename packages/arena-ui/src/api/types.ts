@@ -141,6 +141,14 @@ export interface ArenaApi {
   getLessons(lane: number): Promise<any>;
   /** DELETE /api/lessons: clears every lane's lessons ledger. */
   resetLessons(): Promise<any>;
+  /** GET /api/patterns (contract v1.2 C11): patterns sorted by downtime cost. */
+  getPatterns(): Promise<any>;
+  /** POST /api/specs (C12): writes a fix spec for the qualifying new patterns. */
+  writeSpecs(opts?: { runId?: string }): Promise<any>;
+  /** POST /api/improve (C13): run, mine, apply, rerun, compare. Answers `{improve, phase}`. */
+  startImprove(opts?: Record<string, unknown>): Promise<any>;
+  /** GET /api/improve: `{id, phase, report?, spec?, error?}`. */
+  getImprove(): Promise<any>;
   getLedger(): Promise<any>;
   getWaves(): Promise<WaveSummary[]>;
   getReport(n: number): Promise<any>;

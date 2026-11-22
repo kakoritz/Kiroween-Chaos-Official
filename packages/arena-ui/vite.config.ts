@@ -12,10 +12,10 @@ const stubNode = {
   enforce: 'pre' as const,
   resolveId: (id: string) => (id === 'node:path' ? '\0node-path-stub' : id.startsWith('node:') ? '\0node-stub' : null),
   load: (id: string) => (id === '\0node-stub'
-    ? 'const f = () => { throw new Error("node builtin used in the browser"); }; export const closeSync = f, existsSync = f, fsyncSync = f, openSync = f, readFileSync = f, writeSync = f, mkdirSync = f, readdirSync = f, rmSync = f, writeFileSync = f; export default {};'
+    ? 'const f = () => { throw new Error("node builtin used in the browser"); }; export const closeSync = f, existsSync = f, fsyncSync = f, openSync = f, readFileSync = f, writeSync = f, mkdirSync = f, readdirSync = f, rmSync = f, writeFileSync = f, statSync = f, appendFileSync = f, copyFileSync = f, renameSync = f, unlinkSync = f, readdirSync2 = f; export default {};'
     : id === '\0node-path-stub'
       // The tournament lessons store (packages/haunt) joins paths; the page never calls it.
-      ? 'export const join = (...a) => a.join("/"), resolve = join, dirname = (p) => p.split("/").slice(0, -1).join("/"), basename = (p) => p.split("/").pop(); export default { join, resolve, dirname, basename };'
+      ? 'export const join = (...a) => a.join("/"), resolve = join, dirname = (p) => p.split("/").slice(0, -1).join("/"), basename = (p) => p.split("/").pop(), isAbsolute = (p) => p.startsWith("/") || /^[A-Za-z]:/.test(p), relative = (a, b) => b, extname = (p) => { const m = /\.[^./]+$/.exec(p); return m ? m[0] : ""; }, normalize = (p) => p, sep = "/"; export default { join, resolve, dirname, basename, isAbsolute, relative, extname, normalize, sep };'
       : null),
 };
 

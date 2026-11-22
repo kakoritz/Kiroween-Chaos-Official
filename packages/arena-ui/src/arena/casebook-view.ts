@@ -3,6 +3,7 @@
 import { caseRows, caseTitle, lessonsTip, mechanismWord, solvedCounts, type CasebookVM, type CaseRow, type Lesson } from './casebook';
 import { AWARD_LABEL, type Award, type TournamentVM } from './tournament';
 import { el } from './tournament-view';
+import { CLASS_ICON, CLASS_TIP, CLASS_WORD, CLASSES, curseTable, type CurseLedger } from './curses';
 
 export interface CasebookHost {
   laneTitle(lane: number): string;
@@ -21,9 +22,10 @@ export function casebookTable(cb: Pick<CasebookVM, 'entries' | 'recommended'>, h
   const rows = caseRows(cb);
   const wrap = el('section', 'cbk');
   const open = rows.filter((r) => r.open).length;
+  const absorbed = rows.filter((r) => r.absorbed).length;
   const head = el('div', 'cbk-head');
   head.append(el('h3', '', o.title ?? 'Casebook'));
-  head.append(el('span', 'cbk-sub', rows.length === 0 ? 'No edge cases yet' : `${rows.length} ${rows.length === 1 ? 'case' : 'cases'}, ${rows.length - open} solved, ${open} open`));
+  head.append(el('span', 'cbk-sub', rows.length === 0 ? 'No edge cases yet' : `${rows.length} ${rows.length === 1 ? 'case' : 'cases'}, ${rows.length - open - absorbed} solved, ${open} open${absorbed ? `, ${absorbed} absorbed` : ''}`));
   wrap.append(head);
   if (rows.length === 0) { wrap.append(el('p', 'cbk-none', 'Every edge case a lane meets is written down here: who solved it, how, and what it cost.')); return wrap; }
   const table = el('div', 'cbk-table'); table.setAttribute('role', 'table'); table.setAttribute('aria-label', 'Casebook');
@@ -45,17 +47,18 @@ function solvedText(r: CaseRow, host: CasebookHost): string {
 }
 
 function caseRow(r: CaseRow, host: CasebookHost): HTMLElement {
-  const row = el('div', `cbk-row${r.open ? ' cbk-row--open' : ''}`); row.setAttribute('role', 'row');
+  const row = el('div', `cbk-row${r.open ? ' cbk-row--open' : ''}${r.absorbed ? ' cbk-row--abs' : ''}`); row.setAttribute('role', 'row');
   const c = el('span', 'cbk-case'); c.setAttribute('role', 'cell');
   c.append(el('b', '', caseTitle(r.signature, host.stageLabel)));
   if (r.unknown) { const u = el('i', 'cbk-unk', '? UNKNOWN'); u.title = 'A fuzz fault nobody had seen: a new signature.'; c.append(u); }
   const met = el('span', 'cbk-met', lanesText(r.lanes, host)); met.setAttribute('role', 'cell'); met.title = r.lanes.map((n) => host.laneTitle(n) || `Lane ${n}`).join(', ');
   const solved = el('span', 'cbk-solved'); solved.setAttribute('role', 'cell');
-  if (r.open) solved.append(el('b', 'cbk-openTag', '⚠ OPEN'), document.createTextNode(' nobody solved it'));
+  if (r.absorbed) solved.append(el('b', 'cbk-abs', '\u26E8 ABSORBED'), document.createTextNode(' no harm done, nothing to solve'));
+  else if (r.open) solved.append(el('b', 'cbk-openTag', '⚠ OPEN'), document.createTextNode(' nobody solved it'));
   else solved.append(document.createTextNode(solvedText(r, host)));
   const costBits = [r.costMs > 0 ? sec(r.costMs, 1) : '', r.costPoints !== 0 ? `${r.costPoints > 0 ? '-' : ''}${Math.abs(r.costPoints)} pts` : ''].filter(Boolean);
   const cost = el('span', 'cbk-cost', costBits.length ? costBits.join(', ') : '-'); cost.setAttribute('role', 'cell');
-  const fix = el('span', 'cbk-fix', r.recommended); fix.setAttribute('role', 'cell'); fix.title = r.recommended;
+  const fix = el('span', 'cbk-fix', r.absorbed ? '-' : r.recommended); fix.setAttribute('role', 'cell'); fix.title = r.recommended;
   row.append(c, met, solved, cost, fix);
   return row;
 }
@@ -93,7 +96,8 @@ export function fallbackAwards(t: Pick<TournamentVM, 'champion' | 'fallen'>, cb:
 export function awardsRow(awards: readonly Award[], host: CasebookHost): HTMLElement {
   const order = ['champion', 'battle_tested', 'iron_skeleton', 'fastest_recovery', 'wooden_spoon'];
   const rank = (a: Award): number => { const i = order.indexOf(idOf(a)); return i < 0 ? 99 : i; };
-  const sorted = [...awards].sort((a, b) => rank(a) - rank(b));
+  const shown = awards.filter((a) => !(idOf(a) === 'fastest_recovery' && a.value === 0));
+  const sorted = [...shown].sort((a, b) => rank(a) - rank(b));
   const wrap = el('section', 'awd');
   wrap.setAttribute('aria-label', 'Awards');
   for (const a of sorted) {
@@ -120,6 +124,29 @@ export function lessonsList(list: readonly Lesson[], stageLabel: (id: string) =>
     ul.append(li);
   }
   return ul;
+}
+
+/** "What each lane returned when the API lied": one row per lane, handled, reported, swallowed and crashed. Null when no curse was answered. */
+export function curseTableEl(ledger: CurseLedger, host: CasebookHost): HTMLElement | null {
+  const rows = curseTable(ledger);
+  if (rows.length === 0) return null;
+  const wrap = el('section', 'cbk crs');
+  const head = el('div', 'cbk-head');
+  head.append(el('h3', '', 'Curses'), el('span', 'cbk-sub', 'What each lane returned when the API lied'));
+  wrap.append(head);
+  const table = el('div', 'crs-table'); table.setAttribute('role', 'table'); table.setAttribute('aria-label', 'Curse answers per lane');
+  const hr = el('div', 'crs-row crs-row--h'); hr.setAttribute('role', 'row');
+  const first = el('span', '', 'Lane'); first.setAttribute('role', 'columnheader'); hr.append(first);
+  for (const c of CLASSES) { const x = el('span', `crs-n crs-${c}`, `${CLASS_ICON[c]} ${CLASS_WORD[c]}`); x.title = CLASS_TIP[c]; x.setAttribute('role', 'columnheader'); hr.append(x); }
+  table.append(hr);
+  for (const r of rows) {
+    const row = el('div', `crs-row${r.swallowed + r.crashed > 0 ? ' bad' : ''}`); row.setAttribute('role', 'row');
+    const name = el('span', 'crs-name', host.laneTitle(r.lane) || `Lane ${r.lane}`); name.setAttribute('role', 'cell'); row.append(name);
+    for (const c of CLASSES) { const x = el('span', `crs-n crs-${c}${r[c] === 0 ? ' zero' : ''}`, String(r[c])); x.setAttribute('role', 'cell'); row.append(x); }
+    table.append(row);
+  }
+  wrap.append(table);
+  return wrap;
 }
 
 export { lessonsTip };

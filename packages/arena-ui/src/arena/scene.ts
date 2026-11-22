@@ -11,6 +11,7 @@ import { CHIP_ICON, fromLegacy, heatAlpha, heatAt, type ChipInfo, type ChipV2Sta
 import { outageAt, outageFrame, ringLabel } from './outage';
 import { drawTombstone, drawWallCorpse, drawWisp, tombHeight } from './corpse';
 import { epitaphOf } from './tournament';
+import { CLASS_ICON, CLASS_WORD, POP_MS, curseShort, curseWord, type CurseClass, type CurseVM } from './curses';
 import { captionOf, creatureFrame, creatureTip, shown, spriteOf, MAX_SHOWN, type CreatureVM } from './creatures';
 import { drawCreature } from '../creatures/draw';
 import { bugTint, puff, seedOf, swarmBugs, swarmStale } from './swarm';
@@ -267,6 +268,49 @@ function outageRing(ctx: Ctx, x: number, y: number, o: OutageVM, now: number, re
   ctx.beginPath(); ctx.arc(x, y, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (o.endedAt !== null ? 1 : Math.max(0.02, f.frac))); ctx.stroke();
   ctx.globalAlpha = 1 - f.fade;
   txt(ctx, o.endedAt !== null ? '\u2713' : ringLabel(f), x, y + 1, 13, o.endedAt !== null ? C.ok : C.text, 'center', MONO, '800');
+  ctx.restore();
+}
+
+/** Purple curse chip under a stage chip, left side (TV3-U11): the short kind, for as long as the curse lasts. */
+function curseChip(ctx: Ctx, x: number, y: number, c: CurseVM, more: number): void {
+  const label = more > 0 ? `${curseShort(c.kind)}+${more}` : curseShort(c.kind);
+  ctx.save();
+  ctx.font = `800 13px ${MONO}`;
+  const w = Math.ceil(ctx.measureText(label).width) + 22;
+  rr(ctx, x, y, w, 19, 6); ctx.fillStyle = 'rgba(70,40,120,0.97)'; ctx.fill();
+  ctx.lineWidth = 2.5; ctx.strokeStyle = C.hex; ctx.stroke();
+  txt(ctx, '\u263E', x + 9, y + 10, 13, '#d9c4ff', 'center', SANS, '800');
+  txt(ctx, label, x + 17 + (w - 22) / 2, y + 10, 13, '#ffffff', 'center', MONO, '800');
+  ctx.restore();
+}
+
+/** Answer to a cursed call floats up from its stage chip: HANDLED, REPORTED, SWALLOWED or CRASHED. */
+function curseAnswer(ctx: Ctx, x: number, y: number, cls: CurseClass, age: number, reduced: boolean): void {
+  if (age < 0 || age >= 1) return;
+  const color = cls === 'handled' ? C.ok : cls === 'reported' ? C.ghost : C.fail;
+  const label = `${CLASS_ICON[cls]} ${CLASS_WORD[cls]}`;
+  ctx.save();
+  ctx.globalAlpha = Math.min(1, (1 - age) * 2.4);
+  ctx.font = `800 13px ${MONO}`;
+  const w = Math.ceil(ctx.measureText(label).width) + 18;
+  const cy = y - (reduced ? 0 : 22 * age);
+  rr(ctx, x - w / 2, cy - 11, w, 22, 7); ctx.fillStyle = 'rgba(10,8,18,0.92)'; ctx.fill();
+  ctx.lineWidth = cls === 'swallowed' ? 3 : 2; ctx.strokeStyle = color; ctx.stroke();
+  txt(ctx, label, x, cy + 1, 13, color, 'center', MONO, '800');
+  ctx.restore();
+}
+
+/** Curse tag on the lane card (bottom right): "CURSED 404", or the first kind plus a count. */
+function curseTag(ctx: Ctx, b: LaneBox, list: readonly CurseVM[]): void {
+  const first = list[0]!;
+  const label = `${curseShort(first.kind)}${list.length > 1 ? ` +${list.length - 1}` : ''}`;
+  ctx.save();
+  ctx.font = `800 13px ${MONO}`;
+  const w = Math.ceil(ctx.measureText(label).width) + 38;
+  rr(ctx, 244 - w, b.top + b.h - 36, w, 21, 7); ctx.fillStyle = 'rgba(70,40,120,0.97)'; ctx.fill();
+  ctx.lineWidth = 2.5; ctx.strokeStyle = C.hex; ctx.stroke();
+  txt(ctx, '\u263E', 244 - w + 11, b.top + b.h - 25, 14, '#d9c4ff', 'center', SANS, '800');
+  txt(ctx, label, 244 - 8, b.top + b.h - 25, 13, '#ffffff', 'right', MONO, '800');
   ctx.restore();
 }
 
@@ -592,6 +636,12 @@ export class ArenaScene {
     if (fell) ctx.globalAlpha = 0.5;
     labelCard(ctx, b, l, now, wornParts(l.parts, l.equips, now, this.speed, this.reducedMotion), this.speed, this.reducedMotion);
     if (fell) { ctx.globalAlpha = 1; fallenTag(ctx, b, fell.round); ctx.globalAlpha = 0.4; }
+    if ((l.curses?.length ?? 0) > 0) {
+      ctx.globalAlpha = fell ? 0.7 : 1;
+      curseTag(ctx, b, l.curses!);
+      this.hot.push({ x: 244 - 120, y: b.top + b.h - 38, w: 120, h: 24, tip: l.curses!.map((c) => `${curseWord(c.kind)}${c.endpoint ? ` on ${c.endpoint}` : ''}${c.rate !== null ? ` (${Math.round(c.rate * 100)}%)` : ''}`).join('\n') });
+      ctx.globalAlpha = fell ? 0.4 : 1;
+    }
     const les = this.lessonInfo(l.lane);
     if (les.count > 0) {
       const age = les.learnedAt >= 0 ? (now - les.learnedAt) * this.speed : -1;
@@ -626,6 +676,13 @@ export class ArenaScene {
       chipV2(ctx, x, chipY, s.label, info, cw, this.reducedMotion ? 0 : now);
       heatSegment(ctx, x, chipY + 44, heatAlpha(heatAt(l.heat, l.v2, l.heatFolded, i).issues), cw);
       if (l.lap?.next === i && info.state === 'pending') nextMark(ctx, x, chipY, cw);
+      const cursed = (l.curses ?? []).filter((c) => c.stage === s.id);
+      if (cursed.length > 0) {
+        ctx.save(); ctx.globalAlpha = fell ? 0.5 : 1; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(155,107,255,0.9)'; ctx.setLineDash([6, 4]);
+        rr(ctx, x - cw / 2 - 4, chipY - 4, cw + 8, 48, 12); ctx.stroke(); ctx.restore();
+        curseChip(ctx, x - cw / 2, chipY + 44, cursed[0]!, cursed.length - 1);
+      }
+      for (const pop of l.cursepops ?? []) if (pop.stage === s.id) curseAnswer(ctx, x, chipY + 76, pop.cls, ((now - pop.at) * this.speed) / POP_MS, this.reducedMotion);
       const og = outageAt(l, s.id);
       if (og && (og.endedAt === null || now - og.endedAt < 700)) outageRing(ctx, x, chipY + 41 + 20, og, now, this.reducedMotion);
     });

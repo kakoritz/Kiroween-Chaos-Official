@@ -13,6 +13,8 @@ export interface WaveSummaryHost {
   nextWave(): void;
   playDemo(): void;
   reportUrl(n: number): string;
+  /** Extra section under the lane cards (the curse table), or null. */
+  extra?(): HTMLElement | null;
 }
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls = '', text?: string): HTMLElementTagNameMap[K] {
@@ -97,7 +99,8 @@ export class WaveSummary {
     demo.addEventListener('click', () => { this.close(); this.host.playDemo(); });
     close.addEventListener('click', () => this.close());
     foot.append(rep, close, demo, next);
-    dlg.append(head, lanes, foot);
+    const more = this.host.extra?.() ?? null;
+    dlg.append(head, lanes, ...(more ? [more] : []), foot);
     dim.append(dlg);
     dim.addEventListener('mousedown', (e) => { if (e.target === dim) this.close(); });
     dlg.addEventListener('keydown', (e) => {

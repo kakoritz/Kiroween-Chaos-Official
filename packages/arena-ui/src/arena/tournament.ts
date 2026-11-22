@@ -5,7 +5,7 @@
 export interface Standing { lane: number; rp: number; rank: number; eliminated: boolean; issues: number | null }
 export interface Corpse { lane: number; stage: string; kind: 'eliminated' | 'wall'; round: number; epitaph: string; cause: string }
 export interface Fallen { round: number; stage: string; cause: string; epitaph: string }
-export interface Award { id: string; label: string; lane: number | null; detail: string }
+export interface Award { id: string; label: string; lane: number | null; detail: string; /** Numeric value behind the award (median recovery ms, repeats, cases...) when the engine sends one. */ value?: number }
 
 export interface RoundResult {
   round: number;
@@ -73,7 +73,7 @@ export function awardsOf(v: unknown): Award[] {
   const add = (id: string, x: unknown) => {
     const r = rec(x);
     const lane = typeof x === 'number' ? x : typeof r.lane === 'number' ? r.lane : null;
-    out.push({ id: str(r.id, id), label: str(r.label, AWARD_LABEL[id] ?? id), lane, detail: str(r.text ?? r.detail ?? r.why) });
+    out.push({ id: str(r.id, id), label: str(r.label, AWARD_LABEL[id] ?? id), lane, detail: str(r.text ?? r.detail ?? r.why), ...(typeof r.value === 'number' ? { value: r.value } : {}) });
   };
   if (Array.isArray(v)) v.forEach((x) => add(str(rec(x).id ?? rec(x).award ?? rec(x).kind, 'award'), x));
   else for (const [k, x] of Object.entries(rec(v))) add(k, x);

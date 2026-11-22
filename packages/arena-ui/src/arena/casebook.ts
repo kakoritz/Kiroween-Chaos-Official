@@ -17,8 +17,10 @@ export interface CaseRow {
   lanes: number[];
   /** Lanes that solved it, with the mechanism that worked. */
   solvedBy: Array<{ lane: number; mechanism: string }>;
-  /** Nobody solved it: it goes straight to the fix spec. */
+  /** Nobody solved it: it goes straight to the fix spec. An absorbed case is not open: there was nothing to solve. */
   open: boolean;
+  /** The fault was absorbed: it did no harm, so nobody "solved" it. */
+  absorbed: boolean;
   recommended: string;
   costMs: number;
   costPoints: number;
@@ -117,16 +119,21 @@ export function caseRows(cb: Pick<CasebookVM, 'entries' | 'recommended'>): CaseR
     const p = splitSignature(signature);
     const lanes = [...new Set(entries.map((e) => e.lane))].sort((a, b) => a - b);
     const solvedBy: CaseRow['solvedBy'] = [];
-    for (const e of entries) if (e.outcome === 'solved' && !solvedBy.some((s) => s.lane === e.lane)) solvedBy.push({ lane: e.lane, mechanism: e.mechanism });
-    const open = solvedBy.length === 0;
+    for (const e of entries) if (e.outcome === 'solved' && !isAbsorbed(e) && !solvedBy.some((s) => s.lane === e.lane)) solvedBy.push({ lane: e.lane, mechanism: e.mechanism });
+    // Absorbed is not solved: the fault did nothing, so there was nothing to fix.
+    const absorbed = solvedBy.length === 0 && (p.consequence === 'absorbed' || entries.every((e) => isAbsorbed(e)));
+    const open = solvedBy.length === 0 && !absorbed;
     rows.push({
-      signature, ...p, unknown: entries.some((e) => e.unknown), entries, lanes, solvedBy, open,
-      recommended: cb.recommended[signature] || recommendFix(solvedBy, open),
+      signature, ...p, unknown: entries.some((e) => e.unknown), entries, lanes, solvedBy, open, absorbed,
+      recommended: absorbed ? '' : cb.recommended[signature] || recommendFix(solvedBy, open),
       costMs: entries.reduce((a, e) => a + e.costMs, 0), costPoints: entries.reduce((a, e) => a + e.costPoints, 0),
     });
   }
   return rows.sort((a, b) => Number(b.open) - Number(a.open) || b.lanes.length - a.lanes.length || a.signature.localeCompare(b.signature));
 }
+
+/** An entry whose only "mechanism" is absorbed, or whose consequence says so. */
+const isAbsorbed = (e: CaseEntry): boolean => e.mechanism === 'absorbed' || /\+\s*absorbed\s*$/.test(e.signature);
 
 /** The smallest fix that worked for the lanes that solved it; an open case is handed to the fix spec. */
 export function recommendFix(solvedBy: ReadonlyArray<{ mechanism: string }>, open: boolean): string {
@@ -140,9 +147,11 @@ export function recommendFix(solvedBy: ReadonlyArray<{ mechanism: string }>, ope
 /** Per lane: how many distinct cases it solved (Battle-Tested counts this). */
 export function solvedCounts(cb: Pick<CasebookVM, 'entries'>): Map<number, number> {
   const seen = new Map<number, Set<string>>();
-  for (const e of cb.entries) if (e.outcome === 'solved') { const s = seen.get(e.lane) ?? new Set<string>(); s.add(e.signature); seen.set(e.lane, s); }
+  for (const e of cb.entries) if (e.outcome === 'solved' && !isAbsorbed(e)) { const s = seen.get(e.lane) ?? new Set<string>(); s.add(e.signature); seen.set(e.lane, s); }
   return new Map([...seen].map(([lane, s]) => [lane, s.size] as const));
 }
+
+const consequenceOf = (sig: string): string => splitSignature(sig).consequence;
 
 /** Words for an engine `recommendedFix {action?, part, rule?, mechanism?}`. */
 function fixWord(f: Record<string, unknown>): string {
@@ -164,7 +173,18 @@ export function loadCasebook(cb: CasebookVM, raw: unknown): void {
     const fixObj = rec(g.recommendedFix);
     const fixText = str(g.recommended ?? g.fix) || (Object.keys(fixObj).length ? fixWord(fixObj) : str(g.recommendedFix));
     if (signature && fixText) recommended[signature] = fixText;
-    // Engine row (C10): lanes[] are numbers, solvedBy[] says who solved it, cost is {downtimeMs, points}.
+    // Engine row with per-lane outcomes: lanes[] are {lane, outcome, mechanism?}.
+    if (signature && Array.isArray(g.lanes) && g.lanes.length > 0 && g.lanes.every((n) => typeof rec(n).lane === 'number')) {
+      const cost = rec(g.cost);
+      const first = rec(g.firstSeen);
+      (g.lanes as unknown[]).forEach((x, i) => {
+        const o = rec(x);
+        const e = entryOf(num(o.lane), { signature, unknown: g.unknown, round: o.round ?? first.round, order: o.order ?? first.order, outcome: o.outcome, mechanism: o.mechanism, costMs: i === 0 ? cost.downtimeMs : 0, costPoints: i === 0 ? cost.points : 0 }, {});
+        if (e) entries.push(e);
+      });
+      continue;
+    }
+    // Engine row (C10), plain lane numbers: solvedBy[] says who solved it, cost is {downtimeMs, points}.
     if (signature && Array.isArray(g.lanes) && g.lanes.every((n) => typeof n === 'number')) {
       const solved = Array.isArray(g.solvedBy) ? g.solvedBy.map(rec) : [];
       const cost = rec(g.cost);
@@ -172,7 +192,7 @@ export function loadCasebook(cb: CasebookVM, raw: unknown): void {
       (g.lanes as number[]).forEach((lane, i) => {
         const s = solved.find((x) => num(x.lane) === lane);
         entries.push({
-          signature, lane, round: num(s?.round ?? first.round), order: str(first.order), outcome: s ? 'solved' : 'lost', mechanism: str(s?.mechanism),
+          signature, lane, round: num(s?.round ?? first.round), order: str(first.order), outcome: s ? 'solved' : (consequenceOf(signature) === 'absorbed' ? 'solved' : 'lost'), mechanism: str(s?.mechanism),
           costMs: i === 0 ? num(cost.downtimeMs) : 0, costPoints: i === 0 ? num(cost.points) : 0, unknown: g.unknown === true,
         });
       });

@@ -35,6 +35,10 @@ export interface HauntInPage {
   getCasebook?(): Promise<any>;
   getLessons?(lane: number): Promise<any>;
   resetLessons?(): Promise<any>;
+  getPatterns?(): Promise<any>;
+  writeSpecs?(opts?: { runId?: string }): Promise<any>;
+  startImprove?(opts?: Record<string, unknown>): Promise<any>;
+  getImprove?(): Promise<any>;
   getLedger(): Promise<any>;
   getWaves(): Promise<any>;
   getReport(n: number): Promise<any>;
@@ -88,6 +92,10 @@ export class InPageApi implements ArenaApi {
   getCasebook() { return this.need(this.h.getCasebook); }
   getLessons(lane: number) { return this.need(this.h.getLessons, lane); }
   resetLessons() { return this.need(this.h.resetLessons); }
+  getPatterns() { return this.need(this.h.getPatterns); }
+  writeSpecs(opts: { runId?: string } = {}) { return this.need(this.h.writeSpecs, opts); }
+  startImprove(opts: Record<string, unknown> = {}) { return this.need(this.h.startImprove, opts); }
+  getImprove() { return this.need(this.h.getImprove); }
   getLedger() { return wrap(this.h.getLedger()); }
   getWaves() { return wrap(this.h.getWaves()); }
   getReport(n: number) { return wrap(this.h.getReport(n)); }
