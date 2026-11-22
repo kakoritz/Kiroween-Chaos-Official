@@ -10053,9 +10053,9 @@
   "fault": "not_on_truck",
   "stage": "transit",
   "role": "poll",
-  "outcome": "OK",
+  "outcome": "PARKED_OK",
   "extraRows": {},
-  "template": "T_OK"
+  "template": "T_PARKED_OK"
  },
  {
   "app": "orders",

@@ -10,7 +10,7 @@ import { foldHeat, newHeat, chipState, type ChipInfo, type Heat } from './chips'
 import { applyIntensity, defaultDial, readDial, type DialState } from './dial';
 import { applyTournamentEvent, emptyTournament, loadTournament, type Fallen, type TournamentVM } from './tournament';
 import { applyCurseEvent, type CursePop, type CurseVM } from './curses';
-import { endOutage, openOutage, pruneOutages, type OutageVM } from './outage';
+import { endOutage, openOutage, pruneOutages, startOutage, type OutageVM } from './outage';
 import { absorb, actAll, addCreature, exitAll, exitDepth, exitStage, prune, PUFF_MS, type CreatureVM } from './creatures';
 
 export type ChipState = 'pending' | 'active' | 'done' | 'replayed' | 'retrying' | 'failed' | 'dead' | 'parked' | 'quarantined';
@@ -285,6 +285,7 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
         l.workAnim = vm.stages[si]!.workAnimation;
       }
       l.progress = 0; l.progressLabel = ''; l.action = '';
+      if (ev.stage) startOutage(l, now, ev.stage);
       setMode(l, 'working', now);
       break;
     }
@@ -304,8 +305,13 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
       setMode(l, 'fail', now);
       break;
     case 'curse_start': case 'curse_end': case 'curse_response': applyCurseEvent(l, ev, now, vm.stages.map((s) => s.id), vm.speed); break;
-    case 'outage': openOutage(l, now, vm.speed, ev.stage, d); break;
-    case 'chaos': l.depth = num(d.depth, l.depth + 1); addCreature(l, now, d, ev.stage ?? vm.stages[l.stageIndex]?.id ?? ''); break;
+    case 'outage': {
+      // A fault pressed for a stage the lane has not reached yet waits there: the ring counts from the moment the stage starts.
+      const oi = ev.stage ? vm.stages.findIndex((s) => s.id === ev.stage) : -1;
+      openOutage(l, now, vm.speed, ev.stage, d, !!l.order && oi > l.stageIndex && l.chips[oi] === 'pending');
+      break;
+    }
+    case 'chaos': l.depth = num(d.depth, l.depth + 1); addCreature(l, now, d, str(d.deferredTo) || ev.stage || (vm.stages[l.stageIndex]?.id ?? '')); break;
     case 'chaos_absorbed': l.depth = Math.max(0, l.depth - 1); absorb(l, now, typeof d.creature === 'string' ? d.creature : undefined); break;
     case 'process_dead': {
       actAll(l, now, true); exitAll(l, now, { dur: PUFF_MS, keepKillers: true });

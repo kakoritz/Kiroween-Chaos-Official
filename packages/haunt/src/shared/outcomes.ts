@@ -101,7 +101,8 @@ export function resolveOutcome(app: AppId, tierId: TierId, fault: string, stageI
     if (fault === 'internet_outage') return phoenix ? done('PARKED_OK') : done('FAILED');
     // Transit faults (V1_2 section 4). Timings follow the tracking poll (runtime.md section 7): a retry bot (calls at 0, 1.3 and 2.6 s) survives a stall under 2.6 s, Phoenix (backoff, calls at 0, 1.3, 3.1 and 5.9 s) one under 5.9 s.
     if (fault === 'weather' || fault === 'delay') return phoenix || hasRetry ? done('OK') : done('FAILED');
-    if (fault === 'out_of_gas') return phoenix ? done('PARKED_OK') : done('FAILED');
+    // Out of gas outlasts every attempt; a missing parcel fails fast, so four quick failures open the breaker. Phoenix parks the order and resumes it.
+    if (fault === 'out_of_gas' || fault === 'not_on_truck') return phoenix ? done('PARKED_OK') : done('FAILED');
     // hazard_event, driver_unreachable
     return phoenix ? done('OK') : done('FAILED');
   }

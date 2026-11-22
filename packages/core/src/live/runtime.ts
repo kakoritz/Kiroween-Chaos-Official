@@ -359,7 +359,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
   const norm = new DetailNormalizer();
   let gate: SettleGate | undefined;
   // Wrong order (design.md section 8): the broker owns each decision from `decision_needed` to `decision_made`.
-  let botEvent: (lane: string, ev: Record<string, unknown>) => void = () => {};
+  let botEvent: (lane: string, ev: Record<string, unknown>) => void | Promise<void> = () => {};
   const laneEnv = new Map<string, Record<string, string>>();
   const decisions = new DecisionBroker({
     emit: (lane, ev) => botEvent(lane, ev as unknown as Record<string, unknown>),
@@ -456,6 +456,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
           for (const e of norm.shape(lane, { detail: {}, ...ev, lane })) record?.(lt.annotate({ ...e, lane }) as unknown as HauntEvent);
         });
         chains.set(lane, next);
+        return next;
       },
       onWaveDone: () => {
         void idle().then(() => { clock?.stop(); clock = undefined; demo?.stop(); demo = undefined; stopNight(); gate?.finish(); endWave?.(); });

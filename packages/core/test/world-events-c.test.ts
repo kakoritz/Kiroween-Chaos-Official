@@ -11,7 +11,7 @@ const CASES = [
   { fault: 'road_hazard', creature: 'pothole_imp', mode: 'stall', forMs: 4000, retry: 'FAILED', phoenix: 'OK' },
   { fault: 'delay', creature: 'scarecrow', mode: 'stall', forMs: 600, retry: 'OK', phoenix: 'OK' },
   { fault: 'out_of_gas', creature: 'fuel_wraith', mode: 'stall', forMs: 7000, retry: 'FAILED', phoenix: 'PARKED_OK' },
-  { fault: 'not_on_truck', creature: 'lost_parcel_ghoul', mode: 'no_driver', forMs: 4000, retry: 'FAILED', phoenix: 'OK' },
+  { fault: 'not_on_truck', creature: 'lost_parcel_ghoul', mode: 'no_driver', forMs: 4000, retry: 'FAILED', phoenix: 'PARKED_OK' },
 ] as const;
 
 describe('world events c: transit faults (PT-C7)', () => {
