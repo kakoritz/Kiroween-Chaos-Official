@@ -2,7 +2,7 @@
 import { laneIssues } from '../runner/floor';
 import type { Ev } from './rp';
 
-export type Consequence = 'absorbed' | 'recovered' | 'duplicate_effect' | 'order_lost' | 'order_parked' | 'order_quarantined' | 'lane_halted' | 'order_degraded';
+export type Consequence = 'handled' | 'reported' | 'swallowed' | 'crashed' | 'absorbed' | 'recovered' | 'duplicate_effect' | 'order_lost' | 'order_parked' | 'order_quarantined' | 'lane_halted' | 'order_degraded';
 export type Outcome = 'solved' | 'partly' | 'lost';
 
 /** How a lane got through: what its recovery actually used. */
@@ -35,6 +35,7 @@ export function normaliseFault(detail: Record<string, any> | undefined): string 
   return String(detail.fault ?? 'unknown');
 }
 
+const CURSE_CLASS = new Set(['handled', 'reported', 'swallowed', 'crashed']);
 export const signatureOf = (stage: string, fault: string, consequence: string): string => `${stage} + ${fault} + ${consequence}`;
 
 interface Ctx {
@@ -50,9 +51,11 @@ interface Ctx {
   scoreDelta: number;
   stars?: number;
   restarts: number;
+  /** Curse answers of the order and how the bot reacted (TV3-C9). */
+  curses: { curse: string; stage: string; cls: 'handled' | 'reported' | 'swallowed' | 'crashed' }[];
 }
 
-const fresh = (order: string): Ctx => ({ order, faults: [], actions: new Set(), repeatKinds: new Set(), replayedEffects: 0, parked: false, degraded: false, breakerOpened: false, recoverMs: 0, scoreDelta: 0, restarts: 0 });
+const fresh = (order: string): Ctx => ({ order, faults: [], actions: new Set(), repeatKinds: new Set(), replayedEffects: 0, parked: false, degraded: false, breakerOpened: false, recoverMs: 0, scoreDelta: 0, restarts: 0, curses: [] });
 
 function mechanismOf(c: Ctx): Mechanism {
   if (c.breakerOpened && c.parked) return 'queue';
@@ -78,6 +81,13 @@ export function laneCases(events: readonly Ev[], lane: number, round: number): C
     if (!ctx) return;
     const c = ctx;
     ctx = null;
+    for (const k of c.curses) {
+      const lost = k.cls === 'swallowed' || k.cls === 'crashed';
+      out.push({
+        signature: signatureOf(k.stage, `curse_${k.curse}`, k.cls), stage: k.stage, fault: `curse_${k.curse}`, consequence: k.cls, lane, round, order: c.order,
+        outcome: k.cls === 'handled' ? 'solved' : lost ? 'lost' : 'partly', mechanism: k.cls === 'handled' ? 'retry' : 'none', costMs: Math.round(c.recoverMs), costPoints: lost ? 300 : 0,
+      });
+    }
     const faults = c.faults.length === 0 && lastChaos && (end === 'order_failed' || end === 'halted' || end === 'order_quarantined')
       ? [{ fault: lastChaos.fault, stage: curStage || 'payment', ...(lastChaos.unknown ? { unknown: true, fingerprint: lastChaos.fingerprint } : {}) }]
       : c.faults;
@@ -113,6 +123,7 @@ export function laneCases(events: readonly Ev[], lane: number, round: number): C
         ctx.faults.push({ fault: normaliseFault(d), stage, ...(d.unknown ? { unknown: true, fingerprint: String(d.fingerprint ?? '') } : {}) });
         break;
       }
+      case 'curse_response': if (ctx && CURSE_CLASS.has(String(d.class))) ctx.curses.push({ curse: String(d.curse), stage: String(d.stage ?? e.stage ?? curStage), cls: d.class }); break;
       case 'recover_start': if (ctx && typeof d.action === 'string') { ctx.actions.add(d.action); if (d.action === 'restart') ctx.restarts++; } break;
       case 'recover_done': if (ctx && typeof d.ms === 'number') ctx.recoverMs += d.ms; break;
       case 'process_up': if (ctx) ctx.restarts++; break;

@@ -477,6 +477,11 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
     decide: (lane, order, choice) => decisions.answer(String(lane), order, choice),
     setChaosMode: (m) => engine.setChaosMode(m),
     setIntensity: (level, o) => engine.setIntensity(level, o),
+    addCurse: (lane, kind, endpoint, source) => engine.addCurse(lane, kind, endpoint, source),
+    endCurse: (lane, id) => engine.endCurse(lane, id),
+    clearCurses: () => engine.clearCurses(),
+    bindEmit: (fn) => engine.bindEmit(fn),
+    assignCurses: (lanes, level, seed, round) => engine.assignCurses(lanes, level, seed, round),
     getIntensity: () => engine.getIntensity(),
     assertFloor: () => engine.assertFloor(),
     startDemo(script, speed) {

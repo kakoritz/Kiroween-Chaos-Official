@@ -1,7 +1,7 @@
 // SDK: order(), stage(), effect(), journal replay and reconcile.
 // Semantics: .kiro/specs/engine/runtime.md sections 1, 3, 6, 7, 28 (they win over design.md).
 import { TIER_DECISION_DEFAULT } from '../shared/catalog';
-import { backoffRule, type Policy } from './policy';
+import { backoffRule, ruleFor, type Policy } from './policy';
 import {
   Journal, JournalWriteError, applyRecord, readJournal, replay,
   type DecisionChoice, type EffectState, type JournalRecord, type JournalState, type OrderOutcome,
@@ -91,8 +91,14 @@ class OrderRedo extends Error {}
 
 /** Journal home of the refund and discount effects: they belong to no pipeline stage. */
 const RESOLUTION_STAGE = 'wrong_order';
+/** How long a `journal_replay` lesson waits before it replays an order from the journal. */
+const REPLAY_COOLDOWN_MS = 3000;
+/** Failed attempts after which a `breaker_park` lesson trips the breaker. */
+const BREAKER_PARK_AFTER = 2;
 
 export class CallError extends Error {
+  /** The stage whose call failed for good (set when the retries ran out). */
+  stage?: string;
   constructor(readonly status: number | null, readonly retryAfterMs: number | null, msg: string) {
     super(msg);
   }
@@ -230,6 +236,8 @@ export class Sdk {
           outcome = 'quarantined';
           result = 'quarantined';
           this.ev('order_quarantined', id, undefined, { reason: e.message });
+        } else if (e instanceof CallError && (await this.replayAfter(id, e))) {
+          continue;
         } else {
           outcome = 'failed';
           result = 'failed';
@@ -241,6 +249,23 @@ export class Sdk {
     this.write({ t: 'order_end', order: id, outcome, ts: this.o.host.now() });
     this.order_ = null;
     return result;
+  }
+
+  /** Orders already replayed once from the journal by the `journal_replay` lesson. */
+  private readonly replayed = new Set<string>();
+
+  /**
+   * `journal_replay` (a lesson): a stage whose retries ran out does not fail the order. After a cool-down the order runs again from the journal: the stages
+   * already done are skipped, the failed one is tried again, and an effect that was started is reconciled when the bot can (idempotency). Once per order.
+   */
+  private async replayAfter(order: string, e: CallError): Promise<boolean> {
+    if (!this.journal || !e.stage || this.replayed.has(order) || !ruleFor(this.o.policy, 'journal_replay', e.stage, e.status, e.message)) return false;
+    this.replayed.add(order);
+    this.ev('recover_start', order, e.stage, { action: 'replay', via: 'journal_replay' });
+    await this.o.host.sleep(REPLAY_COOLDOWN_MS);
+    this.ev('recover_done', order, e.stage, { action: 'replay', via: 'journal_replay' });
+    this.replaying = false;
+    return true;
   }
 
   /** Payload journaled for an effect of the current order (what a replay-skipped stage would have returned). */
@@ -287,7 +312,9 @@ export class Sdk {
 
   async effect(order: string, stage: string, kind: string, opts: EffectOptions, seen: { replayed: number; ran: number }): Promise<unknown> {
     const { host } = this.o;
-    const key = opts.key ?? null;
+    // `idempotency_key` (a lesson): a bot with the part that sent this effect without a key gets one derived from the order.
+    const derived = opts.key === undefined && this.use.has('idempotency') && ruleFor(this.o.policy, 'idempotency_key', stage) ? `${order}:${opts.index === undefined ? kind : `${kind}:${opts.index}`}${this.suffix()}` : undefined;
+    const key = opts.key ?? derived ?? null;
     if (key !== null) this.keyUsed = true;
     const eid = opts.index === undefined ? kind : `${kind}:${opts.index}`;
     const prior: EffectState | undefined = this.journal ? this.state.get(order)?.stages.get(stage)?.effects.get(eid) : undefined;
@@ -439,12 +466,19 @@ export class Sdk {
       }
       if (breaker) this.noteFailure(kind);
       this.ev('stage_fail', order, stage, { attempt, status: err.status });
+      // `breaker_park` (a lesson): after two failures at this stage the breaker trips at once instead of after four, so the order parks and the lane stops hammering.
+      if (breaker && attempt >= BREAKER_PARK_AFTER && this.use.has('offline_queue') && ruleFor(this.o.policy, 'breaker_park', stage, err.status, err.message)) this.trip(kind);
       // A learned lesson (spec 4): retry with exponential backoff for this stage and fault, only for a bot that has the retry part and no breaker.
       if (!breaker && this.use.has('retry') && !learned) {
         const rule = backoffRule(this.o.policy, stage, err.status, err.message);
         if (rule) { learned = true; max = Math.max(baseMax, rule.maxAttempts ?? 5); }
       }
-      if (attempt >= max) throw err;
+      if (attempt >= max) {
+        // Out of attempts with the same lesson: park rather than fail.
+        if (breaker && this.use.has('offline_queue') && ruleFor(this.o.policy, 'breaker_park', stage, err.status, err.message)) throw new ParkSignal('breaker_open');
+        err.stage = stage;
+        throw err;
+      }
       if (breaker && this.use.has('offline_queue') && this.isOpen(kind)) throw new ParkSignal('breaker_open');
       const backoff = breaker || learned;
       const delay = backoff ? Math.max(BREAKER.baseMs * 2 ** (attempt - 1), err.retryAfterMs ?? 0) : RETRY.delayMs;
@@ -482,6 +516,14 @@ export class Sdk {
     b.openUntil = null;
     b.fails = BREAKER.openAfter - 1; // one more failure re-opens it
     this.o.host.emit({ type: 'breaker', order: this.order_, detail: { service, state: 'half_open' } });
+  }
+
+  /** Opens the breaker of a service now (a `breaker_park` lesson), whatever the failure count is. */
+  private trip(service: string): void {
+    const b = this.breakerFor(service);
+    if (b.openUntil !== null) return;
+    b.fails = BREAKER.openAfter - 1;
+    this.noteFailure(service);
   }
 
   /** Counts a failed call against the service breaker (also used for transit polls, which sit outside effect()). */

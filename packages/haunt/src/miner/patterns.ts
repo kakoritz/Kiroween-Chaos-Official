@@ -158,7 +158,7 @@ export function minePatterns(input: MineInput): MinedPattern[] {
     if (c.outcome === 'solved') continue;
     const seq = [...(caseSeq.get(`${c.lane}|${c.fault}`) ?? []).slice(0, 2), ...(repeatSeq.get(`${c.lane}|${c.order}`) ?? []).slice(0, 2), ...(failSeq.get(`${c.lane}|${c.order}`) ?? []).slice(0, 2)];
     add({
-      stage: c.stage, fault: c.fault, consequence: c.consequence, shape: 'case', count: 1, lanes: [c.lane], downtimeMs: c.costMs, lostOrders: c.outcome === 'lost' ? 1 : 0,
+      stage: c.stage, fault: c.fault, consequence: c.consequence, shape: c.fault.startsWith('curse_') ? 'curse' : 'case', count: 1, lanes: [c.lane], downtimeMs: c.costMs, lostOrders: c.outcome === 'lost' ? 1 : 0,
       repeats: c.kinds?.length ?? 0, points: c.costPoints, first: { run, ...(round !== undefined ? { round } : {}), order: c.order, lane: c.lane }, seq, journal: journalFor(c.lane, c.order, c.stage),
       ...(c.unknown ? { unknown: true, fingerprint: c.fingerprint } : {}),
     });
@@ -225,13 +225,7 @@ export function minePatterns(input: MineInput): MinedPattern[] {
     add({ stage, fault: 'endpoint_failure_rate', consequence: 'degraded', shape: 'failure_rate', count: f.n, lanes: [...f.lanes], downtimeMs: 0, lostOrders: 0, repeats: 0, points: 0, first: { run, ...(round !== undefined ? { round } : {}), lane: [...f.lanes][0] }, seq: f.seq });
   }
 
-  // ---- curse handling: answers that were swallowed or crashed ----
-  events.forEach((e, i) => {
-    if (e.type !== 'curse_response') return;
-    const d = (e.detail ?? {}) as Record<string, any>;
-    if (d.class !== 'swallowed' && d.class !== 'crashed') return;
-    add({ stage: String(d.stage ?? e.stage ?? 'unknown'), fault: `curse_${String(d.curse ?? 'unknown')}`, consequence: d.class, shape: 'curse', count: 1, lanes: [Number(e.lane)], downtimeMs: 0, lostOrders: d.class === 'crashed' ? 1 : 0, repeats: 0, points: 0, first: { run, ...(round !== undefined ? { round } : {}), order: String(d.order ?? e.order ?? ''), lane: Number(e.lane) }, seq: [seqOf(e, i)] });
-  });
+  // ---- curse handling: swallowed, crashed and reported answers arrive as cases (laneCases reads `curse_response`) ----
 
   // ---- outage data: the windows the lanes sat through ----
   events.forEach((e, i) => {

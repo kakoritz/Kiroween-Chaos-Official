@@ -20,6 +20,8 @@ export interface ReviewInput {
   degraded: boolean;
   /** A gremlin hit this order (spec 5.3). With a slow recovery the review cannot be 5.0. */
   gremlin?: boolean;
+  /** A cursed answer was swallowed (the step was skipped silently): the worst reaction, a big penalty. */
+  swallowed?: boolean;
   decision?: { choice: string; detectedAt?: string };
   cancelled: boolean;
   baselineMs: number;
@@ -74,6 +76,7 @@ export function review(inp: ReviewInput): ReviewResult {
   let delivery = 5;
   if (extraRows >= 2) delivery = Math.min(delivery, 1);
   else if (extraRows === 1 || inp.degraded) delivery = Math.min(delivery, 3);
+  if (inp.swallowed) delivery = Math.min(delivery, 1);
   if (choice === 'discount') delivery = Math.min(delivery, 2);
   if (choice === 'redo') delivery = Math.min(delivery, 4);
   const front = inp.lap.issues.filter((x) => x.stage === 'create' || x.stage === 'confirmation').reduce((s, x) => s + x.count, 0);
@@ -88,6 +91,8 @@ export function review(inp: ReviewInput): ReviewResult {
   if (choice === 'redo') stars = Math.min(stars, 4);
   // Never perfect (spec 5.3): a gremlin plus a slow recovery (over a second of normalised downtime) cannot give 5.0. A fast clean recovery can.
   if (inp.gremlin && d > 1) stars = Math.min(stars, 4.5);
+  // Swallowed errors (spec 5.2): the customer never got a step and nobody was told. At most two stars, whatever else was good.
+  if (inp.swallowed) stars = Math.min(stars, 2);
   stars = Math.max(1, stars);
   const lowDelivery = (inp.extra.charge ?? 0) > 0 ? 'Charged twice!' : choice === 'discount' ? 'Wrong order' : inp.degraded ? 'Missing updates' : LOW.delivery;
   let reasons = SUBS.filter((k) => sub[k] <= 3).map((k) => (k === 'delivery' ? lowDelivery : LOW[k])).slice(0, 2);

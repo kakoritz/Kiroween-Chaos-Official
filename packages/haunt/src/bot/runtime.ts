@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { createInterface } from 'node:readline';
 import { ChaosHost } from '../chaos';
 import { InputError, LaneHalted, Pipeline, STAGES, tierById, type OrderData, type TierDef } from '../pipeline';
-import { PARTS, ParkSignal, Sdk, WrongOrder, parsePolicy, type Policy, type DecisionQuestion, type DecisionSource, type Part, type Transport } from '../sdk';
+import { PARTS, ParkSignal, Sdk, WrongOrder, parsePolicy, backoffRule, type Policy, type DecisionQuestion, type DecisionSource, type Part, type Transport } from '../sdk';
 import { DECISION_CHOICES, type DecisionChoice } from '../shared/catalog';
 
 export interface BotDef {
@@ -235,38 +235,48 @@ export async function runBot(def: BotDef): Promise<void> {
   // Transit polls sit outside sdk.effect, so they get the same retry / backoff rules here (runtime.md section 7).
   const pollTracking = async (shipment: string): Promise<boolean> => {
     await sleep(300);
-    const max = hasPart('breaker') ? 5 : hasPart('retry') ? 3 : 1;
+    const base = hasPart('breaker') ? 5 : hasPart('retry') ? 3 : 1;
+    let max = base;
+    let learned = false;
     for (let n = 1; ; n++) {
       let failure: string;
+      let status: number | null = null;
       try {
         const r = await call(`/tracking/${encodeURIComponent(shipment)}?lane=${encodeURIComponent(lane)}`, { method: 'GET' }, 800);
         const b = r.body as { status?: string };
         if (r.status === 200 && b.status === 'delivered') { if (hasPart('breaker')) sdk.noteSuccess('tracking'); return true; }
         if (r.status === 200 && b.status === 'in_transit') { if (hasPart('breaker')) sdk.noteSuccess('tracking'); return false; }
         failure = r.status === 200 ? String(b.status ?? 'unexpected') : `status ${r.status}`;
+        status = r.status === 200 ? 502 : r.status;
       } catch (e) {
         failure = e instanceof Error ? e.message : String(e);
       }
       send({ type: 'stage_fail', order: curOrder, stage: 'transit', detail: { attempt: n, reason: failure } });
       if (hasPart('breaker')) sdk.noteFailure('tracking');
+      // A learned lesson for this stage (spec 4): backoff and more attempts, for a bot with retry and no breaker.
+      if (!hasPart('breaker') && hasPart('retry') && !learned) { const rule = backoffRule(policy, 'transit', status, failure); if (rule) { learned = true; max = Math.max(base, rule.maxAttempts ?? 5); } }
       if (n >= max) {
         // An exhausted breaker bot with an offline queue parks the order and resumes it when the breaker closes.
         if (hasPart('breaker') && hasPart('offline_queue')) throw new ParkSignal('breaker_open');
         throw new Error(`tracking failed: ${failure}`);
       }
-      const action = hasPart('breaker') ? 'backoff' : 'retry';
+      const backoff = hasPart('breaker') || learned;
+      const action = backoff ? 'backoff' : 'retry';
       send({ type: 'recover_start', order: curOrder, stage: 'transit', detail: { action, attempt: n } });
       await host.hook('during_backoff', { order: curOrder, stage: 'transit' });
-      await sleep(hasPart('breaker') ? 500 * 2 ** (n - 1) : 500);
+      await sleep(backoff ? 500 * 2 ** (n - 1) : 500);
       send({ type: 'recover_done', order: curOrder, stage: 'transit', detail: { action, attempt: n } });
     }
   };
 
   // Handoff sits outside sdk.effect too; a blocked handoff retries like tracking and then fails the order.
   const handoff = async (shipment: string): Promise<void> => {
-    const max = hasPart('breaker') ? 5 : hasPart('retry') ? 3 : 1;
+    const base = hasPart('breaker') ? 5 : hasPart('retry') ? 3 : 1;
+    let max = base;
+    let learned = false;
     for (let n = 1; ; n++) {
       let failure: string;
+      let status: number | null = null;
       let wrong = false;
       try {
         const r = await call(`/handoff/${encodeURIComponent(shipment)}?lane=${encodeURIComponent(lane)}`, { method: 'GET' }, 1500);
@@ -274,16 +284,19 @@ export async function runBot(def: BotDef): Promise<void> {
         if (r.status === 200 && b.status === 'delivered') return;
         wrong = r.status === 200 && b.status === 'wrong_order';
         failure = r.status === 200 ? `handoff blocked: ${b.status ?? 'unexpected'}` : `status ${r.status}`;
+        status = r.status === 200 ? 502 : r.status;
       } catch (e) {
         failure = e instanceof Error ? e.message : String(e);
       }
       // The customer got the wrong order (detect: handoff): the SDK asks for a decision, it is not a transient block.
       if (wrong) throw new WrongOrder('handoff');
       send({ type: 'stage_fail', order: curOrder, stage: 'handoff', detail: { attempt: n, reason: failure } });
+      if (!hasPart('breaker') && hasPart('retry') && !learned) { const rule = backoffRule(policy, 'handoff', status, failure); if (rule) { learned = true; max = Math.max(base, rule.maxAttempts ?? 5); } }
       if (n >= max) throw new Error(failure);
-      send({ type: 'recover_start', order: curOrder, stage: 'handoff', detail: { action: 'retry', attempt: n } });
-      await sleep(500);
-      send({ type: 'recover_done', order: curOrder, stage: 'handoff', detail: { action: 'retry', attempt: n } });
+      const backoff = hasPart('breaker') || learned;
+      send({ type: 'recover_start', order: curOrder, stage: 'handoff', detail: { action: backoff ? 'backoff' : 'retry', attempt: n } });
+      await sleep(backoff ? 500 * 2 ** (n - 1) : 500);
+      send({ type: 'recover_done', order: curOrder, stage: 'handoff', detail: { action: backoff ? 'backoff' : 'retry', attempt: n } });
     }
   };
 

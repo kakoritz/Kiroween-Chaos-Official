@@ -18,11 +18,11 @@ describe('Casebook', () => {
     ], 2);
     expect(book.rounds).toBe(2);
     const solved = book.cases.find((r) => r.signature === 'payment + endpoint_down + recovered')!;
-    expect(solved).toMatchObject({ status: 'solved', lanes: [3, 5], met: 2, firstSeen: { round: 1, order: 'ord-0002', lane: 3 }, cost: { downtimeMs: 1000, points: 0 } });
+    expect(solved).toMatchObject({ status: 'solved', lanes: [{ lane: 3, outcome: 'solved', mechanism: 'retry_backoff' }, { lane: 5, outcome: 'solved', mechanism: 'retry' }], met: 2, firstSeen: { round: 1, order: 'ord-0002', lane: 3 }, cost: { downtimeMs: 1000, points: 0 } });
     expect(solved.solvedBy.map((s) => [s.lane, s.tier, s.mechanism])).toEqual([[3, 'journaler', 'retry_backoff'], [5, 'phoenix', 'retry']]);
     expect(solved.recommendedFix).toMatchObject({ part: 'retry', action: 'retry_backoff' });
     const open = book.cases.find((r) => r.signature === LOST.signature)!;
-    expect(open).toMatchObject({ status: 'open', lanes: [1, 2], outcomes: { solved: 0, partly: 0, lost: 2 }, cost: { points: 600 } });
+    expect(open).toMatchObject({ status: 'open', lanes: [{ lane: 1, outcome: 'lost' }, { lane: 2, outcome: 'lost' }], outcomes: { solved: 0, partly: 0, lost: 2 }, cost: { points: 600 } });
     expect(open.recommendedFix).toEqual({ action: 'retry_backoff', part: 'retry', rule: 'R2' });
     expect(book.open).toEqual([LOST.signature]);
     // Open cases come first: they go straight to the fix spec.
@@ -35,12 +35,29 @@ describe('Casebook', () => {
     expect(book.note).toMatch(/No edge cases this time/);
   });
 
-  it('marks an unknown fault with its fingerprint; a case only absorbed is solved with no part needed', () => {
+  it('marks an unknown fault with its fingerprint; a case only absorbed is absorbed, not solved, and needs no part', () => {
     const book = buildCasebook([c({ unknown: true, fingerprint: 'fz-0000beef' }), c({ signature: 'ship + slow_link + absorbed', consequence: 'absorbed', mechanism: 'absorbed', stage: 'ship', fault: 'slow_link' })], 1);
     expect(book.cases.find((r) => r.fingerprint)).toMatchObject({ unknown: true, fingerprint: 'fz-0000beef' });
     const absorbed = book.cases.find((r) => r.signature.includes('absorbed'))!;
-    expect(absorbed.status).toBe('solved');
+    expect(absorbed.status).toBe('absorbed');
+    expect(absorbed.lanes).toEqual([{ lane: 5, outcome: 'absorbed', mechanism: 'absorbed' }]);
+    expect(absorbed.solvedBy).toEqual([]);
+    expect(book.open).toEqual([]);
     expect(absorbed.recommendedFix).toEqual({ part: 'none', mechanism: 'absorbed' });
+  });
+
+  it('per-lane outcomes: lanes that met a case and did not solve it are not all lost', () => {
+    const sig = { signature: 'payment + endpoint_down + mixed' };
+    const book = buildCasebook([
+      c({ ...sig, lane: 2, outcome: 'partly', mechanism: 'none', consequence: 'order_lost' }), c({ ...sig, lane: 3, ...{ outcome: 'lost', mechanism: 'none' } }),
+      c({ ...sig, lane: 4, outcome: 'solved', mechanism: 'retry_backoff' }), c({ ...sig, lane: 4, outcome: 'lost', mechanism: 'none', order: 'ord-0009' }),
+      c({ ...sig, lane: 5, outcome: 'solved', mechanism: 'absorbed' }),
+    ], 1);
+    expect(book.cases[0]!.lanes).toEqual([
+      { lane: 2, outcome: 'partly' }, { lane: 3, outcome: 'lost' }, { lane: 4, outcome: 'partly', mechanism: 'retry_backoff' }, { lane: 5, outcome: 'absorbed', mechanism: 'absorbed' },
+    ]);
+    // The absorbed lane is not a solver.
+    expect(book.cases[0]!.solvedBy.map((x) => x.lane)).toEqual([4]);
   });
 
   it('case events: one per lane and signature per round, with a count', () => {
@@ -64,6 +81,15 @@ describe('awards', () => {
     expect(by.fastest_recovery).toMatchObject({ lane: 3, value: 250 }); // p50 of lane 2 is 300
     expect(by.wooden_spoon).toMatchObject({ lane: 1 });
     expect(by.wooden_spoon!.text).toMatch(/round 1/);
+  });
+
+  it('Battle-Tested ignores absorbed cases and Fastest Recovery ignores lanes with 0 ms or no recovery', () => {
+    const a = computeAwards({ rp: new Map([[1, 10], [2, 20], [3, 30]]), repeats: new Map([[1, 0], [2, 0], [3, 0]]), recoveries: new Map<number, number[]>([[1, [0, 0]], [2, []], [3, [700, 900]]]),
+      cases: [c({ lane: 1, mechanism: 'absorbed' }), c({ lane: 3, signature: 'x + y + recovered' })] });
+    const by = Object.fromEntries(a.map((x) => [x.id, x]));
+    expect(by.battle_tested).toMatchObject({ lane: 3, value: 1 });
+    expect(by.fastest_recovery).toMatchObject({ lane: 3, value: 800 });
+    expect(computeAwards({ rp: new Map([[1, 10]]), repeats: new Map([[1, 0]]), recoveries: new Map([[1, [0]]]), cases: [] }).some((x) => x.id === 'fastest_recovery')).toBe(false);
   });
 
   it('no Champion until there is one, and awards that need data are left out without it', () => {

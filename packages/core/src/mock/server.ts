@@ -122,6 +122,7 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
       chaos: hub.chaosMode,
       intensity: { ...dial },
       corpses: [...hub.corpses],
+      curses: [...hub.curses],
       awaitingNext: hub.awaitingNext,
       ...(hub.tournament ? { tournament: { ...hub.tournament } } : {}),
       stages: stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role, kind: stageKind(s.role) })),
@@ -204,6 +205,7 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
       if (path === '/api/campaign') return send(res, 200, campaign ??= loadCampaign());
       if (path === '/api/apps') return send(res, 200, Object.values(APPS).map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role, kind: stageKind(s.role) })) })));
       if (path === '/api/state') return send(res, 200, stateBody());
+      if (path === '/api/curses') return send(res, 200, { curses: [...hub.curses], table: [], kinds: ['404', 'slow', 'flaky500', 'clock_skew', 'rate_limit'] });
       if (path === '/api/patterns') {
         const all = [...hub.patterns.values()];
         return send(res, 200, { thresholds: { count: 3, lostOrders: 1, downtimeMs: 30000 }, patterns: all, qualifying: all.filter((p) => p.qualifies).length });
@@ -331,6 +333,15 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
       if (!tour || !hub.awaitingNext || tour.idx >= tour.segs.length) return fail(res, 409, 'not_awaiting_next', 'no round is waiting for Next');
       playRound();
       return send(res, 200, { round: tour.idx, wave: hub.waveNo });
+    }
+    if (path === '/api/curse') {
+      const kinds = ['404', 'slow', 'flaky500', 'clock_skew', 'rate_limit'];
+      if (!Number.isInteger(b.lane) || b.lane < 1 || b.lane > 5) return fail(res, 400, 'bad_lane', 'lane must be 1 to 5');
+      if (!kinds.includes(b.kind)) return fail(res, 400, 'bad_request', 'kind must be one of ' + kinds.join(', '));
+      if (typeof b.endpoint !== 'string' || !b.endpoint) return fail(res, 400, 'bad_request', 'endpoint is required');
+      const id = 'cu-' + (hub.waveNo || 1) + '-' + (hub.curses.length + 1);
+      hub.emit({ type: 'curse_start', ...(hub.waveNo > 0 ? { wave: hub.waveNo } : {}), lane: b.lane, detail: { id, kind: b.kind, endpoint: b.endpoint, source: 'player' } });
+      return send(res, 200, { id, lane: b.lane, kind: b.kind, endpoint: b.endpoint });
     }
     if (path === '/api/intensity') {
       if (!(Number.isInteger(b.level) && b.level >= 1 && b.level <= 11)) return fail(res, 400, 'bad_request', 'level must be an integer from 1 to 11');

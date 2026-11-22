@@ -8,9 +8,15 @@ import type { Part } from '../sdk';
 import { tiersForLanes, type TierMode } from './lanes';
 import { postProviderArm, type PostFault } from './provider';
 import { IssueFloor, gremlinVariant } from './floor';
+import { CURSE_KINDS, classifyHit, drawCurse, stageOfCall, type CurseKind, type CurseRec, type OrderTrace } from '../tournament/curses';
+import { unit } from '../shared/rng';
+
+/** What the provider tells the engine when a curse lied (see `CurseHit` in the provider). */
+export interface ProviderCurseHit { lane: string; service: string; order: string; index?: number; curse: CurseKind; id: string; status: number }
+type CurseHit = ProviderCurseHit;
 import { tierOfLane } from '../tournament/rounds';
 import { tierById } from '../pipeline/pipeline';
-import { OUTAGE_FAULTS, drawOutageMs, initialDial, isLevel, type DialState, type FuzzFault } from './intensity';
+import { OUTAGE_FAULTS, drawOutageMs, initialDial, intensityRow, isLevel, type DialState, type FuzzFault } from './intensity';
 
 export interface EngineChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string; forMs?: number; detect?: 'confirmation' | 'handoff'; source?: 'manual' | 'random' | 'boss' | 'fuzz' | 'gremlin'; fuzz?: FuzzFault; count?: number; outageMs?: number }
 export interface EngineChaosResult { chaosId: string; creature: string; fault: string; depth: number; deferred: boolean }
@@ -72,6 +78,9 @@ export class RunnerEngine {
       tiers.forEach((t, i) => this.director.addLane(String(i + 1), t.use));
     }
     this.floor.reset(this.lanes);
+    this.hits.clear(); this.trace.clear(); this.curOrder.clear();
+    // The provider may be new: tell it again which curses are in force.
+    for (const lane of this.curses.keys()) this.postCurses(lane);
     this.opts.onWaveStart?.(wave, settings, this.lanes);
   };
 
@@ -106,6 +115,7 @@ export class RunnerEngine {
    */
   observe = (ev: HauntEvent): void => {
     this.floor.observe(ev);
+    this.observeCurses(ev);
     if (!this.dial.autoRamp || !ev.order) return;
     if (ev.type !== 'order_done' && ev.type !== 'order_failed' && ev.type !== 'order_quarantined') return;
     this.rampOrders.add(String(ev.order));
@@ -128,6 +138,108 @@ export class RunnerEngine {
 
   /** The engine's assertion of property P19: lanes that have no issue yet. Empty means the floor holds. */
   assertFloor = (): string[] => this.floor.violations();
+
+
+  // ---------------------------------------------------------------------------------------------------- curses (spec 5.2, TV3-C9)
+
+  /** Curses by lane. They persist across rounds until the plan or the player ends them; a corpse keeps its tag. */
+  readonly curses = new Map<number, CurseRec[]>();
+  private curseSeq = 0;
+  private readonly hits = new Map<string, CurseHit[]>();
+  /** What each order did, by lane and order id. The ledger's `effect` events can reach the log before the bot's own `order_start`, so a trace is made by whichever comes first. */
+  private readonly trace = new Map<string, Map<string, OrderTrace>>();
+  private traceOf(lane: string, order: string): OrderTrace {
+    let m = this.trace.get(lane);
+    if (!m) this.trace.set(lane, (m = new Map()));
+    let t = m.get(order);
+    if (!t) m.set(order, (t = { order, effects: [], failed: false, died: false }));
+    return t;
+  }
+  private readonly curOrder = new Map<string, string>();
+
+  /** Where `curse_start` and `curse_end` go: a curse can be put on between waves, so they do not wait for a wave's record callback. */
+  private outside?: (ev: HauntEvent) => void;
+  bindEmit = (fn: (ev: HauntEvent) => void): void => { this.outside = fn; };
+  private emitOutside(ev: HauntEvent): void { (this.outside ?? this.record)?.(ev); }
+
+  private postCurses(lane: number): void {
+    const list = (this.curses.get(lane) ?? []).map((c) => ({ id: c.id, kind: c.kind, service: c.endpoint, ...(c.rate !== undefined ? { rate: c.rate } : {}), ...(c.delayMs !== undefined ? { delayMs: c.delayMs } : {}) }));
+    void this.opts.post?.({ lane: String(lane), service: '*', mode: 'curse', curses: list } as never);
+  }
+
+  /** Put a curse on one endpoint of one lane. Emits `curse_start`. */
+  addCurse = (lane: number, kind: CurseKind, endpoint: string, source: 'plan' | 'player' = 'player'): CurseRec => {
+    const d = drawCurse(this.seed, lane, ++this.curseSeq, kind, endpoint);
+    const rec: CurseRec = { id: `cu-${this.wave}-${this.curseSeq}`, lane, kind, endpoint, ...(d.rate !== undefined ? { rate: d.rate } : {}), ...(d.delayMs !== undefined ? { delayMs: d.delayMs } : {}), source };
+    this.curses.set(lane, [...(this.curses.get(lane) ?? []), rec]);
+    this.postCurses(lane);
+    this.emitOutside({ type: 'curse_start', lane: String(lane), detail: { id: rec.id, kind, endpoint, ...(rec.rate !== undefined ? { rate: rec.rate } : {}), ...(rec.delayMs !== undefined ? { delayMs: rec.delayMs } : {}), source } } as HauntEvent);
+    return rec;
+  };
+
+  endCurse = (lane: number, id: string): boolean => {
+    const list = this.curses.get(lane) ?? [];
+    if (!list.some((c) => c.id === id)) return false;
+    this.curses.set(lane, list.filter((c) => c.id !== id));
+    this.postCurses(lane);
+    this.emitOutside({ type: 'curse_end', lane: String(lane), detail: { id } } as HauntEvent);
+    return true;
+  };
+
+  clearCurses = (): void => { for (const [lane, list] of [...this.curses]) for (const c of list) this.endCurse(lane, c.id); };
+
+  /** The plan gives each live lane as many curses as the level allows (table of spec 5.1), seeded and without repeating a kind. Existing curses stay. */
+  assignCurses = (lanes: readonly number[], level: number, seed: string | number, round: number): CurseRec[] => {
+    const want = Math.min(CURSE_KINDS.length, intensityRow(level).curses);
+    const added: CurseRec[] = [];
+    for (const lane of lanes) {
+      while ((this.curses.get(lane) ?? []).length < want) {
+        const have = new Set((this.curses.get(lane) ?? []).map((c) => c.kind));
+        const left = CURSE_KINDS.filter((k) => !have.has(k));
+        const n = round * 10 + (this.curses.get(lane) ?? []).length;
+        const kind = left[Math.floor(unit(seed, 'curse-pick', lane, n) * left.length)]!;
+        const d = drawCurse(seed, lane, n, kind);
+        added.push(this.addCurse(lane, kind, d.endpoint, 'plan'));
+      }
+    }
+    return added;
+  };
+
+  /** The provider says a curse lied on a call. */
+  noteCurse = (h: ProviderCurseHit): void => {
+    const lane = h.lane;
+    const order = /^ord-/.test(h.order) ? h.order : (this.curOrder.get(lane) ?? h.order);
+    this.hits.set(lane, [...(this.hits.get(lane) ?? []), { ...h, order }]);
+  };
+
+  private observeCurses(ev: HauntEvent): void {
+    if (ev.lane === undefined) return;
+    const lane = String(ev.lane);
+    const d = (ev.detail ?? {}) as Record<string, any>;
+    switch (ev.type) {
+      case 'order_start': this.curOrder.set(lane, String(ev.order)); this.traceOf(lane, String(ev.order)); return;
+      case 'effect': if (ev.order !== undefined) this.traceOf(lane, String(ev.order)).effects.push({ kind: String(d.kind), key: String(d.key) }); return;
+      case 'stage_fail': { const o = ev.order !== undefined ? String(ev.order) : this.curOrder.get(lane); if (o) this.traceOf(lane, o).failed = true; return; }
+      case 'process_dead': { const o = this.curOrder.get(lane); if (o && (this.hits.get(lane) ?? []).some((h) => h.order === o)) this.traceOf(lane, o).died = true; return; }
+      case 'order_done': case 'order_failed': case 'order_parked': case 'order_quarantined': case 'lane_halted': break;
+      default: return;
+    }
+    const endOrder = ev.order !== undefined ? String(ev.order) : this.curOrder.get(lane);
+    const t = endOrder ? this.traceOf(lane, endOrder) : undefined;
+    const mine = (this.hits.get(lane) ?? []).filter((h) => (t ? h.order === t.order : true));
+    if (t) this.trace.get(lane)?.delete(t.order);
+    if (mine.length === 0 || !t) return;
+    this.hits.set(lane, (this.hits.get(lane) ?? []).filter((h) => !mine.includes(h)));
+    const seen = new Set<string>();
+    for (const h of mine) {
+      const stage = stageOfCall(h.service, h.index);
+      const key = `${stage}|${h.id}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const cls = classifyHit(ev.type as never, t, h.service, h.index);
+      this.record?.({ type: 'curse_response', lane, order: t.order, stage, detail: { order: t.order, stage, curse: h.curse, class: cls, id: h.id, endpoint: h.service, status: h.status } } as HauntEvent);
+    }
+  }
 
   chaos = (req: EngineChaosRequest): EngineChaosResult => {
     const lane = String(req.lane ?? this.lanes[0] ?? '1');

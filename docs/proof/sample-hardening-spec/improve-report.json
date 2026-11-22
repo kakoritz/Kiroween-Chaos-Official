@@ -1,0 +1,314 @@
+{
+  "closed": 5,
+  "closedOnTreated": 2,
+  "of": 9,
+  "summary": "closed 5 of 9 patterns, and 2 more on every lane that took a policy",
+  "grade": {
+    "before": "C",
+    "after": "B"
+  },
+  "reliability": {
+    "before": 70,
+    "after": 87
+  },
+  "score": {
+    "before": 1379,
+    "after": 4959
+  },
+  "lost": {
+    "before": 9,
+    "after": 2
+  },
+  "repeats": {
+    "before": 9,
+    "after": 8
+  },
+  "patterns": [
+    {
+      "id": "p-85d0a239",
+      "signature": "payment + http_404 + order_lost",
+      "handling": "overlay+spec",
+      "before": 4,
+      "after": 2,
+      "status": "applied",
+      "closed": false,
+      "lanes": {
+        "before": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "treated": [
+          2,
+          3,
+          4
+        ],
+        "after": [
+          1
+        ]
+      },
+      "closedOnTreated": true
+    },
+    {
+      "id": "p-493c2bba",
+      "signature": "payment + http_429 + order_lost",
+      "handling": "overlay",
+      "before": 1,
+      "after": 0,
+      "status": "verified",
+      "closed": true,
+      "lanes": {
+        "before": [
+          3
+        ],
+        "treated": [
+          3
+        ],
+        "after": []
+      },
+      "closedOnTreated": false
+    },
+    {
+      "id": "p-7f80339d",
+      "signature": "account + slow_link + outage",
+      "handling": "overlay+spec",
+      "before": 4,
+      "after": 3,
+      "status": "applied",
+      "closed": false,
+      "lanes": {
+        "before": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "treated": [
+          5
+        ],
+        "after": [
+          2,
+          3,
+          4
+        ]
+      },
+      "closedOnTreated": true
+    },
+    {
+      "id": "p-d163c9a1",
+      "signature": "submit + timeout + order_lost",
+      "handling": "overlay",
+      "before": 1,
+      "after": 0,
+      "status": "verified",
+      "closed": true,
+      "lanes": {
+        "before": [
+          4
+        ],
+        "treated": [
+          4
+        ],
+        "after": []
+      },
+      "closedOnTreated": false
+    },
+    {
+      "id": "p-4776839d",
+      "signature": "submit + http_404 + order_lost",
+      "handling": "overlay",
+      "before": 1,
+      "after": 0,
+      "status": "verified",
+      "closed": true,
+      "lanes": {
+        "before": [
+          4
+        ],
+        "treated": [
+          4
+        ],
+        "after": []
+      },
+      "closedOnTreated": false
+    },
+    {
+      "id": "p-609731ac",
+      "signature": "account + http_404 + order_lost",
+      "handling": "spec",
+      "before": 1,
+      "after": 0,
+      "status": "verified",
+      "closed": true,
+      "lanes": {
+        "before": [
+          1
+        ],
+        "treated": [],
+        "after": []
+      },
+      "closedOnTreated": false
+    },
+    {
+      "id": "p-0b7b06ed",
+      "signature": "payment + crash + order_lost",
+      "handling": "spec",
+      "before": 1,
+      "after": 0,
+      "status": "verified",
+      "closed": true,
+      "lanes": {
+        "before": [
+          1
+        ],
+        "treated": [],
+        "after": []
+      },
+      "closedOnTreated": false
+    },
+    {
+      "id": "p-e98c1c44",
+      "signature": "payment + endpoint_failure_rate + degraded",
+      "handling": "overlay+spec",
+      "before": 41,
+      "after": 34,
+      "status": "applied",
+      "closed": false,
+      "lanes": {
+        "before": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "treated": [
+          5
+        ],
+        "after": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "closedOnTreated": false
+    },
+    {
+      "id": "p-f5ee5642",
+      "signature": "payment + http_404 + retry_storm",
+      "handling": "overlay+spec",
+      "before": 5,
+      "after": 5,
+      "status": "applied",
+      "closed": false,
+      "lanes": {
+        "before": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "treated": [
+          5
+        ],
+        "after": [
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "closedOnTreated": false
+    }
+  ],
+  "overlays": [
+    {
+      "lane": 2,
+      "tier": "retrier",
+      "signature": "payment + http_404 + order_lost",
+      "action": "retry_backoff",
+      "stage": "payment",
+      "fault": "http_404",
+      "existing": true
+    },
+    {
+      "lane": 3,
+      "tier": "journaler",
+      "signature": "payment + http_404 + order_lost",
+      "action": "retry_backoff",
+      "stage": "payment",
+      "fault": "http_404",
+      "existing": true
+    },
+    {
+      "lane": 4,
+      "tier": "reconciler",
+      "signature": "payment + http_404 + order_lost",
+      "action": "retry_backoff",
+      "stage": "payment",
+      "fault": "http_404",
+      "existing": true
+    },
+    {
+      "lane": 3,
+      "tier": "journaler",
+      "signature": "payment + http_429 + order_lost",
+      "action": "retry_backoff",
+      "stage": "payment",
+      "fault": "http_429",
+      "existing": true
+    },
+    {
+      "lane": 5,
+      "tier": "phoenix",
+      "signature": "account + slow_link + outage",
+      "action": "breaker_park",
+      "stage": "account",
+      "fault": "slow_link",
+      "existing": false
+    },
+    {
+      "lane": 4,
+      "tier": "reconciler",
+      "signature": "submit + timeout + order_lost",
+      "action": "retry_backoff",
+      "stage": "submit",
+      "fault": "timeout",
+      "existing": true
+    },
+    {
+      "lane": 4,
+      "tier": "reconciler",
+      "signature": "submit + http_404 + order_lost",
+      "action": "retry_backoff",
+      "stage": "submit",
+      "fault": "http_404",
+      "existing": true
+    },
+    {
+      "lane": 5,
+      "tier": "phoenix",
+      "signature": "payment + endpoint_failure_rate + degraded",
+      "action": "breaker_park",
+      "stage": "payment",
+      "fault": "endpoint_failure_rate",
+      "existing": false
+    },
+    {
+      "lane": 5,
+      "tier": "phoenix",
+      "signature": "payment + http_404 + retry_storm",
+      "action": "breaker_park",
+      "stage": "payment",
+      "fault": "http_404",
+      "existing": false
+    }
+  ],
+  "newPatterns": [
+    "submit + curse_404 + crashed",
+    "payment + curse_rate_limit + crashed"
+  ]
+}

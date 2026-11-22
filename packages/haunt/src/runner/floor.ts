@@ -25,6 +25,8 @@ export function isIssueEvent(ev: Ev): boolean {
     case 'stage_fail': case 'process_dead': case 'repeat': case 'order_parked': case 'lane_halted': return true;
     case 'breaker': return ev.detail?.state === 'open';
     case 'chaos': return ev.detail?.source === 'gremlin';
+    // A swallowed or crashed answer to a curse is an issue (spec 5.2): the error vanished or took the bot down.
+    case 'curse_response': return ev.detail?.class === 'swallowed' || ev.detail?.class === 'crashed';
     default: return false;
   }
 }

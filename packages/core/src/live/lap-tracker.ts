@@ -24,6 +24,8 @@ interface Rec {
   degraded: boolean;
   /** A gremlin hit this order (spec 5.3): it counts as an issue and caps the review when recovery was slow. */
   gremlin?: boolean;
+  /** A cursed answer was swallowed: the step was skipped silently (spec 5.2). Counts as an issue with a big review penalty. */
+  swallowed?: boolean;
   decision?: { choice?: string; detectedAt?: string };
   stageCur?: string;
 }
@@ -148,6 +150,9 @@ export class LapTracker {
         if (r && top) r.recov.push({ stage: top.stage, action: top.action, ms: typeof d.ms === 'number' ? d.ms : t - top.ts });
         break;
       }
+      case 'curse_response':
+        if (r && (d.class === 'swallowed' || d.class === 'crashed')) { this.bump(r, ev.stage ?? S.open ?? r.stageCur ?? this.stageIds[0]); if (d.class === 'swallowed') r.swallowed = true; }
+        break;
       case 'chaos':
         if (r && d.source === 'gremlin') { this.bump(r, ev.stage ?? S.open ?? r.stageCur ?? this.stageIds[0]); r.gremlin = true; }
         break;
@@ -173,7 +178,7 @@ export class LapTracker {
       const lap = { ms, workMs: Math.max(0, ms - r.grab - r.walks), attempts: r.attempts, retries: r.retries, downtimeMs, issues, recoveries: r.recov };
       const cancelled = ev.type === 'order_failed';
       const rv: ReviewResult = review({
-        lap, extra: r.extra, degraded: r.degraded, gremlin: r.gremlin, cancelled, baselineMs: this.base, paceFactor: this.normFactor,
+        lap, extra: r.extra, degraded: r.degraded, gremlin: r.gremlin, swallowed: r.swallowed, cancelled, baselineMs: this.base, paceFactor: this.normFactor,
         decision: r.decision?.choice ? { choice: r.decision.choice, detectedAt: r.decision.detectedAt } : undefined,
       });
       const cum = S.stars.add(rv.stars);

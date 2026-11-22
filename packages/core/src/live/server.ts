@@ -25,6 +25,7 @@ import { Tournament, type Corpse } from '../../../haunt/src/tournament/tournamen
 import { tierOfLane } from '../../../haunt/src/tournament/rounds';
 import { tierById } from '../../../haunt/src/pipeline/pipeline';
 import { roundScript } from './tournament-script';
+import { CURSE_KINDS, CURSE_ENDPOINTS, curseTable, type CurseKind } from '../../../haunt/src/tournament/curses';
 import { LessonsStore, lessonEvent, policyOf } from '../../../haunt/src/tournament/lessons';
 import { laneCases } from '../../../haunt/src/tournament/signature';
 import { caseEvents } from '../../../haunt/src/tournament/casebook';
@@ -56,6 +57,13 @@ o_decision when nothing is pending for that order. */
   decide?(lane: number, order: string, choice: string): 'ok' | 'no_decision' | 'bad_choice';
   setChaosMode?(mode: ChaosMode): void;
   /** Intensity dial (TV3-C4). The engine owns the level; the server mirrors it for `state`. */
+  /** Curses (TV3-C9): add one to a lane, end one, end all, give the live lanes theirs by level. */
+  addCurse?(lane: number, kind: CurseKind, endpoint: string, source?: 'plan' | 'player'): { id: string; lane: number; kind: string; endpoint: string; rate?: number; delayMs?: number };
+  endCurse?(lane: number, id: string): boolean;
+  clearCurses?(): void;
+  /** Events the engine publishes outside a wave (curse_start, curse_end). */
+  bindEmit?(fn: (ev: HauntEvent) => void): void;
+  assignCurses?(lanes: readonly number[], level: number, seed: string | number, round: number): unknown[];
   setIntensity?(level: number, opts?: { autoRamp?: boolean; everyN?: number; max?: number }): { level: number; autoRamp: boolean; everyN: number; max: number };
   getIntensity?(): { level: number; autoRamp: boolean; everyN: number; max: number };
   /** Property P19: lanes with no issue this wave. Empty means the never-perfect floor held. */
@@ -114,6 +122,8 @@ export class LiveServer {
   improveJob?: { id: string; phase: string; startedAt: number; request: Record<string, unknown>; report?: ImproveReport; error?: string; spec?: unknown };
   /** Corpses of the tournament, rebuilt from `corpse` events so a late page sees them (rule 51). */
   corpses: Corpse[] = [];
+  /** Curses in force, rebuilt from `curse_start` and `curse_end` (state shows them to a late page). */
+  curses: { id: string; lane: number; kind: string; endpoint: string; rate?: number; delayMs?: number; source?: string }[] = [];
   private chaosCount = 0;
   private readonly staticDir?: string;
   private readonly ledger: () => { lanes: unknown[] };
@@ -133,6 +143,7 @@ export class LiveServer {
     this.log = opts.log ?? new EventLog();
     this.waves = new WaveManager(this.log);
     this.engine = opts.engine ?? {};
+    this.engine.bindEmit?.((ev) => { this.log.emit({ ...ev, ...(this.waves.n > 0 ? { wave: this.waves.n } : {}) } as HauntEvent); });
     this.app = opts.app ?? 'orders';
     this.ledger = opts.ledger ?? (() => ({ lanes: [] }));
     this.pingMs = opts.pingMs ?? PING_MS;
@@ -147,7 +158,9 @@ export class LiveServer {
       applyEvent(this.lanes, ev, APP_STAGES[this.app]);
       if (ev.type === 'wave_end') this.demoRunning = null;
       if (ev.type === 'corpse') { const d = (ev.detail ?? {}) as any; this.corpses.push({ lane: Number(d.lane), stage: String(d.stage), kind: d.kind, round: Number(d.round), epitaph: String(d.epitaph ?? '') }); }
-      if (ev.type === 'reset') this.corpses = [];
+      if (ev.type === 'reset') { this.corpses = []; this.curses = []; }
+      if (ev.type === 'curse_start') { const d = (ev.detail ?? {}) as any; this.curses.push({ id: d.id, lane: Number(ev.lane), kind: d.kind, endpoint: d.endpoint, ...(d.rate !== undefined ? { rate: d.rate } : {}), ...(d.delayMs !== undefined ? { delayMs: d.delayMs } : {}), ...(d.source ? { source: d.source } : {}) }); }
+      if (ev.type === 'curse_end') { const d = (ev.detail ?? {}) as any; this.curses = this.curses.filter((c) => !(c.id === d.id && c.lane === Number(ev.lane))); }
       if (ev.type === 'intensity') {
         const d = (ev.detail ?? {}) as { level?: number; autoRamp?: boolean };
         if (typeof d.level === 'number') this.intensity = { ...this.intensity, level: d.level, ...(typeof d.autoRamp === 'boolean' ? { autoRamp: d.autoRamp } : {}) };
@@ -210,6 +223,7 @@ export class LiveServer {
       chaos: { ...this.chaosMode },
       intensity: { ...this.intensity },
       corpses: [...this.corpses],
+      curses: [...this.curses],
       ...(this.tourney ? { tournament: { round: this.tourney.t.round, total: this.tourney.t.total, phase: this.tourney.t.phase, alive: [...this.tourney.t.alive], ...(this.tourney.t.champion !== undefined ? { champion: this.tourney.t.champion } : {}) } } : {}),
       awaitingNext: this.tourney?.t.phase === 'awaiting_next',
       stages: this.stages,
@@ -374,6 +388,7 @@ export class LiveServer {
     this.engine.setChaosMode?.({ mode: 'manual', frequency: 0.3, seed });
     this.chaosMode = { mode: 'manual', frequency: 0.3, seed };
     if (body.resetLessons === true) this.lessons.reset();
+    this.engine.clearCurses?.();
     this.tourney = { t, speed, pace, wave: 0, id: 't' + Date.now().toString(36), firstWave: this.waves.n + 1, ...(body.autoSpecs === false ? { autoSpecs: false } : {}) };
     return { tournament: true, ...this.beginRound() };
   }
@@ -381,6 +396,8 @@ export class LiveServer {
   private beginRound() {
     const tn = this.tourney!;
     const rs = tn.t.beginRound();
+    // The plan curses the live lanes by the level's table (spec 5.1); curses already in force stay, also on corpses, until the tournament ends.
+    this.engine.assignCurses?.(rs.lanes, rs.intensity, tn.t.seed, rs.round);
     // The overlay of every live lane is written before its bot starts: lessons carry into the round.
     for (const lane of rs.lanes) this.lessons.writePolicy(this.lessons.get(lane, tierOfLane(lane)));
     const cfg = tn.t.cfgOf(rs.round);
@@ -444,6 +461,22 @@ export class LiveServer {
    * POST /api/improve {seed?, rounds?, speed?, pace?} (TV3-C13): run the plan, mine, apply the cheap patterns as policy overlay, write a spec for the
    * rest, rerun the same plan and seed and compare. Answers at once; `GET /api/improve` follows the job. Never applies code.
    */
+  /** POST /api/curse {lane, kind, endpoint} (V1_2 section 6): the player curses one endpoint of one lane. */
+  private postCurse(body: Record<string, any>) {
+    if (!Number.isInteger(body.lane) || body.lane < 1 || body.lane > 5) fail(400, 'bad_lane', 'lane must be 1 to 5');
+    if (!(CURSE_KINDS as readonly string[]).includes(body.kind)) fail(400, 'bad_request', 'kind must be one of ' + CURSE_KINDS.join(', '));
+    if (!(CURSE_ENDPOINTS as readonly string[]).includes(body.endpoint)) fail(400, 'bad_request', 'endpoint must be one of ' + CURSE_ENDPOINTS.join(', '));
+    if (!this.engine.addCurse) fail(409, 'not_applicable', 'no engine is attached');
+    const c = this.engine.addCurse!(body.lane, body.kind, body.endpoint, 'player');
+    return { ...c };
+  }
+
+  private endCurse(body: Record<string, any>) {
+    if (!Number.isInteger(body.lane) || typeof body.id !== 'string') fail(400, 'bad_request', 'lane and id are required');
+    if (!this.engine.endCurse?.(body.lane, body.id)) fail(404, 'not_found', 'no such curse');
+    return {};
+  }
+
   private startImprove(body: Record<string, any>) {
     if (this.waves.active) fail(409, 'wave_running', 'a wave is running');
     if (this.improveJob && !['done', 'error'].includes(this.improveJob.phase)) fail(409, 'wave_running', 'an improve run is already going');
@@ -519,9 +552,12 @@ export class LiveServer {
       for (const l of r.newLessons) lessons.push({ lane, ...l });
       for (const s of r.newSuggestions) lessons.push({ lane, suggestion: true, ...s });
     }
-    return { wave, lessonsBonus, lessons, cases };
+    return { wave, lessonsBonus, lessons, cases, curseTable: curseTable(evs as never) };
   }
-  protected finalExtras(_t: Tournament): Record<string, unknown> { return {}; }
+  protected finalExtras(t: Tournament): Record<string, unknown> {
+    const first = this.tourney?.firstWave ?? 0;
+    return { curseTable: curseTable(this.log.events.filter((e) => typeof e.wave === 'number' && e.wave >= first) as never) };
+  }
 
   private tournamentNext() {
     const tn = this.tourney;
@@ -656,6 +692,7 @@ export class LiveServer {
         const dir = joinPath(this.specsDir!, seg[2]!);
         return { json: lintSpecDir(dir) };
       }
+      if (p === '/api/curses') return { json: { curses: [...this.curses], table: curseTable(this.log.events as never), kinds: CURSE_KINDS, endpoints: CURSE_ENDPOINTS } };
       if (p === '/api/improve') {
         const j = this.improveJob;
         return { json: j ? { id: j.id, phase: j.phase, startedAt: j.startedAt, request: j.request, ...(j.report ? { report: j.report } : {}), ...(j.error ? { error: j.error } : {}), ...(j.spec ? { spec: j.spec } : {}) } : { phase: 'idle' } };
@@ -720,6 +757,8 @@ export class LiveServer {
       case '/api/intensity': return { json: this.setIntensity(body) };
       case '/api/specs': return { json: this.writeSpecs(typeof body.runId === 'string' && body.runId ? body.runId : (this.tourney?.id ?? 'run-' + Date.now().toString(36))) };
       case '/api/improve': return { json: this.startImprove(body) };
+      case '/api/curse': return { json: this.postCurse(body) };
+      case '/api/curse/end': return { json: this.endCurse(body) };
       case '/api/tournament/start': return { json: this.startTournament(body) };
       case '/api/next': return { json: this.tournamentNext() };
       case '/api/decision': return { json: this.decision(body) };

@@ -19,7 +19,7 @@ const types = (ev: HauntEvent[]): string[] => ev.map((e) => e.type);
 describe('fixtures (C1, C2)', () => {
   it('has every fixture named in contract/CONTRACT.md', () => {
     expect([...FIXTURE_NAMES].sort()).toEqual(
-      ['absorbed', 'awaiting-next', 'boss-internet', 'boss-power', 'boss-recovered', 'boss-storm', 'breaker', 'calm', 'cancelled', 'deferred', 'downtime', 'elimination-corpse', 'full', 'hero-crash', 'inbox', 'intensity-11', 'laps-reviews', 'loop', 'meltdown', 'parked', 'part-added', 'stacked-chaos', 'stress', 'tournament-r1-r4', 'typo-discount', 'typo-redo', 'typo-refund', 'wall-corpse', 'world-events'].sort(),
+      ['absorbed', 'awaiting-next', 'boss-internet', 'boss-power', 'boss-recovered', 'boss-storm', 'breaker', 'calm', 'cancelled', 'curses-404', 'deferred', 'downtime', 'elimination-corpse', 'full', 'hero-crash', 'inbox', 'intensity-11', 'laps-reviews', 'loop', 'meltdown', 'parked', 'part-added', 'stacked-chaos', 'stress', 'tournament-r1-r4', 'typo-discount', 'typo-redo', 'typo-refund', 'wall-corpse', 'world-events'].sort(),
     );
   });
 
