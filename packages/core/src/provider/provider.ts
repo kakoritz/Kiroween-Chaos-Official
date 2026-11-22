@@ -3,13 +3,15 @@
 import { appendFileSync, closeSync, fsyncSync, openSync, writeFileSync } from 'node:fs';
 import { unit } from '@haunt/shared';
 
-export type Kind = 'account' | 'charge' | 'email' | 'dispatch' | 'notify' | 'ticket' | 'reply' | 'refund' | 'discount';
-export const KINDS: readonly Kind[] = ['account', 'charge', 'email', 'dispatch', 'notify', 'ticket', 'reply', 'refund', 'discount'];
+export type Kind = 'account' | 'order' | 'charge' | 'email' | 'store' | 'dispatch' | 'notify' | 'ticket' | 'reply' | 'refund' | 'discount';
+export const KINDS: readonly Kind[] = ['account', 'order', 'charge', 'email', 'store', 'dispatch', 'notify', 'ticket', 'reply', 'refund', 'discount'];
 
 export const POST_ROUTES: Readonly<Record<string, Kind>> = {
   '/accounts': 'account',
+  '/orders': 'order',
   '/charges': 'charge',
   '/emails': 'email',
+  '/store': 'store',
   '/shipments': 'dispatch',
   '/notifications': 'notify',
   '/tickets': 'ticket',
@@ -19,7 +21,7 @@ export const POST_ROUTES: Readonly<Record<string, Kind>> = {
 };
 
 const ID_PREFIX: Record<Kind, string> = {
-  account: 'acct', charge: 'ch', email: 'em', dispatch: 'sh', notify: 'nt', ticket: 'tk', reply: 'rp', refund: 'rf', discount: 'dc',
+  account: 'acct', order: 'or', charge: 'ch', email: 'em', store: 'st', dispatch: 'sh', notify: 'nt', ticket: 'tk', reply: 'rp', refund: 'rf', discount: 'dc',
 };
 
 export interface LedgerRow {
@@ -29,7 +31,7 @@ export interface LedgerRow {
   order: string;
   key: string | null;
   amount: number | null;
-  /** Notify index, null for every other kind. */
+  /** Notify and store index (store: 1 receive, 2 process), null for every other kind. */
   index: number | null;
   ts: number;
 }
@@ -210,10 +212,10 @@ export class Provider {
       } else {
         const id = `${ID_PREFIX[kind]}_${this.next(`${lane}|${kind}`)}`;
         const amount = (kind === 'charge' || kind === 'refund' || kind === 'discount') && typeof body.amount === 'number' ? body.amount : null;
-        const index = kind === 'notify' && typeof body.index === 'number' ? body.index : null;
+        const index = (kind === 'notify' || kind === 'store') && typeof body.index === 'number' ? body.index : null;
         const payload: Record<string, unknown> = { id };
         if (kind === 'charge' || kind === 'refund' || kind === 'discount') payload.amount = amount;
-        if (kind === 'notify') payload.index = index;
+        if (kind === 'notify' || kind === 'store') payload.index = index;
         const row: LedgerRow = { id, lane, kind, order, key, amount, index, ts: this.clock.now() };
         this.rows.push(row);
         this.persist(row);

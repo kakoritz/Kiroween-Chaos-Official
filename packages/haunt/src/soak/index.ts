@@ -161,5 +161,5 @@ const calmCreature: CreaturePlugin = { id: 'calm', label: 'Calm', family: 'proce
 /** Live runner: a calm segment injects nothing; a chaos segment runs its creature fault via the cell adapter. */
 export function createLiveSoakRunner(o: LiveCellOptions): RunSoakSegment {
   const cell = createLiveCellRunner({ ...o, creatures: [...o.creatures, calmCreature] });
-  return (c, seed) => cell(c ?? { stage: 'intake', creature: calmCreature.id, fault: 'none' }, seed);
+  return (c, seed) => cell(c ?? { stage: 'create', creature: calmCreature.id, fault: 'none' }, seed);
 }

@@ -33,11 +33,11 @@ export function defineBot(def: BotDef): BotDef {
 }
 
 const PATHS: Record<string, string> = {
-  account: '/accounts', charge: '/charges', email: '/emails', dispatch: '/shipments',
+  account: '/accounts', order: '/orders', charge: '/charges', email: '/emails', store: '/store', dispatch: '/shipments',
   notify: '/notifications', ticket: '/tickets', reply: '/replies', refund: '/refunds', discount: '/discounts',
 };
 const ORDER_FILE = /^ord-(\d{4})(\.dup)?\.json$/;
-const SERVICES = ['account', 'charge', 'email', 'dispatch', 'notify', 'tracking'];
+const SERVICES = ['account', 'order', 'charge', 'email', 'store', 'dispatch', 'notify', 'tracking'];
 
 /** Orders in the folder, runtime.md section 20: by order number, original before `.dup`. */
 export function listOrders(dir: string): string[] {
@@ -227,7 +227,7 @@ export async function runBot(def: BotDef): Promise<void> {
     return v;
   };
 
-  // Tracking polls sit outside sdk.effect, so they get the same retry / backoff rules here (runtime.md section 7).
+  // Transit polls sit outside sdk.effect, so they get the same retry / backoff rules here (runtime.md section 7).
   const pollTracking = async (shipment: string): Promise<boolean> => {
     await sleep(300);
     const max = hasPart('breaker') ? 5 : hasPart('retry') ? 3 : 1;
@@ -242,7 +242,7 @@ export async function runBot(def: BotDef): Promise<void> {
       } catch (e) {
         failure = e instanceof Error ? e.message : String(e);
       }
-      send({ type: 'stage_fail', order: curOrder, stage: 'tracking', detail: { attempt: n, reason: failure } });
+      send({ type: 'stage_fail', order: curOrder, stage: 'transit', detail: { attempt: n, reason: failure } });
       if (hasPart('breaker')) sdk.noteFailure('tracking');
       if (n >= max) {
         // An exhausted breaker bot with an offline queue parks the order and resumes it when the breaker closes.
@@ -250,10 +250,10 @@ export async function runBot(def: BotDef): Promise<void> {
         throw new Error(`tracking failed: ${failure}`);
       }
       const action = hasPart('breaker') ? 'backoff' : 'retry';
-      send({ type: 'recover_start', order: curOrder, stage: 'tracking', detail: { action, attempt: n } });
-      await host.hook('during_backoff', { order: curOrder, stage: 'tracking' });
+      send({ type: 'recover_start', order: curOrder, stage: 'transit', detail: { action, attempt: n } });
+      await host.hook('during_backoff', { order: curOrder, stage: 'transit' });
       await sleep(hasPart('breaker') ? 500 * 2 ** (n - 1) : 500);
-      send({ type: 'recover_done', order: curOrder, stage: 'tracking', detail: { action, attempt: n } });
+      send({ type: 'recover_done', order: curOrder, stage: 'transit', detail: { action, attempt: n } });
     }
   };
 

@@ -113,7 +113,7 @@ export function resolveOutcome(app: AppId, tierId: TierId, fault: string, stageI
   // effect stage with a provider fault
   if (stageId === 'updates' && fault !== 'internet_outage') {
     // Non-critical stage: failures are degraded, the order continues (runtime.md section 33).
-    // A whole-internet outage is the exception: the window outlasts the stage and also hits tracking.
+    // A whole-internet outage is the exception: the window outlasts the stage and also hits the next stage (ship).
     if (fault === 'timeout' || fault === 'comm_timeout') {
       if (!hasRetry) return done('OK');
       return idem ? done('OK') : done('REPEAT', selfRows(1));
@@ -131,6 +131,9 @@ export function resolveOutcome(app: AppId, tierId: TierId, fault: string, stageI
     case 'http_429':
       return phoenix ? done('OK') : done('FAILED');
     case 'internet_outage':
+      // From `updates` the window ends while Phoenix is still backing off at `ship` (5 attempts, 500 ms doubling), so it rides it out.
+      if (stageId === 'updates') return phoenix ? done('OK') : done('FAILED');
+      return phoenix ? done('PARKED_OK') : done('FAILED');
     case 'endpoint_down':
     case 'sms_down':
     case 'app_down':

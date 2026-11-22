@@ -4,8 +4,12 @@
 export type AppId = 'orders' | 'inbox';
 export type TierId = 'rookie' | 'retrier' | 'journaler' | 'reconciler' | 'phoenix';
 export type PartId = 'retry' | 'journal' | 'idempotency' | 'breaker' | 'offline_queue';
-export type EffectKind = 'account_create' | 'charge' | 'email' | 'dispatch' | 'notify' | 'ticket';
+export type EffectKind = 'account_create' | 'order' | 'charge' | 'email' | 'store' | 'dispatch' | 'notify' | 'ticket';
 export type StageRole = 'input' | 'work' | 'effect' | 'poll' | 'final';
+
+/** Stage kind carried in the contract's `stages` list (V1_2.md section 1). */
+export type StageKind = 'effect' | 'read' | 'poll' | 'final';
+export const stageKind = (role: StageRole): StageKind => (role === 'input' || role === 'work' ? 'read' : role);
 
 export interface EffectDef {
   kind: EffectKind;
@@ -30,13 +34,16 @@ export interface StageDef {
 }
 
 export const ORDERS_STAGES: StageDef[] = [
-  { id: 'intake', label: 'Order intake', icon: 'mail', workAnimation: 'read_mail', role: 'input', min: 400, max: 900, effects: [], verb: 'Reading order' },
-  { id: 'account', label: 'Account creation', icon: 'user', workAnimation: 'fill_form', role: 'effect', min: 500, max: 1000, effects: [{ kind: 'account_create', key: 'account', service: 'account' }], verb: 'Creating account' },
-  { id: 'payment', label: 'Payment processing', icon: 'card', workAnimation: 'swipe_card', role: 'effect', min: 800, max: 1500, effects: [{ kind: 'charge', key: 'charge', service: 'charge' }], verb: 'Charging card' },
-  { id: 'confirmation', label: 'Confirmation', icon: 'envelope', workAnimation: 'write_letter', role: 'effect', min: 400, max: 800, effects: [{ kind: 'email', key: 'email', service: 'email' }], verb: 'Sending confirmation' },
-  { id: 'dispatch', label: 'Dispatch to delivery', icon: 'box', workAnimation: 'load_scooter', role: 'effect', min: 600, max: 1200, effects: [{ kind: 'dispatch', key: 'dispatch', service: 'dispatch' }], verb: 'Booking delivery' },
-  { id: 'updates', label: 'Order updates', icon: 'bubbles', workAnimation: 'send_bubbles', role: 'effect', min: 400, max: 800, effects: [{ kind: 'notify', key: 'notify:1', service: 'notify' }, { kind: 'notify', key: 'notify:2', service: 'notify' }], verb: 'Sending updates' },
-  { id: 'tracking', label: 'Delivery tracking', icon: 'road', workAnimation: 'scooter_road', role: 'poll', min: 1500, max: 3000, effects: [], verb: 'Tracking delivery' },
+  { id: 'account', label: 'Account or login', icon: 'user', workAnimation: 'fill_form', role: 'effect', min: 400, max: 800, effects: [{ kind: 'account_create', key: 'account', service: 'account' }], verb: 'Logging in' },
+  { id: 'create', label: 'Create order', icon: 'mail', workAnimation: 'read_mail', role: 'input', min: 300, max: 700, effects: [], verb: 'Reading order' },
+  { id: 'submit', label: 'Submit order', icon: 'plane', workAnimation: 'send_letter', role: 'effect', min: 200, max: 400, effects: [{ kind: 'order', key: 'order', service: 'order' }], verb: 'Submitting order' },
+  { id: 'payment', label: 'Payment', icon: 'card', workAnimation: 'swipe_card', role: 'effect', min: 700, max: 1300, effects: [{ kind: 'charge', key: 'charge', service: 'charge' }], verb: 'Charging card' },
+  { id: 'confirmation', label: 'Confirmation', icon: 'envelope', workAnimation: 'write_letter', role: 'effect', min: 300, max: 600, effects: [{ kind: 'email', key: 'email', service: 'email' }], verb: 'Sending confirmation' },
+  { id: 'receive', label: 'Store receives', icon: 'box', workAnimation: 'archive_box', role: 'effect', min: 200, max: 400, effects: [{ kind: 'store', key: 'store:1', service: 'store' }], verb: 'Store receiving' },
+  { id: 'process', label: 'Process order', icon: 'brain', workAnimation: 'think', role: 'effect', min: 300, max: 600, effects: [{ kind: 'store', key: 'store:2', service: 'store' }], verb: 'Preparing items' },
+  { id: 'updates', label: 'Order updates', icon: 'bubbles', workAnimation: 'send_bubbles', role: 'effect', min: 300, max: 600, effects: [{ kind: 'notify', key: 'notify:1', service: 'notify' }, { kind: 'notify', key: 'notify:2', service: 'notify' }], verb: 'Sending updates' },
+  { id: 'ship', label: 'Ship and pack', icon: 'box', workAnimation: 'load_scooter', role: 'effect', min: 500, max: 1000, effects: [{ kind: 'dispatch', key: 'dispatch', service: 'dispatch' }], verb: 'Packing and shipping' },
+  { id: 'transit', label: 'Delivery updates', icon: 'road', workAnimation: 'scooter_road', role: 'poll', min: 1500, max: 3000, effects: [], verb: 'Tracking delivery' },
   { id: 'handoff', label: 'Handoff', icon: 'door', workAnimation: 'doorstep', role: 'final', min: 300, max: 600, effects: [], verb: 'Handing off' },
 ];
 
@@ -54,6 +61,18 @@ export const APPS: Record<AppId, { id: AppId; label: string; stages: StageDef[];
   orders: { id: 'orders', label: 'Haunted Orders', stages: ORDERS_STAGES, orderPrefix: 'ord' },
   inbox: { id: 'inbox', label: 'Haunted Inbox', stages: INBOX_STAGES, orderPrefix: 'msg' },
 };
+
+/** Contract stage list for an app (V1_2.md section 1): `[{id, label, kind}]`. */
+export function stageList(app: AppId): { id: string; label: string; kind: StageKind }[] {
+  return APPS[app].stages.map((s) => ({ id: s.id, label: s.label, kind: stageKind(s.role) }));
+}
+
+/** Pre-v1.2 orders stage ids and what they became (V1_2.md section 1; `intake` is now `create` then `submit`). */
+export const LEGACY_STAGE_MAP: Readonly<Record<string, string>> = { intake: 'create', dispatch: 'ship', tracking: 'transit' };
+/** Maps a legacy stage id to the current one so old recorded runs and fixtures still load. Unknown ids pass through. */
+export function legacyStage(id: string): string {
+  return LEGACY_STAGE_MAP[id] ?? id;
+}
 
 export function orderId(app: AppId, index: number): string {
   return `${APPS[app].orderPrefix}-${String(index).padStart(4, '0')}`;
@@ -146,7 +165,7 @@ export const CREATURES: CreatureDef[] = [
   { id: 'doppelganger', label: 'Doppelganger', family: 'data', sprite: 'doppelganger', causes: ['duplicate_request'], boss: false, apps: both, description: 'Sends the same request twice.' },
   { id: 'witch', label: 'Witch', family: 'data', sprite: 'witch', causes: ['malformed_payload'], boss: false, apps: both, description: 'Curses the input so it cannot be read.' },
   { id: 'mummy', label: 'Mummy', family: 'process', sprite: 'mummy', causes: ['disk_full'], boss: false, apps: both, description: 'Fills the disk so one journal write fails.' },
-  { id: 'werewolf', label: 'Werewolf', family: 'world', sprite: 'werewolf', causes: ['hazard_event'], boss: false, apps: ['orders'], description: 'Stalls the tracking feed.' },
+  { id: 'werewolf', label: 'Werewolf', family: 'world', sprite: 'werewolf', causes: ['hazard_event'], boss: false, apps: ['orders'], description: 'Stalls the delivery feed.' },
   { id: 'will_o_wisp', label: "Will-o'-the-Wisp", family: 'world', sprite: 'will_o_wisp', causes: ['driver_unreachable'], boss: false, apps: ['orders'], description: 'Leads the delivery driver astray.' },
   { id: 'scarecrow', label: 'Scarecrow', family: 'world', sprite: 'scarecrow', causes: ['wrong_address'], boss: false, apps: ['orders'], description: 'Points the scooter down the wrong road.' },
   { id: 'black_cat', label: 'Black Cat', family: 'world', sprite: 'black_cat', causes: ['no_answer', 'gated_house'], boss: false, apps: ['orders'], description: 'Sits on the doorstep so nobody answers, or shuts the gate.' },
@@ -163,8 +182,8 @@ export function creatureForFault(fault: string): CreatureDef | undefined {
 
 /** Which roles a fault can hit (runtime.md section 9). A fault that cannot hit the current stage is deferred. */
 /** World faults that only land on one orders stage (design.md section 7). Others defer to it. */
-export const WORLD_FAULT_STAGE: Record<string, string> = { sms_down: 'confirmation', app_down: 'dispatch', updates_down: 'updates', wrong_address: 'tracking', no_answer: 'handoff', gated_house: 'handoff', car_accident: 'handoff', order_typo: 'intake' };
-const WORLD_STAGE_ROLE: Record<string, StageRole> = { tracking: 'poll', handoff: 'final', intake: 'input' } as Record<string, StageRole>;
+export const WORLD_FAULT_STAGE: Record<string, string> = { sms_down: 'confirmation', app_down: 'ship', updates_down: 'updates', wrong_address: 'transit', no_answer: 'handoff', gated_house: 'handoff', car_accident: 'handoff', order_typo: 'create' };
+const WORLD_STAGE_ROLE: Record<string, StageRole> = { transit: 'poll', handoff: 'final', create: 'input' } as Record<string, StageRole>;
 
 export function faultApplies(fault: string, role: StageRole, stageId?: string): boolean {
   if (WORLD_FAULT_STAGE[fault]) return role === (WORLD_STAGE_ROLE[WORLD_FAULT_STAGE[fault]!] ?? 'effect') && (stageId === undefined || stageId === WORLD_FAULT_STAGE[fault]);

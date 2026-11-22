@@ -11,7 +11,7 @@ import type { DemoScript } from '../live/demo';
 import { RunnerEngine } from '../../../haunt/src/runner/engine';
 import { RepeatDetector, postProviderArm } from '../../../haunt/src/runner/provider';
 import { ScoreEngine, type HauntEvent } from '../../../haunt/src/score/score';
-import { ProcessKilled, Sdk, type Host, type Part, type Transport } from '../../../haunt/src/sdk';
+import { ParkSignal, ProcessKilled, Sdk, type Host, type Part, type Transport } from '../../../haunt/src/sdk';
 import { InputError, LaneHalted, Pipeline, generateOrders, orderId, tierById } from '../../../haunt/src/pipeline';
 import { campaignWaveConfig } from '../../../haunt/src/campaign/wave-config';
 import type { CampaignNight, LaneSummary } from '../../../haunt/src/campaign/types';
@@ -134,7 +134,7 @@ async function run(night: CampaignNight, parts: Part[], scripts: DemoScript[], d
     },
   };
 
-  /** One tracking poll with the retry and backoff rules of the bot runtime (runtime.md section 7). */
+  /** One transit poll with the retry and backoff rules of the bot runtime (runtime.md section 7). */
   const poll = async (shipment: string): Promise<boolean> => {
     const breaker = parts.includes('breaker');
     const max = breaker ? 5 : parts.includes('retry') ? 3 : 1;
@@ -151,7 +151,11 @@ async function run(night: CampaignNight, parts: Part[], scripts: DemoScript[], d
       } catch (e) {
         failure = e instanceof Error ? e.message : String(e);
       }
-      if (n >= max) throw new Error(`tracking failed: ${failure}`);
+      if (n >= max) {
+        // Same as the bot runtime: a Phoenix-class bot parks the order when its transit polls are exhausted.
+        if (breaker && parts.includes('offline_queue')) throw new ParkSignal('breaker_open');
+        throw new Error(`transit failed: ${failure}`);
+      }
       await host.sleep(breaker ? 500 * 2 ** (n - 1) : 500);
     }
   };

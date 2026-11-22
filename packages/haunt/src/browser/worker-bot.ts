@@ -15,7 +15,7 @@ export interface PipelineBotDef {
   orders?: number;
 }
 
-const SERVICES = ['account', 'charge', 'email', 'dispatch', 'notify', 'tracking'];
+const SERVICES = ['account', 'order', 'charge', 'email', 'store', 'dispatch', 'notify', 'tracking'];
 
 /** Wire a full pipeline bot into a worker scope. On `init` it builds Sdk, ChaosHost and Pipeline and runs every order. */
 export function connectPipelineBot(scope: WorkerScopeLike, def: PipelineBotDef, clock: BrowserClock = new BrowserClock()): PageChannel {
@@ -85,7 +85,7 @@ export function connectPipelineBot(scope: WorkerScopeLike, def: PipelineBotDef, 
     const orders = new Map<string, OrderData>(generateOrders(seed, m.orders ?? def.orders ?? 6).map((o) => [o.id, o]));
     let curOrder = '';
 
-    // Tracking polls sit outside sdk.effect, so they get the same retry / backoff rules here (runtime.md section 7).
+    // Transit polls sit outside sdk.effect, so they get the same retry / backoff rules here (runtime.md section 7).
     const polls = new Map<string, number>();
     const pollTracking = async (shipment: string): Promise<boolean> => {
       await clock.sleep(300);
@@ -106,13 +106,13 @@ export function connectPipelineBot(scope: WorkerScopeLike, def: PipelineBotDef, 
         } catch (e) {
           failure = e instanceof Error ? e.message : String(e);
         }
-        send({ type: 'stage_fail', order: curOrder, stage: 'tracking', detail: { attempt: n, reason: failure } });
+        send({ type: 'stage_fail', order: curOrder, stage: 'transit', detail: { attempt: n, reason: failure } });
         if (n >= max) throw new Error(`tracking failed: ${failure}`);
         const action = hasPart('breaker') ? 'backoff' : 'retry';
-        send({ type: 'recover_start', order: curOrder, stage: 'tracking', detail: { action, attempt: n } });
-        await hostIf.hook('during_backoff', { order: curOrder, stage: 'tracking' });
+        send({ type: 'recover_start', order: curOrder, stage: 'transit', detail: { action, attempt: n } });
+        await hostIf.hook('during_backoff', { order: curOrder, stage: 'transit' });
         await clock.sleep(hasPart('breaker') ? 500 * 2 ** (n - 1) : 500);
-        send({ type: 'recover_done', order: curOrder, stage: 'tracking', detail: { action, attempt: n } });
+        send({ type: 'recover_done', order: curOrder, stage: 'transit', detail: { action, attempt: n } });
       }
     };
 

@@ -51,7 +51,7 @@ function processCreature(id: string, label: string, faults: string[]): CreatureP
 function fileCreature(id: string, label: string, fault: string, op: 'removeFile' | 'duplicateFile'): CreaturePlugin {
   return {
     id, label, family: 'data', faults: [fault],
-    appliesTo: { stages: ['intake'] },
+    appliesTo: { stages: ['create'] },
     async inject(ctx) {
       await need((ctx as CoreContext).input, 'input', fault)[op]();
     },

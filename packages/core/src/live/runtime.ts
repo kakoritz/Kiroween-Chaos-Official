@@ -220,7 +220,7 @@ export class DemoPlayer {
       if (this.phase === 'warned' && t >= boss.startAtMs) {
         this.phase = 'live';
         this.record({ type: 'boss_start', detail: { boss: boss.id } });
-        const lanes = Object.fromEntries(this.engine.lanes.map((l) => [l, { state: 'working' as const, stage: 'dispatch' }]));
+        const lanes = Object.fromEntries(this.engine.lanes.map((l) => [l, { state: 'working' as const, stage: 'ship' }]));
         for (const { lane, req } of this.engine.director.bossArms(boss.id as BossId, lanes)) {
           try { this.engine.chaos({ lane: Number(lane), fault: req.fault, point: req.point, forMs: req.forMs, source: 'boss' }); } catch { /* depth limit */ }
         }
@@ -248,7 +248,7 @@ export class DemoPlayer {
 
 // ---- ledger and hardening payloads ----
 
-/** Provider ledger kind to contract effect kind (CONTRACT.md: account_create | charge | email | dispatch | notify | ticket). */
+/** Provider ledger kind to contract effect kind (CONTRACT.md: account_create | charge | email | dispatch | notify | ticket; v1.2 adds order and store). */
 const EFFECT_KIND: Record<string, string> = { account: 'account_create', reply: 'email' };
 
 /** `GET /api/ledger` body: per lane, rows by kind with repeat counts (PROTOCOL.md). */
@@ -409,7 +409,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
         const arm = engine.director.onInputRead(lane, ctx.order);
         if (!arm) return;
         typoOrder(paths, ctx.order, env.HAUNT_SEED ?? '1');
-        if (opts.post) void postProviderArm(opts.post, lane, 'intake', arm);
+        if (opts.post) void postProviderArm(opts.post, lane, 'create', arm);
       },
       onDecision: (lane, ask, alive, env) => {
         laneEnv.set(lane, env);

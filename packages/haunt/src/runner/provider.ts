@@ -7,11 +7,14 @@ type Service = FaultSpec['service'];
 
 const STAGE_SERVICE: Record<string, Service> = {
   account: 'account',
+  submit: 'order',
   payment: 'charge',
   confirmation: 'email',
-  dispatch: 'dispatch',
+  receive: 'store',
+  process: 'store',
+  ship: 'dispatch',
   updates: 'notify',
-  tracking: 'tracking',
+  transit: 'tracking',
   handoff: 'handoff',
 };
 

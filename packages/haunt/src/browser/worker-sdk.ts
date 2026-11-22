@@ -93,7 +93,7 @@ export class PageJournalStore implements JournalStore {
   }
 }
 
-const KINDS: readonly LedgerKind[] = ['account', 'charge', 'email', 'dispatch', 'notify', 'ticket', 'reply'];
+const KINDS: readonly LedgerKind[] = ['account', 'order', 'charge', 'email', 'store', 'dispatch', 'notify', 'ticket', 'reply'];
 
 /** Provider adapter: effects and reconcile lookups go to the in-page ledger instead of HTTP. */
 export class PageTransport implements Transport {

@@ -497,7 +497,7 @@ export class LiveServer {
     const replay = since === undefined ? [] : retained.filter((e) => e.seq > since);
     // On a replay the hello carries the cursor, not the head, so seq and ts stay monotonic across hello and the replayed events.
     const hello = replay.length > 0 ? { seq: since!, ts: replay[0]!.ts } : { seq: this.seq, ts: Date.now() };
-    res.write(`data: ${JSON.stringify({ type: 'hello', contractVersion: CONTRACT_VERSION, mode: 'live', ...hello, app: this.app })}\n\n`);
+    res.write(`data: ${JSON.stringify({ type: 'hello', contractVersion: CONTRACT_VERSION, mode: 'live', ...hello, app: this.app, stages: this.stages })}\n\n`);
     for (const e of replay) res.write(`data: ${JSON.stringify(toWire(e))}\n\n`);
     this.clients.add(res);
     const timer = setInterval(() => res.write(': ping\n\n'), this.pingMs);

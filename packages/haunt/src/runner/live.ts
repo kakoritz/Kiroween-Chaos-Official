@@ -20,7 +20,7 @@ export interface WaveClockOptions {
   /** 0..1 random chaos frequency; ignored unless `randomEnabled()` is true. */
   frequency: number;
   speed?: number;
-  /** Live lane state from the runner loop. Defaults to a working lane in `dispatch`. */
+  /** Live lane state from the runner loop. Defaults to a working lane in `ship`. */
   laneInfo?: (lane: string) => LaneInfo;
   /** Random chaos only fires while this returns true (mode === 'random'). Defaults to the engine's chaos mode. */
   randomEnabled?: () => boolean;
@@ -43,7 +43,7 @@ export class WaveClock {
   }
 
   private info(lane: string): LaneInfo {
-    return this.o.laneInfo?.(lane) ?? { state: 'working', stage: 'dispatch' };
+    return this.o.laneInfo?.(lane) ?? { state: 'working', stage: 'ship' };
   }
 
   private randomOn(): boolean {

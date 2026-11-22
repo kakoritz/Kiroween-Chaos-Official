@@ -27,7 +27,7 @@ export function parseBoss(name: string): BossId | null {
 export const BOSS_STAGE: Record<BossId, string> = {
   boss_power_outage: 'payment',
   boss_internet_outage: 'payment',
-  boss_hazard_storm: 'dispatch',
+  boss_hazard_storm: 'ship',
 };
 
 export interface BossPlan { bosses: BossId[] }
@@ -105,7 +105,7 @@ export function renderBoss(r: BossReport): string {
 /**
  * Live boss creatures. A boss hits every lane at once; the live adapter runs one lane, so each boss presses its
  * fault set on that lane through the cell context (power outage crashes, internet outage drops every service,
- * hazard storm stalls tracking and rate-limits dispatch).
+ * hazard storm stalls transit and rate-limits ship).
  */
 export function liveBossCreatures(speed: number): CreaturePlugin[] {
   const scale = (ms: number): number => Math.max(50, Math.round(ms / speed));
@@ -125,8 +125,8 @@ export function liveBossCreatures(speed: number): CreaturePlugin[] {
     }),
     mk('banshee_queen', 'Banshee Queen', 'network', 'boss_internet_outage', (c) => post(c, 'payment', 'internet_outage', scale(12000))),
     mk('headless_horseman', 'Headless Horseman', 'world', 'boss_hazard_storm', async (c) => {
-      await post(c, 'tracking', 'hazard_event', scale(5000));
-      await post(c, 'dispatch', 'http_429');
+      await post(c, 'transit', 'hazard_event', scale(5000));
+      await post(c, 'ship', 'http_429');
     }),
   ];
 }
