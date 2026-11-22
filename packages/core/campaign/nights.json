@@ -13,7 +13,8 @@
     "pace": "slow",
     "seed": 101,
     "plan": [
-      { "when": { "lane": 1, "event": "stage_start", "stage": "payment", "attempt": 1 }, "forEachOrder": true, "delayMs": 600, "lane": 1, "fault": "crash", "creature": "reaper", "point": "after_effect_before_journal" }
+      { "when": { "lane": 1, "event": "stage_start", "stage": "payment", "order": "ord-0001", "attempt": 1 }, "lane": 1, "fault": "crash", "creature": "reaper", "point": "after_effect_before_journal" },
+      { "when": { "lane": 1, "event": "stage_start", "stage": "payment", "order": "ord-0003", "attempt": 1 }, "lane": 1, "fault": "crash", "creature": "reaper", "point": "after_effect_before_journal" }
     ],
     "rivals": ["retrier", "journaler", "reconciler", "phoenix"],
     "medals": {
@@ -37,10 +38,10 @@
     "pace": "slow",
     "seed": 102,
     "plan": [
-      { "when": { "lane": 1, "event": "stage_start", "stage": "payment", "order": "ord-0001", "attempt": 1 }, "lane": 1, "fault": "timeout", "creature": "zombie" },
-      { "when": { "lane": 1, "event": "stage_start", "stage": "confirmation", "order": "ord-0002", "attempt": 1 }, "lane": 1, "fault": "http_429", "creature": "goblin" },
-      { "when": { "lane": 1, "event": "stage_start", "stage": "ship", "order": "ord-0003", "attempt": 1 }, "lane": 1, "fault": "http_500", "creature": "imp" },
-      { "when": { "lane": 1, "event": "stage_start", "stage": "payment", "order": "ord-0004", "attempt": 1 }, "lane": 1, "fault": "timeout", "creature": "zombie" }
+      { "when": { "lane": 1, "event": "stage_start", "stage": "transit", "order": "ord-0001", "attempt": 1 }, "lane": 1, "fault": "http_500", "creature": "imp" },
+      { "when": { "lane": 1, "event": "stage_start", "stage": "submit", "order": "ord-0002", "attempt": 1 }, "lane": 1, "fault": "http_429", "creature": "goblin" },
+      { "when": { "lane": 1, "event": "stage_start", "stage": "updates", "order": "ord-0003", "attempt": 1 }, "lane": 1, "fault": "http_429", "creature": "goblin" },
+      { "when": { "lane": 1, "event": "stage_start", "stage": "transit", "order": "ord-0004", "attempt": 1 }, "lane": 1, "fault": "slow_link", "creature": "zombie" }
     ],
     "rivals": ["retrier", "journaler", "reconciler", "phoenix"],
     "medals": {
@@ -64,9 +65,9 @@
     "pace": "slow",
     "seed": 103,
     "plan": [
-      { "when": { "lane": 1, "event": "stage_start", "stage": "create", "order": "ord-0001", "attempt": 1 }, "lane": 1, "fault": "missing_file", "creature": "poltergeist" },
-      { "when": { "lane": 1, "event": "stage_start", "stage": "create", "order": "ord-0002", "attempt": 1 }, "lane": 1, "fault": "malformed_payload", "creature": "witch" },
-      { "when": { "lane": 1, "event": "stage_start", "stage": "create", "order": "ord-0003", "attempt": 1 }, "lane": 1, "fault": "duplicate_request", "creature": "doppelganger" }
+      { "atMs": 0, "lane": 1, "fault": "missing_file", "creature": "poltergeist" },
+      { "atMs": 0, "lane": 1, "fault": "malformed_payload", "creature": "witch" },
+      { "atMs": 0, "lane": 1, "fault": "duplicate_request", "creature": "doppelganger" }
     ],
     "rivals": ["retrier", "journaler", "reconciler", "phoenix"],
     "medals": {
@@ -90,10 +91,10 @@
     "pace": "slow",
     "seed": 104,
     "plan": [
-      { "when": { "lane": 1, "event": "stage_start", "stage": "confirmation", "order": "ord-0001", "attempt": 1 }, "lane": 1, "fault": "sms_down", "creature": "gargoyle" },
-      { "when": { "lane": 1, "event": "stage_start", "stage": "ship", "order": "ord-0002", "attempt": 1 }, "lane": 1, "fault": "app_down", "creature": "imp" },
+      { "when": { "lane": 1, "event": "stage_start", "stage": "payment", "order": "ord-0001", "attempt": 1 }, "lane": 1, "fault": "sms_down", "creature": "gargoyle" },
+      { "when": { "lane": 1, "event": "stage_start", "stage": "updates", "order": "ord-0002", "attempt": 1 }, "lane": 1, "fault": "app_down", "creature": "imp" },
       { "when": { "lane": 1, "event": "stage_start", "stage": "transit", "order": "ord-0003", "attempt": 1 }, "lane": 1, "fault": "wrong_address", "creature": "scarecrow" },
-      { "when": { "lane": 1, "event": "stage_start", "stage": "handoff", "order": "ord-0004", "attempt": 1 }, "lane": 1, "fault": "no_answer", "creature": "black_cat" },
+      { "when": { "lane": 1, "event": "stage_start", "stage": "transit", "order": "ord-0004", "attempt": 1 }, "lane": 1, "fault": "no_answer", "creature": "black_cat" },
       { "afterPrevMs": 3500, "lane": 1, "fault": "car_accident", "creature": "phantom_car" }
     ],
     "rivals": ["retrier", "journaler", "reconciler", "phoenix"],
@@ -146,7 +147,7 @@
     "app": "inbox",
     "plan": [
       { "when": { "lane": 1, "event": "stage_start", "stage": "assign", "attempt": 1 }, "forEachOrder": true, "delayMs": 600, "lane": 1, "fault": "crash", "creature": "reaper", "point": "after_effect_before_journal" },
-      { "when": { "lane": 1, "event": "stage_start", "stage": "notify", "order": "msg-0003", "attempt": 1 }, "lane": 1, "fault": "timeout", "creature": "zombie" }
+      { "when": { "lane": 1, "event": "stage_start", "stage": "notify", "order": "ord-0003", "attempt": 1 }, "lane": 1, "fault": "timeout", "creature": "zombie" }
     ],
     "rivals": ["retrier", "journaler", "reconciler", "phoenix"],
     "medals": {

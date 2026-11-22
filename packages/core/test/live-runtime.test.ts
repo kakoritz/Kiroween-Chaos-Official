@@ -70,6 +70,21 @@ describe('demo playback', () => {
     expect(events.filter((e) => e.type === 'chaos').map((e) => e.lane)).toEqual(['2', '3']);
   });
 
+  it('a forEachOrder press never finishes the script, so a night keeps attacking every order (campaign night 1)', () => {
+    const engine = new RunnerEngine();
+    const events: HauntEvent[] = [];
+    engine.startWave(1, settings, (e) => events.push(e));
+    const press = { fault: 'crash', creature: 'reaper', point: 'after_effect_before_journal', lane: 2 };
+    const script = validateDemo({ ...loadDemo('hero'), presses: [{ ...press, when: { lane: 2, event: 'stage_start', stage: 'payment' }, forEachOrder: true }] });
+    const p = new DemoPlayer(engine, (e) => events.push(e), script);
+    p.step(50);
+    expect(p.finished).toBe(false);
+    p.observe({ type: 'stage_start', lane: '2', order: 'ord-0001', stage: 'payment', detail: { attempt: 1 } });
+    p.step(100);
+    expect(p.finished).toBe(false);
+    expect(events.filter((e) => e.type === 'chaos')).toHaveLength(1);
+  });
+
   it('timed presses (atMs) still fire in order, once each', () => {
     const engine = new RunnerEngine();
     const events: HauntEvent[] = [];

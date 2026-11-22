@@ -28,7 +28,7 @@ import { roundScript } from './tournament-script';
 import { CURSE_KINDS, CURSE_ENDPOINTS, curseTable, type CurseKind } from '../../../haunt/src/tournament/curses';
 import { LessonsStore, lessonEvent, policyOf } from '../../../haunt/src/tournament/lessons';
 import { laneCases } from '../../../haunt/src/tournament/signature';
-import { caseEvents } from '../../../haunt/src/tournament/casebook';
+import { buildCasebook, caseEvents } from '../../../haunt/src/tournament/casebook';
 import { PatternStore, THRESHOLDS, costOf, minePatterns, patternEvent, qualifies } from '../../../haunt/src/miner/patterns';
 import { lintSpecDir, writeFixSpec } from '../../../haunt/src/miner/specs';
 import { improve as runImprove, type ImproveReport, type RunResult } from '../../../haunt/src/miner/improve';
@@ -120,6 +120,8 @@ export class LiveServer {
   tourney?: { t: Tournament; speed: number; pace: 'normal' | 'show' | 'slow'; wave: number; id: string; firstWave?: number; autoSpecs?: boolean };
   /** The improve loop (TV3-C13): one job at a time. */
   improveJob?: { id: string; phase: string; startedAt: number; request: Record<string, unknown>; report?: ImproveReport; error?: string; spec?: unknown };
+  /** Casebook of the Crew lane for the last finished campaign night (GET /api/casebook when no tournament runs). */
+  nightCasebook?: { night: number; wave: number } & ReturnType<typeof buildCasebook>;
   /** Corpses of the tournament, rebuilt from `corpse` events so a late page sees them (rule 51). */
   corpses: Corpse[] = [];
   /** Curses in force, rebuilt from `curse_start` and `curse_end` (state shows them to a late page). */
@@ -345,6 +347,7 @@ export class LiveServer {
       }
     }
     if (app !== this.app) this.switchApp(app);
+    this.nightCasebook = undefined;
 
     const laneNos = tour ? tour.lanes : Array.from({ length: lanes }, (_, i) => i + 1);
     const defs = tour ? tour.lanes.map((n) => tierById(tierOfLane(n))) : tiersForLanes(lanes, tiers, crew);
@@ -571,6 +574,9 @@ export class LiveServer {
     const waveNo = this.waves.n;
     this.waves.end(stopped, t ? (lane, row) => ({ ...t.summary(lane), ...(bad.has(String(lane)) ? { floorOk: false } : {}), orders: { ...(t.summary(lane).orders as object), parked: row.parked } }) : undefined);
     if (this.tourney) { if (stopped) this.tourney = undefined; else this.finishTournamentRound(waveNo); }
+    // A campaign night keeps the Casebook of the Crew lane, so the results screen can show what the night taught (GET /api/casebook with no tournament).
+    const night = this.settings?.campaign?.night;
+    if (night !== undefined && !stopped) this.nightCasebook = { night, wave: waveNo, ...buildCasebook(laneCases(waveEvents(this.log.events, waveNo) as never, 1, 1), 1) };
   }
 
   private switchApp(app: AppId) {
@@ -701,7 +707,7 @@ export class LiveServer {
         const all = this.patterns.list().map((x) => ({ ...x, qualifies: qualifies(x), cost: costOf(x) })).sort((a, b) => b.cost - a.cost || a.signature.localeCompare(b.signature));
         return { json: { thresholds: THRESHOLDS, patterns: all, qualifying: all.filter((x) => x.qualifies).length } };
       }
-      if (p === '/api/casebook') return { json: this.tourney ? { ...this.tourney.t.casebook(), awards: this.tourney.t.awards() } : { rounds: 0, cases: [], open: [], awards: [], note: 'No tournament yet.' } };
+      if (p === '/api/casebook') return { json: this.nightCasebook ? { ...this.nightCasebook, awards: [] } : this.tourney ? { ...this.tourney.t.casebook(), awards: this.tourney.t.awards() } : { rounds: 0, cases: [], open: [], awards: [], note: 'No tournament yet.' } };
       if (p === '/api/tournament') return { json: this.tourney ? { ...this.tourney.t.view(), wave: this.tourney.wave } : { phase: 'idle' } };
       if (p === '/api/waves') return { json: this.wavesView() };
       if (seg[0] === 'api' && seg[1] === 'waves' && seg.length >= 4) {

@@ -4,7 +4,7 @@ import { existsSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { HauntEvent } from '../../../haunt/src/score/score';
 import { RunnerEngine, type EngineWaveSettings, type RunnerEngineOptions } from '../../../haunt/src/runner/engine';
-import { lanePathsAt, prepareLane, restoreOrder, tiersForLanes, typoOrder } from '../../../haunt/src/runner/lanes';
+import { corruptNext, hauntFile, injectDuplicate, lanePathsAt, prepareLane, restoreOrder, tiersForLanes, typoOrder } from '../../../haunt/src/runner/lanes';
 import { runLane, type LaneLoopOptions, type LaneLoopResult } from '../../../haunt/src/runner/loop';
 import { BOSS_DURATION_MS, WaveClock } from '../../../haunt/src/runner/live';
 import { RepeatDetector, postProviderArm } from '../../../haunt/src/runner/provider';
@@ -199,6 +199,11 @@ export class DemoPlayer {
         s.orders.add(o);
       }
       s.dueAt = this.lastT + (p.delayMs ?? 0);
+      // No delay: press now, inside the event that matched. A stage lasts only its work time at speed 4, so waiting for the next tick can miss it.
+      if (!p.delayMs) {
+        if (p.forEachOrder) s.dueAt = undefined;
+        this.fire(i, this.lastT);
+      }
       if (!p.forEachOrder) break;
     }
   }
@@ -240,13 +245,14 @@ export class DemoPlayer {
         this.record({ type: 'boss_end', detail: { boss: boss.id, durationMs: Math.round(BOSS_DURATION_MS / this.speed) } });
       }
     }
-    this.finished = presses.every((p, i) => p.forEachOrder || this.st[i]!.firedAt !== undefined) && (!boss || this.phase === 'done');
+    this.finished = presses.every((p, i) => !p.forEachOrder && this.st[i]!.firedAt !== undefined) && (!boss || this.phase === 'done');
   }
 
   start(now: () => number = Date.now): void {
     if (this.timer) return;
     const t0 = now();
-    this.timer = setInterval(() => { this.step(now() - t0); if (this.finished) this.stop(); }, 50);
+    // 10 ms ticks: at speed 4 a stage lasts about 75 ms, so a 50 ms tick let presses land after the stage had ended.
+    this.timer = setInterval(() => { this.step(now() - t0); if (this.finished) this.stop(); }, 10);
     (this.timer as { unref?: () => void }).unref?.();
   }
 
@@ -420,6 +426,15 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
         if (!existsSync(join(paths.orders, `${ctx.order}.json`))) return;
         const arm = engine.director.onInputRead(lane, ctx.order);
         if (!arm) return;
+        // Input faults (campaign night 3): the order file is changed just before the bot reads it.
+        if (arm.fault === 'missing_file') {
+          const restore = hauntFile(paths, `${ctx.order}.json`);
+          const t = setTimeout(restore, Math.max(50, Math.round((arm.forMs ?? 6000) / (engine.speed || 1))));
+          (t as { unref?: () => void }).unref?.();
+          return;
+        }
+        if (arm.fault === 'duplicate_request') { injectDuplicate(paths); return; }
+        if (arm.fault === 'malformed_payload') { corruptNext(paths); return; }
         typoOrder(paths, ctx.order, env.HAUNT_SEED ?? '1');
         if (opts.post) void postProviderArm(opts.post, lane, 'create', arm);
       },
@@ -456,7 +471,13 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
       norm.begin(settings.orders);
       const g = new SettleGate((e) => rec(e as unknown as HauntEvent));
       gate = g;
-      record = (e) => { engine.observe(e as unknown as HauntEvent); g.push(e as unknown as Record<string, any>); demo?.observe(e as never); for (const p of night) p.observe(e as never); trackNight(e as never); };
+      record = (e) => {
+        // A campaign night presses by stage, so the lane's stage must already be the stage that just started when its plan reads the event (otherwise a press lands on the next order).
+        const night1 = night.length > 0;
+        if (night1) trackNight(e as never);
+        engine.observe(e as unknown as HauntEvent); g.push(e as unknown as Record<string, any>); demo?.observe(e as never); for (const p of night) p.observe(e as never);
+        if (!night1) trackNight(e as never);
+      };
       endWave = end;
       engine.startWave(wave, settings, record);
       startNight(settings);

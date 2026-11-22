@@ -7,6 +7,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Provider, POST_ROUTES, type ProviderClock } from '../provider';
 import { DemoPlayer } from '../live/runtime';
+import { LapTracker } from '../live/lap-tracker';
+import { PACE_FACTOR } from '../../../haunt/src/runner/travel';
 import type { DemoScript } from '../live/demo';
 import { RunnerEngine } from '../../../haunt/src/runner/engine';
 import { RepeatDetector, postProviderArm } from '../../../haunt/src/runner/provider';
@@ -23,7 +25,7 @@ const PATHS = Object.fromEntries(Object.entries(POST_ROUTES).map(([p, k]) => [k,
 const MAX_RUNS = 12;
 
 export interface NightRun {
-  /** Lane 1 summary in the shape the medal rule reads. `stars` and `downtimeMs` are play-test v2 fields and stay unset here. */
+  /** Lane 1 summary in the shape the medal rule reads, with the stars and downtime the lap tracker derives on the virtual clock (no walking time, so stars run high and downtime is the recovery time only). */
   summary: LaneSummary;
   /** Every lane 1 event the night produced, in order, with the repeat and chaos events the runtime adds. */
   events: HauntEvent[];
@@ -60,10 +62,14 @@ async function run(night: CampaignNight, parts: Part[], scripts: DemoScript[], d
   let current = '';
   let stage: string | null = null;
 
-  const feed = (ev: HauntEvent): void => {
-    events.push(ev);
-    score.feed(ev);
-    for (const p of players) p.observe(ev as never);
+  const tracker = new LapTracker({ app: night.app ?? 'orders', pace: PACE_FACTOR[night.pace] ?? 1, speed: 1, now: () => now });
+  const feed = (raw: HauntEvent): void => {
+    // As in the live server: the tracker adds `detail.lap` to order ends and a `review` after them, and the score engine sees all of it.
+    for (const ev of tracker.process(raw)) {
+      events.push(ev);
+      score.feed(ev);
+      for (const p of players) p.observe(ev as never);
+    }
     players.forEach((p) => p.step(now - t0));
   };
   // Ledger rows become `repeat` events, before the event that follows them (the runtime does the same).
@@ -161,7 +167,17 @@ async function run(night: CampaignNight, parts: Part[], scripts: DemoScript[], d
   };
 
   const journalPath = join(dir, 'lane-1.journal.jsonl');
+  // Input faults (night 3) act when the order is read, as the live runner does at the bot's `input_read` hook.
+  const missingUntil = new Map<string, number>();
+  const corrupt = new Set<string>();
+  const duplicated = new Set<string>();
   const readOrder = async (id: string) => {
+    const arm = engine.director.onInputRead(LANE, id);
+    if (arm?.fault === 'missing_file') missingUntil.set(id, now + (arm.forMs ?? 6000));
+    else if (arm?.fault === 'malformed_payload') corrupt.add(id);
+    else if (arm?.fault === 'duplicate_request') duplicated.add(id);
+    if ((missingUntil.get(id) ?? 0) > now) throw new InputError('missing', `no order file ${id}`);
+    if (corrupt.has(id)) throw new InputError('malformed', `order ${id} is not valid JSON`);
     const o = orders.find((x) => x.id === id);
     if (!o) throw new InputError('missing', `no order ${id}`);
     return o;
@@ -194,6 +210,13 @@ async function run(night: CampaignNight, parts: Part[], scripts: DemoScript[], d
       }
       break;
     }
+    // A duplicated request (the same order arrives twice): the bot runs it again with the same journal and keys.
+    if (duplicated.has(id) && last === 'done') {
+      const sdk = new Sdk({ tier: tier.id, lane: LANE, use: parts, host, transport, journalPath });
+      await sdk.start();
+      const again = new Pipeline({ sdk, tier, seed: String(night.seed), lane: LANE, readOrder, pollTracking: poll, hook: (point, ctx) => host.hook(point, ctx), emit: (m) => host.emit(m) });
+      try { await again.run(id); } catch (e) { if (!(e instanceof ProcessKilled)) throw e; }
+    }
     syncLedger();
     engine.director.orderEnd(LANE);
     results[id] = parked && last === 'done' ? 'done' : last;
@@ -203,10 +226,13 @@ async function run(night: CampaignNight, parts: Part[], scripts: DemoScript[], d
   for (const p of players) p.stop();
 
   const c = score.lane(LANE);
+  const lap = tracker.summary(LANE) as { stars?: LaneSummary['stars']; downtimeMs?: number };
   const summary: LaneSummary = {
     score: score.totals.get(LANE) ?? 0,
     repeats: c.repeats,
     orders: { done: c.completed, cancelled: c.failed, parked: c.parked, quarantined: c.quarantined, abandoned: c.abandoned },
+    ...(lap.stars ? { stars: lap.stars } : {}),
+    ...(lap.downtimeMs !== undefined ? { downtimeMs: lap.downtimeMs } : {}),
   };
   return { summary, events, ledger: provider.ledger(LANE), results, elapsedMs: now };
 }
