@@ -6,8 +6,10 @@ import { frameFor } from '../rig/skeleton';
 import { drawSkeleton } from '../rig/draw';
 import { TIER_IDS, TIER_LABEL, type Tier } from '../rig/dress';
 import { chipWidth, stationX, type ArenaVM, type ChipState, type LaneVM } from './model';
+import type { OutageVM } from './outage';
 import { CHIP_ICON, fromLegacy, heatAlpha, heatAt, type ChipInfo, type ChipV2State } from './chips';
-import { captionOf, creatureFrame, shown, spriteOf, MAX_SHOWN, type CreatureVM } from './creatures';
+import { outageAt, outageFrame, ringLabel } from './outage';
+import { captionOf, creatureFrame, creatureTip, shown, spriteOf, MAX_SHOWN, type CreatureVM } from './creatures';
 import { drawCreature } from '../creatures/draw';
 import { bugTint, puff, seedOf, swarmBugs, swarmStale } from './swarm';
 import { drawWorldCreature, drawWorldProp, isWorld, worldPhase, worldProp } from './world-events';
@@ -248,6 +250,24 @@ function chipV2(ctx: Ctx, x: number, y: number, label: string, info: ChipInfo, w
   ctx.restore();
 }
 
+/** Countdown ring under a chip while a stage is down (TV3-U7): arc = time left, label = whole seconds. */
+function outageRing(ctx: Ctx, x: number, y: number, o: OutageVM, now: number, reduced: boolean): void {
+  const f = outageFrame(o, now);
+  const r = 16;
+  ctx.save();
+  ctx.globalAlpha = 1 - f.fade;
+  ctx.beginPath(); ctx.arc(x, y, r + 2, 0, Math.PI * 2); ctx.fillStyle = 'rgba(14,10,22,0.92)'; ctx.fill();
+  ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,77,94,0.28)';
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke();
+  const pulse = f.overrun && !reduced ? 0.55 + 0.45 * Math.sin(now / 160) : 1;
+  ctx.globalAlpha = (1 - f.fade) * pulse;
+  ctx.strokeStyle = f.overrun || o.endedAt !== null ? C.warn : C.fail; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(x, y, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (o.endedAt !== null ? 1 : Math.max(0.02, f.frac))); ctx.stroke();
+  ctx.globalAlpha = 1 - f.fade;
+  txt(ctx, o.endedAt !== null ? '\u2713' : ringLabel(f), x, y + 1, 13, o.endedAt !== null ? C.ok : C.text, 'center', MONO, '800');
+  ctx.restore();
+}
+
 /** One heat strip segment under a chip: opacity follows the wave's issue count at the stage. */
 function heatSegment(ctx: Ctx, x: number, y: number, alpha: number, w = 150): void {
   ctx.save();
@@ -412,6 +432,8 @@ function confetti(ctx: Ctx, x: number, y: number, p: number, seed: number, count
 interface Walker { x: number; lastT: number }
 
 export class ArenaScene {
+  /** Hover regions rebuilt every frame (design px): the caption of a gremlin or an UNKNOWN fault carries a tooltip. */
+  hot: Array<{ x: number; y: number; w: number; h: number; tip: string }> = [];
   private statics = new Map<number, HTMLCanvasElement>();
   private walkers = new Map<number, Walker>();
   /** Divides animation durations (wave speed). */
@@ -469,6 +491,7 @@ export class ArenaScene {
 
   draw(vm: ArenaVM, now: number): void {
     const ctx = this.ctx;
+    this.hot = [];
     const quiet = vm.lanes.length === 0;
     const lanes: LaneVM[] = quiet ? [] : vm.lanes;
     const n = quiet ? 5 : lanes.length;
@@ -528,6 +551,8 @@ export class ArenaScene {
       chipV2(ctx, x, chipY, s.label, info, cw, this.reducedMotion ? 0 : now);
       heatSegment(ctx, x, chipY + 44, heatAlpha(heatAt(l.heat, l.v2, l.heatFolded, i).issues), cw);
       if (l.lap?.next === i && info.state === 'pending') nextMark(ctx, x, chipY, cw);
+      const og = outageAt(l, s.id);
+      if (og && (og.endedAt === null || now - og.endedAt < 700)) outageRing(ctx, x, chipY + 41 + 20, og, now, this.reducedMotion);
     });
     // progress bar under the active chip
     const wi = vm.stages.length ? Math.min(l.stageIndex, n - 1) : 0;
@@ -654,6 +679,14 @@ export class ArenaScene {
     rr(ctx, x - w / 2, y + size / 2 + 6, w, 15, 4); ctx.fillStyle = 'rgba(10,8,18,0.82)'; ctx.fill();
     ctx.lineWidth = 1.5; ctx.strokeStyle = C.out; ctx.stroke();
     txt(ctx, cap, x, y + size / 2 + 14, 13, C.warn, 'center', MONO, '700');
+    const tip = creatureTip(c);
+    if (c.unknown) {
+      const uw = 84, uy = y + size / 2 + 25;
+      rr(ctx, x - uw / 2, uy, uw, 18, 5); ctx.fillStyle = C.hex; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = C.out; ctx.stroke();
+      txt(ctx, '? UNKNOWN', x, uy + 10, 13, '#ffffff', 'center', MONO, '800');
+      if (exit === 0) this.hot.push({ x: x - uw / 2, y: uy, w: uw, h: 18, tip });
+    }
+    if (tip && !c.unknown && exit === 0) this.hot.push({ x: x - w / 2, y: y + size / 2 + 6, w, h: 15, tip });
     if (c.random) {
       const dx = x + size * 0.38, dy = y - size * 0.42;
       rr(ctx, dx - 7, dy - 7, 14, 14, 3); ctx.fillStyle = C.bone; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = C.out; ctx.stroke();

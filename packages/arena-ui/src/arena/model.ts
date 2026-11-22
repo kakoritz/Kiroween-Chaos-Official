@@ -8,6 +8,7 @@ import type { OrderDropVM } from './order';
 import { applyLap, lapMotion, newLap, START_X, type LapVM } from './lap';
 import { foldHeat, newHeat, chipState, type ChipInfo, type Heat } from './chips';
 import { applyIntensity, defaultDial, readDial, type DialState } from './dial';
+import { endOutage, openOutage, pruneOutages, type OutageVM } from './outage';
 import { absorb, actAll, addCreature, exitAll, exitDepth, exitStage, prune, PUFF_MS, type CreatureVM } from './creatures';
 
 export type ChipState = 'pending' | 'active' | 'done' | 'replayed' | 'retrying' | 'failed' | 'dead' | 'parked' | 'quarantined';
@@ -62,6 +63,8 @@ export interface LaneVM {
   v2?: ChipInfo[];
   heat?: Heat;
   heatFolded?: boolean;
+  /** Outage countdown rings, one per stage at most (TV3-U7). Cosmetic, not restorable from a snapshot. */
+  outages?: OutageVM[];
   /** Live star tracker (PT-U6): cum of the last review in this wave and that review's stars. */
   stars?: { sum: number; max: number; last: number } | null;
 }
@@ -202,6 +205,7 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
   if (!l) return;
   const si = ev.stage ? vm.stages.findIndex((s) => s.id === ev.stage) : -1;
   prune(l, now);
+  pruneOutages(l, now);
   trackChips(l, vm, ev);
   if (LAP_EVENTS.has(ev.type)) {
     const n = vm.stages.length;
@@ -215,7 +219,7 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
       setMode(l, 'idle', now);
       break;
     case 'order_start':
-      resetChips(l); l.order = ev.order ?? null; l.orderIndex = num(d.index); l.ordersTotal = num(d.total);
+      endOutage(l, now); resetChips(l); l.order = ev.order ?? null; l.orderIndex = num(d.index); l.ordersTotal = num(d.total);
       l.stageIndex = 0; l.dirty = false; l.orderDrop = { since: now }; setMode(l, 'idle', now);
       break;
     case 'stage_start': {
@@ -240,7 +244,7 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
       if (si >= 0) l.chips[si] = d.skipped === true ? 'replayed' : 'done';
       l.progress = 100;
       if (d.skipped !== true) l.cheer = { since: now, dur: 300 };
-      if (ev.stage) exitStage(l, now, ev.stage);
+      if (ev.stage) { exitStage(l, now, ev.stage); endOutage(l, now, ev.stage); }
       setMode(l, 'idle', now);
       break;
     case 'stage_fail':
@@ -248,6 +252,7 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
       if (si >= 0) l.chips[si] = 'failed';
       setMode(l, 'fail', now);
       break;
+    case 'outage': openOutage(l, now, vm.speed, ev.stage, d); break;
     case 'chaos': l.depth = num(d.depth, l.depth + 1); addCreature(l, now, d, ev.stage ?? vm.stages[l.stageIndex]?.id ?? ''); break;
     case 'chaos_absorbed': l.depth = Math.max(0, l.depth - 1); absorb(l, now, typeof d.creature === 'string' ? d.creature : undefined); break;
     case 'process_dead': {
@@ -279,22 +284,22 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
       break;
     }
     case 'order_done':
-      l.counts.completed += 1; l.dirty = d.clean === false; exitAll(l, now);
+      l.counts.completed += 1; l.dirty = d.clean === false; exitAll(l, now); endOutage(l, now);
       l.cheer = { since: now, dur: 700 }; setMode(l, 'idle', now);
       break;
     case 'order_failed':
-      l.counts.failed += 1; exitAll(l, now, { delay: 600 });
+      l.counts.failed += 1; exitAll(l, now, { delay: 600 }); endOutage(l, now);
       { const fi = vm.stages.findIndex((s) => s.id === d.stage); if (fi >= 0) l.chips[fi] = 'failed'; }
       setMode(l, 'fail', now);
       break;
     case 'order_parked':
-      l.counts.parked += 1; exitAll(l, now, { delay: 600 }); if (si >= 0) l.chips[si] = 'parked'; setMode(l, 'idle', now);
+      l.counts.parked += 1; exitAll(l, now, { delay: 600 }); endOutage(l, now); if (si >= 0) l.chips[si] = 'parked'; setMode(l, 'idle', now);
       break;
     case 'order_resumed': l.counts.parked = Math.max(0, l.counts.parked - 1); break;
     case 'order_quarantined':
-      l.counts.quarantined += 1; exitAll(l, now, { delay: 600 }); if (si >= 0) l.chips[si] = 'quarantined'; setMode(l, 'idle', now);
+      l.counts.quarantined += 1; exitAll(l, now, { delay: 600 }); endOutage(l, now); if (si >= 0) l.chips[si] = 'quarantined'; setMode(l, 'idle', now);
       break;
-    case 'lane_halted': exitAll(l, now, { delay: 600 }); setMode(l, 'halted', now); break;
+    case 'lane_halted': exitAll(l, now, { delay: 600 }); endOutage(l, now); setMode(l, 'halted', now); break;
     case 'part_added': {
       const part = str(d.part);
       if (!part) break;

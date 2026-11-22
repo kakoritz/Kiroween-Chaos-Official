@@ -195,7 +195,9 @@ canvas.addEventListener('click', (e) => {
 canvas.addEventListener('mousemove', (e) => {
   const r = canvas.getBoundingClientRect();
   canvas.style.cursor = chipAt(((e.clientX - r.left) / r.width) * STAGE_W, ((e.clientY - r.top) / r.height) * STAGE_H, vm.lanes.length, vm.stages.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET) ? 'pointer' : 'default';
-  canvas.title = chipTipAt(vm, ((e.clientX - r.left) / r.width) * STAGE_W, ((e.clientY - r.top) / r.height) * STAGE_H, vm.boss.phase === 'none' ? 0 : BOSS_INSET);
+  const dx = ((e.clientX - r.left) / r.width) * STAGE_W, dy = ((e.clientY - r.top) / r.height) * STAGE_H;
+  const hot = scene.hot.find((h) => dx >= h.x && dx <= h.x + h.w && dy >= h.y && dy <= h.y + h.h);
+  canvas.title = hot ? hot.tip : chipTipAt(vm, dx, dy, vm.boss.phase === 'none' ? 0 : BOSS_INSET);
 });
 const keysPop = $('keys-pop');
 const keysBtn = $<HTMLButtonElement>('keys-btn');
@@ -568,4 +570,5 @@ function reportPerf(summary: unknown) {
 }
 requestAnimationFrame(frame);
 
-(window as unknown as { __arena?: unknown }).__arena = { vm };
+// Dev and screenshot hook: __arena.inject(event) feeds one event through the normal pipeline (no server needed).
+(window as unknown as { __arena?: unknown }).__arena = { vm, inject: (ev: Partial<ArenaEvent> & { type: string }) => onEvent({ seq: ++lastSeq, ts: Date.now(), ...ev } as ArenaEvent) };
