@@ -8,6 +8,7 @@ import { LAB_CREATURE_IDS, LAB_PRESETS } from '../src/lab/model';
 import { LAB_CREATURES, labRun } from '../src/lab';
 import { parseYaml } from '../src/config/yaml';
 
+const lf = (t: string): string => t.split(String.fromCharCode(13)).join("");
 const PACKS = resolve(__dirname, '../../../packs');
 
 describe('pack format (PK-C1)', () => {
@@ -51,11 +52,7 @@ describe('streaming pack (PK-C2)', () => {
     expect(Object.keys(pack.tiers).sort()).toEqual(['breaker', 'idempotency', 'journal', 'offline_queue', 'retry']);
   });
   it('the embedded browser copy equals the pack file', () => {
-    expect(STREAMING_PACK_YAML.replace(/
-/g, '
-')).toBe(readFileSync(resolve(PACKS, 'streaming/pack.yaml'), 'utf8').replace(/
-/g, '
-'));
+    expect(lf(STREAMING_PACK_YAML)).toBe(lf(readFileSync(resolve(PACKS, 'streaming/pack.yaml'), 'utf8')));
   });
   it('is a labelled Workflow Lab preset', async () => {
     const m = LAB_PRESETS.streaming!;
