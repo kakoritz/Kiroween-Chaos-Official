@@ -178,6 +178,10 @@ export interface LaneCard {
   issues: { stage: string; count: number; heat: 0 | 1 | 2 | 3 }[];
   series: StarPoint[];
   score: number | null;
+  /** Issues in the wave (V1_2 section 5 notes: `summary[lane].issues`), or null on an older server. */
+  issuesTotal: number | null;
+  /** False when the lane had no issue at all: the floor rule (P19) was broken. Null when the server does not say. */
+  floorOk: boolean | null;
 }
 
 /** Heat of one stage chip: 0 none, 1 low, 2 medium, 3 hot (relative to the lane's worst stage). */
@@ -215,6 +219,7 @@ export function laneCards(
       orders: { done: num(o.done), cancelled: num(o.cancelled), parked: num(o.parked), quarantined: num(o.quarantined) },
       issues: ids.map((id) => ({ stage: id, count: num(by[id]), heat: heatOf(num(by[id]), maxIssue) })),
       series: series.get(lane) ?? [], score: typeof r.score === 'number' ? r.score : null,
+      issuesTotal: typeof r.issues === 'number' ? r.issues : null, floorOk: typeof r.floorOk === 'boolean' ? r.floorOk : null,
     });
   }
   return cards;

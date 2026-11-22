@@ -3,13 +3,13 @@
 // stage and order; the popup streams while the stage is active, offers a Chaos button then, and
 // replays a finished stage as a short animation.
 import type { ArenaEvent } from '../api/types';
-import { stationX, type ChipState } from './model';
+import { chaosPhrase } from './creatures';
+import { chipWidth, stationX, type ChipState } from './model';
 import { laneBoxes } from './scene';
 
 export type Level = 'info' | 'warn' | 'error' | 'good';
 export interface InspLine { seq: number; level: Level; icon: string; text: string }
 
-const CHIP_W = 150;
 const CHIP_H = 40;
 
 /** Which stage chip sits under a point in design pixels, as zero-based lane and stage indexes. */
@@ -19,7 +19,7 @@ export function chipAt(x: number, y: number, laneCount: number, stageCount: numb
     const top = boxes[l]!.top + 4;
     if (y < top || y > top + CHIP_H) continue;
     for (let s = 0; s < stageCount; s++) {
-      if (Math.abs(x - stationX(s, stageCount)) <= CHIP_W / 2) return { lane: l, stage: s };
+      if (Math.abs(x - stationX(s, stageCount)) <= chipWidth(stageCount) / 2) return { lane: l, stage: s };
     }
   }
   return null;
@@ -37,7 +37,8 @@ export function inspLine(ev: ArenaEvent): InspLine | null {
     case 'stage_progress': return mk('info', '\u2026', `${num(d.pct) ?? 0}% ${str(d.label)}`.trim());
     case 'stage_done': return d.skipped ? mk('good', '\u21BA', 'Skipped, replayed from the journal') : mk('good', '\u2713', `Done in ${num(d.ms) ?? 0} ms`);
     case 'stage_fail': return mk('error', '\u2717', `Failed: ${str(d.error) || 'error'}${d.retryable ? ' (retryable)' : ''}`);
-    case 'chaos': return mk('warn', '\u2620', `Chaos hit: ${str(d.creature) || 'creature'} ${str(d.fault)}`.trim());
+    case 'chaos': return mk('warn', d.unknown === true ? '?' : '\u2620', d.unknown === true || d.source === 'gremlin' ? `Chaos: ${chaosPhrase(d)}` : `Chaos hit: ${str(d.creature) || 'creature'} ${str(d.fault)}`.trim());
+    case 'outage': return mk('warn', '\u23F3', `Outage: ${Math.round((num(d.outageMs) ?? 0) / 100) / 10} s window${str(d.fault) ? ` (${str(d.fault).replace(/_/g, ' ')})` : ''}`);
     case 'chaos_absorbed': return mk('good', '\u26E8', 'Chaos absorbed');
     case 'effect': return mk('info', '\u270E', `Effect ${str(d.kind)} ${str(d.key)}${d.replayed ? ' (replayed)' : ''}`.trim());
     case 'repeat': return mk('error', '\u21BB', `Repeated side effect ${str(d.kind)} ${str(d.key)}`.trim());

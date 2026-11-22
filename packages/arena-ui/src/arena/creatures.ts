@@ -22,6 +22,15 @@ export interface CreatureVM {
   /** When the exit starts (null: still here). May lie in the future. */
   exitAt: number | null;
   exitDur: number;
+  /** Where the fault came from (contract v1.2 rule 52): plan, gremlin, curse or fuzz. */
+  source: string;
+  /** A fuzz fault nobody has seen: shown with an UNKNOWN tag and its fingerprint (TV3-U7). */
+  unknown: boolean;
+  fingerprint: string;
+  /** Gremlin variant: slow_link, http_500 or duplicate_request. */
+  variant: string;
+  /** The known fault an unknown shape is built on. */
+  base: string;
 }
 
 export const MAX_SHOWN = 5;
@@ -32,19 +41,46 @@ export const SHRUG_MS = 500;
 
 const KILLERS = new Set(['reaper', 'wraith', 'lich']);
 /** Faults with no failure consequence: the creature acts 300 ms after `chaos`, then stays. */
-const QUIET_FAULTS = new Set(['duplicate_request', 'slow_link', 'disk_full']);
+const QUIET_FAULTS = new Set(['duplicate_request', 'slow_link', 'disk_full', 'gremlin']);
 
 export const FAULT_CAPTION: Record<string, string> = {
   crash: 'CRASH', out_of_memory: 'OUT OF MEMORY', power_outage: 'OUTAGE', internet_outage: 'OUTAGE', endpoint_down: '500',
   timeout: 'TIMEOUT', comm_timeout: 'TIMEOUT', slow_link: 'SLOW LINK', http_404: '404', http_429: '429', http_500: '500',
   missing_file: 'MISSING FILE', duplicate_request: 'DUPLICATE', malformed_payload: 'BAD DATA', disk_full: 'DISK FULL',
-  hazard_event: 'STORM', driver_unreachable: 'NO DRIVER', boss_power_outage: 'OUTAGE', boss_internet_outage: 'OUTAGE', boss_hazard_storm: 'STORM',
+  hazard_event: 'STORM', driver_unreachable: 'NO DRIVER', boss_power_outage: 'OUTAGE', boss_internet_outage: 'OUTAGE', boss_hazard_storm: 'STORM', gremlin: 'GREMLIN',
 };
 
 export const captionOf = (fault: string): string => FAULT_CAPTION[fault] ?? WORLD_CAPTION[fault] ?? fault.replace(/_/g, ' ').toUpperCase();
 
 /** Sprite id to draw: a known creature, or null for the generic specter. */
 export const spriteOf = (id: string): CreatureId | null => (CREATURES.some((c) => c.id === id) ? (id as CreatureId) : null);
+
+const words = (s: string): string => s.replace(/_/g, ' ');
+
+/** One line for logs and tickers: a gremlin prank, an UNKNOWN fuzz fault (with its fingerprint), or the plain fault. */
+export function chaosPhrase(d: Record<string, unknown>, stageLabel = ''): string {
+  const at = stageLabel ? ` at ${stageLabel}` : '';
+  const fault = typeof d.fault === 'string' ? d.fault : '';
+  if (d.unknown === true) {
+    const fp = typeof d.fingerprint === 'string' && d.fingerprint ? ` ${d.fingerprint}` : '';
+    return `UNKNOWN fault${fp}${at}`;
+  }
+  if (d.source === 'gremlin' || fault === 'gremlin') {
+    const v = typeof d.variant === 'string' && d.variant ? `: ${words(d.variant)}` : '';
+    return `gremlin${v}${at}`;
+  }
+  return `${fault || 'chaos'} hits ${stageLabel || 'a stage'}`;
+}
+
+/** Tooltip for the UNKNOWN tag and the gremlin. Empty for every other creature. */
+export function creatureTip(c: Pick<CreatureVM, 'unknown' | 'fingerprint' | 'base' | 'fault' | 'variant' | 'source'>): string {
+  if (c.unknown) {
+    const fp = c.fingerprint ? ` Fingerprint ${c.fingerprint}: the same shape gets the same id.` : '';
+    return `UNKNOWN fault: a shape from the fuzz pool that nobody has seen${c.base ? `, built on ${words(c.base)}` : ''}.${fp} It goes in the Casebook as a new signature.`;
+  }
+  if (c.source === 'gremlin' || c.fault === 'gremlin') return `Gremlin${c.variant ? ` (${words(c.variant)})` : ''}: a small prank so no lane gets a perfect run. It costs little.`;
+  return '';
+}
 
 export interface CreatureHost { creatures: CreatureVM[] }
 
@@ -57,6 +93,9 @@ export function addCreature(l: CreatureHost, now: number, d: Record<string, unkn
     inner: d.injectedAt === 'recovery' || d.scope === 'inner', deferred, random: d.source === 'random',
     killer: KILLERS.has(id), born: now, actAt: !deferred && QUIET_FAULTS.has(fault) ? now + 300 : null,
     shrug: false, exitAt: null, exitDur: EXIT_MS,
+    source: typeof d.source === 'string' ? d.source : '', unknown: d.unknown === true,
+    fingerprint: typeof d.fingerprint === 'string' ? d.fingerprint : '', variant: typeof d.variant === 'string' ? d.variant : '',
+    base: typeof (d.fuzz as { fault?: unknown } | undefined)?.fault === 'string' ? String((d.fuzz as { fault: string }).fault) : '',
   };
   l.creatures.push(c);
   return c;
@@ -118,7 +157,7 @@ export interface CreatureFrame {
 }
 
 const ACT_ANIM: Record<string, string> = {
-  reaper: 'swing', zombie: 'sit', ghost: 'touch', wraith: 'yank', poltergeist: 'fling', doppelganger: 'copy', lich: 'cast',
+  gremlin: 'prank', reaper: 'swing', zombie: 'sit', ghost: 'touch', wraith: 'yank', poltergeist: 'fling', doppelganger: 'copy', lich: 'cast',
   banshee: 'scream', goblin: 'hoard', imp: 'throw', gargoyle: 'land', mummy: 'wrap', werewolf: 'howl', wisp: 'lead', witch: 'hex', banshee_queen: 'wail', horseman: 'hurl',
 };
 

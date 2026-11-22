@@ -41,6 +41,8 @@ export interface LaneState {
   counts: { completed: number; failed: number; parked: number; quarantined: number; repeats: number };
   depth: number;
   parts: PartInfo[];
+  /** Contract v1.2 rule 50: set once the lane is eliminated. */
+  fallen?: { round: number; stage: string; cause: string; epitaph?: string } | null;
 }
 
 export interface ArenaState {
@@ -52,6 +54,11 @@ export interface ArenaState {
   stages: StageInfo[];
   lanes: LaneState[];
   boss: { next: string | null; startsInMs: number | null; active: boolean };
+  /** Intensity dial (contract v1.2 section 5). Absent on an older server. */
+  intensity?: { level: number; autoRamp: boolean; everyN: number; max: number };
+  /** Contract v1.2 rule 51: every corpse, so a late joiner sees them. */
+  corpses?: Array<{ lane: number; stage: string; kind: 'eliminated' | 'wall'; round: number; epitaph?: string; cause?: string }>;
+  tournament?: Record<string, unknown>;
   demo: { scripts: string[]; running: string | null };
 }
 
@@ -120,6 +127,28 @@ export interface ArenaApi {
   getWaveLaps(n: number): Promise<any>;
   getWaveStars(n: number): Promise<any>;
   decide(lane: number, order: string, choice: string): Promise<any>;
+  /** POST /api/intensity (contract v1.2 section 5): level 1..11. Answers the new `state.intensity`. */
+  setIntensity(level: number, opts?: { autoRamp?: boolean; everyN?: number; max?: number }): Promise<any>;
+  /** POST /api/tournament/start: five lanes, the worst drops each round (contract v1.2 sections 2 and 6). */
+  startTournament(opts?: Record<string, unknown>): Promise<any>;
+  /** POST /api/next: resumes after `awaiting_next`. */
+  next(): Promise<any>;
+  /** GET /api/tournament: rounds, standings, corpses, awards, casebook. */
+  getTournament(): Promise<any>;
+  /** GET /api/casebook: every edge case seen by any lane. */
+  getCasebook(): Promise<any>;
+  /** GET /api/lessons/:lane: the lane's lessons ledger. */
+  getLessons(lane: number): Promise<any>;
+  /** DELETE /api/lessons: clears every lane's lessons ledger. */
+  resetLessons(): Promise<any>;
+  /** GET /api/patterns (contract v1.2 C11): patterns sorted by downtime cost. */
+  getPatterns(): Promise<any>;
+  /** POST /api/specs (C12): writes a fix spec for the qualifying new patterns. */
+  writeSpecs(opts?: { runId?: string }): Promise<any>;
+  /** POST /api/improve (C13): run, mine, apply, rerun, compare. Answers `{improve, phase}`. */
+  startImprove(opts?: Record<string, unknown>): Promise<any>;
+  /** GET /api/improve: `{id, phase, report?, spec?, error?}`. */
+  getImprove(): Promise<any>;
   getLedger(): Promise<any>;
   getWaves(): Promise<WaveSummary[]>;
   getReport(n: number): Promise<any>;

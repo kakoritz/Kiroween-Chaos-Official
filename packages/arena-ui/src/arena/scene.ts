@@ -5,10 +5,16 @@
 import { frameFor } from '../rig/skeleton';
 import { drawSkeleton } from '../rig/draw';
 import { TIER_IDS, TIER_LABEL, type Tier } from '../rig/dress';
-import { stationX, type ArenaVM, type ChipState, type LaneVM } from './model';
+import { chipWidth, stationX, type ArenaVM, type ChipState, type LaneVM } from './model';
+import type { OutageVM } from './outage';
 import { CHIP_ICON, fromLegacy, heatAlpha, heatAt, type ChipInfo, type ChipV2State } from './chips';
-import { captionOf, creatureFrame, shown, spriteOf, MAX_SHOWN, type CreatureVM } from './creatures';
+import { outageAt, outageFrame, ringLabel } from './outage';
+import { drawTombstone, drawWallCorpse, drawWisp, tombHeight } from './corpse';
+import { epitaphOf } from './tournament';
+import { CLASS_ICON, CLASS_WORD, POP_MS, curseShort, curseWord, type CurseClass, type CurseVM } from './curses';
+import { captionOf, creatureFrame, creatureTip, shown, spriteOf, MAX_SHOWN, type CreatureVM } from './creatures';
 import { drawCreature } from '../creatures/draw';
+import { bugTint, puff, seedOf, swarmBugs, swarmStale } from './swarm';
 import { drawWorldCreature, drawWorldProp, isWorld, worldPhase, worldProp } from './world-events';
 import { archWall, drawProp, pillar } from '../props/draw';
 import { survivedAge } from './boss';
@@ -210,16 +216,17 @@ export function wrapLabel(ctx: Ctx, label: string, w: number, px: number): strin
 }
 
 /** Dashed orange outline and a small arrow on the chip the skeleton is walking to (ui.md section 1). */
-function nextMark(ctx: Ctx, x: number, y: number): void {
-  const w = 150, h = 40;
+function nextMark(ctx: Ctx, x: number, y: number, w = 150): void {
+  const h = 40;
   ctx.save(); ctx.setLineDash([7, 5]); ctx.lineWidth = 3; ctx.strokeStyle = C.torch;
   rr(ctx, x - w / 2 - 4, y - 4, w + 8, h + 8, 12); ctx.stroke(); ctx.restore();
-  txt(ctx, '\u25B6', x - w / 2 - 14, y + h / 2 + 1, 14, C.torch, 'center', SANS, '800');
+  txt(ctx, '\u25B6', x - w / 2 - 6, y + h / 2 + 1, 13, C.torch, 'center', SANS, '800');
 }
 
 /** Chip v2 (PT-U3): state is icon plus colour plus label; an amber flag shows the issue count at this stage. */
-function chipV2(ctx: Ctx, x: number, y: number, label: string, info: ChipInfo, t: number): void {
-  const w = 150; const h = 40;
+function chipV2(ctx: Ctx, x: number, y: number, label: string, info: ChipInfo, w: number, t: number): void {
+  const h = 40;
+  const tight = w < 130;
   const s = CHIP2[info.state];
   const hot = info.state === 'active' || info.state === 'trouble';
   const pulse = hot && t !== 0 ? 0.55 + 0.45 * Math.sin(t / (info.state === 'trouble' ? 140 : 220)) : 1;
@@ -231,12 +238,14 @@ function chipV2(ctx: Ctx, x: number, y: number, label: string, info: ChipInfo, t
   ctx.stroke(); ctx.setLineDash([]);
   ctx.globalAlpha = 1;
   const icon = info.state === 'trouble' && info.attempts > 1 ? `${CHIP_ICON.trouble}${info.attempts}` : CHIP_ICON[info.state];
-  txt(ctx, icon, x - w / 2 + 16, y + h / 2 + 1, 18, s.color, 'center', SANS, '700');
-  const lines = wrapLabel(ctx, label, w - (info.issues > 0 ? 68 : 42), 15);
+  txt(ctx, icon, x - w / 2 + (tight ? 13 : 16), y + h / 2 + 1, tight ? 14 : 18, s.color, 'center', SANS, '700');
+  const px = tight ? 13 : 15;
+  const lines = wrapLabel(ctx, label, tight ? w - 28 : w - (info.issues > 0 ? 68 : 42), px);
   const col = info.state === 'pending' || info.state === 'dead' ? C.muted : C.text;
-  lines.forEach((ln, i) => txt(ctx, ln, x - w / 2 + 31, y + h / 2 + 1 + (i - (lines.length - 1) / 2) * 16, 15, col));
+  lines.forEach((ln, i) => txt(ctx, ln, x - w / 2 + (tight ? 24 : 31), y + h / 2 + 1 + (i - (lines.length - 1) / 2) * (tight ? 14 : 16), px, col));
   if (info.issues > 0) {
-    const fx = x + w / 2 - 14, fy = y + 14;
+    // On narrow chips the flag sits on the top-right corner so it never covers the label.
+    const fx = x + w / 2 - (tight ? 3 : 14), fy = tight ? y + 3 : y + 14;
     ctx.beginPath(); ctx.arc(fx, fy, 13, 0, Math.PI * 2); ctx.fillStyle = AMBER; ctx.fill();
     ctx.lineWidth = 2; ctx.strokeStyle = C.out; ctx.stroke();
     txt(ctx, `\u2691${info.issues > 9 ? '9+' : info.issues}`, fx, fy + 1, 14, C.out, 'center', SANS, '800');
@@ -244,10 +253,71 @@ function chipV2(ctx: Ctx, x: number, y: number, label: string, info: ChipInfo, t
   ctx.restore();
 }
 
-/** One heat strip segment under a chip: opacity follows the wave's issue count at the stage. */
-function heatSegment(ctx: Ctx, x: number, y: number, alpha: number): void {
+/** Countdown ring under a chip while a stage is down (TV3-U7): arc = time left, label = whole seconds. */
+function outageRing(ctx: Ctx, x: number, y: number, o: OutageVM, now: number, reduced: boolean): void {
+  const f = outageFrame(o, now);
+  const r = 16;
   ctx.save();
-  rr(ctx, x - 75, y, 150, 4, 2); ctx.fillStyle = 'rgba(90,80,120,0.25)'; ctx.fill();
+  ctx.globalAlpha = 1 - f.fade;
+  ctx.beginPath(); ctx.arc(x, y, r + 2, 0, Math.PI * 2); ctx.fillStyle = 'rgba(14,10,22,0.92)'; ctx.fill();
+  ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,77,94,0.28)';
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke();
+  const pulse = f.overrun && !reduced ? 0.55 + 0.45 * Math.sin(now / 160) : 1;
+  ctx.globalAlpha = (1 - f.fade) * pulse;
+  ctx.strokeStyle = f.overrun || o.endedAt !== null ? C.warn : C.fail; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(x, y, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (o.endedAt !== null ? 1 : Math.max(0.02, f.frac))); ctx.stroke();
+  ctx.globalAlpha = 1 - f.fade;
+  txt(ctx, o.endedAt !== null ? '\u2713' : ringLabel(f), x, y + 1, 13, o.endedAt !== null ? C.ok : C.text, 'center', MONO, '800');
+  ctx.restore();
+}
+
+/** Purple curse chip under a stage chip, left side (TV3-U11): the short kind, for as long as the curse lasts. */
+function curseChip(ctx: Ctx, x: number, y: number, c: CurseVM, more: number): void {
+  const label = more > 0 ? `${curseShort(c.kind)}+${more}` : curseShort(c.kind);
+  ctx.save();
+  ctx.font = `800 13px ${MONO}`;
+  const w = Math.ceil(ctx.measureText(label).width) + 22;
+  rr(ctx, x, y, w, 19, 6); ctx.fillStyle = 'rgba(70,40,120,0.97)'; ctx.fill();
+  ctx.lineWidth = 2.5; ctx.strokeStyle = C.hex; ctx.stroke();
+  txt(ctx, '\u263E', x + 9, y + 10, 13, '#d9c4ff', 'center', SANS, '800');
+  txt(ctx, label, x + 17 + (w - 22) / 2, y + 10, 13, '#ffffff', 'center', MONO, '800');
+  ctx.restore();
+}
+
+/** Answer to a cursed call floats up from its stage chip: HANDLED, REPORTED, SWALLOWED or CRASHED. */
+function curseAnswer(ctx: Ctx, x: number, y: number, cls: CurseClass, age: number, reduced: boolean): void {
+  if (age < 0 || age >= 1) return;
+  const color = cls === 'handled' ? C.ok : cls === 'reported' ? C.ghost : C.fail;
+  const label = `${CLASS_ICON[cls]} ${CLASS_WORD[cls]}`;
+  ctx.save();
+  ctx.globalAlpha = Math.min(1, (1 - age) * 2.4);
+  ctx.font = `800 13px ${MONO}`;
+  const w = Math.ceil(ctx.measureText(label).width) + 18;
+  const cy = y - (reduced ? 0 : 22 * age);
+  rr(ctx, x - w / 2, cy - 11, w, 22, 7); ctx.fillStyle = 'rgba(10,8,18,0.92)'; ctx.fill();
+  ctx.lineWidth = cls === 'swallowed' ? 3 : 2; ctx.strokeStyle = color; ctx.stroke();
+  txt(ctx, label, x, cy + 1, 13, color, 'center', MONO, '800');
+  ctx.restore();
+}
+
+/** Curse tag on the lane card (bottom right): "CURSED 404", or the first kind plus a count. */
+function curseTag(ctx: Ctx, b: LaneBox, list: readonly CurseVM[]): void {
+  const first = list[0]!;
+  const label = `${curseShort(first.kind)}${list.length > 1 ? ` +${list.length - 1}` : ''}`;
+  ctx.save();
+  ctx.font = `800 13px ${MONO}`;
+  const w = Math.ceil(ctx.measureText(label).width) + 38;
+  rr(ctx, 244 - w, b.top + b.h - 36, w, 21, 7); ctx.fillStyle = 'rgba(70,40,120,0.97)'; ctx.fill();
+  ctx.lineWidth = 2.5; ctx.strokeStyle = C.hex; ctx.stroke();
+  txt(ctx, '\u263E', 244 - w + 11, b.top + b.h - 25, 14, '#d9c4ff', 'center', SANS, '800');
+  txt(ctx, label, 244 - 8, b.top + b.h - 25, 13, '#ffffff', 'right', MONO, '800');
+  ctx.restore();
+}
+
+/** One heat strip segment under a chip: opacity follows the wave's issue count at the stage. */
+function heatSegment(ctx: Ctx, x: number, y: number, alpha: number, w = 150): void {
+  ctx.save();
+  rr(ctx, x - w / 2, y, w, 4, 2); ctx.fillStyle = 'rgba(90,80,120,0.25)'; ctx.fill();
   if (alpha > 0) { ctx.globalAlpha = alpha; ctx.fillStyle = AMBER; ctx.fill(); }
   ctx.restore();
 }
@@ -304,7 +374,7 @@ function labelCard(ctx: Ctx, b: LaneBox, l: LaneVM, t: number, worn: string[], s
     const last = l.stars.last > 0 ? ` (${Number.isInteger(l.stars.last) ? l.stars.last : l.stars.last.toFixed(1)})` : '';
     txt(ctx, `\u2605 ${starTracker({ stars: l.stars.sum, max: l.stars.max })}${last}`, 46, b.top + h - 46, 14, l.stars.sum / Math.max(1, l.stars.max) >= 0.9 ? C.warn : C.muted, 'left', MONO, '700');
     const rt = laneRatingTitle(l.stars);
-    if (rt) txt(ctx, rt.title, 246, b.top + h - 64, 11, rt.tone === 'gold' ? C.warn : rt.tone === 'red' ? C.fail : C.muted, 'right', MONO, '700');
+    if (rt && !l.fallen) txt(ctx, rt.title, 246, b.top + 46, 13, rt.tone === 'gold' ? C.warn : rt.tone === 'red' ? C.fail : C.muted, 'right', MONO, '700');
   }
   if (l.scorePop) {
     const age = (t - l.scorePop.since) * speed / 1100;
@@ -321,6 +391,51 @@ function labelCard(ctx: Ctx, b: LaneBox, l: LaneVM, t: number, worn: string[], s
     ctx.strokeStyle = C.hex; ctx.lineWidth = 2.5; ctx.stroke();
     txt(ctx, `☠${l.depth}`, bx, by + 1, 18, C.text, 'center', SANS, '700');
   }
+  ctx.restore();
+}
+
+/** Lessons on a lane card (TV3-U9): a small scroll with a count. `age` is ms since the last lesson (sparkles while it is young). */
+function lessonScroll(ctx: Ctx, right: number, y: number, count: number, age: number, reduced: boolean): { x: number; w: number } {
+  ctx.save();
+  ctx.font = `800 14px ${MONO}`;
+  const label = `\u00D7${count}`;
+  const tw = Math.ceil(ctx.measureText(label).width);
+  const sx = right - tw - 26;
+  // the scroll: parchment body, two rolled ends, three ink lines
+  rr(ctx, sx + 3, y - 7, 18, 14, 3); ctx.fillStyle = '#efe6d2'; ctx.fill(); ctx.lineWidth = 2.4; ctx.strokeStyle = C.out; ctx.stroke();
+  for (const ex of [sx + 3, sx + 21]) { ctx.beginPath(); ctx.ellipse(ex, y, 3, 8, 0, 0, Math.PI * 2); ctx.fillStyle = '#c9b88e'; ctx.fill(); ctx.stroke(); }
+  ctx.strokeStyle = '#6b4f2a'; ctx.lineWidth = 1.6;
+  for (const dy of [-3, 0, 3]) { ctx.beginPath(); ctx.moveTo(sx + 7, y + dy); ctx.lineTo(sx + 17, y + dy); ctx.stroke(); }
+  txt(ctx, label, right, y + 1, 14, C.bone, 'right', MONO, '800');
+  if (age >= 0 && age < 1800) {
+    const p = age / 1800;
+    ctx.globalAlpha = 1 - p;
+    for (let k = 0; k < 4; k++) {
+      const a = (k / 4) * Math.PI * 2 + (reduced ? 0 : p * 1.6);
+      const r = 14 + (reduced ? 6 : 16 * p);
+      sparkle(ctx, sx + 12 + Math.cos(a) * r, y + Math.sin(a) * r * 0.8, 5 + 2 * (1 - p));
+    }
+  }
+  ctx.restore();
+  return { x: sx - 2, w: right - sx + 6 };
+}
+
+/** A four-point sparkle. */
+function sparkle(ctx: Ctx, x: number, y: number, r: number): void {
+  ctx.beginPath();
+  ctx.moveTo(x, y - r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.quadraticCurveTo(x, y, x, y + r); ctx.quadraticCurveTo(x, y, x - r, y); ctx.quadraticCurveTo(x, y, x, y - r);
+  ctx.fillStyle = '#fff3a8'; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = C.out; ctx.stroke();
+}
+
+/** "FALLEN R2" pill on a fallen lane's label card (TV3-U8). Drawn at full strength over the greyed row. */
+function fallenTag(ctx: Ctx, b: LaneBox, round: number): void {
+  const label = round > 0 ? `FALLEN R${round}` : 'FALLEN';
+  ctx.save();
+  ctx.font = `800 13px ${MONO}`;
+  const w = Math.ceil(ctx.measureText(label).width) + 18;
+  rr(ctx, 244 - w, b.top + 33, w, 21, 6); ctx.fillStyle = 'rgba(70,24,34,0.96)'; ctx.fill();
+  ctx.lineWidth = 2.5; ctx.strokeStyle = C.fail; ctx.stroke();
+  txt(ctx, label, 244 - w / 2, b.top + 44, 13, '#ff9aa6', 'center', MONO, '800');
   ctx.restore();
 }
 
@@ -408,6 +523,10 @@ function confetti(ctx: Ctx, x: number, y: number, p: number, seed: number, count
 interface Walker { x: number; lastT: number }
 
 export class ArenaScene {
+  /** Lessons ledger per lane (TV3-U9): count, tooltip, when the last one was learned and how. The page feeds it from the Casebook model. */
+  lessonInfo: (lane: number) => { count: number; tip: string; learnedAt: number; mechanism: string } = () => ({ count: 0, tip: '', learnedAt: -1, mechanism: '' });
+  /** Hover regions rebuilt every frame (design px): the caption of a gremlin or an UNKNOWN fault carries a tooltip. */
+  hot: Array<{ x: number; y: number; w: number; h: number; tip: string }> = [];
   private statics = new Map<number, HTMLCanvasElement>();
   private walkers = new Map<number, Walker>();
   /** Divides animation durations (wave speed). */
@@ -434,11 +553,19 @@ export class ArenaScene {
     return stationX(next, n);
   }
 
+  /** True while a creature that has started acting is still on the lane: the skeleton shoos it (TV3-U5). */
+  static harassed(l: LaneVM, now: number): boolean {
+    return l.creatures.some((c) => c.exitAt === null && !c.shrug && c.actAt !== null && now >= c.actAt && !c.killer);
+  }
+
   /** Chosen pose for a lane at time `now` (ms). Pure of the canvas, exported for tests. */
   static poseOf(l: LaneVM, now: number, walking: boolean, speed = 1): { anim: string; p: number } {
     const el = Math.max(0, now - l.since) * speed;
     if (l.cheer && now - l.cheer.since < l.cheer.dur / speed && (l.mode === 'idle' || l.mode === 'working' || l.mode === 'done')) {
       return { anim: 'cheer', p: ((now - l.cheer.since) * speed % 800) / 800 };
+    }
+    if (!walking && (l.mode === 'working' || l.mode === 'recovering' || l.mode === 'fail' || l.mode === 'idle') && ArenaScene.harassed(l, now)) {
+      return { anim: 'shoo', p: ((now - l.since) * speed % 520) / 520 };
     }
     switch (l.mode) {
       case 'sleep': return { anim: 'sleep', p: (now % 3200) / 3200 };
@@ -457,6 +584,7 @@ export class ArenaScene {
 
   draw(vm: ArenaVM, now: number): void {
     const ctx = this.ctx;
+    this.hot = [];
     const quiet = vm.lanes.length === 0;
     const lanes: LaneVM[] = quiet ? [] : vm.lanes;
     const n = quiet ? 5 : lanes.length;
@@ -503,19 +631,62 @@ export class ArenaScene {
     const n = vm.stages.length;
     ctx.save();
     ctx.beginPath(); ctx.rect(0, b.top, STAGE_W, b.h); ctx.clip();
+    const fell = l.fallen ?? null;
+    const deathIdx = fell ? Math.max(0, vm.stages.findIndex((s) => s.id === fell.stage)) : -1;
+    if (fell) ctx.globalAlpha = 0.5;
     labelCard(ctx, b, l, now, wornParts(l.parts, l.equips, now, this.speed, this.reducedMotion), this.speed, this.reducedMotion);
+    if (fell) { ctx.globalAlpha = 1; fallenTag(ctx, b, fell.round); ctx.globalAlpha = 0.4; }
+    if ((l.curses?.length ?? 0) > 0) {
+      ctx.globalAlpha = fell ? 0.7 : 1;
+      curseTag(ctx, b, l.curses!);
+      this.hot.push({ x: 244 - 120, y: b.top + b.h - 38, w: 120, h: 24, tip: l.curses!.map((c) => `${curseWord(c.kind)}${c.endpoint ? ` on ${c.endpoint}` : ''}${c.rate !== null ? ` (${Math.round(c.rate * 100)}%)` : ''}`).join('\n') });
+      ctx.globalAlpha = fell ? 0.4 : 1;
+    }
+    const les = this.lessonInfo(l.lane);
+    if (les.count > 0) {
+      const age = les.learnedAt >= 0 ? (now - les.learnedAt) * this.speed : -1;
+      if (fell) ctx.globalAlpha = 0.6;
+      const box = lessonScroll(ctx, 244, b.top + b.h - 46, les.count, age, this.reducedMotion);
+      ctx.globalAlpha = fell ? 0.4 : 1;
+      this.hot.push({ x: box.x, y: b.top + b.h - 62, w: box.w, h: 32, tip: les.tip });
+      // "learned" caption floating by the skeleton for a moment
+      if (age >= 0 && age < 2200 && !fell) {
+        const p = age / 2200;
+        ctx.save(); ctx.globalAlpha = Math.min(1, (1 - p) * 2.4);
+        const text = `LEARNED: ${les.mechanism || 'a new trick'}`;
+        ctx.font = `800 15px ${MONO}`;
+        const w = Math.min(420, Math.ceil(ctx.measureText(text).width) + 40);
+        const cx = 700, cy = b.top + b.h * 0.56 - (this.reducedMotion ? 0 : 16 * p);
+        rr(ctx, cx - w / 2, cy - 13, w, 26, 9); ctx.fillStyle = 'rgba(10,8,18,0.88)'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = C.warn; ctx.stroke();
+        sparkle(ctx, cx - w / 2 + 14, cy, 6); sparkle(ctx, cx + w / 2 - 14, cy, 6);
+        txt(ctx, fit(ctx, text, w - 40), cx, cy + 1, 15, C.text, 'center', MONO, '800');
+        ctx.restore();
+      }
+    }
     stats(ctx, b, l);
-    if (l.mode !== 'sleep') startStack(ctx, b, l);
+    if (l.mode !== 'sleep' && !fell) startStack(ctx, b, l);
     // stage chips and station props
     const chipY = b.top + 4;
+    const cw = chipWidth(n);
     vm.stages.forEach((s, i) => {
       const x = stationX(i, n);
       ctx.fillStyle = 'rgba(10,8,18,0.5)'; ctx.beginPath(); ctx.ellipse(x, b.top + b.h * 0.8 + 2, 22, 6, 0, 0, Math.PI * 2); ctx.fill();
-      const info = l.v2?.[i] ?? fromLegacy(l.chips[i] ?? 'pending', l.attempts[i] ?? 0);
-      chipV2(ctx, x, chipY, s.label, info, this.reducedMotion ? 0 : now);
-      heatSegment(ctx, x, chipY + 44, heatAlpha(heatAt(l.heat, l.v2, l.heatFolded, i).issues));
-      if (l.lap?.next === i && info.state === 'pending') nextMark(ctx, x, chipY);
+      let info = l.v2?.[i] ?? fromLegacy(l.chips[i] ?? 'pending', l.attempts[i] ?? 0);
+      if (fell) { ctx.globalAlpha = i === deathIdx ? 1 : 0.4; if (i === deathIdx) info = { ...info, state: 'dead' }; }
+      chipV2(ctx, x, chipY, s.label, info, cw, this.reducedMotion ? 0 : now);
+      heatSegment(ctx, x, chipY + 44, heatAlpha(heatAt(l.heat, l.v2, l.heatFolded, i).issues), cw);
+      if (l.lap?.next === i && info.state === 'pending') nextMark(ctx, x, chipY, cw);
+      const cursed = (l.curses ?? []).filter((c) => c.stage === s.id);
+      if (cursed.length > 0) {
+        ctx.save(); ctx.globalAlpha = fell ? 0.5 : 1; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(155,107,255,0.9)'; ctx.setLineDash([6, 4]);
+        rr(ctx, x - cw / 2 - 4, chipY - 4, cw + 8, 48, 12); ctx.stroke(); ctx.restore();
+        curseChip(ctx, x - cw / 2, chipY + 44, cursed[0]!, cursed.length - 1);
+      }
+      for (const pop of l.cursepops ?? []) if (pop.stage === s.id) curseAnswer(ctx, x, chipY + 76, pop.cls, ((now - pop.at) * this.speed) / POP_MS, this.reducedMotion);
+      const og = outageAt(l, s.id);
+      if (og && (og.endedAt === null || now - og.endedAt < 700)) outageRing(ctx, x, chipY + 41 + 20, og, now, this.reducedMotion);
     });
+    ctx.globalAlpha = 1;
     // progress bar under the active chip
     const wi = vm.stages.length ? Math.min(l.stageIndex, n - 1) : 0;
     const bx = stationX(wi, n);
@@ -528,9 +699,71 @@ export class ArenaScene {
       if (pct > 0) { rr(ctx, bx - 68, by + 2, Math.max(8, 136 * pct), 8, 4); ctx.fillStyle = failed ? C.fail : C.torch; ctx.fill(); }
       if (l.progressLabel && l.mode === 'working') { ctx.font = `600 13px ${MONO}`; txt(ctx, fit(ctx, l.progressLabel, 130), bx + 78, by + 7, 13, C.muted, 'left', MONO, '600'); }
     }
-    this.drawSkeleton(ctx, vm, l, b, now);
+    this.drawCorpses(ctx, vm, l, b, now);
+    if (fell) this.drawFallen(ctx, vm, l, b, now, deathIdx);
+    else this.drawSkeleton(ctx, vm, l, b, now);
     this.drawCreatures(ctx, l, b, now);
     this.drawSurvived(ctx, l, b, now);
+    ctx.restore();
+  }
+
+  /** Corpse markers on this lane: a wall stays under a living skeleton; an eliminated lane's tombstone is drawn by drawFallen. */
+  private drawCorpses(ctx: Ctx, vm: ArenaVM, l: LaneVM, b: LaneBox, now: number): void {
+    const n = vm.stages.length;
+    const floorY = b.top + b.h * 0.8 + 4;
+    for (const c of vm.tournament.corpses) {
+      if (c.lane !== l.lane || c.kind !== 'wall') continue;
+      const si = vm.stages.findIndex((s) => s.id === c.stage);
+      if (si < 0) continue;
+      const box = drawWallCorpse(ctx, stationX(si, n) + 6, floorY, Math.min(64, b.h * 0.42));
+      if (!this.lite) drawWisp(ctx, stationX(si, n) + 6, floorY, 60, now, this.reducedMotion, l.lane);
+      this.hot.push({ ...box, tip: epitaphOf(c, l.label || l.tier, vm.stages[si]!.label) });
+    }
+  }
+
+  /** An eliminated lane: tombstone on the stage where it died, the skeleton lying beside it, a ghost wisp, and a dim swarm that keeps circling. */
+  private drawFallen(ctx: Ctx, vm: ArenaVM, l: LaneVM, b: LaneBox, now: number, deathIdx: number): void {
+    const n = vm.stages.length;
+    const fell = l.fallen!;
+    const size = Math.min(88, b.h * 0.5);
+    const floorY = b.top + b.h * 0.8 + 4;
+    const x = stationX(deathIdx, n) + 14;
+    const corpse = vm.tournament.corpses.find((c) => c.lane === l.lane && c.kind === 'eliminated');
+    // The creatures that followed this lane circle the stone, so the failure stays visible.
+    let w = this.walkers.get(l.lane);
+    if (!w) { w = { x, lastT: now }; this.walkers.set(l.lane, w); }
+    w.x = x; w.lastT = now;
+    // skeleton lying on the ground to the left of the stone
+    const tier = TIER_IDS.includes(l.tier as Tier) ? (l.tier as Tier) : undefined;
+    ctx.save();
+    ctx.translate(x - 70, floorY - size / 2 + 4);
+    ctx.scale(1.02, 1.02);
+    ctx.filter = 'grayscale(0.7) brightness(0.82)';
+    ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.beginPath(); ctx.ellipse(0, size / 2, size * 0.42, 6, 0, 0, Math.PI * 2); ctx.fill();
+    drawSkeleton(ctx, frameFor('collapse', 1), { silhouette: false, size }, tier, wornParts(l.parts, [], now, this.speed, this.reducedMotion));
+    ctx.restore();
+    ctx.filter = 'none';
+    const h = tombHeight(b.h);
+    const box = drawTombstone(ctx, x, floorY, h, fell.round);
+    drawWisp(ctx, x, floorY - h, h, now, this.reducedMotion, l.lane);
+    const label = vm.stages[deathIdx]?.label ?? fell.stage;
+    const tip = epitaphOf(corpse ?? { lane: l.lane, stage: fell.stage, kind: 'eliminated', round: fell.round, epitaph: fell.epitaph, cause: fell.cause }, l.label || l.tier, label);
+    this.hot.push({ x: box.x - 70, y: box.y, w: box.w + 80, h: box.h, tip });
+    // dim, slow swarm
+    const bugs = swarmBugs({ depth: 2, seed: l.lane * 31 + fell.round * 7, age: now, exit: 0, corpse: true, harass: false, speed: this.speed });
+    const tint = bugTint('wisp');
+    ctx.save();
+    for (const g of (this.lite ? bugs.slice(0, 4) : bugs)) {
+      ctx.globalAlpha = g.a * 0.8;
+      const bx = x + g.x * 0.9, by = floorY - h * 0.55 + g.y * 0.8;
+      const r = 3.6 * g.s;
+      const wing = Math.abs(Math.sin(g.flap * Math.PI * 2)) * 5 * g.s;
+      ctx.fillStyle = tint.wing;
+      ctx.beginPath(); ctx.ellipse(bx - 3, by - 3 - wing * 0.2, 3.6 * g.s, wing + 1, -0.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(bx + 3, by - 3 - wing * 0.2, 3.6 * g.s, wing + 1, 0.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = tint.body;
+      ctx.beginPath(); ctx.ellipse(bx, by, r * 1.1, r, 0, 0, Math.PI * 2); ctx.fill();
+    }
     ctx.restore();
   }
 
@@ -586,8 +819,49 @@ export class ArenaScene {
       ctx.restore();
       if (isWorld(c.id) && !c.shrug && fr.exit === 0) drawWorldProp(ctx, worldProp(c.id, c.fault, c.actAt, now, this.speed), x, y + size * 0.9, size);
       this.creatureTags(ctx, c, x, y, size, now, fr.exit);
+      this.drawSwarm(ctx, l, b, c, fr.exit, now, skelX);
     });
     if (l.creatures.length > MAX_SHOWN) txt(ctx, '+' + (l.creatures.length - MAX_SHOWN), baseX - 40, b.top + 74, 13, C.muted, 'center', MONO, '700');
+  }
+
+  /** Little attackers around the skeleton: orbit, peck, then dissipate in a puff (tournament-v3 section 7.1). */
+  private drawSwarm(ctx: Ctx, l: LaneVM, b: LaneBox, c: CreatureVM, exit: number, now: number, skelX: number): void {
+    if (c.inner && c.killer) return;
+    const corpse = l.mode === 'dead' || l.mode === 'halted';
+    const quiet = l.mode === 'idle' || l.mode === 'done';
+    if (c.exitAt === null && swarmStale(now - c.born, this.speed, quiet)) { c.exitAt = now; c.exitDur = 600; }
+    const acted = c.actAt !== null && now >= c.actAt;
+    const size = Math.min(88, b.h * 0.5);
+    const cx = skelX;
+    const cy = b.top + b.h * 0.8 + 4 - size * 0.55;
+    const age = now - (c.actAt ?? c.born);
+    const lite = this.lite;
+    const bugs = swarmBugs({ depth: c.depth, attempts: Math.min(3, Math.floor(age / 4000)), seed: seedOf(c.id, c.born), age, exit, corpse, harass: acted, speed: this.speed });
+    const tint = bugTint(c.id);
+    const pf = puff(exit);
+    ctx.save();
+    for (const g of (lite ? bugs.slice(0, 5) : bugs)) {
+      if (g.a <= 0.02) continue;
+      const bx = cx + g.x;
+      const by = cy + g.y;
+      ctx.globalAlpha = g.a;
+      const r = 4.6 * g.s;
+      const wing = Math.abs(Math.sin(g.flap * Math.PI * 2)) * 6.5 * g.s;
+      ctx.fillStyle = tint.wing;
+      ctx.beginPath(); ctx.ellipse(bx - 3, by - 4 - wing * 0.2, 4.4 * g.s, wing + 1, -0.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(bx + 3, by - 4 - wing * 0.2, 4.4 * g.s, wing + 1, 0.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = tint.body;
+      ctx.beginPath(); ctx.ellipse(bx, by, r * 1.15, r, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(20,14,30,0.85)';
+      ctx.fillRect(bx - 1, by - r + 0.5, 1.4, r * 2 - 1);
+      if (g.peck > 0.7) { ctx.fillStyle = '#fff4b0'; ctx.fillRect(bx - 1, by + r, 2, 2); }
+    }
+    if (pf) {
+      ctx.globalAlpha = pf.a;
+      ctx.strokeStyle = tint.wing; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(cx, cy, pf.r, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.restore();
   }
 
   /** Fault caption, dice for random chaos, hourglass for a deferred fault. */
@@ -600,6 +874,14 @@ export class ArenaScene {
     rr(ctx, x - w / 2, y + size / 2 + 6, w, 15, 4); ctx.fillStyle = 'rgba(10,8,18,0.82)'; ctx.fill();
     ctx.lineWidth = 1.5; ctx.strokeStyle = C.out; ctx.stroke();
     txt(ctx, cap, x, y + size / 2 + 14, 13, C.warn, 'center', MONO, '700');
+    const tip = creatureTip(c);
+    if (c.unknown) {
+      const uw = 84, uy = y + size / 2 + 25;
+      rr(ctx, x - uw / 2, uy, uw, 18, 5); ctx.fillStyle = C.hex; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = C.out; ctx.stroke();
+      txt(ctx, '? UNKNOWN', x, uy + 10, 13, '#ffffff', 'center', MONO, '800');
+      if (exit === 0) this.hot.push({ x: x - uw / 2, y: uy, w: uw, h: 18, tip });
+    }
+    if (tip && !c.unknown && exit === 0) this.hot.push({ x: x - w / 2, y: y + size / 2 + 6, w, h: 15, tip });
     if (c.random) {
       const dx = x + size * 0.38, dy = y - size * 0.42;
       rr(ctx, dx - 7, dy - 7, 14, 14, 3); ctx.fillStyle = C.bone; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = C.out; ctx.stroke();

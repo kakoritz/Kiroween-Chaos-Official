@@ -35,6 +35,8 @@ export function isIssue(ev: ArenaEvent): boolean {
   switch (ev.type) {
     case 'stage_fail': case 'process_dead': case 'repeat': case 'order_parked': return true;
     case 'breaker': return d.state === 'open';
+    // The floor-rule gremlin counts as an issue (contract V1_2 section 5, TV3-C3).
+    case 'chaos': return d.source === 'gremlin' || d.fault === 'gremlin';
     default: return false;
   }
 }

@@ -13,6 +13,8 @@ export interface WaveSummaryHost {
   nextWave(): void;
   playDemo(): void;
   reportUrl(n: number): string;
+  /** Extra section under the lane cards (the curse table), or null. */
+  extra?(): HTMLElement | null;
 }
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls = '', text?: string): HTMLElementTagNameMap[K] {
@@ -97,7 +99,8 @@ export class WaveSummary {
     demo.addEventListener('click', () => { this.close(); this.host.playDemo(); });
     close.addEventListener('click', () => this.close());
     foot.append(rep, close, demo, next);
-    dlg.append(head, lanes, foot);
+    const more = this.host.extra?.() ?? null;
+    dlg.append(head, lanes, ...(more ? [more] : []), foot);
     dim.append(dlg);
     dim.addEventListener('mousedown', (e) => { if (e.target === dim) this.close(); });
     dlg.addEventListener('keydown', (e) => {
@@ -119,6 +122,11 @@ export class WaveSummary {
     box.setAttribute('aria-label', `${c.title}: ${c.rating || 'no rating'}`);
     box.append(el('h3', '', `Lane ${c.lane}: ${c.title}`));
     box.append(el('div', `ws-rating ws-rating--${c.tone}`, c.rating || 'No reviews'));
+    if (c.floorOk === false) {
+      const fl = el('div', 'ws-floor', '⚠ No issues at all');
+      fl.title = 'Floor rule broken: every lane should meet at least one issue per round, so this run was not tested. The engine asserts it (P19).';
+      box.append(fl);
+    }
     box.append(el('div', 'ws-avg', c.avgStars === null ? 'No stars yet' : `\u2605 ${starNum(c.avgStars)} avg${c.stars ? ` (${c.stars})` : ''}`));
     const kv = el('dl', 'ws-kv');
     const add = (k: string, v: string, bad = false) => { kv.append(el('dt', '', k), el('dd', bad ? 'bad' : '', v)); };
@@ -129,6 +137,7 @@ export class WaveSummary {
     add('Retries', String(c.retries));
     add('Downtime', c.downtimeMs > 0 ? secText(c.downtimeMs) : '\u2013', c.downtimeMs > 0);
     add('Orders', ordersWord(c.orders));
+    if (c.issuesTotal !== null) add('Issues', String(c.issuesTotal), c.floorOk === false);
     if (c.score !== null) add('Score', String(c.score), c.score < 0);
     box.append(kv);
     box.append(el('div', 'ws-sec', 'Issues by step'), renderHeatRow(c.issues, this.host.stageLabel));

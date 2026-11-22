@@ -1,6 +1,7 @@
 // Event ticker (ui-spec section 3, bottom right): newest event on top, icon plus text so colour is
 // never the only signal. Pure formatting is exported for tests; the DOM class only appends rows.
 import type { ArenaEvent } from '../api/types';
+import { chaosPhrase } from './creatures';
 
 export type Tone = 'ok' | 'bad' | 'warn' | 'info' | 'boss';
 export interface TickerLine { tone: Tone; icon: string; text: string }
@@ -24,7 +25,7 @@ export function tickerLine(ev: ArenaEvent, stageLabel: (id: string) => string): 
     case 'order_parked': return { tone: 'warn', icon: '\u29D6', text: `${lane}order parked` };
     case 'order_quarantined': return { tone: 'boss', icon: '\u2620', text: `${lane}order quarantined` };
     case 'stage_fail': return { tone: 'bad', icon: '\u2717', text: `${lane}${stage || 'stage'} failed` };
-    case 'chaos': return { tone: 'bad', icon: '\u2620', text: `${lane}${str(d.fault) || 'chaos'} hits ${stage || 'a stage'}` };
+    case 'chaos': return { tone: 'bad', icon: d.unknown === true ? '?' : '\u2620', text: `${lane}${chaosPhrase(d, stage)}` };
     case 'chaos_absorbed': return { tone: 'ok', icon: '\u26E8', text: `${lane}chaos absorbed` };
     case 'process_dead': return { tone: 'bad', icon: '\u2620', text: `${lane}process died` };
     case 'process_up': return { tone: 'warn', icon: '\u21BB', text: `${lane}process restarted` };
