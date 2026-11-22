@@ -333,6 +333,13 @@ export function reconcileLedger(vm: ArenaVM, data: unknown): void {
 /** Header total. */
 export const totalScore = (vm: ArenaVM): number => vm.lanes.reduce((a, l) => a + l.score, 0);
 
+/** Chip width in design px: 150 when there is room, narrower so eleven chips never overlap (TV3-U8 polish). */
+export function chipWidth(n: number, x0 = 260, x1 = 1500): number {
+  if (n <= 1) return 150;
+  const gap = (x1 - x0 - 140) / (n - 1);
+  return Math.max(60, Math.min(150, Math.floor(gap - 4)));
+}
+
 /** Station x for a stage index inside the track (design px), evenly spaced. */
 export function stationX(i: number, n: number, x0 = 260, x1 = 1500): number {
   const pad = 70;

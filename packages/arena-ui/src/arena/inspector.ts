@@ -3,13 +3,12 @@
 // stage and order; the popup streams while the stage is active, offers a Chaos button then, and
 // replays a finished stage as a short animation.
 import type { ArenaEvent } from '../api/types';
-import { stationX, type ChipState } from './model';
+import { chipWidth, stationX, type ChipState } from './model';
 import { laneBoxes } from './scene';
 
 export type Level = 'info' | 'warn' | 'error' | 'good';
 export interface InspLine { seq: number; level: Level; icon: string; text: string }
 
-const CHIP_W = 150;
 const CHIP_H = 40;
 
 /** Which stage chip sits under a point in design pixels, as zero-based lane and stage indexes. */
@@ -19,7 +18,7 @@ export function chipAt(x: number, y: number, laneCount: number, stageCount: numb
     const top = boxes[l]!.top + 4;
     if (y < top || y > top + CHIP_H) continue;
     for (let s = 0; s < stageCount; s++) {
-      if (Math.abs(x - stationX(s, stageCount)) <= CHIP_W / 2) return { lane: l, stage: s };
+      if (Math.abs(x - stationX(s, stageCount)) <= chipWidth(stageCount) / 2) return { lane: l, stage: s };
     }
   }
   return null;

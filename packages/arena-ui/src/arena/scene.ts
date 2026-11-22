@@ -5,7 +5,7 @@
 import { frameFor } from '../rig/skeleton';
 import { drawSkeleton } from '../rig/draw';
 import { TIER_IDS, TIER_LABEL, type Tier } from '../rig/dress';
-import { stationX, type ArenaVM, type ChipState, type LaneVM } from './model';
+import { chipWidth, stationX, type ArenaVM, type ChipState, type LaneVM } from './model';
 import { CHIP_ICON, fromLegacy, heatAlpha, heatAt, type ChipInfo, type ChipV2State } from './chips';
 import { captionOf, creatureFrame, shown, spriteOf, MAX_SHOWN, type CreatureVM } from './creatures';
 import { drawCreature } from '../creatures/draw';
@@ -211,16 +211,17 @@ export function wrapLabel(ctx: Ctx, label: string, w: number, px: number): strin
 }
 
 /** Dashed orange outline and a small arrow on the chip the skeleton is walking to (ui.md section 1). */
-function nextMark(ctx: Ctx, x: number, y: number): void {
-  const w = 150, h = 40;
+function nextMark(ctx: Ctx, x: number, y: number, w = 150): void {
+  const h = 40;
   ctx.save(); ctx.setLineDash([7, 5]); ctx.lineWidth = 3; ctx.strokeStyle = C.torch;
   rr(ctx, x - w / 2 - 4, y - 4, w + 8, h + 8, 12); ctx.stroke(); ctx.restore();
-  txt(ctx, '\u25B6', x - w / 2 - 14, y + h / 2 + 1, 14, C.torch, 'center', SANS, '800');
+  txt(ctx, '\u25B6', x - w / 2 - 6, y + h / 2 + 1, 13, C.torch, 'center', SANS, '800');
 }
 
 /** Chip v2 (PT-U3): state is icon plus colour plus label; an amber flag shows the issue count at this stage. */
-function chipV2(ctx: Ctx, x: number, y: number, label: string, info: ChipInfo, t: number): void {
-  const w = 150; const h = 40;
+function chipV2(ctx: Ctx, x: number, y: number, label: string, info: ChipInfo, w: number, t: number): void {
+  const h = 40;
+  const tight = w < 130;
   const s = CHIP2[info.state];
   const hot = info.state === 'active' || info.state === 'trouble';
   const pulse = hot && t !== 0 ? 0.55 + 0.45 * Math.sin(t / (info.state === 'trouble' ? 140 : 220)) : 1;
@@ -232,12 +233,14 @@ function chipV2(ctx: Ctx, x: number, y: number, label: string, info: ChipInfo, t
   ctx.stroke(); ctx.setLineDash([]);
   ctx.globalAlpha = 1;
   const icon = info.state === 'trouble' && info.attempts > 1 ? `${CHIP_ICON.trouble}${info.attempts}` : CHIP_ICON[info.state];
-  txt(ctx, icon, x - w / 2 + 16, y + h / 2 + 1, 18, s.color, 'center', SANS, '700');
-  const lines = wrapLabel(ctx, label, w - (info.issues > 0 ? 68 : 42), 15);
+  txt(ctx, icon, x - w / 2 + (tight ? 13 : 16), y + h / 2 + 1, tight ? 14 : 18, s.color, 'center', SANS, '700');
+  const px = tight ? 13 : 15;
+  const lines = wrapLabel(ctx, label, tight ? w - 28 : w - (info.issues > 0 ? 68 : 42), px);
   const col = info.state === 'pending' || info.state === 'dead' ? C.muted : C.text;
-  lines.forEach((ln, i) => txt(ctx, ln, x - w / 2 + 31, y + h / 2 + 1 + (i - (lines.length - 1) / 2) * 16, 15, col));
+  lines.forEach((ln, i) => txt(ctx, ln, x - w / 2 + (tight ? 24 : 31), y + h / 2 + 1 + (i - (lines.length - 1) / 2) * (tight ? 14 : 16), px, col));
   if (info.issues > 0) {
-    const fx = x + w / 2 - 14, fy = y + 14;
+    // On narrow chips the flag sits on the top-right corner so it never covers the label.
+    const fx = x + w / 2 - (tight ? 3 : 14), fy = tight ? y + 3 : y + 14;
     ctx.beginPath(); ctx.arc(fx, fy, 13, 0, Math.PI * 2); ctx.fillStyle = AMBER; ctx.fill();
     ctx.lineWidth = 2; ctx.strokeStyle = C.out; ctx.stroke();
     txt(ctx, `\u2691${info.issues > 9 ? '9+' : info.issues}`, fx, fy + 1, 14, C.out, 'center', SANS, '800');
@@ -246,9 +249,9 @@ function chipV2(ctx: Ctx, x: number, y: number, label: string, info: ChipInfo, t
 }
 
 /** One heat strip segment under a chip: opacity follows the wave's issue count at the stage. */
-function heatSegment(ctx: Ctx, x: number, y: number, alpha: number): void {
+function heatSegment(ctx: Ctx, x: number, y: number, alpha: number, w = 150): void {
   ctx.save();
-  rr(ctx, x - 75, y, 150, 4, 2); ctx.fillStyle = 'rgba(90,80,120,0.25)'; ctx.fill();
+  rr(ctx, x - w / 2, y, w, 4, 2); ctx.fillStyle = 'rgba(90,80,120,0.25)'; ctx.fill();
   if (alpha > 0) { ctx.globalAlpha = alpha; ctx.fillStyle = AMBER; ctx.fill(); }
   ctx.restore();
 }
@@ -517,13 +520,14 @@ export class ArenaScene {
     if (l.mode !== 'sleep') startStack(ctx, b, l);
     // stage chips and station props
     const chipY = b.top + 4;
+    const cw = chipWidth(n);
     vm.stages.forEach((s, i) => {
       const x = stationX(i, n);
       ctx.fillStyle = 'rgba(10,8,18,0.5)'; ctx.beginPath(); ctx.ellipse(x, b.top + b.h * 0.8 + 2, 22, 6, 0, 0, Math.PI * 2); ctx.fill();
       const info = l.v2?.[i] ?? fromLegacy(l.chips[i] ?? 'pending', l.attempts[i] ?? 0);
-      chipV2(ctx, x, chipY, s.label, info, this.reducedMotion ? 0 : now);
-      heatSegment(ctx, x, chipY + 44, heatAlpha(heatAt(l.heat, l.v2, l.heatFolded, i).issues));
-      if (l.lap?.next === i && info.state === 'pending') nextMark(ctx, x, chipY);
+      chipV2(ctx, x, chipY, s.label, info, cw, this.reducedMotion ? 0 : now);
+      heatSegment(ctx, x, chipY + 44, heatAlpha(heatAt(l.heat, l.v2, l.heatFolded, i).issues), cw);
+      if (l.lap?.next === i && info.state === 'pending') nextMark(ctx, x, chipY, cw);
     });
     // progress bar under the active chip
     const wi = vm.stages.length ? Math.min(l.stageIndex, n - 1) : 0;
