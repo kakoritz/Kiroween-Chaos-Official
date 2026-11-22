@@ -17,6 +17,7 @@ import { parseCommandLine } from '../../../haunt/src/adapters';
 import { writeBadgeFiles } from '../../../haunt/src/share';
 import { startProvider } from '../provider/server';
 import { lintSpecDir, renderLint } from '../../../haunt/src/miner/specs';
+import { monkeyCommand, stopCommand } from '../../../haunt/src/monkey/cli';
 
 const argv = process.argv.slice(2);
 const cmd = argv[0];
@@ -355,6 +356,10 @@ if (cmd === 'badge') {
   process.exitCode = await boss();
 } else if (cmd === 'compare') {
   process.exitCode = compare();
+} else if (cmd === 'monkey') {
+  process.exitCode = await monkeyCommand(argv.slice(1));
+} else if (cmd === 'stop') {
+  process.exitCode = await stopCommand(argv.slice(1));
 } else if (cmd === 'ramp') {
   process.exitCode = await ramp();
 } else {
@@ -362,6 +367,7 @@ if (cmd === 'badge') {
   console.log('       npm run haunt -- compare <runA> <runB> [--out file]');
   console.log('       npm run haunt -- badge <run-id> [--out dir]');
   console.log('       npm run haunt -- spec-lint <.kiro/specs/hardening-run>');
+  console.log('       npm run haunt -- monkey --mode observe|staging|prod-guarded [--config file] [--dry-run] | stop  (see docs/PRODUCTION-MODE.md)');
   console.log('       npm run haunt -- improve [--url http://127.0.0.1:7070] [--seed N] [--rounds JSON] [--speed N] [--pace slow]');
   process.exitCode = cmd ? 2 : 0;
 }

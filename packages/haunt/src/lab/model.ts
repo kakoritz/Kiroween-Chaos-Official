@@ -1,5 +1,7 @@
 // Workflow Lab model: a declared workflow (stages and the protections it has) that the browser engine can sweep.
 // No node imports: this must bundle for the browser. Spec: .kiro/specs/share/spec.md section 4 (SH-C3).
+import { STREAMING_PACK_YAML } from '../packs/streaming';
+import { packToLabModel, parsePack } from '../packs/pack';
 import type { HauntConfig, StageDef, StageRole } from '../config/haunt-config';
 
 export type LabPart = 'retry' | 'journal' | 'idempotency' | 'breaker' | 'offline_queue';
@@ -17,8 +19,28 @@ export interface LabStage {
   role: StageRole;
   effects?: LabEffect[];
 }
+/** Ids of the creatures the lab sends (checked against engine LAB_CREATURES by the tests). */
+export const LAB_CREATURE_IDS: readonly string[] = ['reaper', 'wraith', 'banshee', 'zombie', 'ghost', 'goblin', 'imp', 'poltergeist', 'doppelganger', 'witch', 'mummy'];
+
+export interface PackFault { id: string; stage: string; creature: string; art: string; mode: string; behavior: string }
+export interface PackBoss { id: string; label?: string; hits: string[]; story?: string }
+/** Pack labels carried on the model and report so the UI changes words, not code (PK-C1). */
+export interface LabPackMeta {
+  id: string;
+  title: string;
+  modelBased: boolean;
+  /** Lab creature id (art) to the pack's creature name. */
+  creatures: Record<string, string>;
+  review: { label: string; subscores: string[] };
+  tiers: Partial<Record<LabPart, string>>;
+  faults: PackFault[];
+  bosses: PackBoss[];
+}
+
 export interface LabModel {
   name: string;
+  /** Set when the model came from a scenario pack. */
+  pack?: LabPackMeta;
   stages: LabStage[];
   /** Protections the modelled process has. Missing parts count as off ("none, my bot today"). */
   parts?: Partial<Record<LabPart, boolean>>;
@@ -140,6 +162,8 @@ export const LAB_PRESETS: Record<string, LabModel> = {
       { id: 'settle', label: 'Wait for settlement', role: 'poll' },
     ],
   },
+  // Lazy: built from the embedded pack text on first read (the packs module imports this one).
+  get streaming(): LabModel { return streamingPreset(); },
   report: {
     name: 'report-lab',
     stages: [
@@ -152,3 +176,9 @@ export const LAB_PRESETS: Record<string, LabModel> = {
 };
 
 export const LAB_COMMANDS: readonly string[] = ['npx haunt init', 'haunt validate', 'haunt sweep'];
+
+function streamingPreset(): LabModel {
+  const r = parsePack(STREAMING_PACK_YAML);
+  if (!r.ok) throw new Error(`streaming pack is invalid: ${r.errors.join('; ')}`);
+  return packToLabModel(r.pack);
+}
