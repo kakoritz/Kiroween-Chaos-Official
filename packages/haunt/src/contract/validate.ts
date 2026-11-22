@@ -373,6 +373,14 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
         if (typeof d.stage !== 'string' || typeof d.epitaph !== 'string') bad('R59', ev, 'lane_eliminated needs stage and epitaph');
         return;
       }
+      case 'lesson': {
+        // V1_2 section 5, rule 62: a lesson names its lane, a signature of the form "stage + fault + consequence", a mechanism and how it was learned.
+        if (typeof d.signature !== 'string' || d.signature.split(' + ').length !== 3) bad('R62', ev, 'lesson signature must be "stage + fault + consequence"');
+        if (d.via !== 'overcame' && d.via !== 'suggested') bad('R62', ev, 'lesson via must be overcame or suggested');
+        if (typeof d.mechanism !== 'string' || !Number.isInteger(d.round)) bad('R62', ev, 'lesson needs a mechanism and a round');
+        if (tourneyLanes.size && !tourneyLanes.has(d.lane)) bad('R62', ev, 'lesson for lane ' + d.lane + ' which was not live in round ' + tourneyRound);
+        return;
+      }
       case 'corpse': {
         if (d.kind !== 'eliminated' && d.kind !== 'wall') bad('R59', ev, 'corpse kind must be eliminated or wall');
         if (typeof d.epitaph !== 'string' || d.round !== tourneyRound) bad('R59', ev, 'corpse needs an epitaph and the current round');

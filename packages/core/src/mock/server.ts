@@ -32,7 +32,7 @@ export interface MockOptions {
   heartbeatMs?: number;
 }
 
-const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET,POST,OPTIONS', 'access-control-allow-headers': 'content-type' };
+const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET,POST,DELETE,OPTIONS', 'access-control-allow-headers': 'content-type' };
 
 const send = (res: ServerResponse, status: number, body: unknown, type = 'application/json'): void => {
   res.writeHead(status, { 'content-type': type, ...CORS });
@@ -185,7 +185,14 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
     const body = method === 'POST' ? await readBody(req) : undefined;
     if (method === 'POST' && !isObj(body)) return fail(res, 400, 'bad_request', 'body must be a JSON object');
 
+    if (method === 'DELETE' && path === '/api/lessons') { hub.lessons.clear(); return send(res, 200, {}); }
     if (method === 'GET') {
+      if (path.startsWith('/api/lessons/')) {
+        const lane = Number(path.slice('/api/lessons/'.length));
+        if (!Number.isInteger(lane) || lane < 1 || lane > 5) return fail(res, 400, 'bad_lane', 'lane must be 1 to 5');
+        const lessons = hub.lessons.get(lane) ?? [];
+        return send(res, 200, { lane, tier: TIER_ORDER[lane - 1], lessons, suggestions: [], overcame: [], policy: { version: 1, rules: [] } });
+      }
       if (path === '/api/health') return send(res, 200, { ok: true, mode: 'mock', contractVersion: advertised() });
       if (path === '/api/creatures') return send(res, 200, CREATURES);
       if (path.startsWith('/api/demo/captions/')) {

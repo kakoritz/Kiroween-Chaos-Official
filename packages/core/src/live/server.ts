@@ -25,6 +25,9 @@ import { Tournament, type Corpse } from '../../../haunt/src/tournament/tournamen
 import { tierOfLane } from '../../../haunt/src/tournament/rounds';
 import { tierById } from '../../../haunt/src/pipeline/pipeline';
 import { roundScript } from './tournament-script';
+import { LessonsStore, lessonEvent, policyOf } from '../../../haunt/src/tournament/lessons';
+import { laneCases } from '../../../haunt/src/tournament/signature';
+import { join as joinPath } from 'node:path';
 
 export const LIVE_HOST = '127.0.0.1';
 export const LIVE_PORT = 7070;
@@ -69,6 +72,8 @@ export interface LiveOptions {
   /** Hardening spec the reviewer wrote after a wave. Undefined means not ready (404). */
   hardening?: (wave: number) => HardeningBody | undefined;
   pingMs?: number;
+  /** Where lessons are kept (`<lane>.json` and `lane-<lane>.policy.json`). Defaults to `.haunt/lessons` under the working folder. */
+  lessonsDir?: string;
 }
 
 class ApiError extends Error {
@@ -103,6 +108,8 @@ export class LiveServer {
   private readonly pingMs: number;
   private readonly hardening: (wave: number) => HardeningBody | undefined;
   private tracker?: LapTracker;
+  /** Lessons ledger and policy overlays (TV3-C8). */
+  readonly lessons: LessonsStore;
   private readonly clients = new Set<ServerResponse>();
   private http?: Server;
 
@@ -113,6 +120,7 @@ export class LiveServer {
     this.app = opts.app ?? 'orders';
     this.ledger = opts.ledger ?? (() => ({ lanes: [] }));
     this.pingMs = opts.pingMs ?? PING_MS;
+    this.lessons = new LessonsStore(opts.lessonsDir ?? joinPath(process.cwd(), '.haunt', 'lessons'));
     this.hardening = opts.hardening ?? (() => undefined);
     const dist = opts.staticDir ?? resolve(process.cwd(), 'packages', 'arena-ui', 'dist');
     this.staticDir = existsSync(dist) ? dist : undefined;
@@ -346,6 +354,7 @@ export class LiveServer {
     this.corpses = [];
     this.engine.setChaosMode?.({ mode: 'manual', frequency: 0.3, seed });
     this.chaosMode = { mode: 'manual', frequency: 0.3, seed };
+    if (body.resetLessons === true) this.lessons.reset();
     this.tourney = { t, speed, pace, wave: 0 };
     return { tournament: true, ...this.beginRound() };
   }
@@ -353,6 +362,8 @@ export class LiveServer {
   private beginRound() {
     const tn = this.tourney!;
     const rs = tn.t.beginRound();
+    // The overlay of every live lane is written before its bot starts: lessons carry into the round.
+    for (const lane of rs.lanes) this.lessons.writePolicy(this.lessons.get(lane, tierOfLane(lane)));
     const cfg = tn.t.cfgOf(rs.round);
     const waveSeed = fnv1a32(String(tn.t.seed) + '|round' + rs.round) % 1_000_000;
     const script = roundScript(tn.t.seed, rs.round, cfg, rs.lanes, waveSeed);
@@ -367,12 +378,28 @@ export class LiveServer {
     if (!tn || tn.wave !== n || tn.t.phase !== 'running') return;
     const evs = waveEvents(this.log.events, n);
     const out = tn.t.finishRound(evs as never, this.roundExtras(tn.t, evs, n));
-    for (const e of out) this.log.emit({ ...(e as HauntEvent), wave: n });
+    const learned = ((out[0]?.detail?.lessons ?? []) as { lane: number; suggestion?: boolean; signature: string; stage: string; mechanism: string; via: 'overcame' | 'suggested'; learnedRound: number; action?: string }[]).filter((l) => !l.suggestion);
+    out.forEach((e, i) => {
+      this.log.emit({ ...(e as HauntEvent), wave: n });
+      // `lesson` events follow round_end, before any lane is announced fallen.
+      if (i === 0) for (const l of learned) this.log.emit({ ...(lessonEvent(l.lane, l as never) as unknown as HauntEvent), wave: n });
+    });
     if ((tn.t.phase as string) === 'done') this.log.emit({ ...(tn.t.endEvent(this.finalExtras(tn.t)) as HauntEvent), wave: n });
   }
 
   /** Hooks for lessons and the Casebook (TV3-C8, C10). */
-  protected roundExtras(_t: Tournament, _evs: HauntEvent[], wave: number): Record<string, unknown> { return { wave }; }
+  protected roundExtras(t: Tournament, evs: HauntEvent[], wave: number): Record<string, unknown> {
+    const lessonsBonus: Record<number, number> = {};
+    const lessons: unknown[] = [];
+    for (const lane of t.alive) {
+      const tier = tierOfLane(lane);
+      const r = this.lessons.learn(lane, tier, laneCases(evs as never, lane, t.round), t.round);
+      lessonsBonus[lane] = 25 * r.firstOvercome.length;
+      for (const l of r.newLessons) lessons.push({ lane, ...l });
+      for (const s of r.newSuggestions) lessons.push({ lane, suggestion: true, ...s });
+    }
+    return { wave, lessonsBonus, lessons };
+  }
   protected finalExtras(_t: Tournament): Record<string, unknown> { return {}; }
 
   private tournamentNext() {
@@ -497,6 +524,12 @@ export class LiveServer {
         return { json: loadCaptions(seg[3]) };
       }
       if (p === '/api/ledger') return { json: this.ledger() };
+      if (seg[0] === 'api' && seg[1] === 'lessons' && seg.length === 3) {
+        const lane = Number(seg[2]);
+        if (!Number.isInteger(lane) || lane < 1 || lane > 5) fail(400, 'bad_lane', 'bad lane ' + seg[2]);
+        const l = this.lessons.get(lane, tierOfLane(lane));
+        return { json: { ...l, policy: policyOf(l) } };
+      }
       if (p === '/api/tournament') return { json: this.tourney ? { ...this.tourney.t.view(), wave: this.tourney.wave } : { phase: 'idle' } };
       if (p === '/api/waves') return { json: this.wavesView() };
       if (seg[0] === 'api' && seg[1] === 'waves' && seg.length >= 4) {
@@ -531,6 +564,7 @@ export class LiveServer {
       if (seg[0] === 'api' && seg[1] === 'lane' && seg[3] === 'stage' && seg[4]) return { json: this.stageInspector(this.laneOf(seg[2]), seg[4], q.get('order') ?? undefined) };
       return undefined;
     }
+    if (method === 'DELETE' && p === '/api/lessons') { this.lessons.reset(); return { json: {} }; }
     if (method !== 'POST') return undefined;
     switch (p) {
       case '/api/wave/start': return { json: this.startWave(body) };
@@ -582,7 +616,7 @@ export class LiveServer {
     if (o && ORIGIN_RE.test(o)) {
       res.setHeader('access-control-allow-origin', o);
       res.setHeader('vary', 'origin');
-      res.setHeader('access-control-allow-methods', 'GET, POST, OPTIONS');
+      res.setHeader('access-control-allow-methods', 'GET, POST, DELETE, OPTIONS');
       res.setHeader('access-control-allow-headers', 'content-type');
     }
   }

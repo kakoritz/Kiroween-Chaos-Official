@@ -3,6 +3,8 @@
 import { TIER_ORDER, type HauntEvent } from '@haunt/shared';
 import { Tournament } from '../../../haunt/src/tournament/tournament';
 import { roundPlan, tierOfLane, type RoundCfg } from '../../../haunt/src/tournament/rounds';
+import { emptyLessons, lessonEvent, learnRound, type LaneLessons } from '../../../haunt/src/tournament/lessons';
+import { laneCases } from '../../../haunt/src/tournament/signature';
 import type { ArmSpec } from './plan';
 import { assembleWave, assignSeq, BASE_TS, planWave } from './wave';
 
@@ -35,6 +37,7 @@ export interface MockTournamentOpts {
 export function mockTournament(o: MockTournamentOpts = {}): HauntEvent[] {
   const t = new Tournament({ seed: SEED, rounds: o.rounds });
   const out: HauntEvent[] = [];
+  const known = new Map<number, LaneLessons>();
   let ts0 = BASE_TS;
   const limit = o.upTo ?? t.total;
   while (t.phase !== 'done' && t.round < limit) {
@@ -63,9 +66,22 @@ export function mockTournament(o: MockTournamentOpts = {}): HauntEvent[] {
     out.push(...wave);
     const endTs = wave[wave.length - 1]!.ts;
     const evs = wave.filter((e) => e.lane !== undefined || e.type === 'wave_end');
-    const fin = t.finishRound(evs as never, { wave: rs.round });
-    fin.forEach((e, i) => out.push({ seq: 0, ts: endTs + 100 + i * 20, wave: rs.round, ...(e as object) } as HauntEvent));
-    if ((t.phase as string) === 'done') out.push({ seq: 0, ts: endTs + 100 + fin.length * 20 + 20, wave: rs.round, ...(t.endEvent() as object) } as HauntEvent);
+    // Learn from the round exactly as the live server does: lessons, the first-time bonus, then `lesson` events after round_end.
+    const lessonsBonus: Record<number, number> = {};
+    const lessons: unknown[] = [];
+    const learned: { lane: number; lesson: ReturnType<typeof learnRound>['newLessons'][number] }[] = [];
+    for (const lane of live) {
+      const r = learnRound(known.get(lane) ?? emptyLessons(lane, tierOfLane(lane)), laneCases(evs as never, lane, rs.round), rs.round);
+      known.set(lane, r.next);
+      lessonsBonus[lane] = 25 * r.firstOvercome.length;
+      for (const l of r.newLessons) { lessons.push({ lane, ...l }); learned.push({ lane, lesson: l }); }
+      for (const g of r.newSuggestions) lessons.push({ lane, suggestion: true, ...g });
+    }
+    const fin = t.finishRound(evs as never, { wave: rs.round, lessonsBonus, lessons });
+    const withLessons: unknown[] = [];
+    fin.forEach((e, i) => { withLessons.push(e); if (i === 0) for (const l of learned) withLessons.push(lessonEvent(l.lane, l.lesson)); });
+    withLessons.forEach((e, i) => out.push({ seq: 0, ts: endTs + 100 + i * 20, wave: rs.round, ...(e as object) } as HauntEvent));
+    if ((t.phase as string) === 'done') out.push({ seq: 0, ts: endTs + 100 + withLessons.length * 20 + 20, wave: rs.round, ...(t.endEvent() as object) } as HauntEvent);
     ts0 = endTs + GAP_MS;
   }
   return assignSeq(out);

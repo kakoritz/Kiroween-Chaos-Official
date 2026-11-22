@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { createInterface } from 'node:readline';
 import { ChaosHost } from '../chaos';
 import { InputError, LaneHalted, Pipeline, STAGES, tierById, type OrderData, type TierDef } from '../pipeline';
-import { PARTS, ParkSignal, Sdk, WrongOrder, type DecisionQuestion, type DecisionSource, type Part, type Transport } from '../sdk';
+import { PARTS, ParkSignal, Sdk, WrongOrder, parsePolicy, type Policy, type DecisionQuestion, type DecisionSource, type Part, type Transport } from '../sdk';
 import { DECISION_CHOICES, type DecisionChoice } from '../shared/catalog';
 
 export interface BotDef {
@@ -205,7 +205,12 @@ export async function runBot(def: BotDef): Promise<void> {
     },
   };
 
-  const sdk = new Sdk({ tier: def.tier, lane, use, host, transport, journalPath: join(scratch, 'journal.jsonl'), ...(def.onWrongOrder ? { onWrongOrder: def.onWrongOrder } : {}) });
+  // The lessons overlay (`haunt.policy`) the runner wrote for this lane, if any (spec 4).
+  let policy: Policy | undefined;
+  if (env.HAUNT_POLICY && existsSync(env.HAUNT_POLICY)) {
+    try { policy = parsePolicy(JSON.parse(readFileSync(env.HAUNT_POLICY, 'utf8'))); } catch { /* an unreadable overlay is no overlay */ }
+  }
+  const sdk = new Sdk({ tier: def.tier, lane, use, host, transport, journalPath: join(scratch, 'journal.jsonl'), ...(policy ? { policy } : {}), ...(def.onWrongOrder ? { onWrongOrder: def.onWrongOrder } : {}) });
   host.bind(sdk);
 
   // ---- input handling ----

@@ -101,6 +101,8 @@ export interface BotCommandOptions {
   root: string; runDir: string; providerUrl: string; botsDir?: string;
   /** Called once per wave before its first lane spawns (runtime.md section 31: reset the provider). */
   onWave?: (wave: number) => void;
+  /** Folder of per-lane policy overlays (`lane-<n>.policy.json`, TV3-C8). A lane with a file gets `HAUNT_POLICY`. */
+  policyDir?: string;
   /** Bundle name to run instead of `<tier>` (for example `rookie.hardened` for the `loop` wave 2, runtime.md section 32). */
   bundleFor?: (lane: string, wave: number, tier: string) => string | undefined;
 }
@@ -138,6 +140,7 @@ export function makeBotCommand(o: BotCommandOptions): SpawnerOptions['botCommand
       HAUNT_RUN_DIR: dir, HAUNT_LANE: lane, HAUNT_TIER: tier.id, HAUNT_SEED: String(settings.seed),
       HAUNT_PROVIDER: o.providerUrl, HAUNT_ORDERS_DIR: paths.orders, HAUNT_SPEED: String(settings.speed),
       HAUNT_ATTEMPT: String(attempt), HAUNT_APP: settings.app,
+      ...(o.policyDir && existsSync(join(o.policyDir, `lane-${lane}.policy.json`)) ? { HAUNT_POLICY: join(o.policyDir, `lane-${lane}.policy.json`) } : {}),
       ...(tier.id === 'crew' ? { HAUNT_PARTS: crewPartsEnv(tier.use) } : {}),
     };
     if (inbox) return inboxBotCommand(inbox, env);
