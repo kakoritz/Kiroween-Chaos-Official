@@ -1,6 +1,6 @@
 // Fault catalog: which faults exist, where they apply, how they act.
 // Spec: .kiro/specs/engine/design.md section 5; runtime.md sections 3, 19, 29.
-import type { HookPoint } from '../sdk';
+import type { HookPoint } from '../sdk/sdk';
 
 export type FaultKind = 'process' | 'provider' | 'file' | 'disk';
 export type Family = 'process' | 'network' | 'http' | 'data' | 'world';

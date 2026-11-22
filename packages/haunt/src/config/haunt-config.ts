@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs';
 import { parseYaml, YamlError } from './yaml';
 
 export type Adapter = 'sdk' | 'proxy' | 'process';
@@ -159,12 +158,3 @@ export function parseHauntConfig(source: string): LoadResult {
   return validateHauntConfig(raw);
 }
 
-export function loadHauntConfig(path: string): LoadResult {
-  let src: string;
-  try {
-    src = readFileSync(path, 'utf8');
-  } catch (e) {
-    return { ok: false, errors: [`${path}: cannot read file (${(e as NodeJS.ErrnoException).code ?? 'error'})`] };
-  }
-  return parseHauntConfig(src);
-}

@@ -18,7 +18,7 @@ import { DetailNormalizer, SettleGate } from './normalize';
 import { APPS } from '../../../haunt/src/shared/catalog';
 import { LaneTravel, travelAt } from '../../../haunt/src/runner/travel';
 import { crewPartsEnv } from '../../../haunt/src/campaign/crew';
-import { loadCampaign } from '../../../haunt/src/campaign/nights';
+import { loadCampaign } from '../../../haunt/src/campaign/load';
 import { planScripts } from '../../../haunt/src/campaign/wave-config';
 import { loadDemo, type DemoScript } from './demo';
 import { inboxBotCommand, inboxTarget, writeInboxMail } from './inbox-command';

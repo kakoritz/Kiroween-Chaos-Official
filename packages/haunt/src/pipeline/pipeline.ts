@@ -1,7 +1,7 @@
 // The eleven-stage order pipeline (tournament-v3 spec section 2) and the five policy tiers.
 // Spec: .kiro/specs/engine/design.md sections 1 and 4; runtime.md sections 5, 7, 21 and 28.
 import { fnv1a32, mulberry32, unit } from '../shared';
-import { ParkSignal, ProcessKilled, QuarantineError, WrongOrder, type Part, type Sdk } from '../sdk';
+import { ParkSignal, ProcessKilled, QuarantineError, WrongOrder, type Part, type Sdk } from '../sdk/sdk';
 
 export interface StageDef {
   id: string;

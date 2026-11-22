@@ -6,7 +6,7 @@
 import { TIER_ORDER } from '@haunt/shared';
 import { Player } from '../../../core/src/mock/play';
 import type { Hub } from '../../../core/src/mock/hub';
-import { campaignFixture } from '../../../core/mock/campaign-fixtures';
+import { campaignFixture } from '../../../core/mock/campaign-fixtures-core';
 import type { HauntInPage } from '../api';
 
 type Ev = { type: string; ts: number; wave?: number; lane?: number; detail?: any; [k: string]: any };

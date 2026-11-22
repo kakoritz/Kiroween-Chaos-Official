@@ -3,7 +3,7 @@
 import { TIER_DECISION_DEFAULT } from '../shared/catalog';
 import { backoffRule, ruleFor, type Policy } from './policy';
 import {
-  Journal, JournalWriteError, applyRecord, readJournal, replay,
+  JournalWriteError, applyRecord, replay,
   type DecisionChoice, type EffectState, type JournalRecord, type JournalState, type OrderOutcome,
 } from './journal';
 
@@ -16,6 +16,12 @@ export type HookPoint =
 
 export const RETRY = { attempts: 3, delayMs: 500 } as const;
 export const BREAKER = { attempts: 5, baseMs: 500, openAfter: 4, openMs: 5000 } as const;
+
+/** The node file journal, registered by ./journal-node (kept out of this file so the browser bundle has no node imports). */
+export interface NodeJournalApi { open(path: string): JournalStore; read(path: string): JournalRecord[] }
+let nodeJournal: NodeJournalApi | undefined;
+export function registerNodeJournal(api: NodeJournalApi): void { nodeJournal = api; }
+const needNodeJournal = (): NodeJournalApi => { if (!nodeJournal) throw new Error('the node journal is not loaded: import it from the sdk index (../sdk) or ./journal-node'); return nodeJournal; };
 
 /** The host owns time, the control channel and the kill rendezvous. */
 export interface Host {
@@ -162,7 +168,7 @@ export class Sdk {
     this.use = new Set(o.use);
     if (this.use.has('journal')) {
       if (o.journalStore) this.journal = o.journalStore;
-      else if (o.journalPath) this.journal = new Journal(o.journalPath);
+      else if (o.journalPath) this.journal = needNodeJournal().open(o.journalPath);
       else throw new Error('the journal part needs journalPath');
     } else {
       this.journal = null;
@@ -179,7 +185,7 @@ export class Sdk {
   /** `startup` hook, journal load, `hello`. Call once per process before the first order. */
   async start(): Promise<void> {
     await this.o.host.hook('startup', {});
-    if (this.journal) this.state = replay(this.o.initialRecords ?? readJournal(this.o.journalPath ?? ''));
+    if (this.journal) this.state = replay(this.o.initialRecords ?? needNodeJournal().read(this.o.journalPath ?? ''));
     const pid = this.o.pid ?? (typeof process !== 'undefined' ? process.pid : 0);
     this.o.host.emit({ k: 'hello', tier: this.o.tier, parts: this.parts(), pid });
   }

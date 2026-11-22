@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { PatternStore, THRESHOLDS, journalRefs, minePatterns, patternEvent, patternId, qualifies, costOf, type Pattern } from '../src/miner';
+import { PatternStore, FilePatternStore, THRESHOLDS, journalRefs, minePatterns, patternEvent, patternId, qualifies, costOf, type Pattern } from '../src/miner';
 import type { Ev } from '../src/tournament/rp';
 import { validateEvents } from '../src/contract/validate';
 import { mockTournament } from '../../core/src/sim/tournament-fixtures';
@@ -61,7 +61,7 @@ describe('mining cases', () => {
     writeFileSync(path, ['{"t":"order_start","order":"ord-0009"}', '{"t":"intent","order":"ord-0001","stage":"payment","kind":"charge"}', '{"t":"result","order":"ord-0001","stage":"payment"}'].join('\n'));
     expect(journalRefs(path, 'ord-0001', 'payment')).toEqual([`${path.replace(/\\/g, '/')}:2`, `${path.replace(/\\/g, '/')}:3`]);
     expect(journalRefs(join(dir, 'nope.jsonl'), 'a', 'b')).toEqual([]);
-    const m = minePatterns({ run: 'r1', events: order(1, 1, 'timeout', 'failed'), journals: [{ lane: 1, path }], reportLink: '/api/waves/1/report' });
+    const m = minePatterns({ run: 'r1', events: order(1, 1, 'timeout', 'failed'), journals: [{ lane: 1, path }], readRefs: journalRefs, reportLink: '/api/waves/1/report' });
     expect(m[0]!.evidence.journal).toHaveLength(2);
     expect(m[0]!.evidence.report).toBe('/api/waves/1/report');
   });
@@ -129,13 +129,13 @@ describe('thresholds and the store', () => {
   const mine = (run: string, n: number) => minePatterns({ run, events: [...order(1, 1, 'timeout', 'done', { repeat: true, recover: 'retry' }), ...(n > 1 ? order(2, 1, 'timeout', 'done', { repeat: true, recover: 'retry' }) : [])] });
 
   it('accumulates across runs and rounds, never counts the same run twice, keeps first and last seen', () => {
-    const store = new PatternStore(join(mkdtempSync(join(tmpdir(), 'haunt-pat-')), 'patterns.json'));
+    const store = new FilePatternStore(join(mkdtempSync(join(tmpdir(), 'haunt-pat-')), 'patterns.json'));
     const c1 = store.ingest(mine('run-a', 2), 'run-a#r1');
     expect(c1.map((c) => c.kind)).toEqual(['new']);
     expect(store.ingest(mine('run-a', 2), 'run-a#r1')).toEqual([]);
     const c2 = store.ingest(mine('run-b', 1), 'run-b#r1');
     expect(c2[0]!.kind).toBe('updated');
-    const p = new PatternStore(store.file).list()[0]!;
+    const p = new FilePatternStore(store.file).list()[0]!;
     expect(p).toMatchObject({ id: patternId('payment + timeout + duplicate_effect'), count: 3, status: 'new', lanes: [1, 2], repeats: 3, runs: ['run-a#r1', 'run-b#r1'] });
     expect(p.firstSeen.run).toBe('run-a');
     expect(p.lastSeen.run).toBe('run-b');

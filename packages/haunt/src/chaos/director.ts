@@ -1,6 +1,6 @@
 // Chaos director: per-lane fault stack, nesting, deferral, depth limit, bosses, restart delays.
 // Spec: design.md section 5 (Nesting, Crash points); runtime.md sections 3, 19, 29.
-import type { HookPoint, Part } from '../sdk';
+import type { HookPoint, Part } from '../sdk/sdk';
 import {
   BOSSES, JOURNALED_EFFECT_STAGES, MAX_DEPTH, faultById, injectedAtFor, nextApplicableStage, restartDelay,
   type BossId, type FaultDef, type InjectedAt,

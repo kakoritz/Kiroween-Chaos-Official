@@ -1,12 +1,9 @@
-// Campaign data loader and validator (CP-C1). Reads packages/core/campaign/{nights,gear}.json.
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+// Campaign data validators (CP-C1). Pure: no file access, so the browser bundle can use them. The node loader is `./load`.
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 import Ajv2020 from 'ajv/dist/2020.js';
 import type { ValidateFunction } from 'ajv';
 import { PARTS, TIERS } from '../shared/catalog';
 import { faultById } from '../chaos/catalog';
-import { findRepoRoot } from '../contract/validate';
 import type { CampaignGear, CampaignNight, CampaignPress, CampaignResponse, CampaignStart } from './types';
 
 export const NIGHT_COUNT = 7;
@@ -16,10 +13,6 @@ const WORLD_FAULTS: Record<string, string> = {
   sms_down: 'gargoyle', app_down: 'imp', updates_down: 'goblin', wrong_address: 'scarecrow',
   no_answer: 'black_cat', gated_house: 'black_cat', car_accident: 'phantom_car', order_typo: 'prankster',
 };
-
-export function campaignDir(root = findRepoRoot()): string {
-  return resolve(root, 'packages', 'core', 'campaign');
-}
 
 let nightsValidator: ValidateFunction | undefined;
 
@@ -75,13 +68,4 @@ export function validateGear(raw: unknown): { start: CampaignStart; items: Campa
   if (g.items.length !== 5 || badges.size !== 5 || parts.size !== 5) problems.push('gear: five items, one per part and badge');
   if (problems.length) throw new Error(`gear.json: ${problems.join('; ')}`);
   return { start: g.start, items: g.items };
-}
-
-/** Reads and validates the campaign data. The result is the body of GET /api/campaign. */
-export function loadCampaign(root?: string): CampaignResponse {
-  const dir = campaignDir(root);
-  const read = (f: string): unknown => JSON.parse(readFileSync(resolve(dir, f), 'utf8'));
-  const nights = validateNights(read('nights.json'), read('nights.schema.json') as object);
-  const gear = validateGear(read('gear.json'));
-  return { nights, gear: gear.items, start: gear.start };
 }
