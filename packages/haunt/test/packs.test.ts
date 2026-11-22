@@ -51,7 +51,11 @@ describe('streaming pack (PK-C2)', () => {
     expect(Object.keys(pack.tiers).sort()).toEqual(['breaker', 'idempotency', 'journal', 'offline_queue', 'retry']);
   });
   it('the embedded browser copy equals the pack file', () => {
-    expect(STREAMING_PACK_YAML).toBe(readFileSync(resolve(PACKS, 'streaming/pack.yaml'), 'utf8'));
+    expect(STREAMING_PACK_YAML.replace(/
+/g, '
+')).toBe(readFileSync(resolve(PACKS, 'streaming/pack.yaml'), 'utf8').replace(/
+/g, '
+'));
   });
   it('is a labelled Workflow Lab preset', async () => {
     const m = LAB_PRESETS.streaming!;
