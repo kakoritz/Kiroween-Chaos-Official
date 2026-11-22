@@ -3,7 +3,7 @@
 import type { ArenaVM, LaneVM, SkelMode } from './model';
 import { rankGlyph } from '../onboarding/polish';
 
-export const ROW_H = 30;
+export const ROW_H = 29;
 /** Height of the rank board's column header row. */
 export const HEAD_H = 20;
 /** Short column titles so the nine ledger columns fit the panel; the full name stays in the tooltip. */
