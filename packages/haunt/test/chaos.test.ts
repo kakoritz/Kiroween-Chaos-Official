@@ -78,11 +78,20 @@ describe('director: deferral', () => {
     expect(d.onStageStart('L1', 'account')).toEqual([]);
   });
 
-  it('file faults wait for intake', () => {
+  it('file faults wait for intake and act at the next input_read', () => {
     const d = director();
     const r = d.arm('L1', { fault: 'malformed_payload' }, WORKING);
     expect(r).toMatchObject({ ok: true, detail: { deferred: true, deferredTo: 'create' } });
-    expect(d.onStageStart('L1', 'create')).toHaveLength(1);
+    expect(d.onStageStart('L1', 'create')).toEqual([]);
+    expect(d.onInputRead('L1', 'ord-0001')).toMatchObject({ fault: 'malformed_payload', order: 'ord-0001' });
+    expect(d.onInputRead('L1', 'ord-0002')).toBeNull();
+  });
+
+  it('an unfired file fault survives the end of the order that was running', () => {
+    const d = director();
+    d.arm('L1', { fault: 'missing_file' }, WORKING);
+    expect(d.orderEnd('L1')).toEqual([]);
+    expect(d.onInputRead('L1', 'ord-0002')).toMatchObject({ fault: 'missing_file' });
   });
 
   it('hazard_event waits for transit', () => {

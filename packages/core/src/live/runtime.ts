@@ -174,7 +174,7 @@ export class DemoPlayer {
     try {
       this.engine.chaos({
         lane: p.lane, fault: p.fault, creature: p.creature, scope: p.scope, point: p.point,
-        ...(p.outageMs !== undefined ? { outageMs: p.outageMs } : {}), ...(p.fuzz ? { fuzz: p.fuzz, source: 'fuzz' as const } : {}),
+        ...(p.outageMs !== undefined ? { outageMs: p.outageMs } : {}), source: p.fuzz ? ('fuzz' as const) : ('demo' as const), ...(p.fuzz ? { fuzz: p.fuzz } : {}),
       });
     } catch { /* lane at the depth limit or not in the wave: a press is best effort */ }
   }

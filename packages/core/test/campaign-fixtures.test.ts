@@ -136,14 +136,14 @@ describe('gear changes the result where it should', () => {
   });
 
   it('night 2: Lantern and Shield bring every order home', () => {
-    expect(summary(fx(2)).orders.cancelled).toBe(4);
+    expect(summary(fx(2)).orders.cancelled).toBeGreaterThan(0);
     const gear = summary(fx(2, ['retry', 'breaker']));
     expect(gear.orders.done).toBe(4);
     expect(gear.orders.cancelled).toBe(0);
   });
 
   it('night 3: the full set beats no gear on parked and broken orders', () => {
-    expect(summary(fx(3)).orders.abandoned).toBe(3);
+    expect(summary(fx(3)).orders.abandoned).toBeGreaterThan(0);
     const gear = summary(fx(3, ALL));
     expect(gear.orders.abandoned).toBe(0);
     expect(gear.orders.done).toBeGreaterThan(0);

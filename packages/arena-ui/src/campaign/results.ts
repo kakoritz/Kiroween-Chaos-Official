@@ -4,17 +4,17 @@ import { medalSvg } from './art';
 import { loadProgress } from './hub-model';
 import {
   applyResult, exportProgress, explain, loadEarned, nextGoal, parseImport, saveImport, saveOutcome,
-  nightCases, type LaneSummary, type NightCase, type Outcome, type ResultGear, type ResultNight, type ScoreHit,
+  type LaneSummary, type Outcome, type ResultGear, type ResultNight, type ScoreHit,
 } from './results-model';
 
-export interface ResultsApi { getCampaign(): Promise<{ nights?: ResultNight[]; gear?: ResultGear[] }>; /** GET /api/casebook: the Crew lane's cases of the night that just ended. */ getCasebook?(): Promise<unknown> }
+export interface ResultsApi { getCampaign(): Promise<{ nights?: ResultNight[]; gear?: ResultGear[] }> }
 export interface ResultsHandlers { onNight?: (night: ResultNight) => void; onHub?: () => void }
 export interface ResultsHandle { begin(nightId: number): void; onEvent(ev: { type?: string; lane?: number; detail?: unknown }): void; close(): void }
 
 const esc = (s: string): string => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] as string);
 const CREDITS_ROLL = ['Haunted Nights', 'A game about the patterns that keep real software alive.', 'Retries, journals, idempotency keys, breakers and queues.', 'Thank you for playing.'];
 
-export function renderResults(night: ResultNight, o: Outcome, summary: LaneSummary, hits: ScoreHit[], gear: ResultGear[], nights: ResultNight[], cases: readonly NightCase[] = []): string {
+export function renderResults(night: ResultNight, o: Outcome, summary: LaneSummary, hits: ScoreHit[], gear: ResultGear[], nights: ResultNight[]): string {
   const causes = explain(summary, hits, gear, night);
   const next = nights.find((n) => n.id === night.id + 1);
   const goal = nextGoal(night, o.medal);
@@ -28,7 +28,6 @@ export function renderResults(night: ResultNight, o: Outcome, summary: LaneSumma
     ${goal ? `<p class="cpres__goal">${esc(goal)}</p>` : ''}
     <h3>What happened</h3>
     ${causes.length ? `<ol class="cpres__causes">${causes.map((c) => `<li>${esc(c.text)}${c.lost ? ` <span class="cpres__lost">-${c.lost}</span>` : ''}${c.gear ? ` Try the <b>${esc(c.gear)}</b>.` : ''}</li>`).join('')}</ol>` : '<p>Nothing went wrong. Clean night.</p>'}
-    ${cases.length ? `<h3>Casebook for this night</h3><ul class="cpres__cases">${cases.map((c) => `<li><b>${esc(c.title)}</b> ${esc(c.verdict)}${c.fix ? ` Fix: ${esc(c.fix)}.` : ''}</li>`).join('')}</ul>` : ''}
     <div class="cpres__btns">
       ${next && o.bestMedal !== 'none' ? '<button class="btn" type="button" data-act="next">Next night</button>' : ''}
       <button class="btn" type="button" data-act="retry">Retry</button>
@@ -48,13 +47,12 @@ export function mountCampaignResults(stage: HTMLElement, api: ResultsApi, handle
     const nights = c.nights ?? [];
     const night = nights.find((n) => n.id === nightId);
     if (!night) return;
-    const cases = await api.getCasebook?.().then((raw) => nightCases(raw), () => [] as NightCase[]) ?? [];
     const o = applyResult(night, summary, loadProgress(store), loadEarned(store));
     saveOutcome(store, o);
     close();
     el = document.createElement('div');
     el.className = 'cpres';
-    el.innerHTML = renderResults(night, o, summary, hits, c.gear ?? [], nights, cases);
+    el.innerHTML = renderResults(night, o, summary, hits, c.gear ?? [], nights);
     el.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); } });
     const act = (a: string, f: () => void) => el!.querySelector(`[data-act=${a}]`)?.addEventListener('click', f);
     act('next', () => { const n = nights.find((x) => x.id === night.id + 1); close(); if (n) handlers.onNight?.(n); });

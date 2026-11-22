@@ -73,7 +73,7 @@
     "medals": {
       "bronze": { "credits": 150 },
       "silver": { "credits": 400, "repeats": 0 },
-      "gold": { "credits": 700, "repeats": 0, "abandoned": 0 }
+      "gold": { "credits": 600, "repeats": 0, "abandoned": 0 }
     },
     "gearHint": ["offline_queue", "journal"]
   },

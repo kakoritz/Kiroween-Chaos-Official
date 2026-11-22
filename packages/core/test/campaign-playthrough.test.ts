@@ -34,6 +34,7 @@ describe('the campaign data a player meets', () => {
     for (const n of nights) {
       expect(n.briefing.length, `night ${n.id} briefing`).toBeGreaterThan(20);
       expect(n.lesson).toHaveLength(3);
+      if (n.gearHint.length === gear.length) { expect(n.hint.toLowerCase()).toContain('all five'); continue; }
       for (const g of n.gearHint) expect(n.hint.toLowerCase(), `night ${n.id} hint names ${g}`).toContain(gear.find((x) => x.part === g)!.label.toLowerCase());
     }
   });
