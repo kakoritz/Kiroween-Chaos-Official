@@ -11,6 +11,7 @@ describe('kiro hooks', () => {
   it('has the required hooks', () => {
     expect(hooks.map((x) => x.f).sort()).toEqual([
       'fixtures-on-contract-save.kiro.hook',
+      'lint-hardening-spec.kiro.hook',
       'pbt-on-sdk-save.kiro.hook',
       'reviewer-on-wave-end.kiro.hook',
       'trace-on-merge.kiro.hook',
