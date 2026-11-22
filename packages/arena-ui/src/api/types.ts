@@ -139,6 +139,8 @@ export interface ArenaApi {
   getCasebook(): Promise<any>;
   /** GET /api/lessons/:lane: the lane's lessons ledger. */
   getLessons(lane: number): Promise<any>;
+  /** DELETE /api/lessons: clears every lane's lessons ledger. */
+  resetLessons(): Promise<any>;
   getLedger(): Promise<any>;
   getWaves(): Promise<WaveSummary[]>;
   getReport(n: number): Promise<any>;

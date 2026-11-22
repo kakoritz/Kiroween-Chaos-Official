@@ -34,6 +34,7 @@ export interface HauntInPage {
   getTournament?(): Promise<any>;
   getCasebook?(): Promise<any>;
   getLessons?(lane: number): Promise<any>;
+  resetLessons?(): Promise<any>;
   getLedger(): Promise<any>;
   getWaves(): Promise<any>;
   getReport(n: number): Promise<any>;
@@ -86,6 +87,7 @@ export class InPageApi implements ArenaApi {
   getTournament() { return this.need(this.h.getTournament); }
   getCasebook() { return this.need(this.h.getCasebook); }
   getLessons(lane: number) { return this.need(this.h.getLessons, lane); }
+  resetLessons() { return this.need(this.h.resetLessons); }
   getLedger() { return wrap(this.h.getLedger()); }
   getWaves() { return wrap(this.h.getWaves()); }
   getReport(n: number) { return wrap(this.h.getReport(n)); }

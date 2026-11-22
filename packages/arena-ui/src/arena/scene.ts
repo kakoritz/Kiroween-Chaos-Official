@@ -350,6 +350,39 @@ function labelCard(ctx: Ctx, b: LaneBox, l: LaneVM, t: number, worn: string[], s
   ctx.restore();
 }
 
+/** Lessons on a lane card (TV3-U9): a small scroll with a count. `age` is ms since the last lesson (sparkles while it is young). */
+function lessonScroll(ctx: Ctx, right: number, y: number, count: number, age: number, reduced: boolean): { x: number; w: number } {
+  ctx.save();
+  ctx.font = `800 14px ${MONO}`;
+  const label = `\u00D7${count}`;
+  const tw = Math.ceil(ctx.measureText(label).width);
+  const sx = right - tw - 26;
+  // the scroll: parchment body, two rolled ends, three ink lines
+  rr(ctx, sx + 3, y - 7, 18, 14, 3); ctx.fillStyle = '#efe6d2'; ctx.fill(); ctx.lineWidth = 2.4; ctx.strokeStyle = C.out; ctx.stroke();
+  for (const ex of [sx + 3, sx + 21]) { ctx.beginPath(); ctx.ellipse(ex, y, 3, 8, 0, 0, Math.PI * 2); ctx.fillStyle = '#c9b88e'; ctx.fill(); ctx.stroke(); }
+  ctx.strokeStyle = '#6b4f2a'; ctx.lineWidth = 1.6;
+  for (const dy of [-3, 0, 3]) { ctx.beginPath(); ctx.moveTo(sx + 7, y + dy); ctx.lineTo(sx + 17, y + dy); ctx.stroke(); }
+  txt(ctx, label, right, y + 1, 14, C.bone, 'right', MONO, '800');
+  if (age >= 0 && age < 1800) {
+    const p = age / 1800;
+    ctx.globalAlpha = 1 - p;
+    for (let k = 0; k < 4; k++) {
+      const a = (k / 4) * Math.PI * 2 + (reduced ? 0 : p * 1.6);
+      const r = 14 + (reduced ? 6 : 16 * p);
+      sparkle(ctx, sx + 12 + Math.cos(a) * r, y + Math.sin(a) * r * 0.8, 5 + 2 * (1 - p));
+    }
+  }
+  ctx.restore();
+  return { x: sx - 2, w: right - sx + 6 };
+}
+
+/** A four-point sparkle. */
+function sparkle(ctx: Ctx, x: number, y: number, r: number): void {
+  ctx.beginPath();
+  ctx.moveTo(x, y - r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.quadraticCurveTo(x, y, x, y + r); ctx.quadraticCurveTo(x, y, x - r, y); ctx.quadraticCurveTo(x, y, x, y - r);
+  ctx.fillStyle = '#fff3a8'; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = C.out; ctx.stroke();
+}
+
 /** "FALLEN R2" pill on a fallen lane's label card (TV3-U8). Drawn at full strength over the greyed row. */
 function fallenTag(ctx: Ctx, b: LaneBox, round: number): void {
   const label = round > 0 ? `FALLEN R${round}` : 'FALLEN';
@@ -446,6 +479,8 @@ function confetti(ctx: Ctx, x: number, y: number, p: number, seed: number, count
 interface Walker { x: number; lastT: number }
 
 export class ArenaScene {
+  /** Lessons ledger per lane (TV3-U9): count, tooltip, when the last one was learned and how. The page feeds it from the Casebook model. */
+  lessonInfo: (lane: number) => { count: number; tip: string; learnedAt: number; mechanism: string } = () => ({ count: 0, tip: '', learnedAt: -1, mechanism: '' });
   /** Hover regions rebuilt every frame (design px): the caption of a gremlin or an UNKNOWN fault carries a tooltip. */
   hot: Array<{ x: number; y: number; w: number; h: number; tip: string }> = [];
   private statics = new Map<number, HTMLCanvasElement>();
@@ -557,6 +592,27 @@ export class ArenaScene {
     if (fell) ctx.globalAlpha = 0.5;
     labelCard(ctx, b, l, now, wornParts(l.parts, l.equips, now, this.speed, this.reducedMotion), this.speed, this.reducedMotion);
     if (fell) { ctx.globalAlpha = 1; fallenTag(ctx, b, fell.round); ctx.globalAlpha = 0.4; }
+    const les = this.lessonInfo(l.lane);
+    if (les.count > 0) {
+      const age = les.learnedAt >= 0 ? (now - les.learnedAt) * this.speed : -1;
+      if (fell) ctx.globalAlpha = 0.6;
+      const box = lessonScroll(ctx, 244, b.top + b.h - 46, les.count, age, this.reducedMotion);
+      ctx.globalAlpha = fell ? 0.4 : 1;
+      this.hot.push({ x: box.x, y: b.top + b.h - 62, w: box.w, h: 32, tip: les.tip });
+      // "learned" caption floating by the skeleton for a moment
+      if (age >= 0 && age < 2200 && !fell) {
+        const p = age / 2200;
+        ctx.save(); ctx.globalAlpha = Math.min(1, (1 - p) * 2.4);
+        const text = `LEARNED: ${les.mechanism || 'a new trick'}`;
+        ctx.font = `800 15px ${MONO}`;
+        const w = Math.min(420, Math.ceil(ctx.measureText(text).width) + 40);
+        const cx = 700, cy = b.top + b.h * 0.56 - (this.reducedMotion ? 0 : 16 * p);
+        rr(ctx, cx - w / 2, cy - 13, w, 26, 9); ctx.fillStyle = 'rgba(10,8,18,0.88)'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = C.warn; ctx.stroke();
+        sparkle(ctx, cx - w / 2 + 14, cy, 6); sparkle(ctx, cx + w / 2 - 14, cy, 6);
+        txt(ctx, fit(ctx, text, w - 40), cx, cy + 1, 15, C.text, 'center', MONO, '800');
+        ctx.restore();
+      }
+    }
     stats(ctx, b, l);
     if (l.mode !== 'sleep' && !fell) startStack(ctx, b, l);
     // stage chips and station props

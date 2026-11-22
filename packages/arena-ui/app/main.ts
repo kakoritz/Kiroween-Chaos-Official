@@ -18,6 +18,8 @@ import { IntensityDial, applyIntensity, readDial, defaultDial } from '../src/are
 import '../src/arena/dial.css';
 import { RoundIndicator, RoundCard, FinalScreen, type TournamentHost } from '../src/arena/tournament-view';
 import '../src/arena/tournament.css';
+import { applyCasebookEvent, emptyCasebook, lessonsTip, loadCasebook, loadLessons, mechanismWord } from '../src/arena/casebook';
+import { awardsRow, casebookTable, fallbackAwards } from '../src/arena/casebook-view';
 import { LegendModal } from '../src/arena/legend-modal';
 import { ArenaSound } from '../src/sound';
 import { FrameSampler, perfSecondsFromQuery } from '../src/perf';
@@ -177,6 +179,7 @@ const inspector = new LanePopup($('insp'), {
   laneBox: (n) => { const i = vm.lanes.findIndex((x) => x.lane === n); return i < 0 ? null : laneBoxes(vm.lanes.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET)[i] ?? null; },
   chaos: (lane, creature) => api.chaos(creature ? { lane, creature } : { lane }),
   creatures: () => api.getCreatures(),
+  lessons: (lane) => casebook.lessons[lane] ?? [],
   fetchOrder: (lane, order) => api.getLaneOrder(lane, order),
   fetchLaps: (lane) => api.getLaneLaps(lane),
   onError: showError,
@@ -293,6 +296,29 @@ const tournamentHost: TournamentHost = {
 const roundInd = new RoundIndicator($('round-ind'));
 const roundCard = new RoundCard(stageEl, tournamentHost);
 const finalScreen = new FinalScreen(stageEl, tournamentHost);
+// TV3-U9: lessons ledger and Casebook, fed straight from the event stream (the DOM cards need them the moment round_end lands).
+const casebook = emptyCasebook();
+const casebookHost = { laneTitle: tournamentHost.laneTitle, stageLabel: tournamentHost.stageLabel };
+scene.lessonInfo = (lane) => {
+  const list = casebook.lessons[lane] ?? [];
+  const la = casebook.learnedAt[lane];
+  return { count: list.length, tip: list.length ? lessonsTip(list, tournamentHost.stageLabel) : '', learnedAt: la?.at ?? -1, mechanism: la ? mechanismWord(la.mechanism) : '' };
+};
+roundCard.extra = (r) => {
+  const box = document.createElement('div');
+  const learned = Object.entries(casebook.lessons).map(([lane, list]) => ({ lane: Number(lane), n: list.filter((x) => x.round === r.round).length })).filter((x) => x.n > 0);
+  if (learned.length > 0) {
+    const p = document.createElement('p'); p.className = 'tv-learned';
+    p.textContent = `Learned this round: ${learned.map((x) => `${tournamentHost.laneTitle(x.lane) || `Lane ${x.lane}`} +${x.n}`).join(', ')}`;
+    box.append(p);
+  }
+  box.append(casebookTable(casebook, casebookHost, { max: 4, title: 'Casebook so far' }));
+  return box;
+};
+finalScreen.sections = [
+  (t) => awardsRow(t.awards.length > 0 ? t.awards : fallbackAwards(t, casebook), casebookHost),
+  () => casebookTable(casebook, casebookHost, { max: 6 }),
+];
 $('round-ind').addEventListener('click', () => { if (vm.tournament.phase === 'ended') finalScreen.reopen(); });
 const TOURNAMENT_EVENTS = new Set(['round_start', 'round_end', 'awaiting_next', 'lane_eliminated', 'corpse', 'tournament_end']);
 const campaignResults = mountCampaignResults(stageEl, { getCampaign: () => api.getCampaign() }, { onNight: (n) => shopStart(n), onHub: () => window.dispatchEvent(new CustomEvent('haunt:splash', { detail: { action: 'campaign' } })) }); // CP-U3
@@ -300,6 +326,7 @@ const campaignResults = mountCampaignResults(stageEl, { getCampaign: () => api.g
 function onEvent(ev: ArenaEvent) {
   if (TOURNAMENT_EVENTS.has(ev.type)) tourActive = true;
   if (ev.type === 'reset') tourActive = false;
+  applyCasebookEvent(casebook, ev, performance.now());
   roundCard.onEvent(ev);
   finalScreen.onEvent(ev);
   campaignResults.onEvent(ev);
@@ -372,12 +399,18 @@ async function loadState() {
     if (vm.tournament.active) {
       tourActive = true;
       if (vm.tournament.awaitingNext) { awaitingNext = true; nextBtn.textContent = '\u25B6 Next round'; nextBtn.classList.remove('hidden'); }
-      roundCard.adopt(vm.tournament); finalScreen.adopt(vm.tournament);
+      void hydrateCasebook().then(() => { roundCard.adopt(vm.tournament); finalScreen.adopt(vm.tournament); });
     }
     await reconcile();
   } catch (e) { showError(e); }
   paintBadge();
   paintDemo();
+}
+
+/** Casebook and lessons for a page that loads mid-tournament (GET /api/casebook, GET /api/lessons/:lane). A server without them answers 404. */
+async function hydrateCasebook() {
+  try { loadCasebook(casebook, await api.getCasebook()); } catch { /* the events fill it from here */ }
+  await Promise.all(vm.lanes.map((l) => api.getLessons(l.lane).then((raw) => loadLessons(casebook, l.lane, raw)).catch(() => { /* none yet */ })));
 }
 
 async function startCaptions(script: string) {
@@ -415,6 +448,7 @@ async function boot() {
     setSpeed: (s) => { void api.setSpeed(s).catch(showError); },
     toggleSound: () => muteBtn.click(),
     startTournament: () => { void beginTournament(); },
+    resetLessons: () => { void api.resetLessons().then(() => { casebook.lessons = {}; casebook.learnedAt = {}; }).catch(showError); },
     setReducedMotion: (on) => { scene.reducedMotion = on || reduceMotion.matches; document.body.classList.toggle('reduced-motion', on || reduceMotion.matches); },
   }, $('chaos-mode'));
   new LegendModal(stageEl, $<HTMLButtonElement>('legend-btn'));

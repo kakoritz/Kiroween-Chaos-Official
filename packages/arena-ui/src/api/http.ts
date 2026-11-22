@@ -92,6 +92,7 @@ export class HttpApi implements ArenaApi {
   next() { return this.request('POST', '/api/next'); }
   getTournament() { return this.request('GET', '/api/tournament'); }
   getCasebook() { return this.request('GET', '/api/casebook'); }
+  resetLessons() { return this.request('DELETE', '/api/lessons'); }
   getLessons(lane: number) { return this.request('GET', `/api/lessons/${lane}`); }
   getLedger() { return this.request('GET', '/api/ledger'); }
   getWaves() { return this.request<WaveSummary[]>('GET', '/api/waves'); }

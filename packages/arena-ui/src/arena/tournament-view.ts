@@ -231,7 +231,8 @@ export class FinalScreen extends Card {
   private paint(): void {
     this.anim = { stop: false };
     const reduced = this.host.reducedMotion();
-    const dlg = el('section', 'tv-card tv-final');
+    const dlg = el('section', `tv-card tv-final${this.sections.length > 0 ? ' tv-final--full' : ''}`);
+    const small = this.sections.length > 0;
     const order = podiumOf(this.t);
     const champ = order[0] ?? null;
     const head = el('div', 'tv-head');
@@ -249,7 +250,7 @@ export class FinalScreen extends Card {
       const win = s.place === 1;
       const fig = el('div', 'tv-fig');
       if (win) fig.append(el('div', 'tv-crown', '\u{1F451}'));
-      fig.append(skeletonCanvas(this.host.laneTier(s.lane), win ? 'cheer' : 'idle', win ? 104 : 80, reduced, this.anim));
+      fig.append(skeletonCanvas(this.host.laneTier(s.lane), win ? 'cheer' : 'idle', small ? (win ? 84 : 64) : win ? 104 : 80, reduced, this.anim));
       const block = el('div', 'tv-block');
       block.append(el('b', 'tv-place', String(s.place)), el('span', 'tv-who', this.title(s.lane)));
       const f = this.t.fallen[s.lane];

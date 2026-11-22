@@ -33,6 +33,8 @@ export interface GearHost {
   setReducedMotion(on: boolean): void;
   /** TV3-U8: start a five-lane tournament (POST /api/tournament/start). */
   startTournament?(): void;
+  /** TV3-U9: clear every lane's lessons (DELETE /api/lessons). */
+  resetLessons?(): void;
 }
 
 export class GearMenu {
@@ -54,7 +56,7 @@ export class GearMenu {
         `<button type="button" class="seg-b" role="radio" data-pace="${p.id}" aria-checked="false">${p.label}${p.id === DEFAULT_PACE ? ' (default)' : ''}</button>`).join('')}</div></div>
       <div class="gp-sec"><span class="gp-l" id="gp-speed-l">Speed</span><div class="seg" role="radiogroup" aria-labelledby="gp-speed-l">${SPEEDS.map((s) =>
         `<button type="button" class="seg-b" role="radio" data-speed="${s}" aria-checked="false">${s}x</button>`).join('')}</div></div>
-      <div class="gp-sec"><span class="gp-l">Tournament</span><button type="button" class="btn btn--ghost" id="gp-tour" title="Five lanes race. The worst drops each round. The last one standing is the champion.">Start tournament</button></div>
+      <div class="gp-sec"><span class="gp-l">Tournament</span><button type="button" class="btn btn--ghost" id="gp-tour" title="Five lanes race. The worst drops each round. The last one standing is the champion.">Start tournament</button> <button type="button" class="btn btn--ghost" id="gp-lessons" title="Forget what the lanes have learned">Reset lessons</button></div>
       <div class="gp-sec"><span class="gp-l">Sound</span><button type="button" class="btn btn--ghost" id="gp-sound">Toggle sound</button></div>
       <div class="gp-sec"><label class="gp-l"><input type="checkbox" id="gp-motion"> Reduced motion</label></div>`;
     slot.append(this.pop);
@@ -72,6 +74,7 @@ export class GearMenu {
       else if (b.dataset.speed) { this.speed = Number(b.dataset.speed); this.host.setSpeed(this.speed); this.paint(); }
       else if (b.id === 'gp-sound') this.host.toggleSound();
       else if (b.id === 'gp-tour') this.host.startTournament?.();
+      else if (b.id === 'gp-lessons') this.host.resetLessons?.();
       if (b.classList.contains('cm-dice')) return;
       if (shouldClose({ kind: 'select', insideMenu: true, control })) this.toggle(false);
     });
