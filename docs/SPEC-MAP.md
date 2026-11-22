@@ -8,6 +8,7 @@ When two documents disagree, the higher one wins.
 | 1 | `contract/PROTOCOL.md` | Events, endpoints, ordering, state shapes, mock behavior |
 | 2 | `contract/CONTRACT.md`, `STORYBOARDS.md` | IDs, catalogs, fixtures.  |
 | 2b | `.kiro/specs/playtest-v2/` (design, ui, requirements, tasks) | Laps, reviews, scoring v2, travel, world events, wrong-order decisions, UI v2. **Wins over engine and arena specs where it differs** |
+| 2d | `.kiro/specs/tournament-v3/`, `contract/V1_2.md`, `.kiro/specs/packs/`, `docs/FIT-CHECK.md` | Tournament, 11-step order, lessons, Casebook, dial, curses, swarm FX, miner and fix specs, packs, production mode. **Wins over playtest-v2 where it differs** |
 | 2c | `.kiro/specs/campaign/`, `.kiro/specs/onboarding/`, `.kiro/specs/share/` | Campaign game, first-impression and video, badge, Action, Workflow Lab, real loop proof, Kiro proof |
 | 3 | `.kiro/specs/engine/design.md` and `acceptance.md` | Pipeline, provider, journal, tiers, faults, scoring, grading, oracle |
 | 4 | `.kiro/specs/inbox-app/design.md` | App 2 |

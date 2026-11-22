@@ -61,3 +61,5 @@ If a format cannot be confirmed by Nov 25, ship the item as documentation plus a
 | 12 | CI policy for the sweep Action: opt-in example, not a required check | `share` section 3 |
 | 13 | Approve scope: world events (PT-C7) and wrong-order decisions (PT-C8) are optional extras after the must-have list | `playtest-v2` cut line |
 | 14 | Approve the campaign scope (nights 1, 2, 5 first) | `campaign` cut line |
+| 15 | Approve the tournament format (5, 4, 3, 2 lanes, one drops per round) and the intensity table | `tournament-v3` sections 3 and 5 |
+| 16 | Approve packs and production mode as optional after the must list | `packs` cut line |
