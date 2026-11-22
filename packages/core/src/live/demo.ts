@@ -14,6 +14,8 @@ export interface DemoWhen { lane: number; event: string; stage?: string; order?:
 export interface DemoPress {
   atMs?: number; when?: DemoWhen; afterPrevMs?: number; delayMs?: number; forEachOrder?: boolean;
   lane: number; fault: string; creature: string; point?: string; scope?: 'inner' | 'outer';
+  /** Tournament storms: a drawn window at 1x ms, an unknown fault shape, and who pressed it. */
+  outageMs?: number; fuzz?: import('../../../haunt/src/runner/intensity').FuzzFault; source?: 'fuzz' | 'random';
 }
 export interface DemoBoss { id: string; warnAtMs: number; startAtMs: number }
 export interface DemoScript {

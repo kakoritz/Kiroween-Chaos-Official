@@ -155,6 +155,12 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
   let stageIds: string[] = stageIdsFor(events, 'orders');
   let sawWaveStart = false;
   let minor = 0;
+  // Tournament state (V1_2 sections 2 and 3, rules 57 to 61).
+  let tourneyRound = 0;
+  let tourneyLanes = new Set<number>();
+  let eliminatedNow = new Set<number>();
+  const fallenLanes = new Set<number>();
+  let awaiting = false;
 
   /** Rule 41: the lap object of order_done and order_failed. */
   const checkLap = (ev: HauntEvent, d: Record<string, any>, l: Lane): void => {
@@ -276,7 +282,7 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
         return;
       case 'wave_start': {
         if (waveOpen) bad('R1', ev, 'wave_start while the previous wave has not ended');
-        waveOpen = true; sawWaveStart = true;
+        waveOpen = true; sawWaveStart = true; awaiting = false;
         waveNo = ev.wave ?? waveNo + 1;
         app = (d.app as AppId) in APPS ? (d.app as AppId) : 'orders';
         stageIds = stageIdsFor(events, app);
@@ -333,12 +339,66 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
         if (!(Number.isInteger(d.level) && d.level >= 1 && d.level <= 11)) bad('R56', ev, `intensity level ${d.level} is not an integer from 1 to 11`);
         return;
       }
+      case 'round_start': {
+        // V1_2 section 2: round_start comes once per round, inside its wave, naming the live lanes.
+        if (!Number.isInteger(d.round) || d.round < 1) bad('R57', ev, 'round_start needs a round number');
+        if (!Array.isArray(d.lanes) || d.lanes.length === 0) bad('R57', ev, 'round_start needs the live lanes');
+        else if (d.lanes.some((n: unknown) => !Number.isInteger(n) || (n as number) < 1 || (n as number) > 5)) bad('R57', ev, 'round_start lanes must be 1 to 5');
+        if (d.round <= tourneyRound) bad('R57', ev, 'round_start round ' + d.round + ' does not follow round ' + tourneyRound);
+        tourneyRound = d.round;
+        tourneyLanes = new Set<number>(Array.isArray(d.lanes) ? d.lanes : []);
+        return;
+      }
+      case 'round_end': {
+        if (d.round !== tourneyRound) bad('R57', ev, 'round_end for round ' + d.round + ' but round ' + tourneyRound + ' is running');
+        const st = Array.isArray(d.standings) ? d.standings : [];
+        if (st.length === 0) bad('R58', ev, 'round_end needs standings');
+        for (const s of st) {
+          if (!Number.isInteger(s?.lane) || typeof s?.rp !== 'number' || !Number.isInteger(s?.rank)) bad('R58', ev, 'standing ' + JSON.stringify(s) + ' needs lane, rp and rank');
+          else if (!tourneyLanes.has(s.lane)) bad('R58', ev, 'standing for lane ' + s.lane + ' which is not live in round ' + tourneyRound);
+        }
+        const ranks = st.map((s: { rank: number }) => s.rank).sort((a: number, b: number) => a - b);
+        if (ranks.some((r: number, i: number) => r !== i + 1)) bad('R58', ev, 'standing ranks must be 1..n');
+        if (d.eliminated !== undefined) {
+          if (!tourneyLanes.has(d.eliminated)) bad('R59', ev, 'eliminated lane ' + d.eliminated + ' was not live');
+          eliminatedNow = new Set<number>(Array.isArray(d.eliminatedLanes) ? d.eliminatedLanes : [d.eliminated]);
+          for (const n of eliminatedNow) { if (fallenLanes.has(n)) bad('R59', ev, 'lane ' + n + ' was eliminated twice'); fallenLanes.add(n); }
+        }
+        if (!Array.isArray(d.lessons) || !Array.isArray(d.cases)) bad('R58', ev, 'round_end carries lessons[] and cases[]');
+        awaiting = false;
+        return;
+      }
+      case 'lane_eliminated': {
+        if (!eliminatedNow.has(d.lane)) bad('R59', ev, 'lane_eliminated for lane ' + d.lane + ' that round_end did not drop');
+        if (typeof d.stage !== 'string' || typeof d.epitaph !== 'string') bad('R59', ev, 'lane_eliminated needs stage and epitaph');
+        return;
+      }
+      case 'corpse': {
+        if (d.kind !== 'eliminated' && d.kind !== 'wall') bad('R59', ev, 'corpse kind must be eliminated or wall');
+        if (typeof d.epitaph !== 'string' || d.round !== tourneyRound) bad('R59', ev, 'corpse needs an epitaph and the current round');
+        return;
+      }
+      case 'awaiting_next': {
+        // Rule 49: after a round the server waits. No order event may follow until the next round_start.
+        if (d.round !== tourneyRound) bad('R60', ev, 'awaiting_next for round ' + d.round + ' but round ' + tourneyRound + ' just ended');
+        awaiting = true;
+        return;
+      }
+      case 'tournament_end': {
+        if (!Number.isInteger(d.champion) || fallenLanes.has(d.champion)) bad('R61', ev, 'the champion must be a lane that was never eliminated');
+        return;
+      }
       case 'hardening_spec':
       case 'fix_applied':
         if (ev.wave === undefined || ev.wave > waveNo) bad('R26', ev, `${t} carries wave ${ev.wave}, expected a wave up to ${waveNo}`);
         return;
       default:
     }
+
+    // Rule 60 (V1_2 rule 49): while the server waits for Next, no order work happens; rule 50: fallen lanes emit no order events.
+    if (awaiting && (t === 'order_start' || t === 'stage_start')) bad('R60', ev, t + ' while awaiting_next');
+    if (fallenLanes.has(Number(ev.lane)) && (t === 'order_start' || t === 'stage_start' || t === 'order_done')) bad('R59', ev, 'fallen lane ' + ev.lane + ' emits ' + t);
+    if (t === 'wave_start') awaiting = false;
 
     // Lane events from here on.
     if (!sawWaveStart) { bad('R1', ev, `${t} before wave_start`); return; }
@@ -678,7 +738,7 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
   // Chaos closers (rules 7, 14, 20) are checked at wave_end. Final stream rules:
   if (opts.requireWaveEnd !== false) {
     const last = events[events.length - 1];
-    if (last.type !== 'wave_end' && !(['hardening_spec', 'fix_applied', 'part_added'].includes(last.type))) bad('R1', last, 'stream must end with wave_end');
+    if (last.type !== 'wave_end' && !(['hardening_spec', 'fix_applied', 'part_added', 'round_end', 'awaiting_next', 'tournament_end', 'lane_eliminated', 'corpse'].includes(last.type))) bad('R1', last, 'stream must end with wave_end');
     if (waveOpen) bad('R1', last, 'last wave never ended');
   }
   return out;

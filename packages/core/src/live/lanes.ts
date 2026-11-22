@@ -17,6 +17,8 @@ export interface LaneView {
   score: number;
   counts: { completed: number; failed: number; parked: number; quarantined: number; repeats: number };
   depth: number;
+  /** Set once the lane is eliminated (V1_2 rule 50): where, when and why. Eliminated lanes emit no more order events. */
+  fallen?: { round: number; stage: string; cause: string };
   parts: { id: string; label: string; installed: boolean }[];
 }
 
@@ -57,6 +59,7 @@ export function applyEvent(lanes: Map<number, LaneView>, ev: HauntEvent, stages:
     case 'order_parked': l.counts.parked++; break;
     case 'order_quarantined': l.counts.quarantined++; break;
     case 'lane_halted': l.state = 'halted'; break;
+    case 'lane_eliminated': l.fallen = { round: Number(d.round ?? 0), stage: String(d.stage ?? ev.stage ?? ''), cause: String(d.cause ?? '') }; break;
     case 'score': l.score = d.total ?? l.score; break;
     case 'part_added': { const p = l.parts.find((x) => x.id === d.part); if (p) p.installed = true; break; }
     default: break;
