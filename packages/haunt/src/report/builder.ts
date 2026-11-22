@@ -28,6 +28,8 @@ export interface Finding {
   evidenceSeq: number[];
   suggestedPart: string;
 }
+/** One lap of a live run (PT-C11): wall time of the order, its review, and the cancelled label. */
+export interface LapRow { order: string; ms: number; stars?: number; cancelled?: boolean; downtimeMs?: number }
 export interface TierRow { tier: string; grade: Grade; score: number }
 
 export interface ReportInput {
@@ -50,6 +52,7 @@ export interface ReportInput {
   targets: TargetResult[];
   findings: Finding[];
   tiers?: TierRow[];
+  laps?: LapRow[];
 }
 
 export interface Report {
@@ -72,6 +75,7 @@ export interface Report {
   targets: TargetResult[];
   findings: Finding[];
   tiers?: TierRow[];
+  laps?: LapRow[];
 }
 
 const SEVERITY_ORDER: Record<Severity, number> = { high: 0, medium: 1, low: 2 };
@@ -107,6 +111,7 @@ export function buildReport(i: ReportInput): Report {
     (a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity] || cmp(a.id, b.id),
   );
   if (i.tiers) r.tiers = i.tiers;
+  if (i.laps) r.laps = [...i.laps].sort((a, b) => cmp(a.order, b.order));
   return r;
 }
 
@@ -123,6 +128,9 @@ export function renderJsonStable(r: Report): string {
 function mdCell(s: string): string {
   return s.replace(/\|/g, '\\|').replace(/\r?\n/g, ' ');
 }
+
+const lapMs = (l: LapRow): string => (l.cancelled ? 'cancelled' : String(l.ms));
+const lapStars = (l: LapRow): string => (l.cancelled ? 'cancelled' : l.stars === undefined ? '' : String(l.stars));
 
 export function renderMarkdown(r: Report): string {
   const L: string[] = [];
@@ -154,6 +162,10 @@ export function renderMarkdown(r: Report): string {
   if (r.tiers) {
     L.push('', '## Tiers', '', '| Tier | Grade | Score |', '|---|---|---|');
     for (const t of r.tiers) L.push(`| ${mdCell(t.tier)} | ${t.grade} | ${t.score} |`);
+  }
+  if (r.laps) {
+    L.push('', '## Laps and stars', '', '| Order | Lap ms | Stars | Downtime ms |', '|---|---|---|---|');
+    for (const l of r.laps) L.push(`| ${mdCell(l.order)} | ${lapMs(l)} | ${lapStars(l)} | ${l.downtimeMs ?? ''} |`);
   }
   L.push('', '## Findings', '');
   if (r.findings.length === 0) L.push('None.');
@@ -206,6 +218,7 @@ export function renderHtml(r: Report): string {
   }
   if (r.depth) P.push('<h2>Depth</h2>' + table(['Stage', 'Max survived depth'], r.depth.map((d) => [d.stage, d.maxSurvivedDepth])));
   if (r.tiers) P.push('<h2>Tiers</h2>' + table(['Tier', 'Grade', 'Score'], r.tiers.map((t) => [t.tier, t.grade, t.score])));
+  if (r.laps) P.push('<h2>Laps and stars</h2>' + table(['Order', 'Lap ms', 'Stars', 'Downtime ms'], r.laps.map((l) => [l.order, lapMs(l), lapStars(l), l.downtimeMs ?? ''])));
   P.push('<h2>Findings</h2>' + table(['Severity', 'Id', 'Rule', 'Stage', 'Fault', 'Summary', 'Suggested part'], r.findings.map((f) => [f.severity, f.id, f.rule, f.stage, f.fault, f.summary, f.suggestedPart])));
   return (
     '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><title>Haunt report: ' +

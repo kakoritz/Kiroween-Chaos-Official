@@ -7,6 +7,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { POST_ROUTES, Provider, type FaultSpec, type ProviderClock } from '../../core/src/provider';
 import { ProcessKilled, Sdk, type HookPoint, type Host, type Transport } from '../src/sdk';
+import { faultBody } from '../src/runner/provider';
+import { resolveOutcome } from '../../haunt/src/shared/outcomes';
 import { InputError, LaneHalted, Pipeline, TIERS, generateOrders, tierById, type OrderData, type PipelineResult } from '../src/pipeline';
 
 /** Lets the worker's timers and RPC run: a fake sleep that only resolves microtasks starves the event loop for the whole file. */
@@ -79,6 +81,7 @@ class World {
       sdk, tier, seed: SEED, lane: LANE,
       readOrder: (id) => this.readInput(id),
       pollTracking: (shipment) => this.poll(shipment, tier.use),
+      handoff: (shipment) => this.handoffCall(shipment, tier.use),
       hook: (point, ctx) => this.host.hook(point, ctx),
       emit: () => {},
     });
@@ -104,6 +107,25 @@ class World {
             if (n >= max) throw new Error(`tracking failed: ${failure}`);
       await this.host.sleep(breaker ? 500 * 2 ** (n - 1) : 500);
     }
+  }
+
+  /** The handoff call with the retry rules of the bot runtime (bot/runtime.ts): blocked answers retry like tracking, then fail. */
+  private async handoffCall(shipment: string, use: readonly string[]): Promise<void> {
+    const breaker = use.includes('breaker');
+    const max = breaker ? 5 : use.includes('retry') ? 3 : 1;
+    for (let n = 1; ; n++) {
+      const r = await this.provider.handle({ method: 'GET', path: `/handoff/${shipment}`, query: { lane: LANE } });
+      if (r.status === 200 && (r.body as { status?: string }).status === 'delivered') return;
+      if (n >= max) throw new Error('handoff blocked');
+      await this.host.sleep(breaker ? 500 * 2 ** (n - 1) : 500);
+    }
+  }
+
+  /** Arms a catalog fault the way the runner does (runner/provider.ts faultBody). */
+  armFault(fault: string, stage: string | null): void {
+    const body = faultBody(LANE, stage, { id: 1, fault });
+    if (!body) throw new Error(`no provider body for ${fault}`);
+    this.provider.addFault(body);
   }
 
   rows(): Record<string, number> {
@@ -308,4 +330,29 @@ describe('property tests (local only, never in CI)', () => {
   it('the tier list used above matches the pipeline definition', () => {
     expect(TIERS.map((t) => t.id)).toEqual([...TIER_IDS]);
   });
+});
+
+// Table L (PT-C9 / P17): the world faults in-process (L3 degrades and L7 parks in the bot runtime, so those two run in apps/haunted-orders/test/table-l-integration.test.ts), checked against the outcome table the mock and the UI use (shared/outcomes.ts).
+const L_ROWS = [
+  { id: 'L1', fault: 'sms_down', stage: 'confirmation' },
+  { id: 'L2', fault: 'app_down', stage: 'ship' },
+  { id: 'L5', fault: 'no_answer', stage: 'handoff' },
+  { id: 'L6', fault: 'gated_house', stage: 'handoff' },
+] as const;
+const L_CODE: Record<string, string> = { OK: 'OK', FAILED: 'FAILED', PARKED_OK: 'PARKED>OK' };
+
+describe('acceptance table L, all tiers (in-process, fake clock; P17)', () => {
+  for (const row of L_ROWS) {
+    it(`${row.id} ${row.fault} at ${row.stage}: the in-process result matches the shared outcome table for every tier`, async () => {
+      const got: string[] = [];
+      const want: string[] = [];
+      for (const t of TIER_IDS) {
+        const w = new World();
+        w.armFault(row.fault, row.stage);
+        got.push(code(await w.play(t, { heal: undefined }), w.rows()));
+        want.push(L_CODE[resolveOutcome('orders', t, row.fault, row.stage)!.outcome]!);
+      }
+      expect(got).toEqual(want);
+    });
+  }
 });

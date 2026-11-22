@@ -48,11 +48,11 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | PT-C6 | playtest-v2 | Reviews and stars. (done: packages/haunt/src/score/review.ts review(), StarTr... | done | [#161](https://github.com/kakoritz/Kiroween-Chaos/pull/161) | - |
 | PT-C7 | playtest-v2 | World events. (PT-C7a done: smsdown, ppdown, updatesdown faults with outcome... | done | - | - |
 | PT-C8 | playtest-v2 | Wrong order and decisions. (PT-C8a done: ordertypo fault and prankster in the... | open | - | - |
-| PT-C9 | playtest-v2 | Property and unit tests. P9 to P18 plus the worked examples. | open | - | - |
+| PT-C9 | playtest-v2 | Property and unit tests. P9 to P18 plus the worked examples. | done | - | - |
 | PT-C10 | playtest-v2 | Fixtures and storyboards. Update STORYBOARDS.md with travel, ceremony, review... | open | - | - |
-| PT-C11 | playtest-v2 | Reports and CLI. Wave report laps and stars, sweep columns for the world faul... | open | - | - |
-| PT-C12 | playtest-v2 | Mock templates. Rows for table L and the decision flow in outcomes.json; TCAN... | open | - | - |
-| PT-C13 | playtest-v2 | Inbox mapping. Decide which new faults apply to the Python inbox (suggest non... | open | - | - |
+| PT-C11 | playtest-v2 | Reports and CLI. Wave report laps and stars, sweep columns for the world faul... | done | - | - |
+| PT-C12 | playtest-v2 | Mock templates. Rows for table L and the decision flow in outcomes.json; TCAN... | done | - | - |
+| PT-C13 | playtest-v2 | Inbox mapping. Decide which new faults apply to the Python inbox (suggest non... | done | - | - |
 | PT-U1 | playtest-v2 | Lap choreography. (Done: arena/lap.ts anchors, walks of walkMs, grab of grabM... | done | [#159](https://github.com/kakoritz/Kiroween-Chaos/pull/159) | - |
 | PT-U2 | playtest-v2 | Handoff ceremony and cancel sequence. (Done: arena/handoff.ts; door opens, ha... | done | [#164](https://github.com/kakoritz/Kiroween-Chaos/pull/164) | - |
 | PT-U3 | playtest-v2 | Chips v2. (Done: arena/chips.ts pure chipState(events, stageIds) with 11 stat... | done | [#170](https://github.com/kakoritz/Kiroween-Chaos/pull/170) | - |
