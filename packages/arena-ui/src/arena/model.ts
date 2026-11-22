@@ -7,6 +7,7 @@ import { EQUIP_LIFE_MS, type EquipVM } from './equip';
 import type { OrderDropVM } from './order';
 import { applyLap, lapMotion, newLap, START_X, type LapVM } from './lap';
 import { foldHeat, newHeat, chipState, type ChipInfo, type Heat } from './chips';
+import { applyIntensity, defaultDial, readDial, type DialState } from './dial';
 import { absorb, actAll, addCreature, exitAll, exitDepth, exitStage, prune, PUFF_MS, type CreatureVM } from './creatures';
 
 export type ChipState = 'pending' | 'active' | 'done' | 'replayed' | 'retrying' | 'failed' | 'dead' | 'parked' | 'quarantined';
@@ -75,9 +76,11 @@ export interface ArenaVM {
   speed: number;
   /** Boss banner state (UI-B5). */
   boss: BossVM;
+  /** Intensity dial (TV3-U6): the server's level, ramp flag and the source of the last change. */
+  intensity: DialState;
 }
 
-export const emptyVM = (): ArenaVM => ({ stages: [], lanes: [], wave: 0, running: false, speed: 1, boss: emptyBoss() });
+export const emptyVM = (): ArenaVM => ({ stages: [], lanes: [], wave: 0, running: false, speed: 1, boss: emptyBoss(), intensity: defaultDial() });
 
 export function newLane(n: number, stageCount: number, now: number): LaneVM {
   return {
@@ -124,6 +127,7 @@ export function loadSnapshot(vm: ArenaVM, s: ArenaState, now: number): void {
   vm.running = !!s.wave?.running;
   vm.speed = s.wave?.speed ?? 1;
   loadBoss(vm.boss, s, now, vm.speed);
+  vm.intensity = readDial(s) ?? vm.intensity;
   vm.lanes = (s.lanes ?? []).map((ls) => {
     const l = newLane(ls.lane, vm.stages.length, now);
     l.tier = ls.tier; l.label = ls.label; l.parts = ls.parts.filter((p) => p.installed).map((p) => p.id);
@@ -184,6 +188,7 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
     if (k === 'end') for (const l of vm.lanes) if (l.mode !== 'dead' && l.mode !== 'halted') l.survivedAt = now;
     return;
   }
+  if (ev.type === 'intensity') { applyIntensity(vm.intensity, d); return; }
   if (ev.type === 'wave_start') {
     vm.wave = num(ev.wave, vm.wave + 1);
     vm.running = true;

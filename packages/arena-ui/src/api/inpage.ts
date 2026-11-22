@@ -28,6 +28,7 @@ export interface HauntInPage {
   getWaveLaps(n: number): Promise<any>;
   getWaveStars(n: number): Promise<any>;
   decide(lane: number, order: string, choice: string): Promise<any>;
+  setIntensity?(level: number, opts?: { autoRamp?: boolean; everyN?: number; max?: number }): Promise<any>;
   getLedger(): Promise<any>;
   getWaves(): Promise<any>;
   getReport(n: number): Promise<any>;
@@ -71,6 +72,7 @@ export class InPageApi implements ArenaApi {
   getWaveLaps(n: number) { return wrap(this.h.getWaveLaps(n)); }
   getWaveStars(n: number) { return wrap(this.h.getWaveStars(n)); }
   decide(lane: number, order: string, choice: string) { return wrap(this.h.decide(lane, order, choice)); }
+  setIntensity(level: number, opts: { autoRamp?: boolean; everyN?: number; max?: number } = {}) { return wrap(this.h.setIntensity ? this.h.setIntensity(level, opts) : Promise.reject(new ApiError('not_applicable', 'the intensity dial needs a server'))); }
   getLedger() { return wrap(this.h.getLedger()); }
   getWaves() { return wrap(this.h.getWaves()); }
   getReport(n: number) { return wrap(this.h.getReport(n)); }

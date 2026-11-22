@@ -52,6 +52,8 @@ export interface ArenaState {
   stages: StageInfo[];
   lanes: LaneState[];
   boss: { next: string | null; startsInMs: number | null; active: boolean };
+  /** Intensity dial (contract v1.2 section 5). Absent on an older server. */
+  intensity?: { level: number; autoRamp: boolean; everyN: number; max: number };
   demo: { scripts: string[]; running: string | null };
 }
 
@@ -120,6 +122,8 @@ export interface ArenaApi {
   getWaveLaps(n: number): Promise<any>;
   getWaveStars(n: number): Promise<any>;
   decide(lane: number, order: string, choice: string): Promise<any>;
+  /** POST /api/intensity (contract v1.2 section 5): level 1..11. Answers the new `state.intensity`. */
+  setIntensity(level: number, opts?: { autoRamp?: boolean; everyN?: number; max?: number }): Promise<any>;
   getLedger(): Promise<any>;
   getWaves(): Promise<WaveSummary[]>;
   getReport(n: number): Promise<any>;

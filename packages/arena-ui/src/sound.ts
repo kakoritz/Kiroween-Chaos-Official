@@ -1,9 +1,11 @@
 /** UI-D2/UI-S7: sound effects generated in code with WebAudio. No audio files. */
-export type SoundName = 'rattle' | 'creak' | 'wail' | 'thud' | 'sting';
+export type SoundName = 'rattle' | 'creak' | 'wail' | 'thud' | 'sting' | 'rise';
 
 /** Pure mapping from an arena event to the sound it triggers, or null for silence. */
-export function soundFor(ev: { type?: string }): SoundName | null {
+export function soundFor(ev: { type?: string; detail?: { level?: unknown } }): SoundName | null {
   switch (ev.type) {
+    // TV3-U6: the dial hitting the 11 override (THROW EVERYTHING) rises.
+    case 'intensity': return ev.detail?.level === 11 ? 'rise' : null;
     case 'stage_done': return 'rattle';
     case 'order_start': return 'creak';
     case 'process_dead': return 'wail';
@@ -15,7 +17,7 @@ export function soundFor(ev: { type?: string }): SoundName | null {
 }
 
 /** Minimum gap between two plays of the same sound, so a 200 events/s burst stays listenable. */
-export const MIN_GAP_MS: Record<SoundName, number> = { rattle: 120, creak: 250, wail: 900, thud: 150, sting: 1500 };
+export const MIN_GAP_MS: Record<SoundName, number> = { rattle: 120, creak: 250, wail: 900, thud: 150, sting: 1500, rise: 2500 };
 
 /** True when this sound may play now (rate limit per sound). */
 export function canPlay(name: SoundName, now: number, last: Partial<Record<SoundName, number>>): boolean {
@@ -86,6 +88,20 @@ const synth: Record<SoundName, (ctx: Ctx, out: AudioNode, t: number) => void> = 
     const ng = ctx.createGain(); env(ctx, ng, t, 0.3, 0.003, 0.05);
     s.connect(f).connect(ng).connect(out); s.start(t);
   },
+  // Rise: a sawtooth climbing two octaves through an opening filter, over a noise swell (the 11 override).
+  rise(ctx, out, t) {
+    const o = ctx.createOscillator(); o.type = 'sawtooth';
+    o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(880, t + 1.3);
+    const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = 5;
+    f.frequency.setValueAtTime(300, t); f.frequency.exponentialRampToValueAtTime(3600, t + 1.3);
+    const g = ctx.createGain(); env(ctx, g, t, 0.22, 1.1, 1.45);
+    o.connect(f).connect(g).connect(out); o.start(t); o.stop(t + 1.5);
+    const s = noise(ctx, 1.4);
+    const nf = ctx.createBiquadFilter(); nf.type = 'bandpass'; nf.Q.value = 2;
+    nf.frequency.setValueAtTime(400, t); nf.frequency.exponentialRampToValueAtTime(5000, t + 1.3);
+    const ng = ctx.createGain(); env(ctx, ng, t, 0.16, 1.1, 1.4);
+    s.connect(nf).connect(ng).connect(out); s.start(t);
+  },
   // Sting: a dissonant minor-second stab with a low swell.
   sting(ctx, out, t) {
     for (const [hz, type] of [[220, 'sawtooth'], [233, 'sawtooth'], [110, 'square']] as const) {
@@ -120,7 +136,7 @@ export class ArenaSound {
     return muted;
   }
 
-  onEvent(ev: { type?: string }, now: number): void {
+  onEvent(ev: { type?: string; detail?: { level?: unknown } }, now: number): void {
     if (this.state.muted || !this.ctx || !this.master || this.ctx.state !== 'running') return;
     const name = soundFor(ev);
     if (!name || !canPlay(name, now, this.last)) return;

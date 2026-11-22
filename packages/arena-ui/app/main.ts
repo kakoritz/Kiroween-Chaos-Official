@@ -14,6 +14,8 @@ import { ChaosModeControl, readChaosState } from '../src/arena/chaosmode';
 import { AppSwitcher, currentApp } from '../src/arena/appswitch';
 import { GearMenu, DEFAULT_PACE, badgeTitle, type Pace } from '../src/arena/gearmenu';
 import '../src/arena/gearmenu.css';
+import { IntensityDial, applyIntensity, readDial, defaultDial } from '../src/arena/dial';
+import '../src/arena/dial.css';
 import { LegendModal } from '../src/arena/legend-modal';
 import { ArenaSound } from '../src/sound';
 import { FrameSampler, perfSecondsFromQuery } from '../src/perf';
@@ -53,9 +55,10 @@ root.innerHTML = `
       <span class="wave" id="wave"></span>
       <div id="app-switch"></div>
       <div id="chaos-mode"></div>
+      <div id="dial"></div>
       <span class="spacer"></span>
       <span class="total" id="total" title="Total score"></span>
-      <button class="btn btn--ghost" id="tour-open" type="button" title="Six-step guided tour">Tour</button>
+      <button class="btn btn--ghost" id="tour-open" type="button" title="Guided tour">Tour</button>
       <button class="btn btn--ghost" id="keys-btn" type="button" aria-expanded="false" aria-controls="keys-pop" title="Keyboard and state legend (?)">&#9000; Keys</button>
       <button class="btn btn--ghost" id="legend-btn" type="button" aria-expanded="false" title="What do R J I B Q mean?">?</button>
       <span class="gear-wrap" id="gear-wrap"><button class="btn btn--ghost" id="gear-btn" type="button" title="Settings: chaos, pace, speed, sound, motion" aria-label="Settings">&#9881;</button></span>
@@ -105,6 +108,7 @@ let lastSeq = 0;
 let waveNo = 0;
 let api: ArenaApi;
 let chaosCtl: ChaosModeControl;
+let dial: IntensityDial | null = null;
 let appSwitch: AppSwitcher | null = null;
 let demoRunning = false;
 let waveRunning = false;
@@ -139,7 +143,8 @@ const queue: ArenaEvent[] = [];
 const scene = new ArenaScene(canvas.getContext('2d')!);
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 scene.reducedMotion = reduceMotion.matches;
-reduceMotion.addEventListener('change', () => { scene.reducedMotion = reduceMotion.matches; });
+document.body.classList.toggle('reduced-motion', reduceMotion.matches);
+reduceMotion.addEventListener('change', () => { scene.reducedMotion = reduceMotion.matches; document.body.classList.toggle('reduced-motion', reduceMotion.matches); });
 const rankBoard = new RankBoard($('rank-body'));
 const ledgerPanel = new LedgerPanel($('ledger-body'));
 const rankEl = $('rank');
@@ -285,6 +290,10 @@ function onEvent(ev: ArenaEvent) {
   scoreVisuals.onEvent(ev);
   events++;
   if (typeof ev.seq === 'number') lastSeq = ev.seq;
+  if (ev.type === 'intensity') {
+    const next = defaultDial();
+    if (applyIntensity(next, ev.detail)) dial?.adopt({ level: next.level, source: next.source, ...(typeof ev.detail?.autoRamp === 'boolean' ? { autoRamp: next.autoRamp } : {}) });
+  }
   if (ev.type === 'hello') {
     mode = typeof ev.mode === 'string' ? ev.mode : mode;
     if (ev.contractVersion !== 1) errEl.textContent = 'Update the UI: the server speaks contract version ' + String(ev.contractVersion) + '.';
@@ -311,6 +320,8 @@ async function loadState() {
   try {
     const s = await api.getState();
     mode = String(s.mode);
+    const ds = readDial(s);
+    if (ds) dial?.adopt(ds);
     const cs = readChaosState(s);
     if (cs) chaosCtl.adopt(cs);
     appSwitch?.setActive(currentApp(s));
@@ -356,11 +367,12 @@ async function boot() {
   api.startWave = (o) => startWave0({ pace, ...o });
   chaosCtl = new ChaosModeControl($('chaos-mode'), { setChaosMode: (o) => api.setChaosMode(o), onError: showError });
 
+  dial = new IntensityDial($('dial'), { setIntensity: (level, o) => api.setIntensity(level, o).then((st) => { const ds = readDial({ intensity: st as never }); if (ds) dial?.adopt(ds); return st; }), onError: showError });
   new GearMenu($<HTMLButtonElement>('gear-btn'), $('gear-wrap'), $('pace-tag'), {
     setPace: (p) => { pace = p; },
     setSpeed: (s) => { void api.setSpeed(s).catch(showError); },
     toggleSound: () => muteBtn.click(),
-    setReducedMotion: (on) => { scene.reducedMotion = on || reduceMotion.matches; },
+    setReducedMotion: (on) => { scene.reducedMotion = on || reduceMotion.matches; document.body.classList.toggle('reduced-motion', on || reduceMotion.matches); },
   }, $('chaos-mode'));
   new LegendModal(stageEl, $<HTMLButtonElement>('legend-btn'));
 

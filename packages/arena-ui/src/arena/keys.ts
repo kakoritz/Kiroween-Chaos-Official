@@ -23,6 +23,7 @@ export const KEY_HELP: readonly { keys: string; does: string }[] = [
   { keys: '1-9', does: 'Chaos on that lane' },
   { keys: 'C', does: 'Chaos on a random lane' },
   { keys: 'M', does: 'Cycle Off, Manual, Random' },
+  { keys: 'Tab', does: 'Focus the intensity dial: arrows change level, End jumps to 11' },
   { keys: '?', does: 'Show these keys' },
   { keys: 'P', does: 'Present mode (clean frame, Esc exits)' },
 ];

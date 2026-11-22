@@ -18,6 +18,7 @@ export function gearTip(p: GearPart, has: boolean): string {
 export function legendHtml(): string {
   return `<h2>Gear</h2><ul class="lgm-gear">${GEAR_PARTS.map((p) =>
     `<li title="${gearTip(p, true)}"><b class="lgm-l">${p.letter}</b> <b>${p.name}</b> (${p.does}). <span class="lgm-ex">${p.example}</span></li>`).join('')}</ul>
+    <h2>Intensity dial</h2><ul class="lgm-gear"><li><b>1 to 10</b> how many faults hit each order, how many at once, how many are unknown. The default is 3, calm.</li><li><b class="lgm-red">11 THROW EVERYTHING</b> a fault at every stage of every order. A stress test.</li><li><b>RAMP</b> raises the dial by one every few finished orders.</li></ul>
     <h2>Chips</h2><ul class="lg-list">${STATE_LEGEND.map((s) => `<li class="lg-i lg-${s.state}"><span aria-hidden="true">${s.icon}</span> ${s.word}</li>`).join('')}</ul>`;
 }
 
