@@ -12,8 +12,15 @@ export const ACTION_PARTS: Readonly<Record<PolicyAction, readonly string[]>> = {
   hold_and_reroute: ['offline_queue'],
 };
 
-/** The actions the SDK enforces today. The others are recorded and shown, but a tier's own parts already do them. */
-export const ENFORCED_ACTIONS: readonly PolicyAction[] = ['retry_backoff'];
+/**
+ * The actions the SDK enforces. Each one is a lever a tier's own parts leave switched off until a lesson turns it on for a stage:
+ * - retry_backoff: retry that stage with exponential backoff (more attempts, growing waits) for any transient failure; also read by the transit poll and the handoff.
+ * - idempotency_key: an effect of that stage the bot sent without a key gets one derived from the order (needs the `idempotency` part), so a repeat is found, not redone.
+ * - journal_replay: when that stage ends in a failure the retries could not beat, replay the order from the journal after a cool-down instead of failing it (needs `journal`).
+ * - breaker_park: that stage trips the breaker after two failed attempts instead of four, and the order is parked and resumed when the breaker closes (needs `breaker` and `offline_queue`).
+ * `hold_and_reroute` is recorded and shown only.
+ */
+export const ENFORCED_ACTIONS: readonly PolicyAction[] = ['retry_backoff', 'idempotency_key', 'journal_replay', 'breaker_park'];
 
 export interface PolicyRule {
   stage: string;
@@ -56,9 +63,23 @@ export function faultMatches(fault: string, status: number | null, message: stri
   }
 }
 
+/** A failure worth waiting out: no answer, not found yet, a timeout, a rate limit or a server error. A 400, 401, 403 or 409 will not change by waiting. */
+export function isTransient(status: number | null): boolean {
+  return status === null || status === 404 || status === 408 || status === 425 || status === 429 || status >= 500;
+}
+
+/**
+ * The rule of `action` that answers a failed call at `stage`, if the bot has learned one. A lesson is about the stage, not the exact status: it was taught by
+ * one fault (a 404, say) but the same stage fails as a 429 or a 500 in the next round, so any transient failure of the stage matches.
+ * Without a failed call (`status` undefined) a rule matches by stage alone.
+ */
+export function ruleFor(policy: Policy | undefined, action: PolicyAction, stage: string, status?: number | null, message = ''): PolicyRule | undefined {
+  return policy?.rules.find((r) => r.action === action && (r.stage === stage || r.stage === '*') && (status === undefined || (isTransient(status) && r.fault !== 'crash') || faultMatches(r.fault, status, message)));
+}
+
 /** The retry_backoff rule that answers a failed call at `stage`, if the bot has learned one. */
 export function backoffRule(policy: Policy | undefined, stage: string, status: number | null, message: string): PolicyRule | undefined {
-  return policy?.rules.find((r) => r.action === 'retry_backoff' && (r.stage === stage || r.stage === '*') && faultMatches(r.fault, status, message));
+  return ruleFor(policy, 'retry_backoff', stage, status, message);
 }
 
 export function parsePolicy(raw: unknown): Policy {

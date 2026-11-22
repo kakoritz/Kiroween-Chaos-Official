@@ -146,7 +146,15 @@ export class RunnerEngine {
   readonly curses = new Map<number, CurseRec[]>();
   private curseSeq = 0;
   private readonly hits = new Map<string, CurseHit[]>();
-  private readonly trace = new Map<string, OrderTrace>();
+  /** What each order did, by lane and order id. The ledger's `effect` events can reach the log before the bot's own `order_start`, so a trace is made by whichever comes first. */
+  private readonly trace = new Map<string, Map<string, OrderTrace>>();
+  private traceOf(lane: string, order: string): OrderTrace {
+    let m = this.trace.get(lane);
+    if (!m) this.trace.set(lane, (m = new Map()));
+    let t = m.get(order);
+    if (!t) m.set(order, (t = { order, effects: [], failed: false, died: false }));
+    return t;
+  }
   private readonly curOrder = new Map<string, string>();
 
   /** Where `curse_start` and `curse_end` go: a curse can be put on between waves, so they do not wait for a wave's record callback. */
@@ -209,15 +217,17 @@ export class RunnerEngine {
     const lane = String(ev.lane);
     const d = (ev.detail ?? {}) as Record<string, any>;
     switch (ev.type) {
-      case 'order_start': this.curOrder.set(lane, String(ev.order)); this.trace.set(lane, { order: String(ev.order), effects: [], failed: false, died: false }); return;
-      case 'effect': this.trace.get(lane)?.effects.push({ kind: String(d.kind), key: String(d.key) }); return;
-      case 'stage_fail': { const t = this.trace.get(lane); if (t) t.failed = true; return; }
-      case 'process_dead': { const t = this.trace.get(lane); if (t && (this.hits.get(lane) ?? []).some((h) => h.order === t.order)) t.died = true; return; }
+      case 'order_start': this.curOrder.set(lane, String(ev.order)); this.traceOf(lane, String(ev.order)); return;
+      case 'effect': if (ev.order !== undefined) this.traceOf(lane, String(ev.order)).effects.push({ kind: String(d.kind), key: String(d.key) }); return;
+      case 'stage_fail': { const o = ev.order !== undefined ? String(ev.order) : this.curOrder.get(lane); if (o) this.traceOf(lane, o).failed = true; return; }
+      case 'process_dead': { const o = this.curOrder.get(lane); if (o && (this.hits.get(lane) ?? []).some((h) => h.order === o)) this.traceOf(lane, o).died = true; return; }
       case 'order_done': case 'order_failed': case 'order_parked': case 'order_quarantined': case 'lane_halted': break;
       default: return;
     }
-    const t = this.trace.get(lane);
+    const endOrder = ev.order !== undefined ? String(ev.order) : this.curOrder.get(lane);
+    const t = endOrder ? this.traceOf(lane, endOrder) : undefined;
     const mine = (this.hits.get(lane) ?? []).filter((h) => (t ? h.order === t.order : true));
+    if (t) this.trace.get(lane)?.delete(t.order);
     if (mine.length === 0 || !t) return;
     this.hits.set(lane, (this.hits.get(lane) ?? []).filter((h) => !mine.includes(h)));
     const seen = new Set<string>();

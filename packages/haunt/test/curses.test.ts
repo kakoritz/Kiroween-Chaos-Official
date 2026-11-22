@@ -171,11 +171,14 @@ describe('engine: curses persist, follow the level and classify live', () => {
     ev('order_start', 3, {}, { order: 'ord-0001' }); hit(3, 'charge'); ev('stage_fail', 3, { error: 'x' }, { order: 'ord-0001', stage: 'payment' }); ev('order_failed', 3, {}, { order: 'ord-0001' });
     // Lane 4: the process died after the lie -> crashed.
     ev('order_start', 4, {}, { order: 'ord-0001' }); hit(4, 'charge'); ev('process_dead', 4, { reason: 'crash' }); ev('order_done', 4, {}, { order: 'ord-0001' });
+    // Lane 5: the ledger's effect reached the log BEFORE the bot's own order_start (the bot's stdout lags): the step still happened -> handled, not swallowed.
+    ev('effect', 5, { kind: 'charge', key: 'ord-0001:charge' }, { order: 'ord-0001' }); ev('order_start', 5, {}, { order: 'ord-0001' }); hit(5, 'charge'); ev('order_done', 5, {}, { order: 'ord-0001' });
     const got = Object.fromEntries(events.filter((e) => e.type === 'curse_response').map((e) => [e.lane, e]));
     expect(got['1']).toMatchObject({ order: 'ord-0001', stage: 'payment', detail: { class: 'handled', curse: '404', endpoint: 'charge' } });
     expect(got['2']).toMatchObject({ stage: 'updates', detail: { class: 'swallowed' } });
     expect(got['3']!.detail).toMatchObject({ class: 'reported' });
     expect(got['4']!.detail).toMatchObject({ class: 'crashed' });
+    expect(got['5']!.detail).toMatchObject({ class: 'handled' });
     // A curse_response lands before its order_done, and a swallowed or crashed one counts as an issue.
     const i = events.findIndex((e) => e.type === 'curse_response' && e.lane === '2');
     expect(events[i + 1]!.type).toBe('order_done');

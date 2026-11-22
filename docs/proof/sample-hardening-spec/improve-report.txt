@@ -2,41 +2,50 @@ improve started on http://127.0.0.1:7081
 phase: before
 phase: after
 phase: done
-# Improve: closed 0 of 5 patterns
+# Improve: closed 5 of 9 patterns, and 2 more on every lane that took a policy
 
 | | Before | After |
 |---|---|---|
-| Grade | C | C |
-| Reliability | 72 | 69 |
-| Round points | 1929 | 814 |
-| Lost orders | 8 | 10 |
+| Grade | C | B |
+| Reliability | 70 | 87 |
+| Round points | 1379 | 4959 |
+| Lost orders | 9 | 2 |
 | Repeated effects | 9 | 8 |
 
 ## Patterns
 
-| Pattern | Handled by | Before | After | Status |
-|---|---|---|---|---|
-| `payment + http_404 + order_lost` | overlay+spec | 5 | 5 | applied |
-| `payment + crash + order_lost` | spec | 3 | 1 | suggested |
-| `account + slow_link + outage` | spec | 4 | 4 | suggested |
-| `payment + endpoint_failure_rate + degraded` | spec | 30 | 28 | suggested |
-| `payment + http_404 + retry_storm` | spec | 4 | 4 | suggested |
+| Pattern | Handled by | Before | After | Lanes (before > after) | Status |
+|---|---|---|---|---|---|
+| `payment + http_404 + order_lost` | overlay+spec | 4 | 2 | 1,2,3,4 > 1 | applied (gone on the lanes that took the policy) |
+| `payment + http_429 + order_lost` | overlay | 1 | 0 | 3 > - | verified (gone) |
+| `account + slow_link + outage` | overlay+spec | 4 | 3 | 2,3,4,5 > 2,3,4 | applied (gone on the lanes that took the policy) |
+| `submit + timeout + order_lost` | overlay | 1 | 0 | 4 > - | verified (gone) |
+| `submit + http_404 + order_lost` | overlay | 1 | 0 | 4 > - | verified (gone) |
+| `account + http_404 + order_lost` | spec | 1 | 0 | 1 > - | verified (gone) |
+| `payment + crash + order_lost` | spec | 1 | 0 | 1 > - | verified (gone) |
+| `payment + endpoint_failure_rate + degraded` | overlay+spec | 41 | 34 | 1,2,3,4,5 > 1,2,3,4,5 | applied |
+| `payment + http_404 + retry_storm` | overlay+spec | 5 | 5 | 2,3,4,5 > 2,3,4,5 | applied |
 
 ## Applied as policy (lessons)
 
 - lane 2 (retrier): `retry_backoff` for payment + http_404 (already learned in a round)
 - lane 3 (journaler): `retry_backoff` for payment + http_404 (already learned in a round)
 - lane 4 (reconciler): `retry_backoff` for payment + http_404 (already learned in a round)
+- lane 3 (journaler): `retry_backoff` for payment + http_429 (already learned in a round)
+- lane 5 (phoenix): `breaker_park` for account + slow_link
+- lane 4 (reconciler): `retry_backoff` for submit + timeout (already learned in a round)
+- lane 4 (reconciler): `retry_backoff` for submit + http_404 (already learned in a round)
+- lane 5 (phoenix): `breaker_park` for payment + endpoint_failure_rate
+- lane 5 (phoenix): `breaker_park` for payment + http_404
 
 ## Spec for the rest (not applied)
 
-- `.kiro/specs/<run>`: 5 requirements, lint ok. Kiro applies it with the review step.
+- `.kiro/specs/hardening-<run>`: 6 requirements, lint ok. Kiro applies it with the review step.
 
 ## New in the rerun
 
-- `payment + http_429 + order_lost`
-- `account + http_429 + order_lost`
-- `account + http_429 + retry_storm`
+- `submit + curse_404 + crashed`
+- `payment + curse_rate_limit + crashed`
 
 A pattern is verified only when the rerun shows it gone. Lessons learned in the first run carry into the rerun.
 

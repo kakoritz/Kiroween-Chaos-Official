@@ -1,180 +1,275 @@
 {
   "version": 1,
-  "note": "excerpt of .haunt/patterns.json (evidence trimmed)",
+  "note": "excerpt of .haunt/patterns.json: the patterns of the improve run below (evidence trimmed)",
   "patterns": [
     {
       "id": "p-85d0a239",
       "signature": "payment + http_404 + order_lost",
+      "stage": "payment",
+      "fault": "http_404",
+      "consequence": "order_lost",
       "shapes": [
         "case"
       ],
-      "count": 10,
+      "count": 6,
       "lanes": [
         1,
         2,
         3,
         4
       ],
-      "downtimeMsTotal": 39,
-      "lostOrders": 10,
+      "downtimeMsTotal": 34,
+      "lostOrders": 6,
       "repeats": 0,
+      "points": 0,
       "firstSeen": {
-        "run": "tmwrw6vu7",
+        "run": "tmwrx7spi",
         "round": 1,
-        "order": "ord-0004",
+        "order": "ord-0005",
         "lane": 1
       },
       "lastSeen": {
-        "run": "tmwrw7v53",
+        "run": "tmwrx8t7o",
         "round": 1,
         "order": "ord-0004",
         "lane": 1
       },
       "status": "applied",
       "runs": [
-        "tmwrw6vu7#r1",
-        "tmwrw7v53#r1"
-      ]
+        "tmwrx7spi#r1",
+        "tmwrx8t7o#r1"
+      ],
+      "evidence": [
+        {
+          "run": "tmwrx7spi",
+          "round": 1,
+          "seq": [
+            999,
+            1362,
+            1680,
+            1681
+          ],
+          "journal": [
+            ".haunt/wave-1/lane-3/journal.jsonl:135",
+            ".haunt/wave-1/lane-3/journal.jsonl:136"
+          ],
+          "report": "/api/waves/1/report"
+        }
+      ],
+      "solvedBy": [],
+      "unknown": true,
+      "fingerprint": "fz-b87b7f70"
     },
     {
-      "id": "p-9643d1b6",
-      "signature": "account + crash + duplicate_effect",
+      "id": "p-4776839d",
+      "signature": "submit + http_404 + order_lost",
+      "stage": "submit",
+      "fault": "http_404",
+      "consequence": "order_lost",
       "shapes": [
         "case"
       ],
-      "count": 4,
+      "count": 1,
       "lanes": [
-        1,
-        2
+        4
+      ],
+      "downtimeMsTotal": 6,
+      "lostOrders": 1,
+      "repeats": 0,
+      "points": 0,
+      "firstSeen": {
+        "run": "tmwrx7spi",
+        "round": 1,
+        "order": "ord-0005",
+        "lane": 4
+      },
+      "lastSeen": {
+        "run": "tmwrx7spi",
+        "round": 1,
+        "order": "ord-0005",
+        "lane": 4
+      },
+      "status": "verified",
+      "runs": [
+        "tmwrx7spi#r1"
+      ],
+      "evidence": [
+        {
+          "run": "tmwrx7spi",
+          "round": 1,
+          "seq": [
+            1083,
+            1755,
+            1761
+          ],
+          "journal": [
+            ".haunt/wave-1/lane-4/journal.jsonl:144",
+            ".haunt/wave-1/lane-4/journal.jsonl:145"
+          ],
+          "report": "/api/waves/1/report"
+        }
+      ],
+      "solvedBy": []
+    },
+    {
+      "id": "p-609731ac",
+      "signature": "account + http_404 + order_lost",
+      "stage": "account",
+      "fault": "http_404",
+      "consequence": "order_lost",
+      "shapes": [
+        "case"
+      ],
+      "count": 1,
+      "lanes": [
+        1
       ],
       "downtimeMsTotal": 0,
-      "lostOrders": 0,
-      "repeats": 8,
+      "lostOrders": 1,
+      "repeats": 0,
+      "points": 0,
       "firstSeen": {
-        "run": "tmwrw6vu7",
+        "run": "tmwrx7spi",
         "round": 1,
-        "order": "ord-0001",
+        "order": "ord-0003",
         "lane": 1
       },
       "lastSeen": {
-        "run": "tmwrw7v53",
+        "run": "tmwrx7spi",
         "round": 1,
-        "order": "ord-0001",
+        "order": "ord-0003",
         "lane": 1
       },
-      "status": "new",
+      "status": "verified",
       "runs": [
-        "tmwrw6vu7#r1",
-        "tmwrw7v53#r1"
-      ]
-    },
-    {
-      "id": "p-e98c1c44",
-      "signature": "payment + endpoint_failure_rate + degraded",
-      "shapes": [
-        "failure_rate"
+        "tmwrx7spi#r1"
       ],
-      "count": 58,
-      "lanes": [
-        1,
-        2,
-        3,
-        4,
-        5
+      "evidence": [
+        {
+          "run": "tmwrx7spi",
+          "round": 1,
+          "seq": [
+            999,
+            1362,
+            1009,
+            1011
+          ],
+          "journal": [],
+          "report": "/api/waves/1/report"
+        }
       ],
-      "downtimeMsTotal": 0,
-      "lostOrders": 0,
-      "repeats": 0,
-      "firstSeen": {
-        "run": "tmwrw6vu7",
-        "round": 1,
-        "lane": 3
-      },
-      "lastSeen": {
-        "run": "tmwrw7v53",
-        "round": 2,
-        "lane": 5
-      },
-      "status": "suggested",
-      "runs": [
-        "tmwrw6vu7#r1",
-        "tmwrw6vu7#r2",
-        "tmwrw7v53#r1",
-        "tmwrw7v53#r2"
-      ]
-    },
-    {
-      "id": "p-f5ee5642",
-      "signature": "payment + http_404 + retry_storm",
-      "shapes": [
-        "retry_storm"
-      ],
-      "count": 8,
-      "lanes": [
-        2,
-        3,
-        4,
-        5
-      ],
-      "downtimeMsTotal": 0,
-      "lostOrders": 0,
-      "repeats": 0,
-      "firstSeen": {
-        "run": "tmwrw6vu7",
-        "round": 1,
-        "order": "ord-0004",
-        "lane": 3
-      },
-      "lastSeen": {
-        "run": "tmwrw7v53",
-        "round": 1,
-        "order": "ord-0004",
-        "lane": 3
-      },
-      "status": "suggested",
-      "runs": [
-        "tmwrw6vu7#r1",
-        "tmwrw7v53#r1"
-      ]
+      "solvedBy": []
     },
     {
       "id": "p-0b7b06ed",
       "signature": "payment + crash + order_lost",
+      "stage": "payment",
+      "fault": "crash",
+      "consequence": "order_lost",
       "shapes": [
         "case"
       ],
-      "count": 4,
+      "count": 1,
       "lanes": [
-        2,
-        3,
-        4
+        1
       ],
-      "downtimeMsTotal": 138,
-      "lostOrders": 4,
+      "downtimeMsTotal": 0,
+      "lostOrders": 1,
       "repeats": 0,
+      "points": 0,
       "firstSeen": {
-        "run": "tmwrw6vu7",
-        "round": 2,
-        "order": "ord-0004",
-        "lane": 2
+        "run": "tmwrx7spi",
+        "round": 1,
+        "order": "ord-0002",
+        "lane": 1
       },
       "lastSeen": {
-        "run": "tmwrw7v53",
-        "round": 2,
-        "order": "ord-0004",
-        "lane": 2
+        "run": "tmwrx7spi",
+        "round": 1,
+        "order": "ord-0002",
+        "lane": 1
       },
-      "status": "suggested",
+      "status": "verified",
       "runs": [
-        "tmwrw6vu7#r2",
-        "tmwrw7v53#r2"
-      ]
+        "tmwrx7spi#r1"
+      ],
+      "evidence": [
+        {
+          "run": "tmwrx7spi",
+          "round": 1,
+          "seq": [
+            49,
+            711,
+            713
+          ],
+          "journal": [],
+          "report": "/api/waves/1/report"
+        }
+      ],
+      "solvedBy": []
     },
     {
-      "id": "p-7f80339d",
-      "signature": "account + slow_link + outage",
+      "id": "p-e98c1c44",
+      "signature": "payment + endpoint_failure_rate + degraded",
+      "stage": "payment",
+      "fault": "endpoint_failure_rate",
+      "consequence": "degraded",
       "shapes": [
-        "outage"
+        "failure_rate"
+      ],
+      "count": 75,
+      "lanes": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "downtimeMsTotal": 0,
+      "lostOrders": 0,
+      "repeats": 0,
+      "points": 0,
+      "firstSeen": {
+        "run": "tmwrx7spi",
+        "round": 1,
+        "lane": 3
+      },
+      "lastSeen": {
+        "run": "tmwrx8t7o",
+        "round": 2,
+        "lane": 3
+      },
+      "status": "applied",
+      "runs": [
+        "tmwrx7spi#r1",
+        "tmwrx7spi#r2",
+        "tmwrx8t7o#r1",
+        "tmwrx8t7o#r2"
+      ],
+      "evidence": [
+        {
+          "run": "tmwrx7spi",
+          "round": 1,
+          "seq": [
+            645,
+            650,
+            711,
+            1009
+          ],
+          "journal": [],
+          "report": "/api/waves/1/report"
+        }
+      ],
+      "solvedBy": []
+    },
+    {
+      "id": "p-f5ee5642",
+      "signature": "payment + http_404 + retry_storm",
+      "stage": "payment",
+      "fault": "http_404",
+      "consequence": "retry_storm",
+      "shapes": [
+        "retry_storm"
       ],
       "count": 8,
       "lanes": [
@@ -183,216 +278,203 @@
         4,
         5
       ],
-      "downtimeMsTotal": 20680,
-      "lostOrders": 0,
-      "repeats": 0,
-      "firstSeen": {
-        "run": "tmwrw6vu7",
-        "round": 2,
-        "lane": 2
-      },
-      "lastSeen": {
-        "run": "tmwrw7v53",
-        "round": 2,
-        "lane": 2
-      },
-      "status": "suggested",
-      "runs": [
-        "tmwrw6vu7#r2",
-        "tmwrw7v53#r2"
-      ]
-    },
-    {
-      "id": "p-3cb7dd7b",
-      "signature": "account + endpoint_failure_rate + degraded",
-      "shapes": [
-        "failure_rate"
-      ],
-      "count": 20,
-      "lanes": [
-        2,
-        3,
-        4,
-        5
-      ],
       "downtimeMsTotal": 0,
       "lostOrders": 0,
       "repeats": 0,
+      "points": 0,
       "firstSeen": {
-        "run": "tmwrw6vu7",
-        "round": 2,
-        "lane": 5
-      },
-      "lastSeen": {
-        "run": "tmwrw7v53",
-        "round": 2,
-        "lane": 5
-      },
-      "status": "new",
-      "runs": [
-        "tmwrw6vu7#r2",
-        "tmwrw7v53#r2"
-      ]
-    },
-    {
-      "id": "p-121a1440",
-      "signature": "account + http_429 + retry_storm",
-      "shapes": [
-        "retry_storm"
-      ],
-      "count": 4,
-      "lanes": [
-        3,
-        4,
-        5
-      ],
-      "downtimeMsTotal": 0,
-      "lostOrders": 0,
-      "repeats": 0,
-      "firstSeen": {
-        "run": "tmwrw6vu7",
-        "round": 2,
-        "order": "ord-0003",
-        "lane": 5
-      },
-      "lastSeen": {
-        "run": "tmwrw7v53",
-        "round": 2,
-        "order": "ord-0003",
-        "lane": 5
-      },
-      "status": "new",
-      "runs": [
-        "tmwrw6vu7#r2",
-        "tmwrw7v53#r2"
-      ]
-    },
-    {
-      "id": "p-bfcb8956",
-      "signature": "payment + crash + retry_storm",
-      "shapes": [
-        "retry_storm"
-      ],
-      "count": 6,
-      "lanes": [
-        2,
-        3,
-        4,
-        5
-      ],
-      "downtimeMsTotal": 0,
-      "lostOrders": 0,
-      "repeats": 0,
-      "firstSeen": {
-        "run": "tmwrw6vu7",
-        "round": 2,
+        "run": "tmwrx7spi",
+        "round": 1,
         "order": "ord-0004",
-        "lane": 5
+        "lane": 3
       },
       "lastSeen": {
-        "run": "tmwrw7v53",
-        "round": 2,
+        "run": "tmwrx8t7o",
+        "round": 1,
         "order": "ord-0004",
-        "lane": 5
+        "lane": 3
       },
-      "status": "new",
+      "status": "applied",
       "runs": [
-        "tmwrw6vu7#r2",
-        "tmwrw7v53#r2"
-      ]
+        "tmwrx7spi#r1",
+        "tmwrx8t7o#r1"
+      ],
+      "evidence": [
+        {
+          "run": "tmwrx7spi",
+          "round": 1,
+          "seq": [
+            1530,
+            1536,
+            1541,
+            1561
+          ],
+          "journal": [
+            ".haunt/wave-1/lane-3/journal.jsonl:135",
+            ".haunt/wave-1/lane-3/journal.jsonl:136"
+          ],
+          "report": "/api/waves/1/report"
+        }
+      ],
+      "solvedBy": []
     },
     {
       "id": "p-493c2bba",
       "signature": "payment + http_429 + order_lost",
+      "stage": "payment",
+      "fault": "http_429",
+      "consequence": "order_lost",
       "shapes": [
         "case"
       ],
-      "count": 2,
+      "count": 1,
       "lanes": [
-        3,
-        4
+        3
       ],
-      "downtimeMsTotal": 17,
-      "lostOrders": 2,
+      "downtimeMsTotal": 1610,
+      "lostOrders": 1,
       "repeats": 0,
+      "points": 0,
       "firstSeen": {
-        "run": "tmwrw7v53",
-        "round": 2,
-        "order": "ord-0005",
-        "lane": 3
-      },
-      "lastSeen": {
-        "run": "tmwrw7v53",
-        "round": 2,
-        "order": "ord-0005",
-        "lane": 3
-      },
-      "status": "new",
-      "runs": [
-        "tmwrw7v53#r2"
-      ]
-    },
-    {
-      "id": "p-478df4b3",
-      "signature": "account + http_429 + order_lost",
-      "shapes": [
-        "case"
-      ],
-      "count": 2,
-      "lanes": [
-        3,
-        4
-      ],
-      "downtimeMsTotal": 13,
-      "lostOrders": 2,
-      "repeats": 0,
-      "firstSeen": {
-        "run": "tmwrw7v53",
+        "run": "tmwrx7spi",
         "round": 2,
         "order": "ord-0003",
         "lane": 3
       },
       "lastSeen": {
-        "run": "tmwrw7v53",
+        "run": "tmwrx7spi",
         "round": 2,
         "order": "ord-0003",
         "lane": 3
       },
-      "status": "new",
+      "status": "verified",
       "runs": [
-        "tmwrw7v53#r2"
-      ]
+        "tmwrx7spi#r2"
+      ],
+      "evidence": [
+        {
+          "run": "tmwrx7spi",
+          "round": 2,
+          "seq": [
+            2636,
+            2848,
+            2897,
+            2978
+          ],
+          "journal": [
+            ".haunt/wave-2/lane-3/journal.jsonl:93",
+            ".haunt/wave-2/lane-3/journal.jsonl:94"
+          ],
+          "report": "/api/waves/2/report"
+        }
+      ],
+      "solvedBy": [],
+      "unknown": true,
+      "fingerprint": "fz-4f15be90"
     },
     {
-      "id": "p-f1c5e9e7",
-      "signature": "payment + http_429 + retry_storm",
+      "id": "p-7f80339d",
+      "signature": "account + slow_link + outage",
+      "stage": "account",
+      "fault": "slow_link",
+      "consequence": "outage",
       "shapes": [
-        "retry_storm"
+        "outage"
       ],
-      "count": 2,
+      "count": 7,
       "lanes": [
+        2,
         3,
-        4
+        4,
+        5
       ],
-      "downtimeMsTotal": 0,
+      "downtimeMsTotal": 18095,
       "lostOrders": 0,
       "repeats": 0,
+      "points": 0,
       "firstSeen": {
-        "run": "tmwrw7v53",
+        "run": "tmwrx7spi",
+        "round": 2,
+        "lane": 2
+      },
+      "lastSeen": {
+        "run": "tmwrx8t7o",
+        "round": 2,
+        "lane": 2
+      },
+      "status": "applied",
+      "runs": [
+        "tmwrx7spi#r2",
+        "tmwrx8t7o#r2"
+      ],
+      "evidence": [
+        {
+          "run": "tmwrx7spi",
+          "round": 2,
+          "seq": [
+            2263,
+            2265,
+            2267,
+            2269
+          ],
+          "journal": [],
+          "report": "/api/waves/2/report"
+        }
+      ],
+      "solvedBy": []
+    },
+    {
+      "id": "p-d163c9a1",
+      "signature": "submit + timeout + order_lost",
+      "stage": "submit",
+      "fault": "timeout",
+      "consequence": "order_lost",
+      "shapes": [
+        "case"
+      ],
+      "count": 1,
+      "lanes": [
+        4
+      ],
+      "downtimeMsTotal": 154,
+      "lostOrders": 1,
+      "repeats": 0,
+      "points": 0,
+      "firstSeen": {
+        "run": "tmwrx7spi",
         "round": 2,
         "order": "ord-0005",
         "lane": 4
       },
       "lastSeen": {
-        "run": "tmwrw7v53",
+        "run": "tmwrx7spi",
         "round": 2,
         "order": "ord-0005",
         "lane": 4
       },
-      "status": "new",
+      "status": "verified",
       "runs": [
-        "tmwrw7v53#r2"
-      ]
+        "tmwrx7spi#r2"
+      ],
+      "evidence": [
+        {
+          "run": "tmwrx7spi",
+          "round": 2,
+          "seq": [
+            3672,
+            4007,
+            4013
+          ],
+          "journal": [
+            ".haunt/wave-2/lane-4/journal.jsonl:172",
+            ".haunt/wave-2/lane-4/journal.jsonl:173"
+          ],
+          "report": "/api/waves/2/report"
+        }
+      ],
+      "solvedBy": [],
+      "unknown": true,
+      "fingerprint": "fz-c27aac37"
     }
   ]
 }

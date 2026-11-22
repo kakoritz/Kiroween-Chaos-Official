@@ -58,11 +58,21 @@ export interface PatternOutcome {
   before: number;
   after: number;
   status: Pattern['status'];
+  /** Gone from the rerun altogether. Only this verifies a pattern. */
   closed: boolean;
+  /** Lanes that met it in the first run, the lanes that took a policy for it, and the lanes that still show it in the rerun. */
+  lanes: { before: number[]; treated: number[]; after: number[] };
+  /**
+   * The policy reached every lane it could and none of them shows the pattern any more, but a lane whose tier lacks the part (the Rookie has no retry)
+   * still does: that rest needs code, so it is in the spec. Not verified, and not counted in `closed`.
+   */
+  closedOnTreated: boolean;
 }
 
 export interface ImproveReport {
   closed: number;
+  /** Patterns that are not gone but are gone from every lane that took a policy (the lanes still showing them cannot take one). */
+  closedOnTreated: number;
   of: number;
   summary: string;
   grade: { before: Grade; after: Grade };
@@ -163,17 +173,21 @@ export async function improve(deps: ImproveDeps): Promise<ImproveReport> {
     const id = patternId(m.signature);
     const now = present.get(id);
     const gone = !now;
+    const treated = [...new Set(overlays.filter((o) => o.signature === m.signature).map((o) => o.lane))].sort((a, b) => a - b);
+    const after = (now?.lanes ?? []).slice().sort((a, b) => a - b);
+    const closedOnTreated = !gone && treated.length > 0 && !after.some((l) => treated.includes(l));
     const cur = store.get(id)!;
     const status: Pattern['status'] = gone ? 'verified' : (cur.status === 'accepted' || cur.status === 'suggested') && handling.get(id) !== 'nothing' && handling.get(id) !== 'spec' ? 'applied' : cur.status;
     const u = store.setStatus(id, status);
     if (u) deps.onStatus?.(u);
-    outcomes.push({ id, signature: m.signature, handling: handling.get(id) ?? 'nothing', before: m.count, after: now?.count ?? 0, status, closed: gone });
+    outcomes.push({ id, signature: m.signature, handling: handling.get(id) ?? 'nothing', before: m.count, after: now?.count ?? 0, status, closed: gone, lanes: { before: [...m.lanes].sort((a, b) => a - b), treated, after }, closedOnTreated });
   }
   const newPatterns = mined2.filter((m) => !targetIds.includes(patternId(m.signature)) && qualifies({ count: m.count, lostOrders: m.lostOrders, downtimeMsTotal: m.downtimeMs })).map((m) => m.signature);
 
   const closed = outcomes.filter((o) => o.closed).length;
+  const onTreated = outcomes.filter((o) => o.closedOnTreated).length;
   const report: Omit<ImproveReport, 'text'> = {
-    closed, of: outcomes.length, summary: `closed ${closed} of ${outcomes.length} patterns`,
+    closed, closedOnTreated: onTreated, of: outcomes.length, summary: `closed ${closed} of ${outcomes.length} patterns${onTreated ? `, and ${onTreated} more on every lane that took a policy` : ''}`,
     grade: { before: runGrade(before), after: runGrade(after) }, reliability: { before: runReliability(before), after: runReliability(after) },
     score: { before: before.score, after: after.score }, lost: { before: before.lost, after: after.lost }, repeats: { before: before.repeats, after: after.repeats },
     patterns: outcomes, overlays, spec, newPatterns, runs: { before: before.run, after: after.run },
@@ -188,7 +202,7 @@ export function renderImprove(r: Omit<ImproveReport, 'text'>): string {
     `| Grade | ${r.grade.before} | ${r.grade.after} |`, `| Reliability | ${r.reliability.before} | ${r.reliability.after} |`,
     `| Round points | ${r.score.before} | ${r.score.after} |`, `| Lost orders | ${r.lost.before} | ${r.lost.after} |`, `| Repeated effects | ${r.repeats.before} | ${r.repeats.after} |`, '',
     '## Patterns', '',
-    ...(r.patterns.length ? ['| Pattern | Handled by | Before | After | Status |', '|---|---|---|---|---|', ...r.patterns.map((p) => `| \`${p.signature}\` | ${p.handling} | ${p.before} | ${p.after} | ${p.status}${p.closed ? ' (gone)' : ''} |`)] : ['None above the threshold.']), '',
+    ...(r.patterns.length ? ['| Pattern | Handled by | Before | After | Lanes (before > after) | Status |', '|---|---|---|---|---|---|', ...r.patterns.map((p) => `| \`${p.signature}\` | ${p.handling} | ${p.before} | ${p.after} | ${p.lanes.before.join(',') || '-'} > ${p.lanes.after.join(',') || '-'} | ${p.status}${p.closed ? ' (gone)' : p.closedOnTreated ? ' (gone on the lanes that took the policy)' : ''} |`)] : ['None above the threshold.']), '',
     '## Applied as policy (lessons)', '',
     ...(r.overlays.length ? r.overlays.map((o) => `- lane ${o.lane} (${o.tier}): \`${o.action}\` for ${o.stage} + ${o.fault}${o.existing ? ' (already learned in a round)' : ''}`) : ['- Nothing: no tier that met these patterns can take a policy for them.']), '',
     '## Spec for the rest (not applied)', '',

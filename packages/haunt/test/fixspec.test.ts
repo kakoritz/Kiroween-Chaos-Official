@@ -38,7 +38,8 @@ describe('patches', () => {
   });
 
   it('refuses a patch that would change nothing: every lane that met the pattern already has the part, and the SDK does not enforce it as policy (or a breaker bot already backs off)', () => {
-    expect(patchFor(pat({ consequence: 'retry_storm', shapes: ['retry_storm'], lanes: [5] }))).toBeNull();
+    // A retry storm on the Phoenix is now one the breaker_park lesson changes (it trips the breaker after two failures), so it gets a policy patch; a backoff lesson would change nothing for it.
+    expect(patchFor(pat({ consequence: 'retry_storm', shapes: ['retry_storm'], lanes: [5] }))).toMatchObject({ action: 'breaker_park' });
     expect(patchFor(pat({ lanes: [5] }))).toBeNull();
     expect(patchFor(pat({ lanes: [2, 5] }))).not.toBeNull();
     expect(renderFixSpec({ runId: 'r', patterns: [pat({ lanes: [5] })] }).refused).toHaveLength(1);
