@@ -1,0 +1,21 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Haunt: page not found</title>
+<style>body{font:16px system-ui,sans-serif;background:#14101c;color:#e6e0f0;margin:3rem;max-width:36rem}a{color:#cfd3ff}</style>
+</head>
+<body>
+<h1>Nothing haunts this address</h1>
+<p>That page does not exist. <a id="home" href="./">Open the Haunt arena</a>.</p>
+<script>
+// GitHub Pages serves this file at any unknown path. A project site lives under /<repo>/, so go to its first segment.
+(function () {
+  var seg = location.pathname.split('/')[1];
+  var base = seg && location.hostname.slice(-10) === '.github.io' ? '/' + seg + '/' : '/';
+  document.getElementById('home').setAttribute('href', base);
+})();
+</script>
+</body>
+</html>
