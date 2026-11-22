@@ -5,13 +5,14 @@ import type { ArenaEvent, Creature } from '../api/types';
 import { CHIP_WORD } from './chips';
 import {
   FILTERS, OUTCOME_ICON, OUTCOME_WORD, bestSlowest, downtimePoints, filterLog, lapOf, logEntries, offsetText, orderRows, reviewOf,
-  secs, segment, stageRows, starGlyphs, starText, starTone, type LogFilter, type OrderRow,
+  secs, segment, sortUnique, stageRows, starGlyphs, starText, starTone, type LogFilter, type OrderRow,
 } from './lane-popup-model';
 import { replayCount } from './inspector';
 import { lapRowsFromEvents, lapRowsOf, mergeLapRows } from './laps-model';
 import { renderLapTable } from './laps-view';
 
 const MAX_BUF = 1500;
+const ALL_ORDERS = '*';
 const SCENE_W = 1100;
 const SCENE_H = 170;
 const SPEEDS = [1, 2, 4] as const;
@@ -43,6 +44,7 @@ export class LanePopup {
   private lane = 0;
   private stageFocus: string | null = null;
   private picked: string | null = null;
+  private pinSeq = 0;
   private filter: LogFilter = 'all';
   private follow = true;
   private scrub = 1;
@@ -177,6 +179,7 @@ export class LanePopup {
     this.lane = lane;
     this.stageFocus = stage;
     this.picked = order && this.host.laneInfo(lane)?.order !== order ? order : null;
+    this.pinSeq = this.buf.length > 0 ? this.buf[this.buf.length - 1]!.seq : 0;
     this.filter = 'all';
     this.follow = true; this.followBox.checked = true; this.scrubber.disabled = true; this.scrub = 1; this.frozen = null;
     this.replayAt = null;
@@ -224,7 +227,7 @@ export class LanePopup {
     const order = this.picked ?? this.host.laneInfo(lane)?.order ?? null;
     this.serverOrder = null;
     this.serverFor = order ?? '';
-    if (!order) return;
+    if (!order || order === ALL_ORDERS) return;
     this.host.fetchOrder(lane, order).then((d) => {
       if (this.openState && this.lane === lane && this.serverFor === order) { this.serverOrder = d; this.sig = ''; }
     }).catch(() => { /* the buffer still fills it */ });
@@ -254,14 +257,18 @@ export class LanePopup {
     const order = this.picked ?? cur;
     if ((order ?? '') !== this.serverFor) this.fetchPicked();
     const seg = segment(this.buf, this.lane);
-    const evs = order ? seg.get(order) ?? [] : [];
+    const allOrders = order === ALL_ORDERS;
+    // "All orders" only widens the log; the table, lap and review keep describing the current order.
+    const evs = allOrders ? (cur ? seg.get(cur) ?? [] : []) : order ? seg.get(order) ?? [] : [];
+    const logEvs = allOrders ? sortUnique([...seg.values()].flat()) : evs;
     const stageIds = this.host.stageIds();
     const rows = stageRows(evs, stageIds, this.serverOrder);
     const orders = orderRows(this.buf, this.lane, this.serverLaps);
-    const all = logEntries(evs, this.host.stageLabel);
-    const outcomeRow = orders.find((o) => o.order === order);
+    const all = logEntries(logEvs, this.host.stageLabel);
+    const outcomeRow = orders.find((o) => o.order === (allOrders ? cur : order));
     const outcome = outcomeRow?.outcome ?? 'running';
     const live = !!info?.running && order === cur && outcome === 'running';
+    const pinned = this.picked !== null;
 
     let shown = filterLog(all, this.filter, this.stageFocus);
     let replaying = false;
@@ -273,9 +280,13 @@ export class LanePopup {
       shown = shown.slice(0, n);
     } else if (!this.follow) shown = shown.slice(0, Math.ceil(shown.length * this.scrub));
 
-    const last = this.buf.length > 0 ? this.buf[this.buf.length - 1]!.seq : 0;
+    // A pinned view only changes when its own order gets events, so reading never fights new live activity.
+    const lastOwn = logEvs.length > 0 ? logEvs[logEvs.length - 1]!.seq : 0;
+    const lastAny = this.buf.length > 0 ? this.buf[this.buf.length - 1]!.seq : 0;
+    const last = pinned ? lastOwn : lastAny;
+    const missed = pinned ? this.buf.filter((e) => e.lane === this.lane && e.seq > this.pinSeq).length : 0;
     const key = [this.lane, order, this.filter, this.stageFocus, shown.length, last, live, replaying, this.follow, this.scrub,
-      this.serverOrder ? 1 : 0, this.serverLaps ? 1 : 0, info?.tier, outcome, cur].join('|');
+      this.serverOrder ? 1 : 0, this.serverLaps ? 1 : 0, info?.tier, outcome, pinned ? 'p' : cur, pinned ? Math.min(missed, 99) : ''].join('|');
     this.replayBtn.disabled = live || replaying || all.length === 0;
     this.chaosBtn.classList.toggle('hidden', !live);
     this.chaosSel.classList.toggle('hidden', !live);
@@ -285,7 +296,7 @@ export class LanePopup {
     this.title.textContent = `Lane ${this.lane}: ${info?.tier ?? ''}`.trim();
     this.paintPicker(orders, order);
     this.paintTable(rows);
-    this.paintLog(shown, all.length, live);
+    this.paintLog(shown, all.length, live, pinned, missed);
     const lap = lapOf(evs, rows, this.serverOrder);
     const rv = reviewOf(evs, outcome, this.serverOrder);
     this.paintSummary(lap, rv, evs, outcome, orders, order, live);
@@ -329,6 +340,7 @@ export class LanePopup {
     const sel = el('select', 'lp-sel lp-ordersel');
     sel.setAttribute('aria-label', 'Order');
     const bs = bestSlowest(orders);
+    if (orders.length > 0) { const all = el('option', '', 'All orders'); all.value = ALL_ORDERS; all.selected = order === ALL_ORDERS; sel.append(all); }
     for (const o of orders) {
       const tag = bs?.best === o.order ? ' \u2605best' : bs?.slowest === o.order ? ' \uD83D\uDC22slowest' : '';
       const opt = el('option', '', `${OUTCOME_ICON[o.outcome]} ${o.order}${o.lapMs !== null ? ` ${secs(o.lapMs)}` : ''}${o.stars !== null ? ` \u2605${starText(o.stars)}` : ''}${tag}`);
@@ -340,6 +352,7 @@ export class LanePopup {
     sel.addEventListener('change', () => {
       const cur = this.currentOrder();
       this.picked = sel.value && sel.value !== cur ? sel.value : null;
+      this.pinSeq = this.buf.length > 0 ? this.buf[this.buf.length - 1]!.seq : 0;
       this.replayAt = null; this.stageFocus = null;
       this.fetchPicked();
       this.sig = '';
@@ -373,7 +386,10 @@ export class LanePopup {
     }));
   }
 
-  private paintLog(shown: ReturnType<typeof filterLog>, total: number, live: boolean): void {
+  private paintLog(shown: ReturnType<typeof filterLog>, total: number, live: boolean, pinned: boolean, missed: number): void {
+    // Never repaint under a text selection: the reader is copying or reading.
+    const sel = typeof window !== 'undefined' ? window.getSelection?.() : null;
+    if (pinned && sel && !sel.isCollapsed && sel.anchorNode && this.logBox.contains(sel.anchorNode)) return;
     const hadFocus = this.logHead.contains(document.activeElement);
     const bar = FILTERS.map((f) => {
       const b = el('button', `lp-chip${this.filter === f ? ' lp-chip--on' : ''}`, f === 'all' ? 'All' : f === 'issues' ? 'Issues' : 'Score');
@@ -383,14 +399,24 @@ export class LanePopup {
       return b;
     });
     const note = el('span', 'lp-lognote', `${live ? '\u25CF LIVE ' : ''}${this.stageFocus ? `Stage: ${this.host.stageLabel(this.stageFocus)} ` : ''}(${shown.length}/${total})`);
-    this.logHead.replaceChildren(...bar, note);
+    const extra: HTMLElement[] = [];
+    if (pinned) {
+      const pause = el('span', 'lp-pause', `⏸ Paused${missed > 0 ? `, ${missed} new elsewhere` : ''}`);
+      const back = el('button', 'lp-chip', 'Back to live'); back.type = 'button';
+      back.addEventListener('click', () => { this.picked = null; this.fetchPicked(); this.sig = ''; this.pickerSig = ''; });
+      extra.push(pause, back);
+    }
+    this.logHead.replaceChildren(...bar, note, ...extra);
     if (hadFocus) (this.logHead.querySelector('.lp-chip--on') as HTMLElement | null)?.focus();
+    const prevTop = this.logBox.scrollTop;
+    const wasBottom = this.logBox.scrollHeight - this.logBox.clientHeight - prevTop < 24 || this.logBox.childElementCount === 0;
     this.logBox.replaceChildren(...shown.map((x) => {
       const row = el('div', `lp-line lp-line--${x.level}`);
       row.append(el('span', 'lp-ic', x.icon), el('span', 'lp-t', offsetText(x.t)), el('span', '', x.text));
       return row;
     }));
-    this.logBox.scrollTop = this.logBox.scrollHeight;
+    // Live view follows the newest line; a pinned view keeps exactly where the reader is.
+    this.logBox.scrollTop = !pinned && wasBottom ? this.logBox.scrollHeight : pinned ? prevTop : prevTop;
   }
 
   private paintSummary(lap: ReturnType<typeof lapOf>, rv: ReturnType<typeof reviewOf>, evs: ArenaEvent[], outcome: keyof typeof OUTCOME_WORD, orders: OrderRow[], order: string | null, live: boolean): void {
