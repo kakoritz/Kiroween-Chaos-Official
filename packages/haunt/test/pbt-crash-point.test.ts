@@ -9,11 +9,14 @@ import { POST_ROUTES, Provider, type ProviderClock } from '../../core/src/provid
 import { ProcessKilled, Sdk, type Host, type Transport } from '../src/sdk';
 import { Pipeline, generateOrders, tierById } from '../src/pipeline';
 
+/** Lets the worker's timers and RPC run: a fake sleep that only resolves microtasks starves the event loop for the whole file. */
+const yieldTurn = (): Promise<void> => new Promise((r) => setImmediate(r));
 const LANE = 'L1';
 const SEED = 7;
 const ID = 'ord-0001';
 const PATHS = Object.fromEntries(Object.entries(POST_ROUTES).map(([p, k]) => [k, p]));
-const KINDS = ['account', 'charge', 'email', 'dispatch'];
+const KINDS = ['account', 'order', 'charge', 'email', 'store', 'notify', 'dispatch'];
+const ONE = { account: 1, order: 1, charge: 1, email: 1, store: 2, notify: 2, dispatch: 1 };
 
 /** Runs one order, killing the process at the `killAt`-th hook call (1-based; null = never). */
 async function run(tierId: string, killAt: number | null) {
@@ -25,7 +28,7 @@ async function run(tierId: string, killAt: number | null) {
   let armed = killAt !== null;
   const host: Host = {
     now: () => 0,
-    sleep: async () => {},
+    sleep: async () => { await yieldTurn(); },
     hook: async (point) => {
       calls += 1;
       if (armed && calls === killAt) {
@@ -85,12 +88,33 @@ describe('property: crash point by step', () => {
       fc.asyncProperty(fc.integer({ min: 1, max: total }), async (killAt) => {
         const r = await run('phoenix', killAt);
         expect(r.killed).toBe(true);
-        // Known bug (docs/KIRO-LOG.md H6.4): a crash at mid_stage of `updates` ends 'failed' after replay.
-        // The side-effect count is the property under test, so the result is not asserted here.
-        expect(r.counts).toEqual({ account: 1, charge: 1, email: 1, dispatch: 1 });
+        expect(r.counts).toEqual(ONE);
+        expect(r.result).toBe('done');
       }),
       { numRuns: 60 },
     );
+  });
+
+  it('Phoenix finishes done with one effect of each kind for EVERY hook call (exhaustive, includes mid_stage of updates)', async () => {
+    const total = (await run('phoenix', null)).calls;
+    const bad: string[] = [];
+    for (let k = 1; k <= total; k++) {
+      const r = await run('phoenix', k);
+      if (r.result !== 'done' || JSON.stringify(r.counts) !== JSON.stringify(ONE)) bad.push(`${k}:${r.result}:${JSON.stringify(r.counts)}`);
+    }
+    expect(bad).toEqual([]);
+  });
+
+  it('every tier ends done after one restart at any hook call (a skipped stage must hand its recorded output on)', { timeout: 120000 }, async () => {
+    const bad: string[] = [];
+    for (const tier of ['rookie', 'retrier', 'journaler', 'reconciler']) {
+      const total = (await run(tier, null)).calls;
+      for (let k = 1; k <= total; k++) {
+        const r = await run(tier, k);
+        if (r.result !== 'done') bad.push(`${tier}@${k}:${r.result}`);
+      }
+    }
+    expect(bad).toEqual([]);
   });
 
   it('Rookie can double an effect for some crash point (the property is not vacuous)', async () => {
