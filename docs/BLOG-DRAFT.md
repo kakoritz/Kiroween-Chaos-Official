@@ -1,49 +1,49 @@
-# Blog post draft
+# Blog post draft (Bonus Blog Prize)
 
-Draft only. Not published. Wording needs the owner's approval.
+Draft only. Not published. The owner approves wording and picks the platform.
 
-## "Charged. Charged again." We built a haunted house for bugs
+## "Charged. Charged again." The property test that caught our crash
 
-Automations and AI agents crash halfway through. The bad part is not the crash. The bad part is what happens on restart, when the bot redoes work it already finished. A bot killed right after charging a customer charges them again. The same thing shows up as duplicate emails and duplicate tickets.
+A bot crashes right after it charges a customer. It restarts and, not knowing it already charged, charges again. Nothing in the logs looks wrong. The provider's ledger says two charges.
 
-For Kiroween 2026 we built Haunt, a chaos engineering harness for automation and AI agents, and we played it as a game. Chaos creatures such as the Reaper, Wraith, Zombie and Ghost inject crashes, timeouts, duplicates and outages into a workflow. A ledger counts every side effect, and a grader turns the result into a report. Break your bots before the world does.
+That is the bug Haunt is built around, and it is the same bug whether the side effect is a charge, a support ticket or a video stream. This is the story of how we found it, proved it and what Kiro got wrong along the way.
 
-### The hero moment
+### The crash that duplicated a charge
 
-Five bots run an eight-stage order pipeline, each with more protection than the last: Rookie, Retrier, Journaler, Reconciler and Phoenix. Hit them with the same crash right after the charge. Rookie: 2 charges. Phoenix: 1. Phoenix replays its journal, finds its own charge and carries on. The ledger is the provider's own record, so it is the truth.
+We wrote the hero test first (`packages/haunt/test/hero-crash.test.ts`): kill the bot at payment, after the charge and before the journal write, restart it on the same journal, and count what the provider recorded. The Rookie tier (no protection) ends with 2 charges. Phoenix, which keeps a journal, uses idempotency keys and reconciles against the provider, ends with 1. The count comes from the provider's ledger, never from the bot's own report, because the bot is the thing being tested.
 
-### Your own process
+### The property test that found a different bug
 
-Plug in your own workflow and Haunt returns a graded report with the findings and a hardening spec. Try it in the browser with the hosted demo, or clone the repo and run it locally.
+A single crash point proves one case. So Kiro helped us write a fast-check property (`packages/haunt/test/pbt-crash-point.test.ts`): kill the bot at every hook call, restart it, and require exactly one account, one charge, one email and one dispatch for Phoenix. 60 runs per pass.
 
-### The loop
+The effect counts held. But the test surfaced something else: a Phoenix crash at `mid_stage` of the `updates` stage (hook call 20, seed 7) replays to a result of `failed` instead of `done`, even though the side effects were still correct. The bot did the right thing in the world and reported the wrong thing about itself. Ordinary tests had not hit that crash point.
 
-Wave 1 produces a graded report. A reviewer reads the failures and writes a hardening spec. Kiro applies the fix. Wave 2 runs and the two reports are compared. In our saved proof (`docs/proof/`) the orders app went from grade F to grade A with repeated effects going from 5 to 0, using a recorded, hand-written fix. A live run where Kiro applies the fix is still a tracked task, and we will say "F to A" in public only with that proof in hand.
+We did not fix it in that pull request. The test says so in a comment and asserts the side-effect count only, which is what the property is about. As of this draft the comment is still there; the bug is documented, not closed.
 
-### How Kiro drove the build
+### From a crash to a fix spec
 
-We worked from specs, not chat. Each spec area has requirements, design and tasks. Steering files keep every session on the same product rules. Hooks regenerate fixtures when the contract changes and run property tests when the SDK is saved. A chaos director agent picks creatures, and a reviewer agent writes the fix spec after a failed wave.
+Haunt turned into a tournament: five lanes face the same seeded storm, the worst lane dies each round and leaves a corpse, and a Casebook records every edge case. A pattern miner then clusters the recurring problems and writes a Kiro spec with requirements, evidence, the smallest patch and a test per requirement. On one seeded run the improve loop closed 5 of 9 patterns and moved the grade from C to B (`docs/proof/sample-hardening-spec/`).
 
-Two lanes, core and visuals, worked in parallel against one contract. Each task was one branch and one pull request, and each is logged with a date in `docs/KIRO-LOG.md`.
+The fix that took the Rookie from F to A in our loop proof is a recorded, hand-written file. We have not yet recorded Kiro applying a generated spec live, so we do not claim it.
 
-### Two apps, one skeleton
+### What Kiro got wrong
 
-The skeleton is the Haunt harness: engine, SDK, creatures, journal and reports. The orders app (Node) and the inbox app (Python) both run on it and appear in the same arena, which is why we entered Skeleton Crew.
+- **Wrong sweep outcomes the first time.** The first Phoenix sweep had 6 failed cells where the acceptance file said zero. After a restart the pipeline lost the journaled shipment id, so tracking polled an empty id and got a 404. Fixed at the root.
+- **Overstated proof.** Early waves graded A because ledger repeats were not attached to the report. The saved loop proof then showed C, not A, because one Phoenix order was lost in both waves. We corrected the claim and added a task for a real, verified proof.
+- **A first live stream that failed validation 500+ times.** Event detail fields were missing. A normalizer took it to 0 violations.
+- **A wrong number in a design doc.** A scoring example said -340; the code gives -300.
+- **Reported work that was not done.** One run summary described a merge that had not happened because the command waited on an approval prompt. We checked git afterwards.
+- **Drift on long tasks.** Multi-file tasks wandered unless the task named the exact file and acceptance row.
+
+### What we would tell another team
+
+Count the side effect at the provider. Write the acceptance table before the code. Let a property test kill your program at every step, and read what it prints even when your assertion passes. Label a recording as a recording.
 
 ### Try it
 
-Hosted demo: link to be added at submission.
-
 ```
-npm install
-npm run typecheck
-npm test
-npm run build:bots
-npm run haunt -- sweep --tier phoenix --orders 1 --speed 8
+npm ci
+npm run demo
 ```
 
-Tests run locally only. Everything binds to 127.0.0.1.
-
-### What is left
-
-Some tasks are marked partial in the log. We list them rather than round them up.
+Hosted demo: link to be added at submission. Repo: link to be added.

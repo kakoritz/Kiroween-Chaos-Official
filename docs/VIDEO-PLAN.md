@@ -1,64 +1,59 @@
-# Video plan (ON-D3): shot list, script and capture plan
+# Video plan v3 (ON-D3): shot list and capture plan
 
-Owner: the owner records. This file is the plan only. The recording, upload and wording approval are the owner-only. Timing source: `.kiro/specs/onboarding/spec.md` section 8. Voice and captions: `docs/DEMO-SCRIPT.md`. Story: spec section 2.
+Owner records. This file is the plan only; recording, upload and wording approval are owner-only. Captions and voice are in `docs/DEMO-SCRIPT.md` (do not fork the text). Story: the same bug in three outfits (duplicate charge, duplicate ticket, double stream).
 
-Limit: 3:00 hard, target 2:55. Captions burned in. No copyrighted music, no trademarks, no payment or shop brand logos. Music is generated in code or none.
+Limit: 3:00 hard, target 2:50. Captions burned in. No copyrighted music, no payment or shop brand logos. Music none, or generated in code.
 
 ## Preconditions
 
-1. Hosted demo exists (ON-C1 publishing is a separate owner step).
-2. Live Kiro fix exists (`.kiro/specs/share/spec.md` section 5). If not, label the loop scene "recorded fix" and do not say "F to A".
-3. A fresh-clone test passes (`docs/DEV-SETUP.md`). Record only after it passes.
-4. Machine: real device, 1920x1080, 60 fps if possible, notifications off, no personal or company names on screen.
+1. `npm ci` and `npm run fresh-clone` pass.
+2. Arena runs live: `npm run demo -- --no-open`, then `http://127.0.0.1:7070/?splash=0`. Real device, 1920x1080, notifications off, no personal or company names on screen.
+3. A live Kiro run of a generated fix spec exists (scene 6). If not, label the scene "Recorded fix" and cut the line "Kiro applies the spec".
+4. A tournament seed that shows, in the first rounds: a swarm, a Rookie 2 vs Phoenix 1 payment crash, one elimination with a tombstone. Rehearse once and keep the seed.
 
 ## Shot list
 
-| # | Time | Shot | Source and URL | Capture notes |
+| # | Time | Shot | Click path | Status |
 |---|---|---|---|---|
-| 1 | 0:00-0:05 | Black, receipt, red "Charged. Charged again." | Title card, present mode | Hold 5 s. Text from the splash, no edit tricks. |
-| 2 | 0:05-0:25 | Title splash, first lap, door ceremony, stars | `?demo=hero` | Start recording before page load. 20 s. |
-| 3 | 0:25-1:05 | Hero crash lanes 1 and 5 at Payment, callout "SAME CRASH", ledger flash, "Rookie: 2 charges / Phoenix: 1 charge" | `?demo=hero`, `?freeze=hero-crash` for a 2 s hold | Close-up cut of the ledger counter (red flash). |
-| 4 | 1:05-1:30 | Stacked chaos on lane 5, Lich boss, recovery bonus | `?demo=full` | 25 s. |
-| 5 | 1:30-1:50 | Lane popup: attempts, recovery time, downtime. Star ratings | `?demo=meltdown` (mock) | Open the popup on a failed stage. |
-| 6 | 1:50-2:20 | Loop: report with grade and findings, reviewer spec, Kiro applies fix, wave 2 grade up | `?demo=loop`, then live terminal for the Kiro step | Record the Kiro step as one unbroken take. Wave 2 grade must be what the run shows. |
-| 7 | 2:20-2:40 | Agent calls `haunt_sweep` on a new workflow, graded report returns | Terminal or agent chat | Large font (18 pt+), 127.0.0.1 only. |
-| 8 | 2:40-2:55 | Python inbox app in the same arena, scorecard badge | `inbox` fixture or live | Show the badge for 3 s. |
-| 9 | 2:55-3:00 | End card: hosted demo URL, repo URL, "Built with Kiro" | Static card | Fill URLs only after publishing. |
+| 1 | 0:00-0:08 | Receipt, red "Charged. Charged again.", then the splash | Title card, then open `http://127.0.0.1:7070/` | Capture |
+| 2 | 0:08-0:50 | Tournament round 1: swarm and shoo, ledger 2 vs 1, standings, tombstone | **Skip**, **Start tournament**, open the ledger, wait for round end | Capture (live) |
+| 3 | 0:50-1:15 | Dial to 11 and curses | **Next wave** (N), drag **INTENSITY** to 11 (**THROW EVERYTHING**) | Capture (live) |
+| 4 | 1:15-1:35 | Casebook on the final screen | Finish the tournament with **Next wave** until the podium, awards, Casebook | Capture (live) |
+| 5 | 1:35-2:00 | Patterns, fix spec, improve loop | **Patterns**, **Write fix spec**, **Improve**, hold on the compare report | Capture (live). Fallback: the sample in `docs/proof/sample-hardening-spec/` |
+| 6 | 2:00-2:25 | Kiro applies the spec, rerun, grade | Kiro IDE or CLI with `.kiro/specs/hardening-<run>/`, run the tasks, show the diff, rerun in the arena | **TO RECORD live** |
+| 7 | 2:25-2:40 | Python inbox in the same arena | App switcher **Haunted Inbox**, run a wave | Capture (live) |
+| 8 | 2:40-2:50 | End card: `docs/img/architecture.svg`, URLs, "Built with Kiro" | Static | Fill the URLs after publishing |
 
-## Script
-
-Voice and caption text per segment is the table in `docs/DEMO-SCRIPT.md`. Do not fork it. Edit that file if wording changes. Read pace about 150 words per minute. Total spoken text must fit the times above.
+Reference screenshots of scenes 2 to 5 already exist in `docs/proof/ui-tv3/` for framing.
 
 ## Claims check (say only what the evidence shows)
 
-- "Rookie: 2 charges. Phoenix: 1." comes from the hero run ledger. Show the counter.
-- "Every event is real": true only for real runs. In demo mode the label "Recorded run" must be visible.
-- "Kiro applies the fix live": only if scene 6 is a live run. Otherwise "recorded fix".
-- "F to A": only with the live proof. Otherwise state the actual grades shown.
+- "Rookie: 2 charges. Phoenix: 1." comes from the ledger on screen; the same numbers are asserted in `packages/haunt/test/hero-crash.test.ts`.
+- Tournament, dial, curses, Casebook, patterns, fix spec and improve loop are real code (see `README.md` status table). The closed-pattern count is whatever the screen shows on the take, not a number from the docs.
+- "Kiro applies the fix": only if scene 6 is a live take. Otherwise "Recorded fix".
+- "F to A": only with the live proof. The existing proof is a recorded fix on a crash-only plan (`docs/proof/live-fix.md`).
+- Second app is real. A streaming app and the full Ticket Desk flow are not built; do not show them. The closing line names the double stream as the next outfit, not a shipped one.
+- Do not show the Power or Crew app as installed. Only a manifest handshake is proven.
 
 ## Capture method
 
-1. Serve the build on 127.0.0.1 (`npm run ui:build`, then preview). No external network.
-2. Record each scene as a separate clip (OBS or Windows Game Bar). One take per scene, 2 s pad at both ends.
-3. Name clips `scene-1-receipt` to `scene-9-endcard`.
-4. Edit together, total under 3:00. Burn captions in using the same text the hosted demo shows (CC track), inside the safe area (about 5% margin).
-5. Audio: voice only, normalized. No music, or code-generated music.
+1. One clip per scene, 2 s pad each end. Name clips `scene-1-receipt` to `scene-8-endcard`. OBS or Windows Game Bar.
+2. Edit to under 3:00. Burn captions in from the text in `docs/DEMO-SCRIPT.md`, inside a 5% safe margin.
+3. Audio: voice only, normalized.
+4. If a live scene fails on camera, use demo mode and keep the "Recorded run" label visible.
 
-## Publish steps (the owner only)
+## Publish steps (owner only)
 
 1. Export 1080p MP4, captions burned in.
-2. Upload unlisted. Check playback, captions legibility on a phone, total length under 3:00.
-3. Make public at submission time, and put the link in the Devpost draft.
-
-## Fallback
-
-If a live scene fails on camera, use demo mode (it replays real recorded events) and show the "Recorded run" label. Never present a replay as live.
+2. Upload to YouTube unlisted. Check playback, length under 3:00, caption legibility on a phone.
+3. Make it public at submission and paste the link into Devpost.
 
 ## Checklist before upload
 
-- [ ] Hook in the first 5 s
-- [ ] Hero numbers visible (2 vs 1)
-- [ ] Loop scene labelled correctly (live or recorded)
+- [ ] Hook in the first 8 s
+- [ ] Rookie 2 vs Phoenix 1 visible
+- [ ] Dial shows 11 and THROW EVERYTHING
+- [ ] Casebook visible
+- [ ] Scene 6 labelled live or "Recorded fix"
 - [ ] No brand logos, no personal or company names
-- [ ] Length under 3:00
-- [ ] Captions burned in, readable on a phone
+- [ ] Length under 3:00, captions readable on a phone
