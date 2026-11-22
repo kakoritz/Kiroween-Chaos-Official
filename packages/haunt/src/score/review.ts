@@ -124,9 +124,9 @@ export class StarTracker {
   cum(): ReviewCum {
     return { stars: this.sum, max: 5 * this.count, count: this.count };
   }
-  summary(): { sum: number; max: number; count: number; avg: number; rating: Rating } {
+  summary(): { sum: number; max: number; count: number; avg: number; rating?: Rating } {
     const avg = this.count ? this.sum / this.count : 0;
-    return { sum: this.sum, max: 5 * this.count, count: this.count, avg, rating: ratingFor(avg) };
+    return { sum: this.sum, max: 5 * this.count, count: this.count, avg, ...(this.count ? { rating: ratingFor(avg) } : {}) };
   }
 }
 

@@ -270,10 +270,11 @@ export function buildLedger(lanes: readonly string[], rowsOf: (lane: string) => 
       const repeatsByKind: Record<string, number> = {};
       const byKind: Record<string, { rows: number; repeats: number }> = {};
       for (const r of rows) {
-        const e = (byKind[r.kind] ??= { rows: 0, repeats: 0 });
+        const wire = EFFECT_KIND[r.kind] ?? r.kind;
+        const e = (byKind[wire] ??= { rows: 0, repeats: 0 });
         e.rows++;
         const rep = det.add(r);
-        if (rep) { e.repeats++; repeatsByKind[r.kind] = (repeatsByKind[r.kind] ?? 0) + 1; }
+        if (rep) { e.repeats++; repeatsByKind[wire] = (repeatsByKind[wire] ?? 0) + 1; }
       }
       return { lane: Number(lane), byKind, rows };
     }),
@@ -440,7 +441,8 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
         chains.set(lane, next);
       },
       onWaveDone: () => {
-        void idle().then(() => { clock?.stop(); clock = undefined; demo?.stop(); demo = undefined; stopNight(); gate?.finish(); endWave?.(); });
+        const my = epoch;
+        void idle().then(() => { if (my !== epoch) return; clock?.stop(); clock = undefined; demo?.stop(); demo = undefined; stopNight(); gate?.finish(); endWave?.(); });
       },
     });
     resetTravel = () => { epoch++; chains.clear(); travels.clear(); };

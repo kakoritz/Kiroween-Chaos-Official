@@ -114,3 +114,12 @@ describe('live server emits lap, review and summary (PT-C3)', () => {
     }
   });
 });
+
+describe('wave summary without reviews', () => {
+  it('leaves rating out for a lane that has no reviews', () => {
+    const t = new LapTracker({ app: 'orders', pace: 1, speed: 1 });
+    const sum = t.summary('1');
+    expect((sum.stars as { count: number }).count).toBe(0);
+    expect('rating' in sum).toBe(false);
+  });
+});
