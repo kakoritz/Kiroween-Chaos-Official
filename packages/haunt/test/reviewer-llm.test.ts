@@ -2,7 +2,7 @@
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { runReviewerLlm, sanitizeDraft, buildPrompt, pickProvider, anthropicProvider, MAX_DRAFT_CHARS } from '../src/reviewer/llm';
 import { onWaveEnd, hasWaveEnd } from '../src/reviewer/hook';
 import { runReviewer } from '../src/reviewer';
@@ -79,5 +79,42 @@ describe('wave-end hook', () => {
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
+  });
+});
+
+describe('no network unless the flag and the key are both present', () => {
+  const net = (): { spy: ReturnType<typeof vi.fn>; done: () => void } => {
+    const spy = vi.fn(async () => ({ ok: true, status: 200, json: async () => ({ content: [{ text: '+retry()' }] }) }));
+    vi.stubGlobal('fetch', spy);
+    return { spy, done: () => vi.unstubAllGlobals() };
+  };
+  it('key set but no --llm: rules, fetch never called', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'haunt-nonet-'));
+    const n = net();
+    try {
+      const r = await onWaveEnd(root, 'n1', ended, { env: { ANTHROPIC_API_KEY: 'sk-test' } });
+      expect(r!.result.source).toBe('rules');
+      expect(n.spy).not.toHaveBeenCalled();
+    } finally { n.done(); rmSync(root, { recursive: true, force: true }); }
+  });
+  it('--llm but no key: rules, says why, fetch never called', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'haunt-nonet-'));
+    const n = net();
+    try {
+      const r = await onWaveEnd(root, 'n2', ended, { llm: true, env: {} });
+      expect(r!.result.source).toBe('rules');
+      expect((r!.result as any).fallbackReason).toMatch(/no provider/);
+      expect(readFileSync(r!.written.postmortem, 'utf8')).toContain('LLM not used');
+      expect(n.spy).not.toHaveBeenCalled();
+    } finally { n.done(); rmSync(root, { recursive: true, force: true }); }
+  });
+  it('--llm and key: the mocked API is used once and the draft lands in the spec', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'haunt-nonet-'));
+    const n = net();
+    try {
+      const r = await onWaveEnd(root, 'n3', ended, { llm: true, env: { ANTHROPIC_API_KEY: 'sk-test' } });
+      expect(r!.result.source).toBe('llm');
+      expect(n.spy).toHaveBeenCalledTimes(1);
+    } finally { n.done(); rmSync(root, { recursive: true, force: true }); }
   });
 });

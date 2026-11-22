@@ -14,7 +14,7 @@ import { bossReportJson, createLiveBossRunner, planBoss, renderBoss, runBoss } f
 import { compareReportJson, compareReports, renderCompare } from '../../../haunt/src/compare';
 import { ciExitCode, bossTargets, rampTargets, renderTargetLines, soakTargets, stackTargets, sweepTargets } from '../../../haunt/src/report/ci';
 import { parseCommandLine } from '../../../haunt/src/adapters';
-import { writeBadgeFiles } from '../../../haunt/src/share';
+import { writeBadgeFiles, writeImproveFiles } from '../../../haunt/src/share';
 import { startProvider } from '../provider/server';
 import { lintSpecDir, renderLint } from '../../../haunt/src/miner/specs';
 
@@ -293,8 +293,15 @@ function compare(): number {
   return argv.includes('--no-gate') ? 0 : report.verdict === 'regressed' ? 1 : 0;
 }
 function badge(): number {
+  const imp = opt('improve');
+  if (imp) {
+    const r = writeImproveFiles(process.cwd(), imp, opt('out', '.')!);
+    if ('error' in r) { console.error(r.error); return 2; }
+    for (const p of r.files) console.log(`wrote ${p}`);
+    return 0;
+  }
   const id = argv[1];
-  if (!id || id.startsWith('--')) { console.error('usage: npm run haunt -- badge <run-id> [--out dir]'); return 2; }
+  if (!id || id.startsWith('--')) { console.error('usage: npm run haunt -- badge <run-id|report.json> [--out dir] | badge --improve <improve-report.json> [--out dir]'); return 2; }
   const r = writeBadgeFiles(process.cwd(), id, opt('out', '.')!);
   if ('error' in r) { console.error(r.error); return 2; }
   for (const p of r.files) console.log(`wrote ${p}`);
@@ -360,7 +367,7 @@ if (cmd === 'badge') {
 } else {
   console.log(`usage: npm run haunt -- ramp|sweep|stack|soak|boss [--boss lich|banshee_queen|horseman] [--tier rookie|retrier|journaler|reconciler|phoenix] [--seed N] [--orders N] [--speed N] [--config path] [--bot path] [--out dir] [--no-gate]`);
   console.log('       npm run haunt -- compare <runA> <runB> [--out file]');
-  console.log('       npm run haunt -- badge <run-id> [--out dir]');
+  console.log('       npm run haunt -- badge <run-id|report.json> [--out dir] | --improve <improve-report.json>');
   console.log('       npm run haunt -- spec-lint <.kiro/specs/hardening-run>');
   console.log('       npm run haunt -- improve [--url http://127.0.0.1:7070] [--seed N] [--rounds JSON] [--speed N] [--pace slow]');
   process.exitCode = cmd ? 2 : 0;

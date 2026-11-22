@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" role="img" aria-label="Haunt improve: closed 5 of 9, C to B">
+<title>Haunt improve: closed 5 of 9, C to B</title>
+<rect width="1200" height="630" fill="#14121c"/><rect x="0" y="0" width="1200" height="8" fill="#97ca00"/>
+<text x="48" y="70" font-size="34" fill="#ffffff" font-weight="bold">Haunt improve loop</text>
+<text x="48" y="104" font-size="22" fill="#a9a4bd" >closed 5 of 9, C to B</text>
+<circle cx="200" cy="260" r="90" fill="none" stroke="#2a2740" stroke-width="20"/>
+<circle cx="200" cy="260" r="90" fill="none" stroke="#dfb317" stroke-width="20" stroke-dasharray="395.8 565.5" transform="rotate(-90 200 260)"/>
+<text x="200" y="285" font-size="76" fill="#dfb317" text-anchor="middle" font-weight="bold">C</text>
+<text x="200" y="392" font-size="18" fill="#a9a4bd" text-anchor="middle">before</text>
+<text x="200" y="420" font-size="22" fill="#ffffff" text-anchor="middle">70% reliable</text>
+<text x="200" y="448" font-size="16" fill="#d8d4ea" text-anchor="middle">lost 9, repeats 9</text>
+<text x="430" y="280" font-size="64" fill="#a9a4bd" text-anchor="middle">→</text>
+<circle cx="660" cy="260" r="90" fill="none" stroke="#2a2740" stroke-width="20"/>
+<circle cx="660" cy="260" r="90" fill="none" stroke="#97ca00" stroke-width="20" stroke-dasharray="492.0 565.5" transform="rotate(-90 660 260)"/>
+<text x="660" y="285" font-size="76" fill="#97ca00" text-anchor="middle" font-weight="bold">B</text>
+<text x="660" y="392" font-size="18" fill="#a9a4bd" text-anchor="middle">after</text>
+<text x="660" y="420" font-size="22" fill="#ffffff" text-anchor="middle">87% reliable</text>
+<text x="660" y="448" font-size="16" fill="#d8d4ea" text-anchor="middle">lost 2, repeats 8</text>
+<text x="880" y="170" font-size="15" fill="#a9a4bd" >Patterns</text>
+<rect x="880" y="186" width="12" height="12" rx="2" fill="#2ea44f"/>
+<text x="900" y="197" font-size="13" fill="#d8d4ea" >account + http_404 + order_lost (verified)</text>
+<rect x="880" y="216" width="12" height="12" rx="2" fill="#dfb317"/>
+<text x="900" y="227" font-size="13" fill="#d8d4ea" >account + slow_link + outage (applied)</text>
+<rect x="880" y="246" width="12" height="12" rx="2" fill="#2ea44f"/>
+<text x="900" y="257" font-size="13" fill="#d8d4ea" >payment + crash + order_lost (verified)</text>
+<rect x="880" y="276" width="12" height="12" rx="2" fill="#dfb317"/>
+<text x="900" y="287" font-size="13" fill="#d8d4ea" >payment + endpoint_failure_rate + d… (applied)</text>
+<rect x="880" y="306" width="12" height="12" rx="2" fill="#dfb317"/>
+<text x="900" y="317" font-size="13" fill="#d8d4ea" >payment + http_404 + order_lost (applied)</text>
+<rect x="880" y="336" width="12" height="12" rx="2" fill="#dfb317"/>
+<text x="900" y="347" font-size="13" fill="#d8d4ea" >payment + http_404 + retry_storm (applied)</text>
+<rect x="880" y="366" width="12" height="12" rx="2" fill="#2ea44f"/>
+<text x="900" y="377" font-size="13" fill="#d8d4ea" >payment + http_429 + order_lost (verified)</text>
+<rect x="880" y="396" width="12" height="12" rx="2" fill="#2ea44f"/>
+<text x="900" y="407" font-size="13" fill="#d8d4ea" >submit + http_404 + order_lost (verified)</text>
+<rect x="880" y="426" width="12" height="12" rx="2" fill="#2ea44f"/>
+<text x="900" y="437" font-size="13" fill="#d8d4ea" >submit + timeout + order_lost (verified)</text>
+<text x="48" y="612" font-size="14" fill="#6f6a86" >tested with Haunt · kakoritz/Kiroween-Chaos</text>
+</svg>

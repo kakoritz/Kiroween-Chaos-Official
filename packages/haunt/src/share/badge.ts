@@ -224,3 +224,92 @@ export function renderBadgeFiles(report: unknown): BadgeFiles {
     'haunt-scorecard.html': renderScorecardHtml(d),
   };
 }
+
+// ---- Improve card: before and after of the improve loop (contract V1_2 section C13 report shape) ----
+export interface ImproveCardData {
+  closed: number;
+  of: number;
+  summary: string;
+  before: { grade: Grade; reliability: number; lost: number; repeats: number };
+  after: { grade: Grade; reliability: number; lost: number; repeats: number };
+  patterns: { signature: string; status: string }[];
+}
+
+const pair = (v: unknown): { before: number; after: number } => {
+  const o = (v ?? {}) as Json;
+  return { before: num(o.before) ?? 0, after: num(o.after) ?? 0 };
+};
+
+/** Normalise an improve report (the `report` of GET /api/improve, or a saved improve-report.json). */
+export function improveCardData(report: unknown): ImproveCardData {
+  const r = (report ?? {}) as Json;
+  const g = (r.grade ?? {}) as Json;
+  const rel = pair(r.reliability), lost = pair(r.lost), rep = pair(r.repeats);
+  const patterns = Array.isArray(r.patterns)
+    ? (r.patterns as Json[]).map((p) => ({ signature: String(p.signature ?? p.id ?? ''), status: String(p.status ?? '') })).sort((a, b) => cmp(a.signature, b.signature))
+    : [];
+  const closed = num(r.closed) ?? patterns.filter((p) => p.status === 'verified').length;
+  const of = num(r.of) ?? patterns.length;
+  return {
+    closed,
+    of,
+    summary: typeof r.summary === 'string' ? r.summary : `closed ${closed} of ${of} patterns`,
+    before: { grade: asGrade(g.before), reliability: rel.before, lost: lost.before, repeats: rep.before },
+    after: { grade: asGrade(g.after), reliability: rel.after, lost: lost.after, repeats: rep.after },
+    patterns,
+  };
+}
+
+/** 1200x630 before and after card: "closed n of m, B to A". */
+export function renderImproveSvg(d: ImproveCardData): string {
+  const out: string[] = [];
+  const t = (x: number, y: number, size: number, fill: string, s: string, extra = ''): void => {
+    out.push(`<text x="${x}" y="${y}" font-size="${size}" fill="${fill}" ${extra}>${esc(s)}</text>`);
+  };
+  const headline = `closed ${d.closed} of ${d.of}, ${d.before.grade} to ${d.after.grade}`;
+  out.push(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" role="img" aria-label="Haunt improve: ${esc(headline)}">`);
+  out.push(`<title>Haunt improve: ${esc(headline)}</title>`);
+  out.push(`<rect width="1200" height="630" fill="#14121c"/><rect x="0" y="0" width="1200" height="8" fill="${GRADE_COLOURS[d.after.grade]}"/>`);
+  t(48, 70, 34, '#ffffff', 'Haunt improve loop', 'font-weight="bold"');
+  t(48, 104, 22, '#a9a4bd', headline);
+  const ring = (cx: number, label: string, side: ImproveCardData['before']): void => {
+    const colour = GRADE_COLOURS[side.grade];
+    const rad = 90, circ = 2 * Math.PI * rad;
+    const dash = (Math.max(0, Math.min(100, side.reliability)) / 100) * circ;
+    out.push(`<circle cx="${cx}" cy="260" r="${rad}" fill="none" stroke="#2a2740" stroke-width="20"/>`);
+    out.push(`<circle cx="${cx}" cy="260" r="${rad}" fill="none" stroke="${colour}" stroke-width="20" stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}" transform="rotate(-90 ${cx} 260)"/>`);
+    t(cx, 285, 76, colour, side.grade, 'text-anchor="middle" font-weight="bold"');
+    t(cx, 392, 18, '#a9a4bd', label, 'text-anchor="middle"');
+    t(cx, 420, 22, '#ffffff', `${side.reliability}% reliable`, 'text-anchor="middle"');
+    t(cx, 448, 16, '#d8d4ea', `lost ${side.lost}, repeats ${side.repeats}`, 'text-anchor="middle"');
+  };
+  ring(200, 'before', d.before);
+  t(430, 280, 64, '#a9a4bd', '→', 'text-anchor="middle"');
+  ring(660, 'after', d.after);
+  t(880, 170, 15, '#a9a4bd', 'Patterns');
+  d.patterns.slice(0, 9).forEach((p, i) => {
+    const ok = p.status === 'verified';
+    out.push(`<rect x="880" y="${186 + i * 30}" width="12" height="12" rx="2" fill="${ok ? '#2ea44f' : p.status === 'applied' ? '#dfb317' : '#e05d44'}"/>`);
+    t(900, 197 + i * 30, 13, '#d8d4ea', `${trunc(p.signature, 36)} (${p.status})`);
+  });
+  t(48, 612, 14, '#6f6a86', 'tested with Haunt · kakoritz/Kiroween-Chaos');
+  out.push('</svg>');
+  return out.join('\n') + '\n';
+}
+
+export interface ImproveFiles { 'haunt-improve.svg': string; 'haunt-improve.html': string }
+
+export function renderImproveFiles(report: unknown): ImproveFiles {
+  const d = improveCardData(report);
+  const svg = renderImproveSvg(d);
+  return {
+    'haunt-improve.svg': svg,
+    'haunt-improve.html': [
+      '<!doctype html>', '<html lang="en"><head><meta charset="utf-8">',
+      '<meta name="viewport" content="width=device-width,initial-scale=1">',
+      `<title>Haunt improve: closed ${d.closed} of ${d.of}, ${esc(d.before.grade)} to ${esc(d.after.grade)}</title>`,
+      '<style>html,body{margin:0;background:#0b0a10;display:flex;align-items:center;justify-content:center;min-height:100vh}svg{max-width:100%;height:auto}</style>',
+      '</head><body>', svg.replace(/\n$/, ''), '</body></html>', '',
+    ].join('\n'),
+  };
+}

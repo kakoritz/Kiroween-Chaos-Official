@@ -5,7 +5,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import { loadHauntConfig } from '../config';
-import { writeBadgeFiles } from '../share';
+import { writeBadgeFiles, writeImproveFiles } from '../share';
 import { PatternStore, qualifies, costOf } from '../miner/patterns';
 import { lintSpecDir, listSpecs, writeFixSpec } from '../miner/specs';
 
@@ -27,7 +27,7 @@ export const TOOLS: Tool[] = [
   { name: 'haunt_ramp', description: 'Run a load ramp and return the knee, break point and grade.', inputSchema: { type: 'object', properties: runProps } },
   { name: 'haunt_report', description: 'Read a saved sweep or ramp report JSON (latest in .haunt if no path is given).', inputSchema: { type: 'object', properties: { kind: { type: 'string', enum: ['sweep', 'ramp'] }, path: str('string', 'Report file path') } } },
   { name: 'haunt_specs', description: 'Fix specs of the pattern miner: list the qualifying patterns and hardening folders, write .kiro/specs/hardening-<run> for the patterns still new, or lint a spec folder (evidence, patch, test, no rewrite).', inputSchema: { type: 'object', properties: { action: { type: 'string', enum: ['list', 'write', 'lint'], description: 'list (default), write or lint' }, run: str('string', 'Run id for write'), dir: str('string', 'Spec folder for lint') } } },
-  { name: 'haunt_badge', description: 'Write the grade badge and scorecard (SVG and HTML) for a saved run into a local folder.', inputSchema: { type: 'object', properties: { run: str('string', 'Report path or run name under .haunt/sweeps'), out: str('string', 'Output folder (default .)') }, required: ['run'] } },
+  { name: 'haunt_badge', description: 'Write the grade badge and scorecard (SVG and HTML) for a saved run into a local folder.', inputSchema: { type: 'object', properties: { run: str('string', 'Report path or run name under .haunt/sweeps'), out: str('string', 'Output folder (default .)'), improve: str('string', 'Improve report JSON: write the closed n of m before and after card instead') }, required: [] } },
 ];
 
 const text = (t: string, isError = false): Json => ({ content: [{ type: 'text', text: t }], isError });
@@ -97,7 +97,11 @@ export async function callTool(opts: McpOptions, name: string, a: Json): Promise
     return text(`unknown action: ${action}`, true);
   }
   if (name === 'haunt_badge') {
-    if (typeof a.run !== 'string' || !a.run) return text('run required', true);
+    if (typeof a.improve === 'string' && a.improve) {
+      const ri = writeImproveFiles(opts.root, a.improve, String(a.out ?? '.'));
+      return 'error' in ri ? text(ri.error, true) : text(JSON.stringify(ri));
+    }
+    if (typeof a.run !== 'string' || !a.run) return text('run or improve required', true);
     const r = writeBadgeFiles(opts.root, a.run, String(a.out ?? '.'));
     return 'error' in r ? text(r.error, true) : text(JSON.stringify(r));
   }
