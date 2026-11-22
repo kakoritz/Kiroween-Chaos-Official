@@ -127,6 +127,20 @@ export function poseFor(anim: string, p: number): Pose {
       o.blink = p > 0.46 && p < 0.5 ? 1 : 0;
       break;
     }
+    case 'shoo': {
+      // Swatting a swarm: both arms flail fast over the head, body jitters, face worried.
+      const w = sw(p * 4);
+      const v = sw(p * 4, 0.5);
+      o.body.y = -Math.abs(w) * 3;
+      o.body.rot = 0.06 * w;
+      sym(r, 'upperArm', 2.2 + 0.55 * w, -(2.2 + 0.55 * v));
+      sym(r, 'lowerArm', -0.7 * w, 0.7 * v);
+      r.ribcage = 0.08 * w;
+      r.skull = -0.14 * v;
+      sym(r, 'upperLeg', 0.1 * w, -0.1 * w);
+      o.face = 'worry';
+      break;
+    }
     case 'cheer': {
       const up = Math.abs(sw(p / 2));
       o.body.y = -up * 14;
@@ -305,6 +319,7 @@ export const ANIMS = [
   { id: 'idle', label: 'Idle', loop: true, duration: 1800 },
   { id: 'walk', label: 'Walk', loop: true, duration: 900 },
   { id: 'cheer', label: 'Cheer', loop: true, duration: 800 },
+  { id: 'shoo', label: 'Shoo the swarm', loop: true, duration: 520 },
   { id: 'work', label: 'Work', loop: true, duration: 700 },
   { id: 'slump', label: 'Fail slump', loop: true, duration: 1800 },
   { id: 'recover', label: 'Recovering', loop: true, duration: 1200 },
