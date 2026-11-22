@@ -43,6 +43,14 @@ if (useLive && !existsSync(resolve(root, 'dist/bots/rookie.js'))) {
   if (code !== 0) { console.error('build:bots failed'); process.exit(1); }
 }
 
+// The server serves packages/arena-ui/dist. A stale or empty dist (index.html without assets) shows a blank page, so build the UI first.
+if (!existsSync(resolve(root, 'packages/arena-ui/dist/assets'))) {
+  console.log('Building the arena UI (first run)...');
+  const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+  const code = await new Promise((done) => spawn(npm, ['run', 'ui:build'], { cwd: root, stdio: 'inherit', windowsHide: true, shell: process.platform === 'win32' }).on('exit', done));
+  if (code !== 0) console.error('ui:build failed: the arena page may be blank');
+}
+
 const child = run(resolve(root, 'tools/run-ts.mjs'), [entry, ...(useLive && scriptArg === 'loop' ? ['--loop'] : [])], ['ignore', 'inherit', 'inherit']);
 const stop = () => { if (!child.killed) child.kill(); };
 process.on('SIGINT', () => { stop(); process.exit(0); });
