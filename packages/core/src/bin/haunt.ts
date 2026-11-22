@@ -16,6 +16,7 @@ import { ciExitCode, bossTargets, rampTargets, renderTargetLines, soakTargets, s
 import { parseCommandLine } from '../../../haunt/src/adapters';
 import { writeBadgeFiles } from '../../../haunt/src/share';
 import { startProvider } from '../provider/server';
+import { lintSpecDir, renderLint } from '../../../haunt/src/miner/specs';
 
 const argv = process.argv.slice(2);
 const cmd = argv[0];
@@ -299,8 +300,20 @@ function badge(): number {
   for (const p of r.files) console.log(`wrote ${p}`);
   return 0;
 }
+/** `haunt spec-lint <dir>`: exit 1 when a requirement lacks evidence, a patch or a test, or a task says rewrite. */
+function specLint(): number {
+  const dir = argv[1];
+  if (!dir || dir.startsWith('--')) { console.error('usage: npm run haunt -- spec-lint <.kiro/specs/hardening-run>'); return 2; }
+  const path = resolve(dir);
+  if (!existsSync(path)) { console.error(`not found: ${path}`); return 2; }
+  const r = lintSpecDir(path);
+  console.log(renderLint(r, dir));
+  return r.ok ? 0 : 1;
+}
 if (cmd === 'badge') {
   process.exitCode = badge();
+} else if (cmd === 'spec-lint') {
+  process.exitCode = specLint();
 } else if (cmd === 'sweep') {
   process.exitCode = await sweep();
 } else if (cmd === 'stack') {
@@ -317,5 +330,6 @@ if (cmd === 'badge') {
   console.log(`usage: npm run haunt -- ramp|sweep|stack|soak|boss [--boss lich|banshee_queen|horseman] [--tier rookie|retrier|journaler|reconciler|phoenix] [--seed N] [--orders N] [--speed N] [--config path] [--bot path] [--out dir] [--no-gate]`);
   console.log('       npm run haunt -- compare <runA> <runB> [--out file]');
   console.log('       npm run haunt -- badge <run-id> [--out dir]');
+  console.log('       npm run haunt -- spec-lint <.kiro/specs/hardening-run>');
   process.exitCode = cmd ? 2 : 0;
 }

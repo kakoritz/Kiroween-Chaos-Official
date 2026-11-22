@@ -25,7 +25,7 @@ describe('haunt-mcp over stdio', () => {
       expect(init.result.serverInfo.name).toBe('haunt-mcp');
       child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' })}\n`);
       const list = await call({ jsonrpc: '2.0', id: 2, method: 'tools/list' });
-      expect(list.result.tools.map((t: { name: string }) => t.name)).toEqual(['haunt_define', 'haunt_sweep', 'haunt_ramp', 'haunt_report', 'haunt_badge']);
+      expect(list.result.tools.map((t: { name: string }) => t.name)).toEqual(['haunt_define', 'haunt_sweep', 'haunt_ramp', 'haunt_report', 'haunt_specs', 'haunt_badge']);
       const def = await call({ jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: 'haunt_define', arguments: {} } });
       expect(def.result.isError).toBe(false);
       expect(JSON.parse(def.result.content[0].text).ok).toBe(true);

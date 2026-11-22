@@ -29,6 +29,7 @@ import { LessonsStore, lessonEvent, policyOf } from '../../../haunt/src/tourname
 import { laneCases } from '../../../haunt/src/tournament/signature';
 import { caseEvents } from '../../../haunt/src/tournament/casebook';
 import { PatternStore, THRESHOLDS, costOf, minePatterns, patternEvent, qualifies } from '../../../haunt/src/miner/patterns';
+import { lintSpecDir, writeFixSpec } from '../../../haunt/src/miner/specs';
 import { join as joinPath } from 'node:path';
 
 export const LIVE_HOST = '127.0.0.1';
@@ -80,6 +81,8 @@ export interface LiveOptions {
   patternsFile?: string;
   /** Run folder of the bots (for journal evidence). Defaults to `.haunt` under the working folder. */
   runDir?: string;
+  /** Where fix specs are written (`hardening-<runId>/`). Without it no spec is written by the server. */
+  specsDir?: string;
 }
 
 class ApiError extends Error {
@@ -119,6 +122,7 @@ export class LiveServer {
   /** Patterns the miner keeps across runs and rounds (TV3-C11). */
   readonly patterns: PatternStore;
   protected readonly runDir: string;
+  protected readonly specsDir?: string;
   private readonly clients = new Set<ServerResponse>();
   private http?: Server;
 
@@ -132,6 +136,7 @@ export class LiveServer {
     this.lessons = new LessonsStore(opts.lessonsDir ?? joinPath(process.cwd(), '.haunt', 'lessons'));
     this.patterns = new PatternStore(opts.patternsFile ?? joinPath(process.cwd(), '.haunt', 'patterns.json'));
     this.runDir = opts.runDir ?? joinPath(process.cwd(), '.haunt');
+    this.specsDir = opts.specsDir;
     this.hardening = opts.hardening ?? (() => undefined);
     const dist = opts.staticDir ?? resolve(process.cwd(), 'packages', 'arena-ui', 'dist');
     this.staticDir = existsSync(dist) ? dist : undefined;
@@ -400,7 +405,10 @@ export class LiveServer {
       }
     });
     this.minePatterns(tn.id, tn.t.round, n, evs, evs.map((e) => Number(e.lane)).filter((l) => Number.isInteger(l)));
-    if ((tn.t.phase as string) === 'done') this.log.emit({ ...(tn.t.endEvent(this.finalExtras(tn.t)) as HauntEvent), wave: n });
+    if ((tn.t.phase as string) === 'done') {
+      this.log.emit({ ...(tn.t.endEvent(this.finalExtras(tn.t)) as HauntEvent), wave: n });
+      if (this.specsDir && this.patterns.list().some((p) => qualifies(p) && (p.status === 'new'))) { try { this.writeSpecs(tn.id, n); } catch { /* a spec that cannot be written must not stop the tournament */ } }
+    }
   }
 
   /** Mine the round's events into the pattern store and publish a `pattern` event for each qualifying pattern that changed (TV3-C11). */
@@ -410,6 +418,23 @@ export class LiveServer {
     for (const c of this.patterns.ingest(mined, runId + '#r' + round)) {
       if (qualifies(c.pattern)) this.log.emit({ ...(patternEvent(c.pattern, c.kind) as unknown as HauntEvent), wave });
     }
+  }
+
+  /**
+   * Write the fix spec for the qualifying patterns that are still `new` (spec 8.2): `hardening-<runId>/` with requirements, design, tasks and
+   * README, linted. Their status becomes `suggested`; a `spec_written` event follows. Nothing is applied.
+   */
+  writeSpecs(runId: string, wave?: number): { runId: string; path: string; patterns: string[]; refused: string[]; lint: { ok: boolean; issues: unknown[] } } {
+    if (!this.specsDir) fail(409, 'not_applicable', 'no specs folder is configured');
+    const todo = this.patterns.list().filter((p) => qualifies(p) && p.status === 'new');
+    if (todo.length === 0) fail(409, 'not_ready', 'no qualifying pattern is waiting for a spec');
+    const w = wave ?? this.waves.n;
+    const out = writeFixSpec(this.specsDir!, { runId, patterns: todo, plan: this.tourney ? 'the tournament with seed ' + this.tourney.t.seed + ' and the same rounds' : 'the same plan and seed', reports: [...new Set(todo.flatMap((p) => p.evidence.map((e) => e.report).filter(Boolean) as string[]))] });
+    const ids = out.included.map((p) => p.id);
+    for (const p of this.patterns.setStatuses(ids, 'suggested')) this.log.emit({ ...(patternEvent(p, 'updated') as unknown as HauntEvent), wave: w });
+    const result = { runId, path: '.kiro/specs/hardening-' + runId, patterns: ids, refused: out.refused.map((r) => r.pattern.signature), lint: { ok: out.lint.ok, issues: out.lint.issues } };
+    this.log.emit({ type: 'spec_written', wave: w, detail: result } as unknown as HauntEvent);
+    return result;
   }
 
   /** Hooks for lessons and the Casebook (TV3-C8, C10). */
@@ -558,6 +583,11 @@ export class LiveServer {
         const l = this.lessons.get(lane, tierOfLane(lane));
         return { json: { ...l, policy: policyOf(l) } };
       }
+      if (seg[0] === 'api' && seg[1] === 'specs' && seg.length === 3) {
+        if (!this.specsDir || !/^hardening-[A-Za-z0-9._-]+$/.test(seg[2]!)) fail(404, 'not_found', 'no such spec');
+        const dir = joinPath(this.specsDir!, seg[2]!);
+        return { json: lintSpecDir(dir) };
+      }
       if (p === '/api/patterns') {
         const all = this.patterns.list().map((x) => ({ ...x, qualifies: qualifies(x), cost: costOf(x) })).sort((a, b) => b.cost - a.cost || a.signature.localeCompare(b.signature));
         return { json: { thresholds: THRESHOLDS, patterns: all, qualifying: all.filter((x) => x.qualifies).length } };
@@ -616,6 +646,7 @@ export class LiveServer {
       case '/api/chaos': return { json: this.chaos(body) };
       case '/api/chaos/mode': return { json: this.setChaosMode(body) };
       case '/api/intensity': return { json: this.setIntensity(body) };
+      case '/api/specs': return { json: this.writeSpecs(typeof body.runId === 'string' && body.runId ? body.runId : (this.tourney?.id ?? 'run-' + Date.now().toString(36))) };
       case '/api/tournament/start': return { json: this.startTournament(body) };
       case '/api/next': return { json: this.tournamentNext() };
       case '/api/decision': return { json: this.decision(body) };

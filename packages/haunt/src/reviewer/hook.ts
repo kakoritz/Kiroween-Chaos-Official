@@ -5,7 +5,7 @@ import { runReviewerLlm, type LlmReviewOptions, type LlmReviewResult } from './l
 
 export const hasWaveEnd = (events: HauntEvent[]): boolean => events.some((e) => e.type === 'wave_end');
 
-export interface WaveEndOptions extends LlmReviewOptions { llm?: boolean; specsDir?: string }
+export interface WaveEndOptions extends LlmReviewOptions { llm?: boolean; specsDir?: string; /** Write the serious spec (pattern miner, TV3-C12) instead of the rule-based text. */ fixSpec?: boolean }
 export interface WaveEndReview { result: LlmReviewResult; written: WrittenReview }
 
 /** Returns undefined when the wave has not ended. Without `llm` the provider is ignored and the rule reviewer runs. */

@@ -45,13 +45,13 @@ function engine(): LiveEngine {
 
 async function boot() {
   const lessonsDir = join(mkdtempSync(join(tmpdir(), 'haunt-ls-')), 'lessons');
-  srv = new LiveServer({ engine: engine(), staticDir: '/nonexistent', lessonsDir, patternsFile: join(lessonsDir, '..', 'patterns.json'), runDir: join(lessonsDir, '..') });
+  srv = new LiveServer({ engine: engine(), staticDir: '/nonexistent', lessonsDir, patternsFile: join(lessonsDir, '..', 'patterns.json'), runDir: join(lessonsDir, '..'), specsDir: join(lessonsDir, '..', 'specs') });
   const { url } = await srv.listen(0);
   const get = async (p: string) => { const r = await fetch(url + p); return { status: r.status, body: await r.json() as any }; };
   const post = async (p: string, b?: unknown) => { const r = await fetch(url + p, { method: 'POST', body: JSON.stringify(b ?? {}) }); return { status: r.status, body: await r.json() as any }; };
   const del = async (p: string) => { const r = await fetch(url + p, { method: 'DELETE' }); return { status: r.status, body: await r.json() as any }; };
   const until = async (fn: () => boolean) => { for (let i = 0; i < 300 && !fn(); i++) await new Promise((r) => setTimeout(r, 10)); expect(fn()).toBe(true); };
-  return { lessonsDir, get, post, del, until };
+  return { lessonsDir, specsDir: join(lessonsDir, '..', 'specs'), get, post, del, until };
 }
 
 describe('lessons in a live tournament', () => {
@@ -151,5 +151,38 @@ describe('pattern miner in a live tournament (TV3-C11)', () => {
     expect((await get('/api/patterns')).body.patterns.length).toBeGreaterThanOrEqual(1);
     expect((await del('/api/patterns')).status).toBe(200);
     expect((await get('/api/patterns')).body.patterns).toEqual([]);
+  });
+});
+
+describe('fix specs from a live tournament (TV3-C12)', () => {
+  it('POST /api/specs writes a linted hardening folder for the new qualifying patterns, emits spec_written and moves them to suggested', async () => {
+    const { get, post, until, specsDir } = await boot();
+    expect((await post('/api/specs')).status).toBe(409);
+    await post('/api/tournament/start', { seed: 7, resetLessons: true });
+    await until(() => srv!.log.events.some((e) => e.type === 'awaiting_next'));
+    const r = await post('/api/specs', { runId: 'live-1' });
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ runId: 'live-1', path: '.kiro/specs/hardening-live-1', lint: { ok: true, issues: [] } });
+    expect(r.body.patterns).toHaveLength(1);
+    for (const f of ['requirements.md', 'design.md', 'tasks.md', 'README.md']) expect(existsSync(join(specsDir, 'hardening-live-1', f))).toBe(true);
+    const ev = srv!.log.events.find((e) => e.type === 'spec_written')!;
+    expect(ev.lane).toBeUndefined();
+    expect(ev.detail).toMatchObject({ runId: 'live-1', patterns: r.body.patterns });
+    const api = (await get('/api/patterns')).body;
+    expect(api.patterns[0].status).toBe('suggested');
+    expect(srv!.log.events.filter((e) => e.type === 'pattern' && (e.detail as any).status === 'suggested')).toHaveLength(1);
+    expect((await get('/api/specs/hardening-live-1')).body).toMatchObject({ ok: true });
+    expect((await get('/api/specs/..%2Fevil')).status).toBe(404);
+    // Nothing is left that is new, so asking again says so.
+    expect((await post('/api/specs', { runId: 'live-2' })).status).toBe(409);
+  });
+
+  it('writes the spec by itself when the tournament ends, and the spec passes lint', async () => {
+    const { post, until, specsDir } = await boot();
+    await post('/api/tournament/start', { seed: 7, resetLessons: true, rounds: [{ lanes: 5, orders: 6, intensity: 3 }] });
+    await until(() => srv!.log.events.some((e) => e.type === 'spec_written'));
+    const d = (srv!.log.events.find((e) => e.type === 'spec_written')!.detail as any);
+    expect(d.lint.ok).toBe(true);
+    expect(existsSync(join(specsDir, 'hardening-' + d.runId, 'README.md'))).toBe(true);
   });
 });
