@@ -60,6 +60,12 @@ export class Hub {
   chaosMode = { mode: 'manual' as 'off' | 'manual' | 'random', frequency: 0.3, seed: 7 };
   boss = { next: 'boss_power_outage', startsInMs: null as number | null, active: false };
   demoRunning: string | null = null;
+  /** Tournament state (TV3-C7), rebuilt from events: corpses, whether the server waits for Next, the round and the champion. */
+  corpses: { lane: number; stage: string; kind: string; round: number; epitaph: string }[] = [];
+  awaitingNext = false;
+  /** Lessons by lane, rebuilt from `lesson` events (the mock keeps no files). */
+  lessons = new Map<number, { signature: string; mechanism: string; via: string; learnedRound: number; stage?: string }[]>();
+  tournament: { round: number; total: number; phase: string; alive: number[]; champion?: number } | null = null;
 
   get wave(): WaveRecord | undefined { return this.waves[this.waves.length - 1]; }
   get running(): boolean { const w = this.wave; return !!w && w.endedAt === undefined; }
@@ -78,6 +84,9 @@ export class Hub {
     this.lanes.clear();
     this.boss = { next: 'boss_power_outage', startsInMs: null, active: false };
     this.demoRunning = null;
+    this.corpses = [];
+    this.awaitingNext = false;
+    this.tournament = null;
     this.emit({ type: 'reset', detail: {} });
   }
 
@@ -88,7 +97,11 @@ export class Hub {
     const lane = e.lane !== undefined ? this.lanes.get(e.lane) : undefined;
     switch (e.type) {
       case 'wave_start': {
+        // Fallen lanes stay on the board until the tournament ends.
+        const keep = [...this.lanes.values()].filter((l) => (l as { fallen?: unknown }).fallen);
         this.lanes.clear();
+        for (const l of keep) this.lanes.set(l.lane, l);
+        this.awaitingNext = false;
         this.waves.push({ n: e.wave ?? this.waveNo, startedAt: e.ts, seed: d.seed, orders: d.orders, lanes: d.lanes, speed: d.speed, tiers: d.tiers, app: d.app });
         break;
       }
@@ -123,6 +136,18 @@ export class Hub {
       case 'chaos': if (lane) lane.depth = d.depth ?? lane.depth + 1; break;
       case 'score': if (lane) lane.score = d.total; break;
       case 'part_added': if (lane) { const p = lane.parts.find((x) => x.id === d.part); if (p) p.installed = true; } break;
+      case 'round_start': this.tournament = { round: d.round, total: d.total, phase: 'running', alive: [...d.lanes] }; break;
+      case 'round_end': if (this.tournament) this.tournament.phase = 'review'; break;
+      case 'lane_eliminated': {
+        const l = this.lanes.get(d.lane);
+        if (l) (l as { fallen?: unknown }).fallen = { round: d.round, stage: d.stage, cause: d.cause };
+        if (this.tournament) this.tournament.alive = this.tournament.alive.filter((x) => x !== d.lane);
+        break;
+      }
+      case 'lesson': { const a = this.lessons.get(d.lane) ?? []; a.push({ signature: d.signature, mechanism: d.mechanism, via: d.via, learnedRound: d.round, ...(e.stage ? { stage: e.stage } : {}) }); this.lessons.set(d.lane, a); break; }
+      case 'corpse': this.corpses.push({ lane: d.lane, stage: d.stage, kind: d.kind, round: d.round, epitaph: d.epitaph }); break;
+      case 'awaiting_next': this.awaitingNext = true; if (this.tournament) this.tournament.phase = 'awaiting_next'; break;
+      case 'tournament_end': if (this.tournament) { this.tournament.phase = 'done'; this.tournament.champion = d.champion; } break;
       case 'boss_warning': this.boss = { next: d.boss, startsInMs: d.startsInMs ?? null, active: false }; break;
       case 'boss_start': this.boss = { next: d.boss, startsInMs: null, active: true }; break;
       case 'boss_end': this.boss = { next: d.boss, startsInMs: null, active: false }; break;

@@ -117,6 +117,30 @@
     },
     {
       "$ref": "#/$defs/fix_applied"
+    },
+    {
+      "$ref": "#/$defs/round_start"
+    },
+    {
+      "$ref": "#/$defs/round_end"
+    },
+    {
+      "$ref": "#/$defs/awaiting_next"
+    },
+    {
+      "$ref": "#/$defs/tournament_end"
+    },
+    {
+      "$ref": "#/$defs/lane_eliminated"
+    },
+    {
+      "$ref": "#/$defs/corpse"
+    },
+    {
+      "$ref": "#/$defs/lesson"
+    },
+    {
+      "$ref": "#/$defs/case"
     }
   ],
   "$defs": {
@@ -2212,6 +2236,482 @@
                     "default",
                     "timeout"
                   ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "round_start": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "detail",
+            "wave"
+          ],
+          "properties": {
+            "type": {
+              "const": "round_start"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "round",
+                "total",
+                "lanes",
+                "orders",
+                "intensity",
+                "seed"
+              ],
+              "properties": {
+                "round": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "total": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "lanes": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5
+                  }
+                },
+                "orders": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "intensity": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 11
+                },
+                "seed": {
+                  "description": "number or string"
+                }
+              }
+            },
+            "lane": false
+          }
+        }
+      ]
+    },
+    "round_end": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "detail",
+            "wave"
+          ],
+          "properties": {
+            "type": {
+              "const": "round_end"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "round",
+                "standings"
+              ],
+              "properties": {
+                "round": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "total": {
+                  "type": "integer"
+                },
+                "standings": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "lane",
+                      "rp",
+                      "rank"
+                    ],
+                    "properties": {
+                      "lane": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 5
+                      },
+                      "rp": {
+                        "type": "number"
+                      },
+                      "cumRp": {
+                        "type": "number"
+                      },
+                      "rank": {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      "eliminated": {
+                        "type": "boolean"
+                      },
+                      "halted": {
+                        "type": "boolean"
+                      },
+                      "issues": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    }
+                  }
+                },
+                "eliminated": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 5
+                },
+                "eliminatedLanes": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                },
+                "lessons": {
+                  "type": "array"
+                },
+                "cases": {
+                  "type": "array"
+                },
+                "rule": {
+                  "type": "string"
+                }
+              }
+            },
+            "lane": false
+          }
+        }
+      ]
+    },
+    "awaiting_next": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "detail",
+            "wave"
+          ],
+          "properties": {
+            "type": {
+              "const": "awaiting_next"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "round"
+              ],
+              "properties": {
+                "round": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "next": {
+                  "type": "integer"
+                }
+              }
+            },
+            "lane": false
+          }
+        }
+      ]
+    },
+    "tournament_end": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "detail",
+            "wave"
+          ],
+          "properties": {
+            "type": {
+              "const": "tournament_end"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "champion"
+              ],
+              "properties": {
+                "champion": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 5
+                },
+                "awards": {
+                  "type": "array"
+                },
+                "casebookRef": {
+                  "type": "string"
+                },
+                "rounds": {
+                  "type": "integer"
+                }
+              }
+            },
+            "lane": false
+          }
+        }
+      ]
+    },
+    "lane_eliminated": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "lane",
+            "detail",
+            "wave"
+          ],
+          "properties": {
+            "type": {
+              "const": "lane_eliminated"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "lane",
+                "round",
+                "stage",
+                "cause",
+                "epitaph"
+              ],
+              "properties": {
+                "lane": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 5
+                },
+                "round": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "stage": {
+                  "type": "string"
+                },
+                "cause": {
+                  "type": "string"
+                },
+                "epitaph": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "corpse": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "lane",
+            "detail",
+            "wave"
+          ],
+          "properties": {
+            "type": {
+              "const": "corpse"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "lane",
+                "stage",
+                "kind",
+                "round",
+                "epitaph"
+              ],
+              "properties": {
+                "lane": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 5
+                },
+                "stage": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "eliminated",
+                    "wall"
+                  ]
+                },
+                "round": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "epitaph": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "lesson": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "lesson"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "lane",
+                "signature",
+                "mechanism",
+                "round",
+                "via"
+              ],
+              "properties": {
+                "lane": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 5
+                },
+                "signature": {
+                  "type": "string"
+                },
+                "mechanism": {
+                  "type": "string"
+                },
+                "round": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "via": {
+                  "enum": [
+                    "overcame",
+                    "suggested"
+                  ]
+                },
+                "action": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "case": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/envelope"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "wave",
+            "lane",
+            "detail"
+          ],
+          "properties": {
+            "type": {
+              "const": "case"
+            },
+            "detail": {
+              "type": "object",
+              "required": [
+                "signature",
+                "lane",
+                "round",
+                "order",
+                "outcome",
+                "costMs",
+                "costPoints"
+              ],
+              "properties": {
+                "signature": {
+                  "type": "string"
+                },
+                "lane": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 5
+                },
+                "round": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "order": {
+                  "type": "string"
+                },
+                "outcome": {
+                  "enum": [
+                    "solved",
+                    "partly",
+                    "lost"
+                  ]
+                },
+                "mechanism": {
+                  "type": "string"
+                },
+                "costMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "costPoints": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "unknown": {
+                  "type": "boolean"
+                },
+                "fingerprint": {
+                  "type": "string"
                 }
               }
             }

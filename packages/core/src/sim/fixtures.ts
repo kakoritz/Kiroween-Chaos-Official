@@ -5,6 +5,7 @@ import type { ArmSpec } from './plan';
 import { assembleWave, assignSeq, BASE_TS, planWave, type BossSpec, type WaveSpec } from './wave';
 import { decorateV11 } from './v11';
 import { V11_FIXTURES } from './fixtures-v11';
+import { TOURNAMENT_FIXTURES } from './tournament-fixtures';
 import { drawOutageMs, fuzzFault } from '../../../haunt/src/runner/intensity';
 
 const SEED = 7;
@@ -162,6 +163,6 @@ export const FIXTURES: Record<string, () => HauntEvent[]> = {
   },
 };
 
-Object.assign(FIXTURES, V11_FIXTURES);
+Object.assign(FIXTURES, V11_FIXTURES, TOURNAMENT_FIXTURES);
 
 export const FIXTURE_NAMES = Object.keys(FIXTURES);

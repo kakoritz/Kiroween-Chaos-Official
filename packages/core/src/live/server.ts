@@ -21,6 +21,14 @@ import { loadDemo } from './demo';
 import { CAPTION_SCRIPTS, loadCaptions } from './captions';
 import type { HardeningBody } from './runtime';
 import { applyEvent, logLine, newLane, toWire, type LaneView } from './lanes';
+import { Tournament, type Corpse } from '../../../haunt/src/tournament/tournament';
+import { tierOfLane } from '../../../haunt/src/tournament/rounds';
+import { tierById } from '../../../haunt/src/pipeline/pipeline';
+import { roundScript } from './tournament-script';
+import { LessonsStore, lessonEvent, policyOf } from '../../../haunt/src/tournament/lessons';
+import { laneCases } from '../../../haunt/src/tournament/signature';
+import { caseEvents } from '../../../haunt/src/tournament/casebook';
+import { join as joinPath } from 'node:path';
 
 export const LIVE_HOST = '127.0.0.1';
 export const LIVE_PORT = 7070;
@@ -30,7 +38,7 @@ const SPEEDS = [0.5, 1, 2, 4];
 
 export interface ChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string; detect?: 'confirmation' | 'handoff' }
 export interface ChaosResult { chaosId: string; creature: string; fault: string; depth: number; deferred: boolean }
-export interface WaveSettings { orders: number; seed: number; tiers: TierMode; lanes: number; speed: number; pace: 'normal' | 'show' | 'slow'; app: AppId; campaign?: CampaignRequest }
+export interface WaveSettings { orders: number; seed: number; tiers: TierMode; lanes: number; speed: number; pace: 'normal' | 'show' | 'slow'; app: AppId; campaign?: CampaignRequest; tournament?: { round: number; lanes: number[]; level: number; script: unknown } }
 
 /** What the runner provides. Every hook is optional so the server is usable (read-only) before the runner exists. */
 export interface LiveEngine {
@@ -65,6 +73,8 @@ export interface LiveOptions {
   /** Hardening spec the reviewer wrote after a wave. Undefined means not ready (404). */
   hardening?: (wave: number) => HardeningBody | undefined;
   pingMs?: number;
+  /** Where lessons are kept (`<lane>.json` and `lane-<lane>.policy.json`). Defaults to `.haunt/lessons` under the working folder. */
+  lessonsDir?: string;
 }
 
 class ApiError extends Error {
@@ -89,12 +99,18 @@ export class LiveServer {
   /** Intensity dial (V1_2 section 5): default level 3. Moved by POST /api/intensity and by auto-ramp. */
   intensity = { level: 3, autoRamp: false, everyN: 4, max: 11 };
   demoRunning: string | null = null;
+  /** The running tournament (TV3-C7), if any. */
+  tourney?: { t: Tournament; speed: number; pace: 'normal' | 'show' | 'slow'; wave: number };
+  /** Corpses of the tournament, rebuilt from `corpse` events so a late page sees them (rule 51). */
+  corpses: Corpse[] = [];
   private chaosCount = 0;
   private readonly staticDir?: string;
   private readonly ledger: () => { lanes: unknown[] };
   private readonly pingMs: number;
   private readonly hardening: (wave: number) => HardeningBody | undefined;
   private tracker?: LapTracker;
+  /** Lessons ledger and policy overlays (TV3-C8). */
+  readonly lessons: LessonsStore;
   private readonly clients = new Set<ServerResponse>();
   private http?: Server;
 
@@ -105,12 +121,15 @@ export class LiveServer {
     this.app = opts.app ?? 'orders';
     this.ledger = opts.ledger ?? (() => ({ lanes: [] }));
     this.pingMs = opts.pingMs ?? PING_MS;
+    this.lessons = new LessonsStore(opts.lessonsDir ?? joinPath(process.cwd(), '.haunt', 'lessons'));
     this.hardening = opts.hardening ?? (() => undefined);
     const dist = opts.staticDir ?? resolve(process.cwd(), 'packages', 'arena-ui', 'dist');
     this.staticDir = existsSync(dist) ? dist : undefined;
     this.log.subscribe((ev) => {
       applyEvent(this.lanes, ev, APP_STAGES[this.app]);
       if (ev.type === 'wave_end') this.demoRunning = null;
+      if (ev.type === 'corpse') { const d = (ev.detail ?? {}) as any; this.corpses.push({ lane: Number(d.lane), stage: String(d.stage), kind: d.kind, round: Number(d.round), epitaph: String(d.epitaph ?? '') }); }
+      if (ev.type === 'reset') this.corpses = [];
       if (ev.type === 'intensity') {
         const d = (ev.detail ?? {}) as { level?: number; autoRamp?: boolean };
         if (typeof d.level === 'number') this.intensity = { ...this.intensity, level: d.level, ...(typeof d.autoRamp === 'boolean' ? { autoRamp: d.autoRamp } : {}) };
@@ -172,6 +191,9 @@ export class LiveServer {
       wave: s ? { n: this.waves.n, running, seed: s.seed, speed: s.speed, orders: s.orders, tiers: s.tiers, startedAt: s.startedAt } : null,
       chaos: { ...this.chaosMode },
       intensity: { ...this.intensity },
+      corpses: [...this.corpses],
+      ...(this.tourney ? { tournament: { round: this.tourney.t.round, total: this.tourney.t.total, phase: this.tourney.t.phase, alive: [...this.tourney.t.alive], ...(this.tourney.t.champion !== undefined ? { champion: this.tourney.t.champion } : {}) } } : {}),
+      awaitingNext: this.tourney?.t.phase === 'awaiting_next',
       stages: this.stages,
       lanes: this.laneList(),
       boss: { next: null, startsInMs: null, active: false },
@@ -259,8 +281,9 @@ export class LiveServer {
 
   // ---- write endpoints ----
 
-  private startWave(body: Record<string, any>) {
+  private startWave(body: Record<string, any>, tour?: { round: number; total: number; lanes: number[]; orders: number; seed: number; level: number; script: unknown; speed: number; pace: 'normal' | 'show' | 'slow' }) {
     if (this.waves.active) fail(409, 'wave_running', 'a wave is running');
+    if (tour) body = { orders: tour.orders, seed: tour.seed, lanes: tour.lanes.length, speed: tour.speed, pace: tour.pace };
     const num = (k: string, def: number, ok: (n: number) => boolean) => {
       const v = body[k] ?? def;
       if (typeof v !== 'number' || !ok(v)) fail(400, 'bad_request', `bad ${k}`);
@@ -291,29 +314,114 @@ export class LiveServer {
     }
     if (app !== this.app) this.switchApp(app);
 
-    const defs = tiersForLanes(lanes, tiers, crew);
+    const laneNos = tour ? tour.lanes : Array.from({ length: lanes }, (_, i) => i + 1);
+    const defs = tour ? tour.lanes.map((n) => tierById(tierOfLane(n))) : tiersForLanes(lanes, tiers, crew);
+    // Fallen lanes stay on the board as corpses until the tournament ends.
+    const fallen = tour ? [...this.lanes.values()].filter((l) => l.fallen) : [];
     this.lanes.clear();
+    for (const l of fallen) this.lanes.set(l.lane, l);
     const perLane: Record<string, number> = {};
     defs.forEach((t, i) => {
-      this.lanes.set(i + 1, newLane(i + 1, t.id, t.label, t.use, orders));
-      perLane[String(i + 1)] = orders;
+      this.lanes.set(laneNos[i], newLane(laneNos[i], t.id, t.label, t.use, orders));
+      perLane[String(laneNos[i])] = orders;
     });
-    const settings: WaveSettings = { orders, seed, tiers, lanes, speed, pace, app, ...(campaign ? { campaign } : {}) };
+    const settings: WaveSettings = { orders, seed, tiers, lanes, speed, pace, app, ...(campaign ? { campaign } : {}), ...(tour ? { tournament: { round: tour.round, lanes: tour.lanes, level: tour.level, script: tour.script } } : {}) };
     const prev = this.waves.waves.at(-1)?.n ?? 0;
     if (prev > 0) for (const ev of this.engine.betweenWaves?.(prev, prev + 1, settings) ?? []) this.log.emit({ ...ev, wave: prev });
     const n = this.waves.start({ lanes: perLane, info: { orders, seed, tiers, lanes, speed, app, pace, ...(campaign ? { campaign } : {}) } });
     this.settings = { ...settings, startedAt: this.waves.waves.at(-1)!.startedAt };
-    defs.forEach((t, i) => this.waves.record({ type: 'lane_ready', lane: String(i + 1), detail: { tier: t.id, label: t.label, parts: [...t.use] } }));
+    defs.forEach((t, i) => this.waves.record({ type: 'lane_ready', lane: String(laneNos[i]), detail: { tier: t.id, label: t.label, parts: [...t.use] } }));
+    if (tour) this.waves.record({ type: 'round_start', detail: { round: tour.round, total: tour.total, lanes: tour.lanes, orders: tour.orders, intensity: tour.level, seed: this.tourney?.t.seed ?? tour.seed } } as HauntEvent);
     const tracker = new LapTracker({ app, pace: PACE_FACTOR[pace] ?? 1, speed });
     this.tracker = tracker;
     this.engine.startWave?.(n, settings, (ev) => { if (this.waves.active) for (const e of tracker.process(ev)) this.waves.record(e); }, () => { if (this.waves.active && this.waves.n === n) this.endWave(); });
     return { wave: n };
   }
 
+  /** POST /api/tournament/start {lanes?, rounds?, seed?, speed?, pace?} (V1_2 section 2). Round 1 starts at once. */
+  private startTournament(body: Record<string, any>) {
+    if (this.waves.active) fail(409, 'wave_running', 'a wave is running');
+    const seed = body.seed ?? 7;
+    if (!Number.isInteger(seed)) fail(400, 'bad_request', 'bad seed');
+    const speed = body.speed ?? 1;
+    if (!SPEEDS.includes(speed)) fail(400, 'bad_request', 'bad speed');
+    const pace = body.pace ?? 'slow';
+    if (pace !== 'normal' && pace !== 'show' && pace !== 'slow') fail(400, 'bad_request', 'bad pace');
+    if (body.lanes !== undefined && !(Number.isInteger(body.lanes) && body.lanes >= 2 && body.lanes <= 5)) fail(400, 'bad_request', 'lanes must be 2 to 5');
+    let t: Tournament;
+    try { t = new Tournament({ seed, rounds: body.rounds, lanes: body.lanes }); } catch (e) { return fail(400, 'bad_request', e instanceof Error ? e.message : 'bad rounds'); }
+    if (this.app !== 'orders') this.switchApp('orders');
+    this.lanes.clear();
+    this.corpses = [];
+    this.engine.setChaosMode?.({ mode: 'manual', frequency: 0.3, seed });
+    this.chaosMode = { mode: 'manual', frequency: 0.3, seed };
+    if (body.resetLessons === true) this.lessons.reset();
+    this.tourney = { t, speed, pace, wave: 0 };
+    return { tournament: true, ...this.beginRound() };
+  }
+
+  private beginRound() {
+    const tn = this.tourney!;
+    const rs = tn.t.beginRound();
+    // The overlay of every live lane is written before its bot starts: lessons carry into the round.
+    for (const lane of rs.lanes) this.lessons.writePolicy(this.lessons.get(lane, tierOfLane(lane)));
+    const cfg = tn.t.cfgOf(rs.round);
+    const waveSeed = fnv1a32(String(tn.t.seed) + '|round' + rs.round) % 1_000_000;
+    const script = roundScript(tn.t.seed, rs.round, cfg, rs.lanes, waveSeed);
+    const r = this.startWave({}, { round: rs.round, total: rs.total, lanes: rs.lanes, orders: rs.orders, seed: waveSeed, level: rs.intensity, script, speed: tn.speed, pace: tn.pace });
+    tn.wave = r.wave;
+    return { round: rs.round, wave: r.wave, lanes: rs.lanes };
+  }
+
+  /** The wave of a tournament round ended: score it, drop a lane, publish round_end and awaiting_next (rule 49). */
+  private finishTournamentRound(n: number) {
+    const tn = this.tourney;
+    if (!tn || tn.wave !== n || tn.t.phase !== 'running') return;
+    const evs = waveEvents(this.log.events, n);
+    const out = tn.t.finishRound(evs as never, this.roundExtras(tn.t, evs, n));
+    const learned = ((out[0]?.detail?.lessons ?? []) as { lane: number; suggestion?: boolean; signature: string; stage: string; mechanism: string; via: 'overcame' | 'suggested'; learnedRound: number; action?: string }[]).filter((l) => !l.suggestion);
+    const roundCases = (out[0]?.detail?.cases ?? []) as Parameters<typeof caseEvents>[0];
+    out.forEach((e, i) => {
+      this.log.emit({ ...(e as HauntEvent), wave: n });
+      // `lesson` and `case` events follow round_end, before any lane is announced fallen.
+      if (i === 0) {
+        for (const l of learned) this.log.emit({ ...(lessonEvent(l.lane, l as never) as unknown as HauntEvent), wave: n });
+        for (const c of caseEvents(roundCases)) this.log.emit({ ...(c as unknown as HauntEvent), wave: n });
+      }
+    });
+    if ((tn.t.phase as string) === 'done') this.log.emit({ ...(tn.t.endEvent(this.finalExtras(tn.t)) as HauntEvent), wave: n });
+  }
+
+  /** Hooks for lessons and the Casebook (TV3-C8, C10). */
+  protected roundExtras(t: Tournament, evs: HauntEvent[], wave: number): Record<string, unknown> {
+    const lessonsBonus: Record<number, number> = {};
+    const lessons: unknown[] = [];
+    const cases: ReturnType<typeof laneCases> = [];
+    for (const lane of t.alive) {
+      const tier = tierOfLane(lane);
+      const mine = laneCases(evs as never, lane, t.round);
+      cases.push(...mine);
+      const r = this.lessons.learn(lane, tier, mine, t.round);
+      lessonsBonus[lane] = 25 * r.firstOvercome.length;
+      for (const l of r.newLessons) lessons.push({ lane, ...l });
+      for (const s of r.newSuggestions) lessons.push({ lane, suggestion: true, ...s });
+    }
+    return { wave, lessonsBonus, lessons, cases };
+  }
+  protected finalExtras(_t: Tournament): Record<string, unknown> { return {}; }
+
+  private tournamentNext() {
+    const tn = this.tourney;
+    if (!tn || tn.t.phase !== 'awaiting_next') fail(409, 'not_awaiting_next', 'no round is waiting for Next');
+    return this.beginRound();
+  }
+
   private endWave(stopped = false) {
     const t = this.tracker;
     const bad = new Set(this.engine.assertFloor?.() ?? []);
+    const waveNo = this.waves.n;
     this.waves.end(stopped, t ? (lane, row) => ({ ...t.summary(lane), ...(bad.has(String(lane)) ? { floorOk: false } : {}), orders: { ...(t.summary(lane).orders as object), parked: row.parked } }) : undefined);
+    if (this.tourney) { if (stopped) this.tourney = undefined; else this.finishTournamentRound(waveNo); }
   }
 
   private switchApp(app: AppId) {
@@ -424,6 +532,14 @@ export class LiveServer {
         return { json: loadCaptions(seg[3]) };
       }
       if (p === '/api/ledger') return { json: this.ledger() };
+      if (seg[0] === 'api' && seg[1] === 'lessons' && seg.length === 3) {
+        const lane = Number(seg[2]);
+        if (!Number.isInteger(lane) || lane < 1 || lane > 5) fail(400, 'bad_lane', 'bad lane ' + seg[2]);
+        const l = this.lessons.get(lane, tierOfLane(lane));
+        return { json: { ...l, policy: policyOf(l) } };
+      }
+      if (p === '/api/casebook') return { json: this.tourney ? { ...this.tourney.t.casebook(), awards: this.tourney.t.awards() } : { rounds: 0, cases: [], open: [], awards: [], note: 'No tournament yet.' } };
+      if (p === '/api/tournament') return { json: this.tourney ? { ...this.tourney.t.view(), wave: this.tourney.wave } : { phase: 'idle' } };
       if (p === '/api/waves') return { json: this.wavesView() };
       if (seg[0] === 'api' && seg[1] === 'waves' && seg.length >= 4) {
         this.waveRecord(seg[2]);
@@ -457,6 +573,7 @@ export class LiveServer {
       if (seg[0] === 'api' && seg[1] === 'lane' && seg[3] === 'stage' && seg[4]) return { json: this.stageInspector(this.laneOf(seg[2]), seg[4], q.get('order') ?? undefined) };
       return undefined;
     }
+    if (method === 'DELETE' && p === '/api/lessons') { this.lessons.reset(); return { json: {} }; }
     if (method !== 'POST') return undefined;
     switch (p) {
       case '/api/wave/start': return { json: this.startWave(body) };
@@ -474,6 +591,8 @@ export class LiveServer {
       case '/api/chaos': return { json: this.chaos(body) };
       case '/api/chaos/mode': return { json: this.setChaosMode(body) };
       case '/api/intensity': return { json: this.setIntensity(body) };
+      case '/api/tournament/start': return { json: this.startTournament(body) };
+      case '/api/next': return { json: this.tournamentNext() };
       case '/api/decision': return { json: this.decision(body) };
       case '/api/demo/start':
         if (!(DEMO_SCRIPTS as readonly string[]).includes(body.script)) fail(400, 'bad_request', 'bad script');
@@ -506,7 +625,7 @@ export class LiveServer {
     if (o && ORIGIN_RE.test(o)) {
       res.setHeader('access-control-allow-origin', o);
       res.setHeader('vary', 'origin');
-      res.setHeader('access-control-allow-methods', 'GET, POST, OPTIONS');
+      res.setHeader('access-control-allow-methods', 'GET, POST, DELETE, OPTIONS');
       res.setHeader('access-control-allow-headers', 'content-type');
     }
   }

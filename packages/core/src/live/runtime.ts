@@ -10,6 +10,8 @@ import { BOSS_DURATION_MS, WaveClock } from '../../../haunt/src/runner/live';
 import { RepeatDetector, postProviderArm } from '../../../haunt/src/runner/provider';
 import { DecisionBroker, type DecisionAnswer, type DecisionAsk } from '../../../haunt/src/runner/decisions';
 import { DECISION_TIMEOUT_MS } from '../../../haunt/src/shared/catalog';
+import { tierById } from '../../../haunt/src/pipeline/pipeline';
+import { tierOfLane } from '../../../haunt/src/tournament/rounds';
 import type { BossId } from '../../../haunt/src/chaos/catalog';
 import type { LedgerRow } from '../provider';
 import { DetailNormalizer, SettleGate } from './normalize';
@@ -99,6 +101,8 @@ export interface BotCommandOptions {
   root: string; runDir: string; providerUrl: string; botsDir?: string;
   /** Called once per wave before its first lane spawns (runtime.md section 31: reset the provider). */
   onWave?: (wave: number) => void;
+  /** Folder of per-lane policy overlays (`lane-<n>.policy.json`, TV3-C8). A lane with a file gets `HAUNT_POLICY`. */
+  policyDir?: string;
   /** Bundle name to run instead of `<tier>` (for example `rookie.hardened` for the `loop` wave 2, runtime.md section 32). */
   bundleFor?: (lane: string, wave: number, tier: string) => string | undefined;
 }
@@ -118,7 +122,9 @@ export function makeBotCommand(o: BotCommandOptions): SpawnerOptions['botCommand
       rmSync(waveDir(o.runDir, wave), { recursive: true, force: true });
       o.onWave?.(wave);
     }
-    const tier = tiersForLanes(settings.lanes, settings.tiers, settings.campaign ? { parts: settings.campaign.parts } : undefined)[Number(lane) - 1];
+    const tier = settings.tournament
+      ? tierById(tierOfLane(Number(lane)))
+      : tiersForLanes(settings.lanes, settings.tiers, settings.campaign ? { parts: settings.campaign.parts } : undefined)[Number(lane) - 1];
     if (!tier) return undefined;
     const bundle = o.bundleFor?.(lane, wave, tier.id) ?? tier.id;
     const file = join(botsDir, `${bundle}.js`);
@@ -134,6 +140,7 @@ export function makeBotCommand(o: BotCommandOptions): SpawnerOptions['botCommand
       HAUNT_RUN_DIR: dir, HAUNT_LANE: lane, HAUNT_TIER: tier.id, HAUNT_SEED: String(settings.seed),
       HAUNT_PROVIDER: o.providerUrl, HAUNT_ORDERS_DIR: paths.orders, HAUNT_SPEED: String(settings.speed),
       HAUNT_ATTEMPT: String(attempt), HAUNT_APP: settings.app,
+      ...(o.policyDir && existsSync(join(o.policyDir, `lane-${lane}.policy.json`)) ? { HAUNT_POLICY: join(o.policyDir, `lane-${lane}.policy.json`) } : {}),
       ...(tier.id === 'crew' ? { HAUNT_PARTS: crewPartsEnv(tier.use) } : {}),
     };
     if (inbox) return inboxBotCommand(inbox, env);
@@ -165,7 +172,10 @@ export class DemoPlayer {
     const p = this.script.presses[i]!;
     this.st[i]!.firedAt = t;
     try {
-      this.engine.chaos({ lane: p.lane, fault: p.fault, creature: p.creature, scope: p.scope, point: p.point });
+      this.engine.chaos({
+        lane: p.lane, fault: p.fault, creature: p.creature, scope: p.scope, point: p.point,
+        ...(p.outageMs !== undefined ? { outageMs: p.outageMs } : {}), ...(p.fuzz ? { fuzz: p.fuzz, source: 'fuzz' as const } : {}),
+      });
     } catch { /* lane at the depth limit or not in the wave: a press is best effort */ }
   }
 
@@ -326,8 +336,10 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
   };
   // Campaign nights press provider faults mid-stage, so the engine must know the stage a lane is in (and release deferred faults).
   const laneStage = new Map<string, string>();
+  // A tournament round presses faults by stage too, so it tracks the lane stage the same way.
+  let tourneyOn = false;
   const trackNight = (e: { type?: string; lane?: unknown; stage?: unknown }): void => {
-    if (night.length === 0 || e.lane === undefined) return;
+    if ((night.length === 0 && !tourneyOn) || e.lane === undefined) return;
     const lane = String(e.lane);
     if (e.type === 'stage_start' && typeof e.stage === 'string') {
       laneStage.set(lane, e.stage);
@@ -366,7 +378,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
   };
   const engine: RunnerEngine = new RunnerEngine({
     post: opts.post,
-    laneInfo: (lane) => ({ state: 'working', stage: night.length > 0 ? laneStage.get(lane) ?? null : null }),
+    laneInfo: (lane) => ({ state: 'working', stage: night.length > 0 || tourneyOn ? laneStage.get(lane) ?? null : null }),
     sendArm: (lane, arm) => spawner?.send(lane, arm),
     onWaveStart: (wave, settings, lanes) => {
       repeats.reset();
@@ -380,7 +392,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
       }
       spawner?.start(wave, settings, lanes);
     },
-    onWaveStop: () => { clock?.stop(); clock = undefined; demo?.stop(); demo = undefined; stopNight(); spawner?.stop(); },
+    onWaveStop: () => { tourneyOn = false; clock?.stop(); clock = undefined; demo?.stop(); demo = undefined; stopNight(); spawner?.stop(); },
   });
   if (opts.botCommand) {
     // Server-enforced travel gaps (contract rule 40): a per-lane queue holds each bot event until its gap has passed.
@@ -448,6 +460,15 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
       endWave = end;
       engine.startWave(wave, settings, record);
       startNight(settings);
+      tourneyOn = !!settings.tournament;
+      if (settings.tournament) {
+        // Tournament round: the dial goes to the round's level and every live lane meets the one seeded storm.
+        engine.setIntensity(settings.tournament.level);
+        record({ type: 'intensity', detail: { level: settings.tournament.level, source: 'plan', autoRamp: false } } as unknown as HauntEvent);
+        demo?.stop();
+        demo = new DemoPlayer(engine, record, settings.tournament.script as DemoScript, engine.speed);
+        demo.start();
+      }
     },
     betweenWaves: opts.betweenWaves,
     stopWave: () => { resetTravel(); decisions.clear(); engine.stopWave(); },

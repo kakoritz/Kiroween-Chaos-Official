@@ -6,6 +6,8 @@ import { resolve } from 'node:path';
 import { APPS, CONTRACT_VERSION, stageKind, CREATURES, PARTS, TIERS, TIER_ORDER, type AppId, type HauntEvent } from '@haunt/shared';
 import { findRepoRoot } from '../../../haunt/src/contract/validate';
 import { FIXTURES } from '../sim/fixtures';
+import { mockTournament } from '../sim/tournament-fixtures';
+import { parseRounds } from '../../../haunt/src/tournament/rounds';
 import { Hub, BUFFER_MAX } from './hub';
 import { CAPTION_SCRIPTS, loadCaptions } from '../live/captions';
 import { OutcomeTable } from './outcomes';
@@ -30,7 +32,7 @@ export interface MockOptions {
   heartbeatMs?: number;
 }
 
-const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET,POST,OPTIONS', 'access-control-allow-headers': 'content-type' };
+const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET,POST,DELETE,OPTIONS', 'access-control-allow-headers': 'content-type' };
 
 const send = (res: ServerResponse, status: number, body: unknown, type = 'application/json'): void => {
   res.writeHead(status, { 'content-type': type, ...CORS });
@@ -102,6 +104,14 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
   }
 
   let dial = { level: 3, autoRamp: false, everyN: 4, max: 11 };
+  // Mock tournament: the fixture is cut at each awaiting_next; POST /api/next plays the following round.
+  let tour: { segs: HauntEvent[][]; idx: number; speed: number } | undefined;
+  function playRound(): void {
+    const t = tour!;
+    const seg = t.segs[t.idx++]!;
+    hub.awaitingNext = false;
+    player.play(seg, ++hub.waveNo, { speed: t.speed, script: 'tournament' });
+  }
 
   function stateBody() {
     const w = hub.wave;
@@ -111,6 +121,9 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
       wave: w ? { n: w.n, running: hub.running, seed: w.seed, speed: hub.speed, orders: w.orders, tiers: w.tiers, startedAt: w.startedAt } : null,
       chaos: hub.chaosMode,
       intensity: { ...dial },
+      corpses: [...hub.corpses],
+      awaitingNext: hub.awaitingNext,
+      ...(hub.tournament ? { tournament: { ...hub.tournament } } : {}),
       stages: stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role, kind: stageKind(s.role) })),
       lanes: [...hub.lanes.values()].sort((a, b) => a.lane - b.lane),
       boss: hub.boss,
@@ -172,7 +185,14 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
     const body = method === 'POST' ? await readBody(req) : undefined;
     if (method === 'POST' && !isObj(body)) return fail(res, 400, 'bad_request', 'body must be a JSON object');
 
+    if (method === 'DELETE' && path === '/api/lessons') { hub.lessons.clear(); return send(res, 200, {}); }
     if (method === 'GET') {
+      if (path.startsWith('/api/lessons/')) {
+        const lane = Number(path.slice('/api/lessons/'.length));
+        if (!Number.isInteger(lane) || lane < 1 || lane > 5) return fail(res, 400, 'bad_lane', 'lane must be 1 to 5');
+        const lessons = hub.lessons.get(lane) ?? [];
+        return send(res, 200, { lane, tier: TIER_ORDER[lane - 1], lessons, suggestions: [], overcame: [], policy: { version: 1, rules: [] } });
+      }
       if (path === '/api/health') return send(res, 200, { ok: true, mode: 'mock', contractVersion: advertised() });
       if (path === '/api/creatures') return send(res, 200, CREATURES);
       if (path.startsWith('/api/demo/captions/')) {
@@ -183,6 +203,15 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
       if (path === '/api/campaign') return send(res, 200, campaign ??= loadCampaign());
       if (path === '/api/apps') return send(res, 200, Object.values(APPS).map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role, kind: stageKind(s.role) })) })));
       if (path === '/api/state') return send(res, 200, stateBody());
+      if (path === '/api/casebook') {
+        const last = [...hub.buffer].reverse().find((e) => e.type === 'tournament_end' || e.type === 'round_end');
+        const d = (last?.detail ?? {}) as { casebook?: object; awards?: unknown };
+        return send(res, 200, last ? { ...(d.casebook ?? {}), awards: d.awards ?? [] } : { rounds: 0, cases: [], open: [], awards: [], note: 'No tournament yet.' });
+      }
+      if (path === '/api/tournament') {
+        const rounds = hub.buffer.filter((e) => e.type === 'round_end').map((e) => e.detail);
+        return send(res, 200, hub.tournament ? { ...hub.tournament, history: rounds, standings: (rounds.at(-1) as { standings?: unknown } | undefined)?.standings ?? [], corpses: [...hub.corpses] } : { phase: 'idle' });
+      }
       if (path === '/api/events') return sse(req, res, url);
       if (path === '/api/ledger') return send(res, 200, ledger(hub));
       if (path === '/api/waves') return send(res, 200, wavesList(hub));
@@ -276,6 +305,27 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
       if (!need) return fail(res, 409, 'no_decision', 'no decision is pending for that order');
       if (!(need.detail?.options ?? []).includes(b.choice)) return fail(res, 400, 'bad_request', 'choice is not one of the options');
       return send(res, 200, {});
+    }
+    if (path === '/api/tournament/start') {
+      if (hub.running && player.active) return fail(res, 409, 'wave_running', 'a wave is already running');
+      const speed = b.speed === undefined ? hub.speed : Number(b.speed);
+      if (!SPEEDS.includes(speed)) return fail(res, 400, 'bad_request', 'speed must be one of ' + SPEEDS.join(', '));
+      let rounds;
+      try { rounds = parseRounds(b.rounds); } catch (e) { return fail(res, 400, 'bad_request', e instanceof Error ? e.message : 'bad rounds'); }
+      const events = mockTournament({ rounds });
+      const segs: HauntEvent[][] = [];
+      let cur: HauntEvent[] = [];
+      for (const e of events) { cur.push(e); if (e.type === 'awaiting_next') { segs.push(cur); cur = []; } }
+      if (cur.length) segs.push(cur);
+      hub.reset();
+      tour = { segs, idx: 0, speed };
+      playRound();
+      return send(res, 200, { tournament: true, round: 1, wave: hub.waveNo });
+    }
+    if (path === '/api/next') {
+      if (!tour || !hub.awaitingNext || tour.idx >= tour.segs.length) return fail(res, 409, 'not_awaiting_next', 'no round is waiting for Next');
+      playRound();
+      return send(res, 200, { round: tour.idx, wave: hub.waveNo });
     }
     if (path === '/api/intensity') {
       if (!(Number.isInteger(b.level) && b.level >= 1 && b.level <= 11)) return fail(res, 400, 'bad_request', 'level must be an integer from 1 to 11');
