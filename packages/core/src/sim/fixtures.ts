@@ -41,10 +41,10 @@ export const FIXTURES: Record<string, () => HauntEvent[]> = {
 
   meltdown: () =>
     single(spec({ orders: 4 }), {
-      1: [arm('melt-1', 'malformed_payload', { creature: 'witch', when: when(1, 'intake', 5) })],
+      1: [arm('melt-1', 'malformed_payload', { creature: 'witch', when: when(1, 'create', 5) })],
       2: [arm('melt-2', 'http_429', { creature: 'goblin', when: when(1, 'payment', 600) })],
       5: [
-        arm('melt-5a', 'malformed_payload', { creature: 'witch', when: when(1, 'intake', 5) }),
+        arm('melt-5a', 'malformed_payload', { creature: 'witch', when: when(1, 'create', 5) }),
         arm('melt-5b', 'http_429', { creature: 'goblin', when: when(2, 'payment', 600) }),
       ],
     }),
@@ -58,7 +58,7 @@ export const FIXTURES: Record<string, () => HauntEvent[]> = {
 
   parked: () => single(spec({ orders: 3 }), { 5: [arm('park-5', 'internet_outage', { creature: 'banshee', when: when(1, 'payment', 600) })] }),
 
-  breaker: () => single(spec({ orders: 3 }), { 5: [arm('brk-5', 'endpoint_down', { creature: 'gargoyle', when: when(1, 'dispatch', 600) })] }),
+  breaker: () => single(spec({ orders: 3 }), { 5: [arm('brk-5', 'endpoint_down', { creature: 'gargoyle', when: when(1, 'ship', 600) })] }),
 
   absorbed: () =>
     single(spec({ orders: 3 }), {
@@ -69,7 +69,7 @@ export const FIXTURES: Record<string, () => HauntEvent[]> = {
 
   deferred: () =>
     single(spec({ orders: 3 }), {
-      5: [arm('def-5', 'http_404', { creature: 'ghost', when: when(1, 'intake', 300) })],
+      5: [arm('def-5', 'http_404', { creature: 'ghost', when: when(1, 'create', 300) })],
       3: [arm('def-3', 'hazard_event', { creature: 'werewolf', when: when(1, 'payment', 300) })],
     }),
 

@@ -95,6 +95,8 @@ type StageRes =
   | { k: 'halt'; reason: string }
   | { k: 'resume'; s: number; effFrom: number };
 
+const LOCKS_SERVICE: ReadonlySet<string> = new Set(['endpoint_down', 'sms_down', 'app_down', 'updates_down', 'timeout', 'comm_timeout', 'http_404', 'http_500', 'http_429']);
+
 interface Sub {
   fault: string;
   /** Which calls it matches. */
@@ -271,7 +273,7 @@ class Planner {
     const cur = this.cur;
     a.order = this.curOrder || this.nextFresh;
     if (a.isInput) {
-      const beforeRead = !!cur && cur.idx === 0 && press < cur.t0 + 20;
+      const beforeRead = !!cur && cur.def.role === 'input' && press < cur.t0 + 20;
       a.order = beforeRead ? this.curOrder : (this.curOrder ? this.curOrder + 1 : this.nextFresh);
       a.deferred = !!cur && !beforeRead;
     }
@@ -284,7 +286,7 @@ class Planner {
       a.injectedAt = a.scope === 'inner' ? 'recovery' : 'during';
       if (!a.isInput && !a.isDup && !a.isDisk && spec.fault !== 'duplicate_request') {
         const role = cur?.def.role;
-        a.deferred = role !== undefined && !(a.bossFault === 'boss_hazard_storm' ? role === 'poll' || cur!.def.id === 'dispatch' : faultApplies(spec.fault === 'boss_internet_outage' ? 'internet_outage' : spec.fault, role));
+        a.deferred = role !== undefined && !(a.bossFault === 'boss_hazard_storm' ? role === 'poll' || cur!.def.id === 'ship' : faultApplies(spec.fault === 'boss_internet_outage' ? 'internet_outage' : spec.fault, role));
       }
       if (a.isDup) a.deferred = false;
     }
@@ -386,7 +388,9 @@ class Planner {
         if (sub.lockedService && sub.lockedService !== service) continue;
         if (sub.count !== undefined) { if (sub.used >= sub.count) continue; }
         else if (sub.forMs !== undefined && sub.start !== undefined && t >= sub.start + sub.forMs) continue;
-        if ((sub.fault === 'endpoint_down' || sub.fault === 'sms_down' || sub.fault === 'app_down' || sub.fault === 'updates_down') && !sub.lockedService) sub.lockedService = service;
+        // The provider arms a fault on the service of the stage it was pressed at, so a count fault that is only partly used in a
+        // non-critical stage (updates) cannot spill into the next stage's service.
+        if (LOCKS_SERVICE.has(sub.fault) && !sub.lockedService) sub.lockedService = service;
         if (sub.forMs !== undefined && sub.start === undefined) sub.start = t;
         sub.used++;
         arm.fired = true;

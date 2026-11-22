@@ -3,7 +3,7 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { APPS, CONTRACT_VERSION, CREATURES, PARTS, TIERS, TIER_ORDER, type AppId, type HauntEvent } from '@haunt/shared';
+import { APPS, CONTRACT_VERSION, stageKind, CREATURES, PARTS, TIERS, TIER_ORDER, type AppId, type HauntEvent } from '@haunt/shared';
 import { findRepoRoot } from '../../../haunt/src/contract/validate';
 import { FIXTURES } from '../sim/fixtures';
 import { Hub, BUFFER_MAX } from './hub';
@@ -108,12 +108,12 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
       contractVersion: advertised(), mode: 'mock', app: hub.app,
       wave: w ? { n: w.n, running: hub.running, seed: w.seed, speed: hub.speed, orders: w.orders, tiers: w.tiers, startedAt: w.startedAt } : null,
       chaos: hub.chaosMode,
-      stages: stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role })),
+      stages: stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role, kind: stageKind(s.role) })),
       lanes: [...hub.lanes.values()].sort((a, b) => a.lane - b.lane),
       boss: hub.boss,
       demo: { scripts: DEMO_SCRIPTS, running: hub.demoRunning },
       // Earlier mock fields, kept for clients written against the first slice.
-      apps: Object.values(APPS).map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, role: s.role })) })),
+      apps: Object.values(APPS).map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, role: s.role, kind: stageKind(s.role) })) })),
       tiers: TIER_ORDER.map((t) => ({ id: t, label: TIERS[t].label, parts: TIERS[t].parts })),
       parts: Object.values(PARTS),
       scripts: DEMO_SCRIPTS,
@@ -148,7 +148,7 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
       res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache', connection: 'keep-alive', ...CORS });
       conns.add(res);
       const write = (e: object): void => { res.write(`data: ${JSON.stringify(e)}\n\n`); };
-      write({ type: 'hello', contractVersion: advertised(), mode: 'mock', seq: hub.seq, ts: Date.now(), app: hub.app });
+      write({ type: 'hello', contractVersion: advertised(), mode: 'mock', seq: hub.seq, ts: Date.now(), app: hub.app, stages: APPS[hub.app].stages.map((s) => ({ id: s.id, label: s.label, kind: stageKind(s.role) })) });
       if (since !== undefined) for (const e of hub.buffer) if (e.seq > since) write(e);
       const sub = (e: HauntEvent): void => write(e);
       hub.subs.add(sub);
@@ -178,7 +178,7 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
         return send(res, 200, loadCaptions(s));
       }
       if (path === '/api/campaign') return send(res, 200, campaign ??= loadCampaign());
-      if (path === '/api/apps') return send(res, 200, Object.values(APPS).map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role })) })));
+      if (path === '/api/apps') return send(res, 200, Object.values(APPS).map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role, kind: stageKind(s.role) })) })));
       if (path === '/api/state') return send(res, 200, stateBody());
       if (path === '/api/events') return sse(req, res, url);
       if (path === '/api/ledger') return send(res, 200, ledger(hub));

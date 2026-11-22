@@ -3,9 +3,46 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "crash",
-  "stage": "intake",
-  "role": "input",
-  "point": "mid_stage",
+  "stage": "account",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "crash",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "crash",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "out_of_memory",
+  "stage": "account",
+  "role": "effect",
+  "point": "before_effect",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -14,9 +51,35 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "out_of_memory",
-  "stage": "intake",
-  "role": "input",
-  "point": "mid_stage",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "out_of_memory",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "power_outage",
+  "stage": "account",
+  "role": "effect",
+  "point": "before_effect",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -25,9 +88,74 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "power_outage",
-  "stage": "intake",
-  "role": "input",
-  "point": "mid_stage",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "power_outage",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "internet_outage",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "endpoint_down",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "timeout",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "comm_timeout",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "slow_link",
+  "stage": "account",
+  "role": "effect",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -35,8 +163,87 @@
  {
   "app": "orders",
   "tier": "rookie",
+  "fault": "http_404",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "http_429",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "http_500",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "disk_full",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "crash",
+  "stage": "create",
+  "role": "input",
+  "point": "mid_stage",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "out_of_memory",
+  "stage": "create",
+  "role": "input",
+  "point": "mid_stage",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "power_outage",
+  "stage": "create",
+  "role": "input",
+  "point": "mid_stage",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
   "fault": "missing_file",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "outcome": "HALT",
   "extraRows": {},
@@ -46,15 +253,17 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "duplicate_request",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
-   "notify": 2
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
   },
   "template": "T_REPEAT"
  },
@@ -62,7 +271,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "malformed_payload",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "outcome": "HALT",
   "extraRows": {},
@@ -72,7 +281,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "disk_full",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "outcome": "OK",
   "extraRows": {},
@@ -82,7 +291,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "order_typo",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "outcome": "CANCELLED",
   "extraRows": {},
@@ -92,20 +301,9 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "crash",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "before_effect",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
- },
- {
-  "app": "orders",
-  "tier": "rookie",
-  "fault": "crash",
-  "stage": "account",
-  "role": "effect",
-  "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1
@@ -116,35 +314,39 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "crash",
-  "stage": "account",
-  "role": "effect",
-  "point": "after_journal",
-  "outcome": "REPEAT",
-  "extraRows": {
-   "account_create": 1
-  },
-  "template": "T_REPEAT"
- },
- {
-  "app": "orders",
-  "tier": "rookie",
-  "fault": "out_of_memory",
-  "stage": "account",
-  "role": "effect",
-  "point": "before_effect",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
- },
- {
-  "app": "orders",
-  "tier": "rookie",
-  "fault": "out_of_memory",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
+   "order": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "crash",
+  "stage": "submit",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "out_of_memory",
+  "stage": "submit",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "REPEAT",
+  "extraRows": {
    "account_create": 1
   },
   "template": "T_REPEAT"
@@ -153,35 +355,39 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "out_of_memory",
-  "stage": "account",
-  "role": "effect",
-  "point": "after_journal",
-  "outcome": "REPEAT",
-  "extraRows": {
-   "account_create": 1
-  },
-  "template": "T_REPEAT"
- },
- {
-  "app": "orders",
-  "tier": "rookie",
-  "fault": "power_outage",
-  "stage": "account",
-  "role": "effect",
-  "point": "before_effect",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
- },
- {
-  "app": "orders",
-  "tier": "rookie",
-  "fault": "power_outage",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
+   "order": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "out_of_memory",
+  "stage": "submit",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "power_outage",
+  "stage": "submit",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "REPEAT",
+  "extraRows": {
    "account_create": 1
   },
   "template": "T_REPEAT"
@@ -190,12 +396,27 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "power_outage",
-  "stage": "account",
+  "stage": "submit",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "power_outage",
+  "stage": "submit",
   "role": "effect",
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
-   "account_create": 1
+   "account_create": 1,
+   "order": 1
   },
   "template": "T_REPEAT"
  },
@@ -203,7 +424,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "internet_outage",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -213,7 +434,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "endpoint_down",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -223,7 +444,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "timeout",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -233,7 +454,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "comm_timeout",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -243,7 +464,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "slow_link",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -253,7 +474,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "http_404",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -263,7 +484,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "http_429",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -273,7 +494,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "http_500",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -283,7 +504,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "disk_full",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -298,7 +519,8 @@
   "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
-   "account_create": 1
+   "account_create": 1,
+   "order": 1
   },
   "template": "T_REPEAT"
  },
@@ -312,6 +534,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1
   },
   "template": "T_REPEAT"
@@ -326,6 +549,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1
   },
   "template": "T_REPEAT"
@@ -339,7 +563,8 @@
   "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
-   "account_create": 1
+   "account_create": 1,
+   "order": 1
   },
   "template": "T_REPEAT"
  },
@@ -353,6 +578,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1
   },
   "template": "T_REPEAT"
@@ -367,6 +593,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1
   },
   "template": "T_REPEAT"
@@ -380,7 +607,8 @@
   "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
-   "account_create": 1
+   "account_create": 1,
+   "order": 1
   },
   "template": "T_REPEAT"
  },
@@ -394,6 +622,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1
   },
   "template": "T_REPEAT"
@@ -408,6 +637,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1
   },
   "template": "T_REPEAT"
@@ -512,6 +742,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1
   },
   "template": "T_REPEAT"
@@ -526,6 +757,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1
   },
@@ -541,6 +773,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1
   },
@@ -556,6 +789,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1
   },
   "template": "T_REPEAT"
@@ -570,6 +804,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1
   },
@@ -585,6 +820,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1
   },
@@ -600,6 +836,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1
   },
   "template": "T_REPEAT"
@@ -614,6 +851,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1
   },
@@ -629,6 +867,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1
   },
@@ -738,12 +977,13 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "crash",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1
   },
@@ -753,15 +993,16 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "crash",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1
+   "store": 1
   },
   "template": "T_REPEAT"
  },
@@ -769,15 +1010,16 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "crash",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1
+   "store": 1
   },
   "template": "T_REPEAT"
  },
@@ -785,12 +1027,13 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "out_of_memory",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1
   },
@@ -800,15 +1043,16 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "out_of_memory",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1
+   "store": 1
   },
   "template": "T_REPEAT"
  },
@@ -816,15 +1060,16 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "out_of_memory",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1
+   "store": 1
   },
   "template": "T_REPEAT"
  },
@@ -832,12 +1077,13 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "power_outage",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1
   },
@@ -847,15 +1093,16 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "power_outage",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1
+   "store": 1
   },
   "template": "T_REPEAT"
  },
@@ -863,15 +1110,16 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "power_outage",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1
+   "store": 1
   },
   "template": "T_REPEAT"
  },
@@ -879,7 +1127,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "internet_outage",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -889,7 +1137,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "endpoint_down",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -899,7 +1147,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "timeout",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -909,7 +1157,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "comm_timeout",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -919,7 +1167,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "slow_link",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -929,7 +1177,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "http_404",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -939,7 +1187,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "http_429",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -949,7 +1197,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "http_500",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -959,7 +1207,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "disk_full",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -968,8 +1216,161 @@
  {
   "app": "orders",
   "tier": "rookie",
-  "fault": "app_down",
-  "stage": "dispatch",
+  "fault": "crash",
+  "stage": "process",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "crash",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "crash",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "out_of_memory",
+  "stage": "process",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "out_of_memory",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "out_of_memory",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "power_outage",
+  "stage": "process",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "power_outage",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "power_outage",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "internet_outage",
+  "stage": "process",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -978,6 +1379,86 @@
  {
   "app": "orders",
   "tier": "rookie",
+  "fault": "endpoint_down",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "timeout",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "comm_timeout",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "slow_link",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "http_404",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "http_429",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "http_500",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "disk_full",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
   "fault": "crash",
   "stage": "updates",
   "role": "effect",
@@ -985,9 +1466,10 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1
+   "store": 2
   },
   "template": "T_REPEAT"
  },
@@ -1001,9 +1483,10 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
+   "store": 2,
    "notify": 1
   },
   "template": "T_REPEAT"
@@ -1018,9 +1501,10 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
+   "store": 2,
    "notify": 1
   },
   "template": "T_REPEAT"
@@ -1035,9 +1519,10 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1
+   "store": 2
   },
   "template": "T_REPEAT"
  },
@@ -1051,9 +1536,10 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
+   "store": 2,
    "notify": 1
   },
   "template": "T_REPEAT"
@@ -1068,9 +1554,10 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
+   "store": 2,
    "notify": 1
   },
   "template": "T_REPEAT"
@@ -1085,9 +1572,10 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1
+   "store": 2
   },
   "template": "T_REPEAT"
  },
@@ -1101,9 +1589,10 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
+   "store": 2,
    "notify": 1
   },
   "template": "T_REPEAT"
@@ -1118,9 +1607,10 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
+   "store": 2,
    "notify": 1
   },
   "template": "T_REPEAT"
@@ -1229,15 +1719,72 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "crash",
-  "stage": "tracking",
-  "role": "poll",
-  "point": "mid_stage",
+  "stage": "ship",
+  "role": "effect",
+  "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
+   "store": 2,
+   "notify": 2
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "crash",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "crash",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "out_of_memory",
+  "stage": "ship",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2,
    "notify": 2
   },
   "template": "T_REPEAT"
@@ -1246,15 +1793,54 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "out_of_memory",
-  "stage": "tracking",
-  "role": "poll",
-  "point": "mid_stage",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "out_of_memory",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "power_outage",
+  "stage": "ship",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2,
    "notify": 2
   },
   "template": "T_REPEAT"
@@ -1263,16 +1849,37 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "power_outage",
-  "stage": "tracking",
-  "role": "poll",
-  "point": "mid_stage",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
-   "notify": 2
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "power_outage",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
   },
   "template": "T_REPEAT"
  },
@@ -1280,7 +1887,164 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "internet_outage",
-  "stage": "tracking",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "endpoint_down",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "timeout",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "comm_timeout",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "slow_link",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "http_404",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "http_429",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "http_500",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "disk_full",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "app_down",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "crash",
+  "stage": "transit",
+  "role": "poll",
+  "point": "mid_stage",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "out_of_memory",
+  "stage": "transit",
+  "role": "poll",
+  "point": "mid_stage",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "power_outage",
+  "stage": "transit",
+  "role": "poll",
+  "point": "mid_stage",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "internet_outage",
+  "stage": "transit",
   "role": "poll",
   "outcome": "FAILED",
   "extraRows": {},
@@ -1290,7 +2054,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "slow_link",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "OK",
   "extraRows": {},
@@ -1300,7 +2064,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "disk_full",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "OK",
   "extraRows": {},
@@ -1310,7 +2074,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "hazard_event",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "FAILED",
   "extraRows": {},
@@ -1320,7 +2084,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "driver_unreachable",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "FAILED",
   "extraRows": {},
@@ -1330,7 +2094,7 @@
   "app": "orders",
   "tier": "rookie",
   "fault": "wrong_address",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "FAILED",
   "extraRows": {},
@@ -1346,10 +2110,12 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
-   "notify": 2
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
   },
   "template": "T_REPEAT"
  },
@@ -1363,10 +2129,12 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
-   "notify": 2
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
   },
   "template": "T_REPEAT"
  },
@@ -1380,10 +2148,12 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
-   "notify": 2
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
   },
   "template": "T_REPEAT"
  },
@@ -1431,9 +2201,46 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "crash",
-  "stage": "intake",
-  "role": "input",
-  "point": "mid_stage",
+  "stage": "account",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "crash",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "crash",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "out_of_memory",
+  "stage": "account",
+  "role": "effect",
+  "point": "before_effect",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -1442,9 +2249,35 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "out_of_memory",
-  "stage": "intake",
-  "role": "input",
-  "point": "mid_stage",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "out_of_memory",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "power_outage",
+  "stage": "account",
+  "role": "effect",
+  "point": "before_effect",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -1453,9 +2286,78 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "power_outage",
-  "stage": "intake",
-  "role": "input",
-  "point": "mid_stage",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "power_outage",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "internet_outage",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "endpoint_down",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "timeout",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "comm_timeout",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "slow_link",
+  "stage": "account",
+  "role": "effect",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -1463,8 +2365,87 @@
  {
   "app": "orders",
   "tier": "retrier",
+  "fault": "http_404",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "http_429",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "http_500",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "disk_full",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "crash",
+  "stage": "create",
+  "role": "input",
+  "point": "mid_stage",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "out_of_memory",
+  "stage": "create",
+  "role": "input",
+  "point": "mid_stage",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "power_outage",
+  "stage": "create",
+  "role": "input",
+  "point": "mid_stage",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
   "fault": "missing_file",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "outcome": "FAILED",
   "extraRows": {},
@@ -1474,15 +2455,17 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "duplicate_request",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
-   "notify": 2
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
   },
   "template": "T_REPEAT"
  },
@@ -1490,7 +2473,7 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "malformed_payload",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "outcome": "FAILED",
   "extraRows": {},
@@ -1500,7 +2483,7 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "disk_full",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "outcome": "OK",
   "extraRows": {},
@@ -1510,7 +2493,7 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "order_typo",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "outcome": "CANCELLED",
   "extraRows": {},
@@ -1520,20 +2503,9 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "crash",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "before_effect",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
- },
- {
-  "app": "orders",
-  "tier": "retrier",
-  "fault": "crash",
-  "stage": "account",
-  "role": "effect",
-  "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1
@@ -1544,35 +2516,39 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "crash",
-  "stage": "account",
-  "role": "effect",
-  "point": "after_journal",
-  "outcome": "REPEAT",
-  "extraRows": {
-   "account_create": 1
-  },
-  "template": "T_REPEAT"
- },
- {
-  "app": "orders",
-  "tier": "retrier",
-  "fault": "out_of_memory",
-  "stage": "account",
-  "role": "effect",
-  "point": "before_effect",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
- },
- {
-  "app": "orders",
-  "tier": "retrier",
-  "fault": "out_of_memory",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
+   "order": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "crash",
+  "stage": "submit",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "out_of_memory",
+  "stage": "submit",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "REPEAT",
+  "extraRows": {
    "account_create": 1
   },
   "template": "T_REPEAT"
@@ -1581,35 +2557,39 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "out_of_memory",
-  "stage": "account",
-  "role": "effect",
-  "point": "after_journal",
-  "outcome": "REPEAT",
-  "extraRows": {
-   "account_create": 1
-  },
-  "template": "T_REPEAT"
- },
- {
-  "app": "orders",
-  "tier": "retrier",
-  "fault": "power_outage",
-  "stage": "account",
-  "role": "effect",
-  "point": "before_effect",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
- },
- {
-  "app": "orders",
-  "tier": "retrier",
-  "fault": "power_outage",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
+   "order": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "out_of_memory",
+  "stage": "submit",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "power_outage",
+  "stage": "submit",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "REPEAT",
+  "extraRows": {
    "account_create": 1
   },
   "template": "T_REPEAT"
@@ -1618,12 +2598,27 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "power_outage",
-  "stage": "account",
+  "stage": "submit",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "power_outage",
+  "stage": "submit",
   "role": "effect",
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
-   "account_create": 1
+   "account_create": 1,
+   "order": 1
   },
   "template": "T_REPEAT"
  },
@@ -1631,7 +2626,7 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "internet_outage",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -1641,7 +2636,7 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "endpoint_down",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -1651,11 +2646,11 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "timeout",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "REPEAT",
   "extraRows": {
-   "account_create": 1
+   "order": 1
   },
   "template": "T_REPEAT"
  },
@@ -1663,11 +2658,11 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "comm_timeout",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "REPEAT",
   "extraRows": {
-   "account_create": 1
+   "order": 1
   },
   "template": "T_REPEAT"
  },
@@ -1675,7 +2670,7 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "slow_link",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -1685,7 +2680,7 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "http_404",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -1695,7 +2690,7 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "http_429",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -1705,7 +2700,7 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "http_500",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -1715,7 +2710,7 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "disk_full",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -1730,7 +2725,8 @@
   "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
-   "account_create": 1
+   "account_create": 1,
+   "order": 1
   },
   "template": "T_REPEAT"
  },
@@ -1744,6 +2740,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1
   },
   "template": "T_REPEAT"
@@ -1758,6 +2755,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1
   },
   "template": "T_REPEAT"
@@ -1771,7 +2769,8 @@
   "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
-   "account_create": 1
+   "account_create": 1,
+   "order": 1
   },
   "template": "T_REPEAT"
  },
@@ -1785,6 +2784,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1
   },
   "template": "T_REPEAT"
@@ -1799,6 +2799,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1
   },
   "template": "T_REPEAT"
@@ -1812,7 +2813,8 @@
   "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
-   "account_create": 1
+   "account_create": 1,
+   "order": 1
   },
   "template": "T_REPEAT"
  },
@@ -1826,6 +2828,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1
   },
   "template": "T_REPEAT"
@@ -1840,6 +2843,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1
   },
   "template": "T_REPEAT"
@@ -1948,6 +2952,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1
   },
   "template": "T_REPEAT"
@@ -1962,6 +2967,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1
   },
@@ -1977,6 +2983,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1
   },
@@ -1992,6 +2999,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1
   },
   "template": "T_REPEAT"
@@ -2006,6 +3014,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1
   },
@@ -2021,6 +3030,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1
   },
@@ -2036,6 +3046,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1
   },
   "template": "T_REPEAT"
@@ -2050,6 +3061,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1
   },
@@ -2065,6 +3077,7 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1
   },
@@ -2178,12 +3191,13 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "crash",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1
   },
@@ -2193,15 +3207,16 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "crash",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1
+   "store": 1
   },
   "template": "T_REPEAT"
  },
@@ -2209,15 +3224,16 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "crash",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1
+   "store": 1
   },
   "template": "T_REPEAT"
  },
@@ -2225,12 +3241,13 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "out_of_memory",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1
   },
@@ -2240,15 +3257,16 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "out_of_memory",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1
+   "store": 1
   },
   "template": "T_REPEAT"
  },
@@ -2256,15 +3274,16 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "out_of_memory",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1
+   "store": 1
   },
   "template": "T_REPEAT"
  },
@@ -2272,12 +3291,13 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "power_outage",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1
   },
@@ -2287,15 +3307,16 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "power_outage",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1
+   "store": 1
   },
   "template": "T_REPEAT"
  },
@@ -2303,15 +3324,16 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "power_outage",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1
+   "store": 1
   },
   "template": "T_REPEAT"
  },
@@ -2319,7 +3341,7 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "internet_outage",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -2329,7 +3351,7 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "endpoint_down",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -2339,11 +3361,11 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "timeout",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "REPEAT",
   "extraRows": {
-   "dispatch": 1
+   "store": 1
   },
   "template": "T_REPEAT"
  },
@@ -2351,11 +3373,11 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "comm_timeout",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "REPEAT",
   "extraRows": {
-   "dispatch": 1
+   "store": 1
   },
   "template": "T_REPEAT"
  },
@@ -2363,7 +3385,7 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "slow_link",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -2373,7 +3395,7 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "http_404",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -2383,7 +3405,7 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "http_429",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -2393,7 +3415,7 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "http_500",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -2403,7 +3425,7 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "disk_full",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -2412,8 +3434,161 @@
  {
   "app": "orders",
   "tier": "retrier",
-  "fault": "app_down",
-  "stage": "dispatch",
+  "fault": "crash",
+  "stage": "process",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "crash",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "crash",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "out_of_memory",
+  "stage": "process",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "out_of_memory",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "out_of_memory",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "power_outage",
+  "stage": "process",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "power_outage",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "power_outage",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "internet_outage",
+  "stage": "process",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -2422,6 +3597,90 @@
  {
   "app": "orders",
   "tier": "retrier",
+  "fault": "endpoint_down",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "timeout",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "store": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "comm_timeout",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "store": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "slow_link",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "http_404",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "http_429",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "http_500",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "disk_full",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
   "fault": "crash",
   "stage": "updates",
   "role": "effect",
@@ -2429,9 +3688,10 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1
+   "store": 2
   },
   "template": "T_REPEAT"
  },
@@ -2445,9 +3705,10 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
+   "store": 2,
    "notify": 1
   },
   "template": "T_REPEAT"
@@ -2462,9 +3723,10 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
+   "store": 2,
    "notify": 1
   },
   "template": "T_REPEAT"
@@ -2479,9 +3741,10 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1
+   "store": 2
   },
   "template": "T_REPEAT"
  },
@@ -2495,9 +3758,10 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
+   "store": 2,
    "notify": 1
   },
   "template": "T_REPEAT"
@@ -2512,9 +3776,10 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
+   "store": 2,
    "notify": 1
   },
   "template": "T_REPEAT"
@@ -2529,9 +3794,10 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1
+   "store": 2
   },
   "template": "T_REPEAT"
  },
@@ -2545,9 +3811,10 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
+   "store": 2,
    "notify": 1
   },
   "template": "T_REPEAT"
@@ -2562,9 +3829,10 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
+   "store": 2,
    "notify": 1
   },
   "template": "T_REPEAT"
@@ -2677,15 +3945,72 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "crash",
-  "stage": "tracking",
-  "role": "poll",
-  "point": "mid_stage",
+  "stage": "ship",
+  "role": "effect",
+  "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
+   "store": 2,
+   "notify": 2
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "crash",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "crash",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "out_of_memory",
+  "stage": "ship",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2,
    "notify": 2
   },
   "template": "T_REPEAT"
@@ -2694,15 +4019,54 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "out_of_memory",
-  "stage": "tracking",
-  "role": "poll",
-  "point": "mid_stage",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "out_of_memory",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "power_outage",
+  "stage": "ship",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2,
    "notify": 2
   },
   "template": "T_REPEAT"
@@ -2711,16 +4075,37 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "power_outage",
-  "stage": "tracking",
-  "role": "poll",
-  "point": "mid_stage",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
-   "notify": 2
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "power_outage",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
   },
   "template": "T_REPEAT"
  },
@@ -2728,7 +4113,168 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "internet_outage",
-  "stage": "tracking",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "endpoint_down",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "timeout",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "dispatch": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "comm_timeout",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "dispatch": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "slow_link",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "http_404",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "http_429",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "http_500",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "disk_full",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "app_down",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "crash",
+  "stage": "transit",
+  "role": "poll",
+  "point": "mid_stage",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "out_of_memory",
+  "stage": "transit",
+  "role": "poll",
+  "point": "mid_stage",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "power_outage",
+  "stage": "transit",
+  "role": "poll",
+  "point": "mid_stage",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "order": 1,
+   "charge": 1,
+   "email": 1,
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "internet_outage",
+  "stage": "transit",
   "role": "poll",
   "outcome": "FAILED",
   "extraRows": {},
@@ -2738,7 +4284,7 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "slow_link",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "OK",
   "extraRows": {},
@@ -2748,7 +4294,7 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "disk_full",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "OK",
   "extraRows": {},
@@ -2758,7 +4304,7 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "hazard_event",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "FAILED",
   "extraRows": {},
@@ -2768,7 +4314,7 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "driver_unreachable",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "FAILED",
   "extraRows": {},
@@ -2778,7 +4324,7 @@
   "app": "orders",
   "tier": "retrier",
   "fault": "wrong_address",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "FAILED",
   "extraRows": {},
@@ -2794,10 +4340,12 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
-   "notify": 2
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
   },
   "template": "T_REPEAT"
  },
@@ -2811,10 +4359,12 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
-   "notify": 2
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
   },
   "template": "T_REPEAT"
  },
@@ -2828,10 +4378,12 @@
   "outcome": "REPEAT",
   "extraRows": {
    "account_create": 1,
+   "order": 1,
    "charge": 1,
    "email": 1,
-   "dispatch": 1,
-   "notify": 2
+   "store": 2,
+   "notify": 2,
+   "dispatch": 1
   },
   "template": "T_REPEAT"
  },
@@ -2879,7 +4431,206 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "crash",
-  "stage": "intake",
+  "stage": "account",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "crash",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "crash",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "out_of_memory",
+  "stage": "account",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "out_of_memory",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "out_of_memory",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "power_outage",
+  "stage": "account",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "power_outage",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "power_outage",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "internet_outage",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "endpoint_down",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "timeout",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "comm_timeout",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "slow_link",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "http_404",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "http_429",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "http_500",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "disk_full",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "crash",
+  "stage": "create",
   "role": "input",
   "point": "mid_stage",
   "outcome": "OK",
@@ -2890,7 +4641,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "out_of_memory",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "point": "mid_stage",
   "outcome": "OK",
@@ -2901,7 +4652,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "power_outage",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "point": "mid_stage",
   "outcome": "OK",
@@ -2912,7 +4663,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "missing_file",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "outcome": "FAILED",
   "extraRows": {},
@@ -2922,7 +4673,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "duplicate_request",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "outcome": "OK",
   "extraRows": {},
@@ -2932,7 +4683,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "malformed_payload",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "outcome": "FAILED",
   "extraRows": {},
@@ -2942,7 +4693,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "disk_full",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "outcome": "OK",
   "extraRows": {},
@@ -2952,7 +4703,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "order_typo",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "outcome": "OK",
   "extraRows": {},
@@ -2962,7 +4713,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "crash",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "before_effect",
   "outcome": "OK",
@@ -2973,12 +4724,12 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "crash",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
-   "account_create": 1
+   "order": 1
   },
   "template": "T_REPEAT"
  },
@@ -2986,7 +4737,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "crash",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "after_journal",
   "outcome": "OK",
@@ -2997,7 +4748,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "out_of_memory",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "before_effect",
   "outcome": "OK",
@@ -3008,12 +4759,12 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "out_of_memory",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
-   "account_create": 1
+   "order": 1
   },
   "template": "T_REPEAT"
  },
@@ -3021,7 +4772,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "out_of_memory",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "after_journal",
   "outcome": "OK",
@@ -3032,7 +4783,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "power_outage",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "before_effect",
   "outcome": "OK",
@@ -3043,12 +4794,12 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "power_outage",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
-   "account_create": 1
+   "order": 1
   },
   "template": "T_REPEAT"
  },
@@ -3056,7 +4807,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "power_outage",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "after_journal",
   "outcome": "OK",
@@ -3067,7 +4818,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "internet_outage",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -3077,7 +4828,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "endpoint_down",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -3087,11 +4838,11 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "timeout",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "REPEAT",
   "extraRows": {
-   "account_create": 1
+   "order": 1
   },
   "template": "T_REPEAT"
  },
@@ -3099,11 +4850,11 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "comm_timeout",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "REPEAT",
   "extraRows": {
-   "account_create": 1
+   "order": 1
   },
   "template": "T_REPEAT"
  },
@@ -3111,7 +4862,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "slow_link",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -3121,7 +4872,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "http_404",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -3131,7 +4882,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "http_429",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -3141,7 +4892,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "http_500",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -3151,7 +4902,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "disk_full",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -3569,7 +5320,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "crash",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "before_effect",
   "outcome": "OK",
@@ -3580,12 +5331,12 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "crash",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
-   "dispatch": 1
+   "store": 1
   },
   "template": "T_REPEAT"
  },
@@ -3593,7 +5344,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "crash",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_journal",
   "outcome": "OK",
@@ -3604,7 +5355,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "out_of_memory",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "before_effect",
   "outcome": "OK",
@@ -3615,12 +5366,12 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "out_of_memory",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
-   "dispatch": 1
+   "store": 1
   },
   "template": "T_REPEAT"
  },
@@ -3628,7 +5379,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "out_of_memory",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_journal",
   "outcome": "OK",
@@ -3639,7 +5390,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "power_outage",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "before_effect",
   "outcome": "OK",
@@ -3650,12 +5401,12 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "power_outage",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
-   "dispatch": 1
+   "store": 1
   },
   "template": "T_REPEAT"
  },
@@ -3663,7 +5414,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "power_outage",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_journal",
   "outcome": "OK",
@@ -3674,7 +5425,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "internet_outage",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -3684,7 +5435,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "endpoint_down",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -3694,11 +5445,11 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "timeout",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "REPEAT",
   "extraRows": {
-   "dispatch": 1
+   "store": 1
   },
   "template": "T_REPEAT"
  },
@@ -3706,11 +5457,11 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "comm_timeout",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "REPEAT",
   "extraRows": {
-   "dispatch": 1
+   "store": 1
   },
   "template": "T_REPEAT"
  },
@@ -3718,7 +5469,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "slow_link",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -3728,7 +5479,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "http_404",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -3738,7 +5489,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "http_429",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -3748,7 +5499,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "http_500",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -3758,7 +5509,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "disk_full",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -3767,12 +5518,201 @@
  {
   "app": "orders",
   "tier": "journaler",
-  "fault": "app_down",
-  "stage": "dispatch",
+  "fault": "crash",
+  "stage": "process",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "crash",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "store": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "crash",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "out_of_memory",
+  "stage": "process",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "out_of_memory",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "store": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "out_of_memory",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "power_outage",
+  "stage": "process",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "power_outage",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "store": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "power_outage",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "internet_outage",
+  "stage": "process",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
   "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "endpoint_down",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "timeout",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "store": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "comm_timeout",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "store": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "slow_link",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "http_404",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "http_429",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "http_500",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "disk_full",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
  },
  {
   "app": "orders",
@@ -3987,7 +5927,216 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "crash",
-  "stage": "tracking",
+  "stage": "ship",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "crash",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "dispatch": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "crash",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "out_of_memory",
+  "stage": "ship",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "out_of_memory",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "dispatch": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "out_of_memory",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "power_outage",
+  "stage": "ship",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "power_outage",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "dispatch": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "power_outage",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "internet_outage",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "endpoint_down",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "timeout",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "dispatch": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "comm_timeout",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "dispatch": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "slow_link",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "http_404",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "http_429",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "http_500",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "disk_full",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "app_down",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "crash",
+  "stage": "transit",
   "role": "poll",
   "point": "mid_stage",
   "outcome": "OK",
@@ -3998,7 +6147,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "out_of_memory",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "point": "mid_stage",
   "outcome": "OK",
@@ -4009,7 +6158,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "power_outage",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "point": "mid_stage",
   "outcome": "OK",
@@ -4020,7 +6169,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "internet_outage",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "FAILED",
   "extraRows": {},
@@ -4030,7 +6179,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "slow_link",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "OK",
   "extraRows": {},
@@ -4040,7 +6189,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "disk_full",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "OK",
   "extraRows": {},
@@ -4050,7 +6199,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "hazard_event",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "FAILED",
   "extraRows": {},
@@ -4060,7 +6209,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "driver_unreachable",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "FAILED",
   "extraRows": {},
@@ -4070,7 +6219,7 @@
   "app": "orders",
   "tier": "journaler",
   "fault": "wrong_address",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "FAILED",
   "extraRows": {},
@@ -4153,7 +6302,196 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "crash",
-  "stage": "intake",
+  "stage": "account",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "crash",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "crash",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "out_of_memory",
+  "stage": "account",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "out_of_memory",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "out_of_memory",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "power_outage",
+  "stage": "account",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "power_outage",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "power_outage",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "internet_outage",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "endpoint_down",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "timeout",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "comm_timeout",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "slow_link",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "http_404",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "http_429",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "http_500",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "disk_full",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "crash",
+  "stage": "create",
   "role": "input",
   "point": "mid_stage",
   "outcome": "OK",
@@ -4164,7 +6502,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "out_of_memory",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "point": "mid_stage",
   "outcome": "OK",
@@ -4175,7 +6513,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "power_outage",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "point": "mid_stage",
   "outcome": "OK",
@@ -4186,7 +6524,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "missing_file",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "outcome": "FAILED",
   "extraRows": {},
@@ -4196,7 +6534,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "duplicate_request",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "outcome": "OK",
   "extraRows": {},
@@ -4206,7 +6544,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "malformed_payload",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "outcome": "FAILED",
   "extraRows": {},
@@ -4216,7 +6554,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "disk_full",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "outcome": "OK",
   "extraRows": {},
@@ -4226,7 +6564,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "order_typo",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "outcome": "OK",
   "extraRows": {},
@@ -4236,7 +6574,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "crash",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "before_effect",
   "outcome": "OK",
@@ -4247,7 +6585,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "crash",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "OK",
@@ -4258,7 +6596,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "crash",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "after_journal",
   "outcome": "OK",
@@ -4269,7 +6607,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "out_of_memory",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "before_effect",
   "outcome": "OK",
@@ -4280,7 +6618,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "out_of_memory",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "OK",
@@ -4291,7 +6629,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "out_of_memory",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "after_journal",
   "outcome": "OK",
@@ -4302,7 +6640,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "power_outage",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "before_effect",
   "outcome": "OK",
@@ -4313,7 +6651,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "power_outage",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "OK",
@@ -4324,7 +6662,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "power_outage",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "after_journal",
   "outcome": "OK",
@@ -4335,7 +6673,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "internet_outage",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -4345,7 +6683,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "endpoint_down",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -4355,7 +6693,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "timeout",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -4365,7 +6703,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "comm_timeout",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -4375,7 +6713,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "slow_link",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -4385,7 +6723,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "http_404",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -4395,7 +6733,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "http_429",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -4405,7 +6743,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "http_500",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -4415,7 +6753,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "disk_full",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -4813,7 +7151,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "crash",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "before_effect",
   "outcome": "OK",
@@ -4824,7 +7162,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "crash",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "OK",
@@ -4835,7 +7173,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "crash",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_journal",
   "outcome": "OK",
@@ -4846,7 +7184,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "out_of_memory",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "before_effect",
   "outcome": "OK",
@@ -4857,7 +7195,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "out_of_memory",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "OK",
@@ -4868,7 +7206,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "out_of_memory",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_journal",
   "outcome": "OK",
@@ -4879,7 +7217,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "power_outage",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "before_effect",
   "outcome": "OK",
@@ -4890,7 +7228,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "power_outage",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "OK",
@@ -4901,7 +7239,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "power_outage",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_journal",
   "outcome": "OK",
@@ -4912,7 +7250,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "internet_outage",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -4922,7 +7260,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "endpoint_down",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -4932,7 +7270,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "timeout",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -4942,7 +7280,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "comm_timeout",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -4952,7 +7290,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "slow_link",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -4962,7 +7300,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "http_404",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -4972,7 +7310,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "http_429",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
@@ -4982,7 +7320,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "http_500",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -4992,7 +7330,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "disk_full",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -5001,12 +7339,191 @@
  {
   "app": "orders",
   "tier": "reconciler",
-  "fault": "app_down",
-  "stage": "dispatch",
+  "fault": "crash",
+  "stage": "process",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "crash",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "crash",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "out_of_memory",
+  "stage": "process",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "out_of_memory",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "out_of_memory",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "power_outage",
+  "stage": "process",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "power_outage",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "power_outage",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "internet_outage",
+  "stage": "process",
   "role": "effect",
   "outcome": "FAILED",
   "extraRows": {},
   "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "endpoint_down",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "timeout",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "comm_timeout",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "slow_link",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "http_404",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "http_429",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "http_500",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "disk_full",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
  },
  {
   "app": "orders",
@@ -5211,7 +7728,206 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "crash",
-  "stage": "tracking",
+  "stage": "ship",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "crash",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "crash",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "out_of_memory",
+  "stage": "ship",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "out_of_memory",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "out_of_memory",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "power_outage",
+  "stage": "ship",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "power_outage",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "power_outage",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "internet_outage",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "endpoint_down",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "timeout",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "comm_timeout",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "slow_link",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "http_404",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "http_429",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "http_500",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "disk_full",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "app_down",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "crash",
+  "stage": "transit",
   "role": "poll",
   "point": "mid_stage",
   "outcome": "OK",
@@ -5222,7 +7938,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "out_of_memory",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "point": "mid_stage",
   "outcome": "OK",
@@ -5233,7 +7949,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "power_outage",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "point": "mid_stage",
   "outcome": "OK",
@@ -5244,7 +7960,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "internet_outage",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "FAILED",
   "extraRows": {},
@@ -5254,7 +7970,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "slow_link",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "OK",
   "extraRows": {},
@@ -5264,7 +7980,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "disk_full",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "OK",
   "extraRows": {},
@@ -5274,7 +7990,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "hazard_event",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "FAILED",
   "extraRows": {},
@@ -5284,7 +8000,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "driver_unreachable",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "FAILED",
   "extraRows": {},
@@ -5294,7 +8010,7 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "wrong_address",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "FAILED",
   "extraRows": {},
@@ -5377,7 +8093,196 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "crash",
-  "stage": "intake",
+  "stage": "account",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "crash",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "crash",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "out_of_memory",
+  "stage": "account",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "out_of_memory",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "out_of_memory",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "power_outage",
+  "stage": "account",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "power_outage",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "power_outage",
+  "stage": "account",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "internet_outage",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "PARKED_OK",
+  "extraRows": {},
+  "template": "T_PARKED_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "endpoint_down",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "PARKED_OK",
+  "extraRows": {},
+  "template": "T_PARKED_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "timeout",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "comm_timeout",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "slow_link",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "http_404",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "http_429",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "http_500",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "disk_full",
+  "stage": "account",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "crash",
+  "stage": "create",
   "role": "input",
   "point": "mid_stage",
   "outcome": "OK",
@@ -5388,7 +8293,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "out_of_memory",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "point": "mid_stage",
   "outcome": "OK",
@@ -5399,7 +8304,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "power_outage",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "point": "mid_stage",
   "outcome": "OK",
@@ -5410,7 +8315,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "missing_file",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "outcome": "PARKED_OK",
   "extraRows": {},
@@ -5420,7 +8325,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "duplicate_request",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "outcome": "OK",
   "extraRows": {},
@@ -5430,7 +8335,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "malformed_payload",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "outcome": "QUAR",
   "extraRows": {},
@@ -5440,7 +8345,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "disk_full",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "outcome": "OK",
   "extraRows": {},
@@ -5450,7 +8355,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "order_typo",
-  "stage": "intake",
+  "stage": "create",
   "role": "input",
   "outcome": "OK",
   "extraRows": {},
@@ -5460,7 +8365,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "crash",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "before_effect",
   "outcome": "OK",
@@ -5471,7 +8376,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "crash",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "OK",
@@ -5482,7 +8387,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "crash",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "after_journal",
   "outcome": "OK",
@@ -5493,7 +8398,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "out_of_memory",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "before_effect",
   "outcome": "OK",
@@ -5504,7 +8409,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "out_of_memory",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "OK",
@@ -5515,7 +8420,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "out_of_memory",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "after_journal",
   "outcome": "OK",
@@ -5526,7 +8431,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "power_outage",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "before_effect",
   "outcome": "OK",
@@ -5537,7 +8442,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "power_outage",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "OK",
@@ -5548,7 +8453,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "power_outage",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "point": "after_journal",
   "outcome": "OK",
@@ -5559,7 +8464,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "internet_outage",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "PARKED_OK",
   "extraRows": {},
@@ -5569,7 +8474,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "endpoint_down",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "PARKED_OK",
   "extraRows": {},
@@ -5579,7 +8484,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "timeout",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -5589,7 +8494,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "comm_timeout",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -5599,7 +8504,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "slow_link",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -5609,7 +8514,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "http_404",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -5619,7 +8524,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "http_429",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -5629,7 +8534,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "http_500",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -5639,7 +8544,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "disk_full",
-  "stage": "account",
+  "stage": "submit",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -6037,7 +8942,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "crash",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "before_effect",
   "outcome": "OK",
@@ -6048,7 +8953,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "crash",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "OK",
@@ -6059,7 +8964,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "crash",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_journal",
   "outcome": "OK",
@@ -6070,7 +8975,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "out_of_memory",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "before_effect",
   "outcome": "OK",
@@ -6081,7 +8986,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "out_of_memory",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "OK",
@@ -6092,7 +8997,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "out_of_memory",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_journal",
   "outcome": "OK",
@@ -6103,7 +9008,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "power_outage",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "before_effect",
   "outcome": "OK",
@@ -6114,7 +9019,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "power_outage",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_effect_before_journal",
   "outcome": "OK",
@@ -6125,7 +9030,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "power_outage",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "point": "after_journal",
   "outcome": "OK",
@@ -6136,7 +9041,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "internet_outage",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "PARKED_OK",
   "extraRows": {},
@@ -6146,7 +9051,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "endpoint_down",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "PARKED_OK",
   "extraRows": {},
@@ -6156,7 +9061,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "timeout",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -6166,7 +9071,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "comm_timeout",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -6176,7 +9081,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "slow_link",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -6186,7 +9091,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "http_404",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -6196,7 +9101,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "http_429",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -6206,7 +9111,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "http_500",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -6216,7 +9121,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "disk_full",
-  "stage": "dispatch",
+  "stage": "receive",
   "role": "effect",
   "outcome": "OK",
   "extraRows": {},
@@ -6225,12 +9130,191 @@
  {
   "app": "orders",
   "tier": "phoenix",
-  "fault": "app_down",
-  "stage": "dispatch",
+  "fault": "crash",
+  "stage": "process",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "crash",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "crash",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "out_of_memory",
+  "stage": "process",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "out_of_memory",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "out_of_memory",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "power_outage",
+  "stage": "process",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "power_outage",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "power_outage",
+  "stage": "process",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "internet_outage",
+  "stage": "process",
   "role": "effect",
   "outcome": "PARKED_OK",
   "extraRows": {},
   "template": "T_PARKED_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "endpoint_down",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "PARKED_OK",
+  "extraRows": {},
+  "template": "T_PARKED_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "timeout",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "comm_timeout",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "slow_link",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "http_404",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "http_429",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "http_500",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "disk_full",
+  "stage": "process",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
  },
  {
   "app": "orders",
@@ -6337,9 +9421,9 @@
   "fault": "internet_outage",
   "stage": "updates",
   "role": "effect",
-  "outcome": "PARKED_OK",
+  "outcome": "OK",
   "extraRows": {},
-  "template": "T_PARKED_OK"
+  "template": "T_OK"
  },
  {
   "app": "orders",
@@ -6435,7 +9519,206 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "crash",
-  "stage": "tracking",
+  "stage": "ship",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "crash",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "crash",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "out_of_memory",
+  "stage": "ship",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "out_of_memory",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "out_of_memory",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "power_outage",
+  "stage": "ship",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "power_outage",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "power_outage",
+  "stage": "ship",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "internet_outage",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "PARKED_OK",
+  "extraRows": {},
+  "template": "T_PARKED_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "endpoint_down",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "PARKED_OK",
+  "extraRows": {},
+  "template": "T_PARKED_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "timeout",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "comm_timeout",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "slow_link",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "http_404",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "http_429",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "http_500",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "disk_full",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "app_down",
+  "stage": "ship",
+  "role": "effect",
+  "outcome": "PARKED_OK",
+  "extraRows": {},
+  "template": "T_PARKED_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "crash",
+  "stage": "transit",
   "role": "poll",
   "point": "mid_stage",
   "outcome": "OK",
@@ -6446,7 +9729,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "out_of_memory",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "point": "mid_stage",
   "outcome": "OK",
@@ -6457,7 +9740,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "power_outage",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "point": "mid_stage",
   "outcome": "OK",
@@ -6468,7 +9751,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "internet_outage",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "PARKED_OK",
   "extraRows": {},
@@ -6478,7 +9761,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "slow_link",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "OK",
   "extraRows": {},
@@ -6488,7 +9771,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "disk_full",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "OK",
   "extraRows": {},
@@ -6498,7 +9781,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "hazard_event",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "OK",
   "extraRows": {},
@@ -6508,7 +9791,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "driver_unreachable",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "OK",
   "extraRows": {},
@@ -6518,7 +9801,7 @@
   "app": "orders",
   "tier": "phoenix",
   "fault": "wrong_address",
-  "stage": "tracking",
+  "stage": "transit",
   "role": "poll",
   "outcome": "OK",
   "extraRows": {},
