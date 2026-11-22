@@ -30,7 +30,11 @@ export interface ArmSpec {
   id: string;
   fault: string;
   creature?: string;
-  source: 'user' | 'random' | 'boss' | 'demo' | 'sweep';
+  source: 'user' | 'random' | 'boss' | 'demo' | 'sweep' | 'gremlin' | 'fuzz';
+  /** A drawn outage window in ms at 1x (TV3-C5). Replaces the fixed window of an `endpoint_down` or service-down fault and adds an `outage` event. */
+  outageMs?: number;
+  /** Extra fields copied into the `chaos` detail (`unknown`, `fingerprint`, `variant`). */
+  extra?: Record<string, unknown>;
   scope?: 'inner' | 'outer';
   point?: string;
   /** order_typo: the stage that finds the wrong order (default confirmation) and the decision (default: tier policy). */
@@ -212,7 +216,7 @@ class Planner {
     switch (spec.fault) {
       case 'timeout': case 'comm_timeout': add(spec.fault, 'effect', 'latency'); break;
       case 'http_404': case 'http_500': case 'http_429': add(spec.fault, 'effect', 'status'); break;
-      case 'endpoint_down': case 'sms_down': case 'app_down': case 'updates_down': add(spec.fault, 'effect', 'status'); break;
+      case 'endpoint_down': case 'sms_down': case 'app_down': case 'updates_down': add(spec.fault, 'effect', 'status', spec.outageMs !== undefined ? { forMs: spec.outageMs } : {}); break;
       case 'internet_outage': add(spec.fault, 'all', 'drop'); break;
       case 'boss_internet_outage': add('internet_outage', 'all', 'drop', { forMs: 12000 }); break;
       case 'slow_link': add(spec.fault, 'all', 'slow'); break;
@@ -295,7 +299,9 @@ class Planner {
     };
     if (a.point) detail.point = a.point;
     if (a.deferred) detail.deferred = true;
+    if (spec.extra) Object.assign(detail, spec.extra);
     this.push(press, 'chaos', undefined, undefined, detail);
+    if (spec.outageMs !== undefined) this.push(press, 'outage', undefined, cur?.def.id, { outageMs: spec.outageMs, seed: this.cfg.seed, fault: spec.fault });
     if (this.curOrder) this.attacks.push(a.depth);
     if (a.bossFault) this.bossArms.push(a);
     if (a.isDisk && !this.journalOn) {

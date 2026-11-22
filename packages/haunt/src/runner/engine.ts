@@ -7,6 +7,7 @@ import type { HauntEvent } from '../score/score';
 import type { Part } from '../sdk';
 import { tiersForLanes, type TierMode } from './lanes';
 import { postProviderArm, type PostFault } from './provider';
+import { DEFAULT_LEVEL, OUTAGE_FAULTS, drawOutageMs } from './intensity';
 
 export interface EngineChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string; forMs?: number; detect?: 'confirmation' | 'handoff'; source?: 'manual' | 'random' | 'boss' }
 export interface EngineChaosResult { chaosId: string; creature: string; fault: string; depth: number; deferred: boolean }
@@ -34,6 +35,9 @@ export class RunnerEngine {
   private record?: (ev: HauntEvent) => void;
   private wave = 0;
   private seq = 0;
+  private seed: number | string = 7;
+  /** Dial level, default 3. The outage length of an `endpoint_down` or service-down press is drawn from it. */
+  level = DEFAULT_LEVEL;
 
   constructor(private readonly opts: RunnerEngineOptions = {}) {
     this.director = opts.director ?? new ChaosDirector();
@@ -41,6 +45,7 @@ export class RunnerEngine {
 
   startWave = (wave: number, settings: EngineWaveSettings, record: (ev: HauntEvent) => void): void => {
     this.wave = wave;
+    this.seed = settings.seed;
     this.record = record;
     this.speed = settings.speed;
     this.seq = 0;
@@ -63,11 +68,20 @@ export class RunnerEngine {
     const lane = String(req.lane ?? this.lanes[0] ?? '1');
     if (!this.lanes.includes(lane)) throw new Error(`lane ${lane} is not in the current wave`);
     const info = this.opts.laneInfo?.(lane) ?? { state: 'working' as const, stage: null };
-    const r = this.director.arm(lane, { fault: req.fault, scope: req.scope, point: req.point as never, forMs: req.forMs, detect: req.detect }, info);
+    const nextId = `c${this.wave}-${this.seq + 1}`;
+    // Outage timer (spec 5.4): unless the press fixes its window, draw it from the dial level. The window is 1x ms; real ms is divided by speed.
+    const outageMs = req.forMs === undefined && OUTAGE_FAULTS.has(req.fault) ? drawOutageMs(this.seed, lane, nextId, this.level) : undefined;
+    const forMs = outageMs !== undefined ? Math.max(50, Math.round(outageMs / (this.speed || 1))) : req.forMs;
+    const r = this.director.arm(lane, { fault: req.fault, scope: req.scope, point: req.point as never, forMs, detect: req.detect }, info);
     if (!r.ok) throw new Error(r.error);
-    const chaosId = `c${this.wave}-${++this.seq}`;
+    const chaosId = nextId;
+    this.seq++;
     const creature = req.creature ?? FAULTS.find((f) => f.id === req.fault)?.creature ?? req.fault;
     this.record?.({ type: 'chaos', lane, detail: { id: chaosId, creature, ...(req.source ? { source: req.source } : {}), ...r.detail } });
+    if (outageMs !== undefined) {
+      const stage = r.detail.deferredTo ?? info.stage;
+      this.record?.({ type: 'outage', lane, ...(stage ? { stage } : {}), detail: { outageMs, seed: this.seed, fault: req.fault, level: this.level } });
+    }
     if (r.arm) this.opts.sendArm?.(lane, { k: 'arm', id: String(r.id), ...r.arm });
     if (r.provider && this.opts.post) void postProviderArm(this.opts.post, lane, info.stage, r.provider as ProviderArm);
     return { chaosId, creature, fault: r.detail.fault, depth: r.detail.depth, deferred: r.detail.deferred === true };

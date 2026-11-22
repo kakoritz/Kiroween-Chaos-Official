@@ -5,3 +5,4 @@ export * from './loop';
 export * from './provider';
 export * from './schedule';
 export * from './live';
+export * from './intensity';
