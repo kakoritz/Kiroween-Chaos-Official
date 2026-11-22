@@ -5,7 +5,7 @@ import { rankGlyph } from '../onboarding/polish';
 
 export const ROW_H = 30;
 /** Height of the rank board's column header row. */
-export const HEAD_H = 22;
+export const HEAD_H = 20;
 /** Short column titles so the nine ledger columns fit the panel; the full name stays in the tooltip. */
 const SHORT_LABEL: Record<string, string> = { Accounts: 'Accts', Orders: 'Placed', Shipments: 'Ships', Notices: 'Notes', Receipts: 'Receipts' };
 export const ledgerHeader = (full: string): string => SHORT_LABEL[full] ?? full;

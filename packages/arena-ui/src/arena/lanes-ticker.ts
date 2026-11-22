@@ -48,7 +48,7 @@ export function laneMessage(ev: ArenaEvent, stageLabel: (id: string) => string):
       const s = num(d.stars, NaN);
       if (!Number.isFinite(s)) return null;
       const t = str(d.text);
-      return { tone: s >= 4 ? 'good' : s >= 3 ? 'warn' : 'error', icon: '\u2605', text: `\u2605 ${stars(s)}${t ? ` "${t}"` : ''}` };
+      return { tone: s >= 4 ? 'good' : s >= 3 ? 'warn' : 'error', icon: '\u270e', text: `\u2605 ${stars(s)}${t ? ` "${t}"` : ''}` };
     }
     case 'decision_needed': {
       const at = str(d.detectedAt);

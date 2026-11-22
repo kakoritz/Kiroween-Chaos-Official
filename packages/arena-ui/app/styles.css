@@ -192,9 +192,9 @@ body.present .rb-row, body.present .lg td, body.present .lg th, body.present .tk
 .panel { top: 844px; height: 196px; }
 .panel h2 { height: 26px; line-height: 26px; font-size: 14px; }
 .quiet { top: 840px; height: 190px; }
-.rb-body { height: 170px; }
+.rb-body { height: 168px; }
 .rb-row { height: 30px; grid-template-columns: 44px 1fr 64px 52px 78px 54px 36px; padding: 0 12px; font-size: 16px; }
-.rb-head { position: absolute; left: 0; right: 0; top: 0; height: 22px; display: grid; grid-template-columns: 44px 1fr 64px 52px 78px 54px 36px; align-items: center; padding: 0 12px; font: 700 14px ui-monospace, 'Cascadia Code', Menlo, monospace; letter-spacing: 0; color: var(--muted); border-bottom: 1px solid var(--stone-2); }
+.rb-head { position: absolute; left: 0; right: 0; top: 0; height: 20px; display: grid; grid-template-columns: 44px 1fr 64px 52px 78px 54px 36px; align-items: center; padding: 0 12px; font: 700 14px ui-monospace, 'Cascadia Code', Menlo, monospace; letter-spacing: 0; color: var(--muted); border-bottom: 1px solid var(--stone-2); }
 .rb-head span { text-align: right; } .rb-head span:nth-child(2) { text-align: left; }
 .rb-rank { font-size: 18px; }
 .lg { table-layout: fixed; font-size: 14px; }
