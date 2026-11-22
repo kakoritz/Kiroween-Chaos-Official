@@ -46,12 +46,26 @@ function solvedText(r: CaseRow, host: CasebookHost): string {
   return [...by].map(([m, lanes]) => `${mechanismWord(m)}: ${lanesText(lanes, host, 2)}`).join('; ');
 }
 
+const WORST: Record<string, number> = { lost: 0, partly: 1, solved: 2 };
+/** The worst outcome a lane had for this case. */
+function laneOutcome(r: CaseRow, lane: number): string {
+  const e = r.entries.filter((x) => x.lane === lane).sort((a, b) => (WORST[a.outcome] ?? 3) - (WORST[b.outcome] ?? 3))[0];
+  return !e ? 'met' : r.absorbed ? 'absorbed' : e.outcome;
+}
+const GLYPH: Record<string, string> = { solved: '✓', partly: '~', lost: '✕' };
+
+/** "Rookie ✕, Journaler ✓ +1": who met the case and how it went for each lane (nothing for an absorbed case). */
+function metText(r: CaseRow, host: CasebookHost): string {
+  const parts = r.lanes.map((n) => `${host.laneTitle(n) || `Lane ${n}`}${r.absorbed ? '' : ` ${GLYPH[laneOutcome(r, n)] ?? ''}`}`.trim());
+  return parts.length <= 3 ? parts.join(', ') : `${parts.slice(0, 3).join(', ')} +${parts.length - 3}`;
+}
+
 function caseRow(r: CaseRow, host: CasebookHost): HTMLElement {
   const row = el('div', `cbk-row${r.open ? ' cbk-row--open' : ''}${r.absorbed ? ' cbk-row--abs' : ''}`); row.setAttribute('role', 'row');
   const c = el('span', 'cbk-case'); c.setAttribute('role', 'cell');
   c.append(el('b', '', caseTitle(r.signature, host.stageLabel)));
   if (r.unknown) { const u = el('i', 'cbk-unk', '? UNKNOWN'); u.title = 'A fuzz fault nobody had seen: a new signature.'; c.append(u); }
-  const met = el('span', 'cbk-met', lanesText(r.lanes, host)); met.setAttribute('role', 'cell'); met.title = r.lanes.map((n) => host.laneTitle(n) || `Lane ${n}`).join(', ');
+  const met = el('span', 'cbk-met', metText(r, host)); met.setAttribute('role', 'cell'); met.title = r.lanes.map((n) => `${host.laneTitle(n) || `Lane ${n}`}: ${laneOutcome(r, n)}`).join(', ');
   const solved = el('span', 'cbk-solved'); solved.setAttribute('role', 'cell');
   if (r.absorbed) solved.append(el('b', 'cbk-abs', '\u26E8 ABSORBED'), document.createTextNode(' no harm done, nothing to solve'));
   else if (r.open) solved.append(el('b', 'cbk-openTag', '⚠ OPEN'), document.createTextNode(' nobody solved it'));

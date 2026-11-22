@@ -56,6 +56,8 @@ export abstract class Card {
   protected dim: HTMLElement | null = null;
   /** The player closed it: a late `adopt` (hydrate after reload) must not bring it back. */
   protected dismissed = false;
+  /** True while the improve loop runs its own tournaments: their cards stay closed so they do not cover the Patterns screen. */
+  muted: () => boolean = () => false;
   private returnFocus: HTMLElement | null = null;
   constructor(protected readonly stage: HTMLElement) {}
   get isOpen(): boolean { return this.dim !== null; }
@@ -110,7 +112,7 @@ export class RoundCard extends Card {
     if ((ev.type === 'lane_eliminated' || ev.type === 'corpse') && this.isOpen) { const r = this.t.results[this.t.results.length - 1]; if (r) { r.eliminated = [...r.eliminated.filter((e) => !this.t.fallen[e.lane]), ...Object.entries(this.t.fallen).filter(([, f]) => f.round === r.round).map(([lane, f]) => ({ lane: Number(lane), stage: f.stage, cause: f.cause, epitaph: f.epitaph }))]; this.paint(r); } return; }
     if (ev.type === 'round_end') {
       const r = this.t.results[this.t.results.length - 1];
-      if (r) this.paint(r);
+      if (r && !this.muted()) this.paint(r);
     }
   }
 
@@ -218,7 +220,7 @@ export class FinalScreen extends Card {
   onEvent(ev: ArenaEvent): void {
     applyTournamentEvent(this.t, ev as never);
     if (ev.type === 'reset' || ev.type === 'round_start' || ev.type === 'wave_start') { if (this.isOpen) this.close(); return; }
-    if (ev.type === 'tournament_end') this.paint();
+    if (ev.type === 'tournament_end' && !this.muted()) this.paint();
   }
 
   protected override onClose(): void { this.anim.stop = true; }

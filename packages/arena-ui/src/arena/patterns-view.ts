@@ -53,6 +53,9 @@ export class PatternsPanel extends Card {
     else if (ev.type === 'reset') { this.rows = []; this.qualifying = 0; this.spec = null; this.refresh(); }
   }
 
+  /** The improve loop is running its tournaments. */
+  get running(): boolean { return isRunning(this.improve); }
+
   async open(): Promise<void> {
     this.paintShell();
     await this.reload();

@@ -311,6 +311,8 @@ const patternsPanel = new PatternsPanel(stageEl, {
   onBadge: (n, running) => { patternsBadge.textContent = running ? '\u21BB' : String(n); patternsBadge.classList.toggle('hidden', !running && n === 0); patternsBadge.classList.toggle('run', running); },
 }, () => reduceMotion.matches || document.body.classList.contains('reduced-motion'));
 patternsBtn.addEventListener('click', () => void patternsPanel.open());
+roundCard.muted = () => patternsPanel.running;
+finalScreen.muted = () => patternsPanel.running;
 const casebook = emptyCasebook();
 const casebookHost = { laneTitle: tournamentHost.laneTitle, stageLabel: tournamentHost.stageLabel };
 scene.lessonInfo = (lane) => {
