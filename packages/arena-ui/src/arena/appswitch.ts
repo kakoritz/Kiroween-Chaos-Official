@@ -47,7 +47,7 @@ export class AppSwitcher {
 
   constructor(private readonly root: HTMLElement, private readonly host: SwitchHost) {
     root.classList.add('as');
-    root.innerHTML = '<span class="as-label" id="as-label">App</span><div class="seg" role="radiogroup" aria-labelledby="as-label"></div>';
+    root.innerHTML = '<span class="as-label sr-only" id="as-label">App</span><div class="seg" role="radiogroup" aria-labelledby="as-label"></div>';
     this.detail = document.createElement('span');
     this.detail.className = 'sr-only';
     this.detail.setAttribute('aria-live', 'polite');
@@ -85,7 +85,7 @@ export class AppSwitcher {
       for (const c of this.choices) {
         const b = document.createElement('button');
         b.type = 'button'; b.className = 'seg-b'; b.setAttribute('role', 'radio'); b.dataset.app = c.id;
-        b.textContent = appTitle(c);
+        b.textContent = appTitle(c).replace(/^haunted\s+/i, '');
         b.title = c.stageLabels.length ? `Stages: ${c.stageLabels.join(', ')}` : appTitle(c);
         b.addEventListener('click', () => { void this.choose(c.id); });
         seg.appendChild(b); this.btns.set(c.id, b);

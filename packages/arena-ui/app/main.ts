@@ -67,19 +67,18 @@ root.innerHTML = `
       <span class="spacer"></span>
       <span class="total" id="total" title="Total score"></span>
       <button class="btn btn--ghost" id="tour-open" type="button" title="Guided tour">Tour</button>
-      <button class="btn btn--ghost" id="keys-btn" type="button" aria-expanded="false" aria-controls="keys-pop" title="Keyboard and state legend (?)">&#9000; Keys</button>
+      <button class="btn btn--ghost" id="keys-btn" type="button" aria-expanded="false" aria-controls="keys-pop" aria-label="Keys" title="Keyboard shortcuts and state legend">&#9000;</button>
       <button class="btn btn--ghost" id="patterns-btn" type="button" title="Recurring trouble, fix specs and the improve loop">Patterns<span class="pt-badge hidden" id="patterns-badge"></span></button>
       <button class="btn btn--ghost" id="legend-btn" type="button" aria-expanded="false" title="What do R J I B Q mean?">?</button>
       <span class="gear-wrap" id="gear-wrap"><button class="btn btn--ghost" id="gear-btn" type="button" title="Settings: chaos, pace, speed, sound, motion" aria-label="Settings">&#9881;</button></span>
       <span class="pace-tag" id="pace-tag" title="Slow pace is on"></span>
-      <button class="btn btn--ghost" id="mute" type="button" aria-pressed="true" title="Sound is off until you turn it on">&#128263; Sound off</button>
+      <button class="btn btn--ghost" id="mute" type="button" aria-pressed="true" aria-label="Sound off" title="Sound is off. Click to turn it on.">&#128263;</button>
       <span class="pill hidden" id="demo-pill">DEMO</span>
       <span class="badge badge--offline" id="badge" role="status"></span>
       <button class="btn btn--ghost hidden" id="demo-stop" type="button">&#9632; Stop demo</button>
       <button class="btn hidden" id="next-btn" type="button" title="Review the logs first. Press N or Space for the next wave.">&#9654; Next wave</button>
       <button class="btn" id="demo-open" type="button">&#9654; Play demo</button>
     </header>
-    <div id="chaos-mode"></div>
     <div class="boss" id="boss" aria-hidden="true"></div>
     <div id="insp"></div>
     <div class="keys-pop hidden" id="keys-pop" role="dialog" aria-label="Keyboard and state legend"><h2>Keyboard</h2><ul class="keys-list" id="keys-list"></ul><h2>States</h2><ul class="lg-list" id="legend-list"></ul></div>
@@ -169,9 +168,8 @@ const ticker = new LaneTickerView($('ticker-body'), tickerModel, {
   open: (lane) => {
     const l = vm.lanes.find((x) => x.lane === lane);
     if (!l) return;
-    const at = Math.max(0, l.chips.findIndex((c) => c === 'active' || c === 'retrying' || c === 'failed' || c === 'dead'));
-    const st = vm.stages[at];
-    if (st) inspector.open(l.lane, at, st.id, l.order);
+    // A row opens the whole lane log; only a chip or its flag focuses one stage.
+    inspector.open(l.lane, null, null, l.order);
   },
 });
 const bossBar = new BossBar($('boss'));
@@ -208,7 +206,7 @@ canvas.addEventListener('mousemove', (e) => {
   const r = canvas.getBoundingClientRect();
   canvas.style.cursor = chipAt(((e.clientX - r.left) / r.width) * STAGE_W, ((e.clientY - r.top) / r.height) * STAGE_H, vm.lanes.length, vm.stages.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET) ? 'pointer' : 'default';
   const dx = ((e.clientX - r.left) / r.width) * STAGE_W, dy = ((e.clientY - r.top) / r.height) * STAGE_H;
-  const hot = scene.hot.find((h) => dx >= h.x && dx <= h.x + h.w && dy >= h.y && dy <= h.y + h.h);
+  const hot = [...scene.hot, ...scene.gearHot].find((h) => dx >= h.x && dx <= h.x + h.w && dy >= h.y && dy <= h.y + h.h);
   canvas.title = hot ? hot.tip : chipTipAt(vm, dx, dy, vm.boss.phase === 'none' ? 0 : BOSS_INSET);
 });
 const keysPop = $('keys-pop');
@@ -255,7 +253,9 @@ const muteBtn = $<HTMLButtonElement>('mute');
 muteBtn.addEventListener('click', () => {
   const muted = sound.toggle();
   muteBtn.setAttribute('aria-pressed', String(muted));
-  muteBtn.textContent = muted ? '\u{1F507} Sound off' : '\u{1F50A} Sound on';
+  muteBtn.textContent = muted ? '\u{1F507}' : '\u{1F50A}';
+  muteBtn.setAttribute('aria-label', muted ? 'Sound off' : 'Sound on');
+  muteBtn.title = muted ? 'Sound is off. Click to turn it on.' : 'Sound is on. Click to mute.';
 });
 
 const captionPlayer = new CaptionPlayer(freezeFromQuery(window.location.search));

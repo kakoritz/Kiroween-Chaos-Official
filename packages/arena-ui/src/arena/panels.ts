@@ -3,7 +3,12 @@
 import type { ArenaVM, LaneVM, SkelMode } from './model';
 import { rankGlyph } from '../onboarding/polish';
 
-export const ROW_H = 40;
+export const ROW_H = 30;
+/** Height of the rank board's column header row. */
+export const HEAD_H = 22;
+/** Short column titles so the nine ledger columns fit the panel; the full name stays in the tooltip. */
+const SHORT_LABEL: Record<string, string> = { Accounts: 'Accts', Orders: 'Placed', Shipments: 'Ships', Notices: 'Notes', Receipts: 'Receipts' };
+export const ledgerHeader = (full: string): string => SHORT_LABEL[full] ?? full;
 const KIND_ORDER = ['account_create', 'order', 'charge', 'email', 'store', 'dispatch', 'notify', 'ticket'];
 export const KIND_LABEL: Record<string, string> = {
   account_create: 'Accounts', order: 'Orders', charge: 'Charges', email: 'Emails', store: 'Store', dispatch: 'Shipments', notify: 'Notices', ticket: 'Tickets',
@@ -16,9 +21,12 @@ export function rankLanes(lanes: readonly LaneVM[]): LaneVM[] {
 }
 
 /** Effect kinds to show: every kind seen, in the canonical order, or the orders-app default. */
+/** The provider sometimes reports `account` or `reply`; they belong in the Accounts and Emails columns. */
+export const canonKind = (k: string): string => (k === 'account' ? 'account_create' : k === 'reply' ? 'email' : k);
+
 export function ledgerKinds(vm: ArenaVM): string[] {
   const seen = new Set<string>();
-  for (const l of vm.lanes) for (const k of Object.keys(l.ledger)) seen.add(k);
+  for (const l of vm.lanes) for (const k of Object.keys(l.ledger)) seen.add(canonKind(k));
   if (!seen.size) return DEFAULT_KINDS;
   const known = KIND_ORDER.filter((k) => seen.has(k));
   const extra = [...seen].filter((k) => !KIND_ORDER.includes(k)).sort();
@@ -27,7 +35,8 @@ export function ledgerKinds(vm: ArenaVM): string[] {
 
 export interface CellView { rows: number; repeats: number; text: string; dup: boolean }
 export function cellView(l: LaneVM, kind: string): CellView {
-  const c = l.ledger[kind] ?? { rows: 0, repeats: 0 };
+  const c = { rows: 0, repeats: 0 };
+  for (const [k, v] of Object.entries(l.ledger)) if (canonKind(k) === kind) { c.rows += v.rows; c.repeats += v.repeats; }
   return { rows: c.rows, repeats: c.repeats, dup: c.repeats > 0, text: c.repeats > 0 ? `${c.rows} +${c.repeats}` : String(c.rows) };
 }
 
@@ -65,7 +74,12 @@ export function avgStarsText(l: LaneVM): string {
 export class RankBoard {
   private rows = new Map<number, HTMLElement>();
   private sig = '';
-  constructor(private host: HTMLElement) {}
+  constructor(private host: HTMLElement) {
+    const head = document.createElement('div');
+    head.className = 'rb-head';
+    head.innerHTML = '<span></span><span>Lane</span><span title="score">Score</span><span title="average stars (out of 5)">Stars</span><span title="orders completed / failed">Done/Lost</span><span title="duplicate side effects">Dupes</span><span></span>';
+    host.appendChild(head);
+  }
   update(vm: ArenaVM): void {
     const ranked = rankLanes(vm.lanes);
     const sig = ranked.map((l) => `${l.lane}:${l.score}:${avgStarsText(l)}:${l.counts.completed}:${l.counts.failed}:${l.counts.repeats}:${l.mode}`).join('|');
@@ -78,7 +92,7 @@ export class RankBoard {
       let el = this.rows.get(l.lane);
       if (!el) { el = document.createElement('div'); el.className = 'rb-row'; this.host.appendChild(el); this.rows.set(l.lane, el); }
       const st = stateIcon(l.mode);
-      el.style.transform = `translateY(${i * ROW_H}px)`;
+      el.style.transform = `translateY(${HEAD_H + i * ROW_H}px)`;
       el.className = `rb-row rb-${l.mode}`;
       el.innerHTML = `<span class="rb-rank">${nums[i] === 1 ? rankGlyph(0, l.score) : String(nums[i])}</span>`
         + `<span class="rb-name">${esc(tierName(l.tier))} <i>#${l.lane}</i></span>`
@@ -104,7 +118,7 @@ export class LedgerPanel {
     const sig = kinds.join() + '#' + vm.lanes.map((l) => `${l.lane}:${l.counts.completed}:${kinds.map((k) => cellView(l, k).text).join(',')}`).join('|') + '#' + flash;
     if (sig === this.sig) return;
     this.sig = sig;
-    const head = `<tr><th>Lane</th>${kinds.map((k) => `<th>${esc(kindLabel(k, kinds.includes('charge')))}</th>`).join('')}</tr>`;
+    const head = `<tr><th>Lane</th>${kinds.map((k) => { const full = kindLabel(k, kinds.includes('charge')); return `<th title="${esc(full)} written to the outside world">${esc(ledgerHeader(full))}</th>`; }).join('')}</tr>`;
     const rows = vm.lanes.map((l) => {
       const cells = kinds.map((k) => {
         const c = cellView(l, k);
@@ -114,7 +128,7 @@ export class LedgerPanel {
       }).join('');
       return `<tr><th>${esc(tierName(l.tier))} <i>#${l.lane}</i></th>${cells}<td class="lg-exp-c" title="orders completed so far">${l.counts.completed}</td></tr>`;
     }).join('');
-    this.body.querySelector('thead')!.innerHTML = head.replace('</tr>', '<th title="orders completed so far">Orders</th></tr>');
+    this.body.querySelector('thead')!.innerHTML = head.replace('</tr>', '<th title="orders completed so far">Done</th></tr>');
     this.body.querySelector('tbody')!.innerHTML = rows;
   }
 }

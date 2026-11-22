@@ -57,3 +57,12 @@
 @media (prefers-reduced-motion: no-preference) { .ws { animation: ws-in 0.25s ease-out; } }
 @keyframes ws-in { from { transform: scale(0.96); opacity: 0; } to { transform: none; opacity: 1; } }
 .ws-floor { align-self: flex-start; padding: 2px 8px; border: 2px solid #ff4d5e; border-radius: 6px; background: rgba(90,24,36,0.6); color: #ff9aa6; font-size: 13px; font-weight: 800; }
+/* Wave end card, larger so it reads at 1280 wide (design px, the stage is scaled). */
+.ws { width: 1440px; height: 880px; }
+.ws-head h2 { font-size: 30px; } .ws-head .ws-sub { font-size: 17px; }
+.ws-card { gap: 8px; padding: 12px 14px; } .ws-card h3 { font-size: 17px; } .ws-rating { font-size: 24px; } .ws-avg { font-size: 15px; }
+.ws-kv { font-size: 15px; gap: 2px 10px; } .ws-sec { font-size: 14px; margin-top: 4px; }
+.ws-card .sc { height: 110px; flex: none; }
+.ws-card .hr { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+.ws-card .hr-chip { font-size: 14px; padding: 1px 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sc-lbl { font-size: 14px; }

@@ -1,5 +1,6 @@
 // Legend modal (PT-U9, ui.md section 9): what the gear letters R J I B Q mean, plus chip states.
 import { STATE_LEGEND } from './keys';
+import { CREATURES } from '../creatures/defs';
 
 export interface GearPart { letter: 'R' | 'J' | 'I' | 'B' | 'Q'; name: string; does: string; example: string; needs: string }
 export const GEAR_PARTS: readonly GearPart[] = [
@@ -15,11 +16,20 @@ export function gearTip(p: GearPart, has: boolean): string {
   return `${p.letter} ${p.name}: ${p.does}. ${has ? 'This tier has it.' : `Add this part to survive ${p.needs}.`}`;
 }
 
+/** Tab ids of the legend modal, in order (ui.md section 9). */
+export const LEGEND_TABS = [{ id: 'gear', label: 'Gear' }, { id: 'chips', label: 'Chips' }, { id: 'creatures', label: 'Creatures' }] as const;
+
+export function creaturesHtml(): string {
+  return `<ul class="lgm-gear lgm-cr">${CREATURES.map((c) => `<li><b>${c.name}</b> ${c.does}</li>`).join('')}</ul>`;
+}
+
 export function legendHtml(): string {
-  return `<h2>Gear</h2><ul class="lgm-gear">${GEAR_PARTS.map((p) =>
+  const bar = `<div class="lgm-tabs" role="tablist">${LEGEND_TABS.map((t, i) => `<button type="button" role="tab" class="lgm-tab${i === 0 ? ' lgm-tab--on' : ''}" data-tab="${t.id}" aria-selected="${i === 0}">${t.label}</button>`).join('')}</div>`;
+  return `${bar}<section class="lgm-pane" data-pane="gear"><h2>Gear</h2><ul class="lgm-gear">${GEAR_PARTS.map((p) =>
     `<li title="${gearTip(p, true)}"><b class="lgm-l">${p.letter}</b> <b>${p.name}</b> (${p.does}). <span class="lgm-ex">${p.example}</span></li>`).join('')}</ul>
     <h2>Intensity dial</h2><ul class="lgm-gear"><li><b>1 to 10</b> how many faults hit each order, how many at once, how many are unknown. The default is 3, calm.</li><li><b class="lgm-red">11 THROW EVERYTHING</b> a fault at every stage of every order. A stress test.</li><li><b>RAMP</b> raises the dial by one every few finished orders.</li></ul>
-    <h2>Chips</h2><ul class="lg-list">${STATE_LEGEND.map((s) => `<li class="lg-i lg-${s.state}"><span aria-hidden="true">${s.icon}</span> ${s.word}</li>`).join('')}</ul>`;
+    </section><section class="lgm-pane hidden" data-pane="chips"><h2>Chips</h2><ul class="lg-list">${STATE_LEGEND.map((s) => `<li class="lg-i lg-${s.state}"><span aria-hidden="true">${s.icon}</span> ${s.word}</li>`).join('')}</ul>
+    </section><section class="lgm-pane hidden" data-pane="creatures"><h2>Creatures and the fault each causes</h2>${creaturesHtml()}</section>`;
 }
 
 export class LegendModal {
@@ -33,6 +43,14 @@ export class LegendModal {
     this.el.innerHTML = `<div class="lgm-card"><button type="button" class="btn btn--ghost lgm-x" aria-label="Close legend">&times;</button>${legendHtml()}</div>`;
     parent.append(this.el);
     opener.addEventListener('click', () => this.toggle());
+    this.el.addEventListener('click', (e) => {
+      const tab = (e.target as HTMLElement).closest<HTMLElement>('.lgm-tab');
+      if (tab) {
+        this.el.querySelectorAll<HTMLElement>('.lgm-tab').forEach((t) => { const on = t === tab; t.classList.toggle('lgm-tab--on', on); t.setAttribute('aria-selected', String(on)); });
+        this.el.querySelectorAll<HTMLElement>('.lgm-pane').forEach((p) => p.classList.toggle('hidden', p.dataset.pane !== tab.dataset.tab));
+        return;
+      }
+    });
     this.el.addEventListener('click', (e) => { if (e.target === this.el || (e.target as HTMLElement).closest('.lgm-x')) this.toggle(false); });
     window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && this.isOpen()) this.toggle(false); });
   }
