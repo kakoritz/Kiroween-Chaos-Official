@@ -2,7 +2,7 @@
 import { normReview, starGlyphs, starText, starTone, type Review } from './lane-popup-model';
 import { ratingFor, ratingTone } from './laps-model';
 
-export const REVIEW_CARD_MS = 4000;
+export const REVIEW_CARD_MS = 3000;
 
 export type GhostMood = 'delighted' | 'neutral' | 'angry';
 
