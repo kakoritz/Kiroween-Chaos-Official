@@ -3,7 +3,7 @@ import type { HauntEvent } from '@haunt/shared';
 import { validateEvents } from '../src/contract/validate';
 
 // Contract v1.1 ordering rules 40 to 47. Each rule has a clean stream that passes and a negative stream that fails.
-const STAGES = ['intake', 'account', 'payment', 'confirmation', 'dispatch', 'updates', 'tracking', 'handoff'];
+const STAGES = ['account', 'create', 'submit', 'payment', 'confirmation', 'receive', 'process', 'updates', 'ship', 'transit', 'handoff'];
 
 type Emit = (type: string, detail?: any, extra?: any) => void;
 
@@ -24,7 +24,7 @@ function build(fn: (e: Emit) => void, minor = 1): HauntEvent[] {
   return out;
 }
 
-const lap = (o: any = {}): any => ({ ms: 4000, workMs: 3000, attempts: 8, retries: 0, downtimeMs: 0, issues: [], recoveries: [], ...o });
+const lap = (o: any = {}): any => ({ ms: 4000, workMs: 3000, attempts: 11, retries: 0, downtimeMs: 0, issues: [], recoveries: [], ...o });
 const head = (e: Emit): void => {
   e('hello');
   e('wave_start', { orders: 2, seed: 7, tiers: 'race', lanes: 1, speed: 1, app: 'orders', pace: 'show' });
@@ -117,9 +117,9 @@ describe('contract v1.1 rules 40 to 47', () => {
       const ev = build((e) => {
         head(e);
         e('order_start', { index: 1, total: 2 }, { order: 'ord-0001' });
-        e('stage_start', { attempt: 1 }, { order: 'ord-0001', stage: 'intake' });
-        e('stage_fail', { error: 'boom', retryable: false, attempt: 1 }, { order: 'ord-0001', stage: 'intake' });
-        e('order_failed', { stage: 'intake', error: 'boom', outcome: 'cancelled', reason: 'cancelled', cancelMs: 900, returnMs: 1800, lap: lap({ issues: [{ stage: 'intake', count: 1 }] }) }, { order: 'ord-0001' });
+        e('stage_start', { attempt: 1 }, { order: 'ord-0001', stage: 'account' });
+        e('stage_fail', { error: 'boom', retryable: false, attempt: 1 }, { order: 'ord-0001', stage: 'account' });
+        e('order_failed', { stage: 'account', error: 'boom', outcome: 'cancelled', reason: 'cancelled', cancelMs: 900, returnMs: 1800, lap: lap({ issues: [{ stage: 'account', count: 1 }] }) }, { order: 'ord-0001' });
         e('review', reviewDetail('ord-0001', 1, { stars: 1, max: 5, count: 1 }), { order: 'ord-0001' });
         e('order_start', { index: 2, total: 2 }, { order: 'ord-0002', dt: 2000 });
         e('wave_end', { stopped: true, summary: summary() });
@@ -133,13 +133,13 @@ describe('contract v1.1 rules 40 to 47', () => {
       const ev = build((e) => {
         head(e);
         e('order_start', { index: 1, total: 1, grabMs: 100 }, { order: 'ord-0001' });
-        e('stage_start', { attempt: 1 }, { order: 'ord-0001', stage: 'intake', dt: 100 });
-        e('stage_done', { ms: 1, skipped: false, walkMs: 500 }, { order: 'ord-0001', stage: 'intake' });
+        e('stage_start', { attempt: 1 }, { order: 'ord-0001', stage: 'account', dt: 100 });
+        e('stage_done', { ms: 1, skipped: false, walkMs: 500 }, { order: 'ord-0001', stage: 'account' });
         e('process_dead', { reason: 'crash', restartInMs: 100 });
         e('process_up', { attempt: 2 }, { dt: 100 });
         e('recover_start', { action: 'restart', depth: 0 });
         e('recover_done', { action: 'restart', ms: 5, depth: 0 });
-        e('stage_start', { attempt: 1 }, { order: 'ord-0001', stage: 'intake', dt: 5 });
+        e('stage_start', { attempt: 1 }, { order: 'ord-0001', stage: 'account', dt: 5 });
         e('wave_end', { stopped: true, summary: summary() });
       });
       expect(rules(ev)).not.toContain('R40');
@@ -162,11 +162,11 @@ describe('contract v1.1 rules 40 to 47', () => {
       const ev = build((e) => {
         head(e);
         e('order_start', { index: 1, total: 1 }, { order: 'ord-0001' });
-        e('stage_start', { attempt: 1 }, { order: 'ord-0001', stage: 'intake' });
-        e('stage_fail', { error: 'x', retryable: true, attempt: 1 }, { order: 'ord-0001', stage: 'intake' });
+        e('stage_start', { attempt: 1 }, { order: 'ord-0001', stage: 'account' });
+        e('stage_fail', { error: 'x', retryable: true, attempt: 1 }, { order: 'ord-0001', stage: 'account' });
         e('recover_start', { action: 'retry', depth: 0 });
         e('recover_done', { action: 'retry', ms: 5, depth: 0 });
-        e('stage_done', { ms: 5, skipped: false }, { order: 'ord-0001', stage: 'intake' });
+        e('stage_done', { ms: 5, skipped: false }, { order: 'ord-0001', stage: 'account' });
         for (const s of STAGES.slice(1)) {
           e('stage_start', { attempt: 1 }, { order: 'ord-0001', stage: s });
           e('stage_done', { ms: 5, skipped: false }, { order: 'ord-0001', stage: s });
@@ -201,9 +201,9 @@ describe('contract v1.1 rules 40 to 47', () => {
       const ev = build((e) => {
         head(e);
         e('order_start', { index: 1, total: 1 }, { order: 'ord-0001' });
-        e('stage_start', { attempt: 1 }, { order: 'ord-0001', stage: 'intake' });
-        e('stage_fail', { error: 'boom', retryable: false, attempt: 1 }, { order: 'ord-0001', stage: 'intake' });
-        e('order_failed', { stage: 'intake', error: 'boom', outcome: 'cancelled', reason: 'cancelled', lap: lap({ issues: [{ stage: 'intake', count: 1 }] }) }, { order: 'ord-0001' });
+        e('stage_start', { attempt: 1 }, { order: 'ord-0001', stage: 'account' });
+        e('stage_fail', { error: 'boom', retryable: false, attempt: 1 }, { order: 'ord-0001', stage: 'account' });
+        e('order_failed', { stage: 'account', error: 'boom', outcome: 'cancelled', reason: 'cancelled', lap: lap({ issues: [{ stage: 'account', count: 1 }] }) }, { order: 'ord-0001' });
         e('review', reviewDetail('ord-0001', 3, { stars: 3, max: 5, count: 1 }), { order: 'ord-0001' });
         e('wave_end', { stopped: true, summary: summary() });
       });
@@ -235,7 +235,7 @@ describe('contract v1.1 rules 40 to 47', () => {
       head(e);
       const ord = 'ord-0001';
       e('order_start', { index: 1, total: 1 }, { order: ord });
-      for (const s of STAGES.slice(0, 3)) {
+      for (const s of STAGES.slice(0, STAGES.indexOf('confirmation'))) {
         e('stage_start', { attempt: 1 }, { order: ord, stage: s });
         e('stage_done', { ms: 5, skipped: false }, { order: ord, stage: s });
       }
@@ -243,7 +243,7 @@ describe('contract v1.1 rules 40 to 47', () => {
       e('stage_start', { attempt: 1 }, { order: ord, stage: 'confirmation' });
       e('stage_fail', { error: 'wrong_order', retryable: false, attempt: 1 }, { order: ord, stage: 'confirmation' });
       if (!tweak.skipNeeded) e('decision_needed', { order: ord, kind: 'wrong_order', detectedAt: 'confirmation', options: ['refund', 'discount', 'redo'], defaultChoice: 'refund', timeoutMs: 8000 }, { order: ord });
-      if (tweak.stageBeforeMade) e('stage_start', { attempt: 2 }, { order: ord, stage: 'dispatch' });
+      if (tweak.stageBeforeMade) e('stage_start', { attempt: 2 }, { order: ord, stage: 'ship' });
       e('decision_made', { order: ord, choice, source }, { order: ord });
       if (choice === 'refund') {
         if (tweak.refundEffect !== false) e('effect', { kind: 'refund', key: `${ord}:charge`, replayed: false }, { order: ord });
@@ -283,12 +283,12 @@ describe('contract v1.1 rules 40 to 47', () => {
       head(e);
       const ord = 'ord-0001';
       e('order_start', { index: 1, total: 1 }, { order: ord });
-      e('stage_start', { attempt: 1 }, { order: ord, stage: 'intake' });
-      e('stage_fail', { error: 'x', retryable: true, attempt: 1 }, { order: ord, stage: 'intake' });
+      e('stage_start', { attempt: 1 }, { order: ord, stage: 'account' });
+      e('stage_fail', { error: 'x', retryable: true, attempt: 1 }, { order: ord, stage: 'account' });
       if (scoreAfter === 'stage_fail') e('score', { delta: scoreDelta, total: scoreDelta, reason: 'downtime' }, { order: ord });
       e('recover_start', { action: 'retry', depth: 0 });
       e('recover_done', { action: 'retry', ms: 5, depth: 0 });
-      e('stage_done', { ms: 5, skipped: false }, { order: ord, stage: 'intake' });
+      e('stage_done', { ms: 5, skipped: false }, { order: ord, stage: 'account' });
       if (scoreAfter === 'stage_done') e('score', { delta: scoreDelta, total: scoreDelta, reason: 'downtime' }, { order: ord });
       e('wave_end', { stopped: true, summary: summary() });
     });
@@ -326,8 +326,8 @@ describe('contract v1.1 rules 40 to 47', () => {
       const ord = 'ord-0001';
       e('order_start', { index: 1, total: 1 }, { order: ord });
       if (opts.hit !== false) e('chaos', { creature: 'reaper', fault: 'crash', scope: 'outer', depth: 1, injectedAt: 'before', source: 'boss' });
-      e('stage_start', { attempt: 1 }, { order: ord, stage: 'intake' });
-      e('stage_done', { ms: 5, skipped: false }, { order: ord, stage: 'intake' });
+      e('stage_start', { attempt: 1 }, { order: ord, stage: 'account' });
+      e('stage_done', { ms: 5, skipped: false }, { order: ord, stage: 'account' });
       for (const s of STAGES.slice(1)) {
         e('stage_start', { attempt: 1 }, { order: ord, stage: s });
         e('stage_done', { ms: 5, skipped: false }, { order: ord, stage: s });

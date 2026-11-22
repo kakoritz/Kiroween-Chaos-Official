@@ -17,9 +17,9 @@ describe('night plans 1 to 3 (cp-night-1-3)', () => {
     ]);
   });
 
-  it('night 3 hits intake with missing, bad and duplicate input', () => {
+  it('night 3 hits create with missing, bad and duplicate input', () => {
     expect(nightAttacks(night(3)).map((x) => `${x.stage}:${x.fault}`)).toEqual([
-      'intake:missing_file', 'intake:malformed_payload', 'intake:duplicate_request',
+      'create:missing_file', 'create:malformed_payload', 'create:duplicate_request',
     ]);
   });
 });

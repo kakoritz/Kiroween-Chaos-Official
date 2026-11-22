@@ -19,9 +19,9 @@ describe('wrong order decisions (PT-C8, table L8)', () => {
 
   for (const c of L8) {
     it(`L8 ${c.tier}: ${c.choice}`, () => {
-      expect(resolveOutcome('orders', c.tier, 'order_typo', 'intake')!.outcome).toBe(c.outcome);
+      expect(resolveOutcome('orders', c.tier, 'order_typo', 'create')!.outcome).toBe(c.outcome);
       expect(resolveOutcome('orders', c.tier, 'order_typo', 'payment')).toBeNull();
-      const arms = { 1: [{ id: 'w1', fault: 'order_typo', source: 'demo' as const, creature: 'prankster', when: { order: 1, stage: 'intake', attempt: 1, delay: 100 } }] };
+      const arms = { 1: [{ id: 'w1', fault: 'order_typo', source: 'demo' as const, creature: 'prankster', when: { order: 1, stage: 'create', attempt: 1, delay: 100 } }] };
       const ev = assembleWave(planWave({ app: 'orders', seed: 7, pace: 2, orders: 2, tiers: [c.tier, c.tier] }, arms, []), BASE_TS).filter((e) => e.lane === 1);
       const types = ev.map((e) => e.type);
       const i = types.indexOf('decision_needed');

@@ -38,12 +38,37 @@ describe('validateEvents', () => {
     const ev = stream((e) => {
       start(e);
       e('order_start', 1, { index: 1, total: 1 }, ord);
+      for (const s of ['account', 'create', 'submit', 'payment', 'confirmation', 'receive', 'process', 'updates', 'ship', 'transit', 'handoff']) stage(e, s);
+      e('order_done', 1, { clean: true, ms: 1, repeats: 0 }, ord);
+      e('score', 1, { delta: 100, total: 100, reason: 'order clean' });
+      end(e);
+    });
+    expect(validateEvents(ev)).toEqual([]);
+  });
+
+  it('still accepts a recorded run with the legacy stage ids (V1_2 section 1, rule 48)', () => {
+    const ev = stream((e) => {
+      start(e);
+      e('order_start', 1, { index: 1, total: 1 }, ord);
       for (const s of ['intake', 'account', 'payment', 'confirmation', 'dispatch', 'updates', 'tracking', 'handoff']) stage(e, s);
       e('order_done', 1, { clean: true, ms: 1, repeats: 0 }, ord);
       e('score', 1, { delta: 100, total: 100, reason: 'order clean' });
       end(e);
     });
     expect(validateEvents(ev)).toEqual([]);
+  });
+
+  it('checks stage ids against the hello stage list when the server sends one', () => {
+    const ev = stream((e) => {
+      start(e);
+      e('order_start', 1, { index: 1, total: 1 }, ord);
+      for (const s of ['login', 'pay']) stage(e, s);
+      e('order_done', 1, { clean: true, ms: 1, repeats: 0 }, ord);
+      e('score', 1, { delta: 100, total: 100, reason: 'order clean' });
+      end(e);
+    });
+    (ev[0] as any).stages = [{ id: 'login', label: 'Login', kind: 'effect' }, { id: 'pay', label: 'Pay', kind: 'effect' }];
+    expect(rules(ev)).not.toContain('R19');
   });
 
   it('rejects a lane on a global event and a missing wave (rule 16)', () => {
@@ -57,7 +82,7 @@ describe('validateEvents', () => {
     const ev = stream((e) => {
       start(e);
       e('order_start', 1, { index: 1, total: 1 }, ord);
-      stage(e, 'intake');
+      stage(e, 'account');
       e('stage_start', 1, { attempt: 5 }, { ...ord, stage: 'payment' });
       e('stage_done', 1, { ms: 1, skipped: false }, { ...ord, stage: 'payment' });
       end(e);
@@ -116,7 +141,7 @@ describe('validateEvents', () => {
     const ev = stream((e) => {
       start(e);
       e('order_start', 1, { index: 1, total: 1 }, ord);
-      stage(e, 'intake');
+      stage(e, 'account');
       e('stage_start', 1, { attempt: 1 }, { ...ord, stage: 'account' });
       e('stage_fail', 1, { error: 'x', retryable: true, attempt: 1 }, { ...ord, stage: 'account' });
       e('recover_start', 1, { action: 'retry', depth: 0 });
@@ -131,12 +156,12 @@ describe('validateEvents', () => {
     const ev = stream((e) => {
       start(e);
       e('order_start', 1, { index: 1, total: 1 }, ord);
-      stage(e, 'intake');
-      e('stage_start', 1, { attempt: 1 }, { ...ord, stage: 'account' });
-      e('stage_fail', 1, { error: 'x', retryable: true, attempt: 1 }, { ...ord, stage: 'account' });
+      stage(e, 'account');
+      e('stage_start', 1, { attempt: 1 }, { ...ord, stage: 'create' });
+      e('stage_fail', 1, { error: 'x', retryable: true, attempt: 1 }, { ...ord, stage: 'create' });
       e('recover_start', 1, { action: 'retry', depth: 0 });
       e('recover_done', 1, { action: 'retry', ms: 500, depth: 0 });
-      e('stage_done', 1, { ms: 700, skipped: false }, { ...ord, stage: 'account' });
+      e('stage_done', 1, { ms: 700, skipped: false }, { ...ord, stage: 'create' });
       end(e);
     });
     // The order is left in flight at wave_end (R4); nothing else is wrong.

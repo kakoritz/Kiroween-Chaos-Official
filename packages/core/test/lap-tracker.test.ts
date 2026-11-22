@@ -9,8 +9,8 @@ const ev = (type: string, ts: number, order?: string, stage?: string, detail: Re
 
 const clean = (order: string, at: number, ms = 4000): HauntEvent[] => [
   ev('order_start', at, order, undefined, { grabMs: 100 }),
-  ev('stage_start', at + 100, order, 'intake'),
-  ev('stage_done', at + ms - 100, order, 'intake', { walkMs: 0 }),
+  ev('stage_start', at + 100, order, 'create'),
+  ev('stage_done', at + ms - 100, order, 'create', { walkMs: 0 }),
   ev('order_done', at + ms, order, undefined, {}),
 ];
 
@@ -32,17 +32,17 @@ describe('LapTracker (PT-C3)', () => {
     const t = new LapTracker({ app: 'orders', pace: 1, speed: 1 });
     const out = run(t, [
       ev('order_start', T0, 'ord-0001', undefined, { grabMs: 0 }),
-      ev('stage_start', T0, 'ord-0001', 'intake'),
-      ev('stage_fail', T0 + 1000, 'ord-0001', 'intake', { error: 'x' }),
+      ev('stage_start', T0, 'ord-0001', 'create'),
+      ev('stage_fail', T0 + 1000, 'ord-0001', 'create', { error: 'x' }),
       ev('recover_start', T0 + 1000, 'ord-0001', undefined, { action: 'retry' }),
-      ev('stage_fail', T0 + 3000, 'ord-0001', 'intake', { error: 'x' }),
+      ev('stage_fail', T0 + 3000, 'ord-0001', 'create', { error: 'x' }),
       ev('recover_done', T0 + 6000, 'ord-0001', undefined, { action: 'retry' }),
-      ev('stage_done', T0 + 7000, 'ord-0001', 'intake'),
+      ev('stage_done', T0 + 7000, 'ord-0001', 'create'),
       ev('order_done', T0 + 7000, 'ord-0001'),
     ]);
     const lap = (out.find((e) => e.type === 'order_done')!.detail as any).lap;
-    expect(lap).toMatchObject({ ms: 7000, attempts: 3, retries: 1, downtimeMs: 6000, issues: [{ stage: 'intake', count: 2 }] });
-    expect(lap.recoveries).toEqual([{ stage: 'intake', action: 'retry', ms: 5000 }]);
+    expect(lap).toMatchObject({ ms: 7000, attempts: 3, retries: 1, downtimeMs: 6000, issues: [{ stage: 'create', count: 2 }] });
+    expect(lap.recoveries).toEqual([{ stage: 'create', action: 'retry', ms: 5000 }]);
     expect((out.at(-1)!.detail as any).stars).toBeLessThan(5);
   });
 

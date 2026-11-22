@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { POST_ROUTES, Provider, type FaultSpec, type ProviderClock } from '../../core/src/provider';
 import { ProcessKilled, Sdk, type HookPoint, type Host, type Transport } from '../src/sdk';
 import {
-  InputError, LaneHalted, Pipeline, STAGES, TIERS, baselineMs, generateOrders, stageDuration, tierById,
+  InputError, LaneHalted, Pipeline, STAGES, customerEmail, TIERS, baselineMs, generateOrders, stageDuration, tierById,
   type OrderData, type TierDef,
 } from '../src/pipeline';
 
@@ -90,7 +90,9 @@ class World {
 }
 
 const ID = 'ord-0001';
-const CLEAN = { account: 1, charge: 1, email: 1, dispatch: 1, notify: 2 };
+// One row per effect of the 11-step order: account, order (submit), charge, email (receipt), store (receive + process), dispatch (ship), notify x2.
+const CLEAN = { account: 1, order: 1, charge: 1, email: 1, store: 2, dispatch: 1, notify: 2 };
+const DOUBLE = Object.fromEntries(Object.entries(CLEAN).map(([k, v]) => [k, v * 2]));
 
 /** Runs the order, kills once at `at`, restarts a fresh process, and returns the ledger. */
 async function crashAndRestart(tier: string, at: { point: HookPoint; stage?: string }): Promise<Record<string, number>> {
@@ -103,8 +105,10 @@ async function crashAndRestart(tier: string, at: { point: HookPoint; stage?: str
 }
 
 describe('pipeline definition', () => {
-  it('has eight stages in order and five tiers with the documented parts', () => {
-    expect(STAGES.map((s) => s.id)).toEqual(['intake', 'account', 'payment', 'confirmation', 'dispatch', 'updates', 'tracking', 'handoff']);
+  it('has eleven stages in order, account first, and five tiers with the documented parts', () => {
+    expect(STAGES.map((s) => s.id)).toEqual(['account', 'create', 'submit', 'payment', 'confirmation', 'receive', 'process', 'updates', 'ship', 'transit', 'handoff']);
+    expect(STAGES.map((s) => s.label)).toEqual(['Account or login', 'Create order', 'Submit order', 'Payment', 'Confirmation', 'Store receives', 'Process order', 'Order updates', 'Ship and pack', 'Delivery updates', 'Handoff']);
+    expect(STAGES[0]!.id).toBe('account');
     expect(TIERS.map((t) => [t.id, t.lane, t.use.length])).toEqual([
       ['rookie', 1, 0], ['retrier', 2, 1], ['journaler', 3, 2], ['reconciler', 4, 3], ['phoenix', 5, 5],
     ]);
@@ -115,6 +119,8 @@ describe('pipeline definition', () => {
     expect(a).toEqual(generateOrders('s', 12));
     expect(new Set(a.map((o) => o.email)).size).toBe(12);
     expect(a[0]!.id).toBe('ord-0001');
+    // The customer is derived from the order id, so the account stage needs no input file.
+    for (const o of a) expect(customerEmail(o.id)).toBe(o.email);
     for (const o of a) expect(o.total).toBe(o.items.reduce((x, i) => x + i.qty * i.price, 0));
   });
 
@@ -150,13 +156,13 @@ describe('clean runs', () => {
 
 describe('acceptance table A through the pipeline', () => {
   it('A1 crash at payment before_effect: Rookie repeats the account', async () => {
-    expect(await crashAndRestart('rookie', { point: 'before_effect', stage: 'payment' })).toEqual({ ...CLEAN, account: 2 });
+    expect(await crashAndRestart('rookie', { point: 'before_effect', stage: 'payment' })).toEqual({ ...CLEAN, account: 2, order: 2 });
     expect(await crashAndRestart('journaler', { point: 'before_effect', stage: 'payment' })).toEqual(CLEAN);
   });
 
   it('A2 crash at payment after_effect_before_journal: only idempotency prevents the second charge', async () => {
     const at = { point: 'after_effect_before_journal' as const, stage: 'payment' };
-    expect(await crashAndRestart('rookie', at)).toEqual({ ...CLEAN, account: 2, charge: 2 });
+    expect(await crashAndRestart('rookie', at)).toEqual({ ...CLEAN, account: 2, order: 2, charge: 2 });
     expect(await crashAndRestart('journaler', at)).toEqual({ ...CLEAN, charge: 2 });
     expect(await crashAndRestart('reconciler', at)).toEqual(CLEAN);
     expect(await crashAndRestart('phoenix', at)).toEqual(CLEAN);
@@ -165,26 +171,33 @@ describe('acceptance table A through the pipeline', () => {
   it('A3 crash at payment after_journal: Journaler does not repeat', async () => {
     const at = { point: 'after_journal' as const, stage: 'payment' };
     expect(await crashAndRestart('journaler', at)).toEqual(CLEAN);
-    expect(await crashAndRestart('retrier', at)).toEqual({ ...CLEAN, account: 2, charge: 2 });
+    expect(await crashAndRestart('retrier', at)).toEqual({ ...CLEAN, account: 2, order: 2, charge: 2 });
   });
 
-  it('A5 crash at intake mid_stage repeats nothing', async () => {
-    for (const t of TIERS) expect(await crashAndRestart(t.id, { point: 'mid_stage', stage: 'intake' })).toEqual(CLEAN);
+  it('A5 crash at account before_effect repeats nothing (no effect happened yet)', async () => {
+    for (const t of TIERS) expect(await crashAndRestart(t.id, { point: 'before_effect', stage: 'account' })).toEqual(CLEAN);
   });
 
-  it('A6 crash at tracking mid_stage: Rookie repeats all five kinds, Journaler none', async () => {
-    const at = { point: 'mid_stage' as const, stage: 'tracking' };
-    expect(await crashAndRestart('rookie', at)).toEqual({ account: 2, charge: 2, email: 2, dispatch: 2, notify: 4 });
-    expect(await crashAndRestart('retrier', at)).toEqual({ account: 2, charge: 2, email: 2, dispatch: 2, notify: 4 });
+  it('A5b crash at create mid_stage: only a journal keeps the account from repeating', async () => {
+    const at = { point: 'mid_stage' as const, stage: 'create' };
+    expect(await crashAndRestart('rookie', at)).toEqual({ ...CLEAN, account: 2 });
+    expect(await crashAndRestart('retrier', at)).toEqual({ ...CLEAN, account: 2 });
+    for (const t of ['journaler', 'reconciler', 'phoenix']) expect(await crashAndRestart(t, at)).toEqual(CLEAN);
+  });
+
+  it('A6 crash at transit mid_stage: Rookie repeats every kind, Journaler none', async () => {
+    const at = { point: 'mid_stage' as const, stage: 'transit' };
+    expect(await crashAndRestart('rookie', at)).toEqual(DOUBLE);
+    expect(await crashAndRestart('retrier', at)).toEqual(DOUBLE);
     expect(await crashAndRestart('journaler', at)).toEqual(CLEAN);
   });
 
-  it('resumes tracking with the journaled shipment after a restart (replay-skipped dispatch)', async () => {
+  it('resumes transit with the journaled shipment after a restart (replay-skipped ship)', async () => {
     for (const tier of ['journaler', 'reconciler', 'phoenix']) {
       const w = new World();
       const polled: string[] = [];
       const t = tierById(tier);
-      w.killAt = { point: 'mid_stage', stage: 'tracking' };
+      w.killAt = { point: 'mid_stage', stage: 'transit' };
       await expect((await w.start(t)).run(ID)).rejects.toBeInstanceOf(ProcessKilled);
       const p = await w.start(t);
       const inner = (p as unknown as { d: { pollTracking(s: string): Promise<boolean> } }).d;
@@ -225,6 +238,27 @@ describe('input errors by tier (runtime.md section 7)', () => {
     await expect(run('rookie')).rejects.toBeInstanceOf(LaneHalted);
     for (const t of ['retrier', 'journaler', 'reconciler']) expect(await run(t)).toBe('failed');
     expect(await run('phoenix')).toBe('parked');
+  });
+
+  it('input faults hit the create stage, after the account stage already ran', async () => {
+    for (const bad of [missing, malformed]) {
+      const w = new World();
+      bad(w);
+      expect(await (await w.start(tierById('retrier'))).run(ID)).toBe('failed');
+      expect(w.msgs.filter((m) => m.type === 'stage_start').map((m) => m.stage)).toEqual(['account', 'create']);
+      expect(w.rows()).toEqual({ account: 1 });
+    }
+  });
+
+  it('the account stage does not read the input file', async () => {
+    const w = new World();
+    let reads = 0;
+    const real = w.readInput;
+    w.readInput = async (id) => { reads++; return real(id); };
+    w.killAt = { point: 'mid_stage', stage: 'create' };
+    await expect((await w.start(tierById('journaler'))).run(ID)).rejects.toBeInstanceOf(ProcessKilled);
+    expect(reads).toBe(0);
+    expect(w.rows()).toEqual({ account: 1 });
   });
 
   it('A16 malformed payload: Rookie halts, Retrier to Reconciler fail, Phoenix quarantines', async () => {

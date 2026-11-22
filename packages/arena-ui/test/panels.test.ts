@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { applyEvent, emptyVM, newLane, reconcileLedger, type ArenaVM } from '../src/arena/model';
-import { cellView, DEFAULT_KINDS, ledgerKinds, rankLanes, stateIcon } from '../src/arena/panels';
+import { cellView, DEFAULT_KINDS, kindLabel, ledgerKinds, rankLanes, stateIcon } from '../src/arena/panels';
 import type { ArenaEvent } from '../src/api/types';
 
 const ev = (type: string, lane: number | undefined, detail: Record<string, unknown> = {}): ArenaEvent => ({ seq: 1, ts: 0, type, wave: 1, ...(lane ? { lane } : {}), detail });
@@ -59,6 +59,16 @@ describe('ledger', () => {
     applyEvent(vm, ev('effect', 1, { kind: 'ticket', key: 't', replayed: false }), 1);
     applyEvent(vm, ev('effect', 1, { kind: 'email', key: 'e', replayed: false }), 1);
     expect(ledgerKinds(vm)).toEqual(['email', 'ticket']);
+  });
+  it('ledger columns of the 11-step order: Accounts, Orders, Charges, Receipts, Store, Shipments, Notices', () => {
+    const vm = vm2();
+    expect(DEFAULT_KINDS).toEqual(['account_create', 'order', 'charge', 'email', 'store', 'dispatch', 'notify']);
+    for (const kind of ['notify', 'store', 'order', 'dispatch', 'email', 'charge', 'account_create']) applyEvent(vm, ev('effect', 1, { kind, key: kind, replayed: false }), 1);
+    const kinds = ledgerKinds(vm);
+    expect(kinds).toEqual(DEFAULT_KINDS);
+    expect(kinds.map((k) => kindLabel(k, true))).toEqual(['Accounts', 'Orders', 'Charges', 'Receipts', 'Store', 'Shipments', 'Notices']);
+    // The inbox app has no charge column: its email stays "Emails".
+    expect(kindLabel('email')).toBe('Emails');
   });
   it('reconciles with the server ledger', () => {
     const vm = vm2();

@@ -10,7 +10,7 @@ describe('workflow lab model (SH-U1)', () => {
   });
   it('preset copies do not share state', () => {
     const a = presetModel('orders'); a.stages[0]!.id = 'changed';
-    expect(presetModel('orders').stages[0]!.id).toBe('intake');
+    expect(presetModel('orders').stages[0]!.id).toBe('account');
   });
   it('round trips pasted haunt.yaml', () => {
     const m = presetModel('payments');

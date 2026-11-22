@@ -13,7 +13,8 @@ const LANE = 'L1';
 const SEED = 'seed-1';
 const ID = 'ord-0001';
 const PATHS = Object.fromEntries(Object.entries(POST_ROUTES).map(([p, k]) => [k, p]));
-const CLEAN: Record<string, number> = { account: 1, charge: 1, email: 1, dispatch: 1, notify: 2 };
+// One row per effect of the 11-step order (submit = order, receive + process = store x2, ship = dispatch).
+const CLEAN: Record<string, number> = { account: 1, order: 1, charge: 1, email: 1, store: 2, dispatch: 1, notify: 2 };
 const TIER_IDS = ['rookie', 'retrier', 'journaler', 'reconciler', 'phoenix'] as const;
 const CLIENT_TIMEOUT_MS = 1500;
 type Kill = { point: HookPoint; stage?: string };
@@ -143,7 +144,7 @@ function code(result: string, rows: Record<string, number>): string {
   const extra = Object.keys(CLEAN).filter((k) => (rows[k] ?? 0) > CLEAN[k]!);
   const base = result === 'parked>done' ? 'PARKED>' : '';
   if (extra.length === 0) return `${base}OK`;
-  if (extra.length === 5) return `${base}REPEAT all x2`;
+  if (extra.length === Object.keys(CLEAN).length) return `${base}REPEAT all x2`;
   return `${base}REPEAT ${extra.map((k) => `${k} x${rows[k]! / CLEAN[k]!}`).join(', ')}`;
 }
 
@@ -161,15 +162,17 @@ const recoveryHook = (tier: string): HookPoint => (tier === 'rookie' || tier ===
 interface Row { id: string; setup: (tier: string) => (w: World) => void; expect: [string, string, string, string, string]; heal?: (w: World) => void }
 const PAY_A2: Kill = { point: 'after_effect_before_journal', stage: 'payment' };
 const ALL5 = 'REPEAT all x2';
-const A2: Row['expect'] = ['REPEAT account x2, charge x2', 'REPEAT account x2, charge x2', 'REPEAT charge x2', 'OK', 'OK'];
+const A2: Row['expect'] = ['REPEAT account x2, order x2, charge x2', 'REPEAT account x2, order x2, charge x2', 'REPEAT charge x2', 'OK', 'OK'];
 
 const ROWS: Row[] = [
-  { id: 'A1', setup: () => crash({ point: 'before_effect', stage: 'payment' }), expect: ['REPEAT account x2', 'REPEAT account x2', 'OK', 'OK', 'OK'] },
+  { id: 'A1', setup: () => crash({ point: 'before_effect', stage: 'payment' }), expect: ['REPEAT account x2, order x2', 'REPEAT account x2, order x2', 'OK', 'OK', 'OK'] },
   { id: 'A2', setup: () => crash(PAY_A2), expect: A2 },
-  { id: 'A3', setup: () => crash({ point: 'after_journal', stage: 'payment' }), expect: ['REPEAT account x2, charge x2', 'REPEAT account x2, charge x2', 'OK', 'OK', 'OK'] },
+  { id: 'A3', setup: () => crash({ point: 'after_journal', stage: 'payment' }), expect: ['REPEAT account x2, order x2, charge x2', 'REPEAT account x2, order x2, charge x2', 'OK', 'OK', 'OK'] },
   { id: 'A4', setup: () => crash({ point: 'after_effect_before_journal', stage: 'account' }), expect: ['REPEAT account x2', 'REPEAT account x2', 'REPEAT account x2', 'OK', 'OK'] },
-  { id: 'A5', setup: () => crash({ point: 'mid_stage', stage: 'intake' }), expect: ['OK', 'OK', 'OK', 'OK', 'OK'] },
-  { id: 'A6', setup: () => crash({ point: 'mid_stage', stage: 'tracking' }), expect: [ALL5, ALL5, 'OK', 'OK', 'OK'] },
+  // Account comes first now: a crash while reading the input file repeats it unless there is a journal.
+  { id: 'A5', setup: () => crash({ point: 'mid_stage', stage: 'create' }), expect: ['REPEAT account x2', 'REPEAT account x2', 'OK', 'OK', 'OK'] },
+  { id: 'A5b', setup: () => crash({ point: 'before_effect', stage: 'account' }), expect: ['OK', 'OK', 'OK', 'OK', 'OK'] },
+  { id: 'A6', setup: () => crash({ point: 'mid_stage', stage: 'transit' }), expect: [ALL5, ALL5, 'OK', 'OK', 'OK'] },
   { id: 'A7', setup: () => crash(PAY_A2), expect: A2 },
   { id: 'A8', setup: (t) => crash(PAY_A2, { point: recoveryHook(t) }), expect: A2 },
   {
@@ -253,7 +256,7 @@ describe('acceptance table A, all tiers (in-process, fake clock)', () => {
   });
 });
 
-const EFFECT_STAGES = ['account', 'payment', 'confirmation', 'dispatch', 'updates'];
+const EFFECT_STAGES = ['account', 'submit', 'payment', 'confirmation', 'receive', 'process', 'updates', 'ship'];
 const POINTS: HookPoint[] = ['before_effect', 'after_effect_before_journal', 'after_journal', 'mid_stage'];
 const RUNS = 200;
 

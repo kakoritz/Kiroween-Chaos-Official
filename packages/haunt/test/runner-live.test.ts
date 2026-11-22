@@ -8,7 +8,7 @@ function setup(mode: 'off' | 'manual' | 'random', frequency = 1) {
   engine.setChaosMode({ mode, frequency, seed: 7 });
   engine.startWave(1, { orders: 4, seed: 7, tiers: 'mixed' as never, lanes: 2, speed: 1, pace: 'normal', app: 'a' }, (e) => events.push(e));
   const record = (e: HauntEvent) => events.push(e);
-  const clock = new WaveClock({ engine, record, wave: 1, orders: 4, seed: 7, frequency, laneInfo: () => ({ state: 'working', stage: 'dispatch' }) });
+  const clock = new WaveClock({ engine, record, wave: 1, orders: 4, seed: 7, frequency, laneInfo: () => ({ state: 'working', stage: 'ship' }) });
   return { events, engine, clock };
 }
 

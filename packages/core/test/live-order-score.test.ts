@@ -22,8 +22,8 @@ describe('live review score and order record (PT-C3-remainder)', () => {
     const { srv, rec, now } = await boot();
     try {
       rec(ev('order_start', now, 'ord-0001', undefined, { grabMs: 100 }));
-      rec(ev('stage_start', now + 100, 'ord-0001', 'intake'));
-      rec(ev('stage_done', now + 3900, 'ord-0001', 'intake', { walkMs: 0 }));
+      rec(ev('stage_start', now + 100, 'ord-0001', 'create'));
+      rec(ev('stage_done', now + 3900, 'ord-0001', 'create', { walkMs: 0 }));
       rec(ev('order_done', now + 4000, 'ord-0001'));
       rec(ev('order_start', now + 6000, 'ord-0002'));
       rec(ev('order_failed', now + 6100, 'ord-0002', undefined, { outcome: 'cancelled' }));
@@ -48,12 +48,12 @@ describe('live review score and order record (PT-C3-remainder)', () => {
     const { srv, url, rec, now } = await boot();
     try {
       rec(ev('order_start', now, 'ord-0001', undefined, { grabMs: 100 }));
-      rec(ev('stage_start', now + 100, 'ord-0001', 'intake'));
-      rec(ev('stage_fail', now + 600, 'ord-0001', 'intake', { error: 'boom', retryable: true }));
-      rec(ev('recover_start', now + 700, 'ord-0001', 'intake', { action: 'retry' }));
-      rec(ev('recover_done', now + 1200, 'ord-0001', 'intake', { action: 'retry', ms: 500, depth: 1 }));
-      rec(ev('stage_start', now + 1300, 'ord-0001', 'intake'));
-      rec(ev('stage_done', now + 3900, 'ord-0001', 'intake', { walkMs: 0 }));
+      rec(ev('stage_start', now + 100, 'ord-0001', 'create'));
+      rec(ev('stage_fail', now + 600, 'ord-0001', 'create', { error: 'boom', retryable: true }));
+      rec(ev('recover_start', now + 700, 'ord-0001', 'create', { action: 'retry' }));
+      rec(ev('recover_done', now + 1200, 'ord-0001', 'create', { action: 'retry', ms: 500, depth: 1 }));
+      rec(ev('stage_start', now + 1300, 'ord-0001', 'create'));
+      rec(ev('stage_done', now + 3900, 'ord-0001', 'create', { walkMs: 0 }));
       rec(ev('order_done', now + 4000, 'ord-0001'));
       const res = await fetch(`${url}/api/lane/1/order/ord-0001`);
       expect(res.status).toBe(200);
@@ -62,7 +62,7 @@ describe('live review score and order record (PT-C3-remainder)', () => {
       expect(body.lap).toBeTruthy();
       expect(body.review.stars).toBeGreaterThanOrEqual(1);
       expect(body.stages).toHaveLength(1);
-      expect(body.stages[0]).toMatchObject({ stage: 'intake', status: 'done', attempts: 2, retries: 1, recoverable: true, issues: 1, downtimeMs: 500 });
+      expect(body.stages[0]).toMatchObject({ stage: 'create', status: 'done', attempts: 2, retries: 1, recoverable: true, issues: 1, downtimeMs: 500 });
       expect(body.stages[0].recoveries).toEqual([{ startTs: now + 700, endTs: now + 1200, ms: 500, action: 'retry', depth: 1 }]);
       expect(srv.log.events.length).toBeGreaterThan(0);
       expect(body).toEqual(JSON.parse(JSON.stringify(orderRecord(srv.log.events, 1, 'ord-0001', 1))));
@@ -77,7 +77,7 @@ describe('live review score and order record (PT-C3-remainder)', () => {
 
   it('mock and live share one implementation of the record', () => {
     const events = [
-      ev('order_start', 1000, 'ord-0001'), ev('stage_start', 1100, 'ord-0001', 'intake'), ev('stage_done', 1900, 'ord-0001', 'intake'),
+      ev('order_start', 1000, 'ord-0001'), ev('stage_start', 1100, 'ord-0001', 'create'), ev('stage_done', 1900, 'ord-0001', 'create'),
       ev('order_done', 2000, 'ord-0001'),
     ].map((e) => ({ ...e, lane: 1 })) as unknown as HauntEvent[];
     expect(laneOrderRecord({ buffer: events } as any, 1, 'ord-0001')).toEqual(orderRecord(events, 1, 'ord-0001'));
