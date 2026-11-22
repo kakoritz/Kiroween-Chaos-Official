@@ -55,7 +55,7 @@ describe('live server: reads', () => {
     const cs = (await get('/api/creatures')).body as any[];
     expect(cs).toHaveLength(21);
     expect(cs.filter((c) => c.boss).map((c) => c.id).sort()).toEqual(['banshee_queen', 'headless_horseman', 'lich']);
-    expect(cs.find((c) => c.id === 'zombie').causes).toEqual(['timeout', 'comm_timeout', 'slow_link']);
+    expect(cs.find((c) => c.id === 'zombie').causes).toEqual(['timeout', 'comm_timeout', 'slow_link', 'duplicate_storm']);
     for (const c of cs) expect(c.sprite).toBe(c.id);
   });
   it('serves a display name and description for every creature', async () => {
@@ -77,7 +77,7 @@ describe('live server: reads', () => {
     const before = srv!.log.events.length;
     expect((await post('/api/app', { app: 'inbox' })).status).toBe(200);
     expect(srv!.log.events.length).toBe(before + 1);
-    expect((await get('/api/state')).body.stages.map((s: any) => s.id)).toEqual(['login', 'ingest', 'validate', 'dedupe', 'triage', 'assign', 'notify', 'escalate', 'resolve', 'close']);
+    expect((await get('/api/state')).body.stages.map((s: any) => s.id)).toEqual(['login', 'ingest', 'validate', 'dedupe', 'triage', 'assign', 'sla', 'notify', 'escalate', 'resolve', 'close']);
     expect((await post('/api/app', { app: 'x' })).body.error.code).toBe('bad_request');
   });
 });

@@ -9,11 +9,11 @@ import { LiveServer, createLiveRuntime, makeBotCommand } from '../src/live';
 import { findPython } from '../src/live/inbox-command';
 import { APP_STAGES } from '../src/live/catalog';
 import { startProvider } from '../src/provider';
+import { pyTest } from './python-skip';
 
 const root = resolve(__dirname, '../../..');
 const py = findPython();
-if (!py) console.warn('[inbox-desk] Python 3.11+ not found on PATH: the Python Ticket Desk tests are skipped.');
-const pyIt = py ? it : it.skip;
+const pyIt = pyTest(py);
 
 let srv: LiveServer | undefined;
 let stopProvider: (() => Promise<void>) | undefined;
@@ -25,9 +25,9 @@ afterEach(async () => {
 });
 
 describe('ticket desk catalog', () => {
-  it('lists the ten desk stages with stable ids', () => {
-    expect(APP_STAGES.inbox.map((s) => s.id)).toEqual(['login', 'ingest', 'validate', 'dedupe', 'triage', 'assign', 'notify', 'escalate', 'resolve', 'close']);
-    expect(APP_STAGES.inbox.filter((s) => s.kind === 'effect').map((s) => s.id)).toEqual(['assign', 'notify', 'escalate']);
+  it('lists the eleven desk stages with stable ids', () => {
+    expect(APP_STAGES.inbox.map((s) => s.id)).toEqual(['login', 'ingest', 'validate', 'dedupe', 'triage', 'assign', 'sla', 'notify', 'escalate', 'resolve', 'close']);
+    expect(APP_STAGES.inbox.filter((s) => s.kind === 'effect').map((s) => s.id)).toEqual(['login', 'assign', 'notify', 'escalate']);
   });
 });
 
@@ -86,4 +86,39 @@ describe('live ticket desk wave', () => {
     for (const lane of ['2', '3', '4', '5']) expect(dups(lane), `lane ${lane}`).toBe(0);
     expect(prov.provider.ledger('5').some((r) => r.kind === 'ticket')).toBe(true);
   }, 120_000);
+});
+
+describe('ticket desk tournament', () => {
+  pyIt('plays a tournament round on the inbox: five Python lanes, one drops, desk reviews carry the ticket labels', async () => {
+    const runDir = mkdtempSync(join(tmpdir(), 'haunt-desk-tourney-'));
+    dirs.push(runDir);
+    const prov = await startProvider({ port: 0 });
+    stopProvider = () => prov.close();
+    const rt = createLiveRuntime({
+      clock: false, travel: false,
+      botCommand: makeBotCommand({ root, runDir, providerUrl: prov.url }),
+      ledgerRows: (lane) => prov.provider.ledger(lane),
+    });
+    srv = new LiveServer({ engine: rt.live, ledger: rt.ledger });
+    const { url } = await srv.listen(0);
+    const post = async (p: string, body?: unknown) => { const r = await fetch(url + p, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body ?? {}) }); return { status: r.status, body: (await r.json()) as any }; };
+    expect((await post('/api/tournament/start', { app: 'inbox', seed: 5, speed: 4, pace: 'normal', rounds: [{ orders: 4 }, { orders: 4 }] })).status).toBe(200);
+    const types = () => srv!.log.events.map((e) => e.type);
+    for (let i = 0; i < 600 && !types().includes('awaiting_next'); i++) await new Promise((r) => setTimeout(r, 100));
+    expect(types()).toContain('awaiting_next');
+    const st = (await (await fetch(url + '/api/state')).json()) as any;
+    expect(st.app).toBe('inbox');
+    expect(st.tournament).toMatchObject({ round: 1, phase: 'awaiting_next' });
+    expect(st.tournament.alive).toHaveLength(4);
+    expect(st.corpses).toHaveLength(1);
+    const reviews = srv.log.events.filter((e) => e.type === 'review') as any[];
+    expect(reviews.length).toBeGreaterThan(0);
+    expect(reviews[0].detail.subLabels).toMatchObject({ timeliness: 'First response', delivery: 'SLA' });
+    expect((await post('/api/next')).status).toBe(200);
+    for (let i = 0; i < 600 && !types().includes('tournament_end'); i++) await new Promise((r) => setTimeout(r, 100));
+    expect(types().filter((x) => x === 'round_start')).toHaveLength(2);
+    expect(types()).toContain('tournament_end');
+    const end = (await (await fetch(url + '/api/state')).json()) as any;
+    expect(end.tournament.alive).toHaveLength(3);
+  }, 240_000);
 });

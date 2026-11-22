@@ -9,6 +9,7 @@ import { parseCommandLine } from '../../../packages/haunt/src/adapters';
 import { loadHauntConfig } from '../../../packages/haunt/src/config';
 import { CORE_CREATURES, EXTRA_CREATURES } from '../../../packages/haunt/src/creatures';
 import { createLiveCellRunner, planSweep } from '../../../packages/haunt/src/sweep';
+import { pyTest } from '../../../packages/core/test/python-skip';
 
 const root = resolve(__dirname, '../../..');
 const app = join(root, 'apps/haunted-inbox');
@@ -23,7 +24,7 @@ function findPython(): string | null {
   return null;
 }
 const py = findPython();
-const pyIt = py ? it : it.skip;
+const pyIt = pyTest(py);
 const creatures = [...CORE_CREATURES, ...EXTRA_CREATURES];
 
 describe('sweep over the Python inbox', () => {
@@ -31,7 +32,7 @@ describe('sweep over the Python inbox', () => {
     const r = loadHauntConfig(join(app, 'haunt.yaml'));
     if (!r.ok) throw new Error('config invalid');
     const plan = planSweep(r.config, creatures);
-    expect(plan.stages).toEqual(['login', 'ingest', 'validate', 'dedupe', 'triage', 'assign', 'notify', 'escalate', 'resolve', 'close']);
+    expect(plan.stages).toEqual(['login', 'ingest', 'validate', 'dedupe', 'triage', 'assign', 'sla', 'notify', 'escalate', 'resolve', 'close']);
     expect(plan.cells.some((c) => c.stage === 'assign' && c.creature === 'reaper')).toBe(true);
   });
 

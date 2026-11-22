@@ -133,11 +133,11 @@
   {
     "id": 6,
     "title": "The Inbox",
-    "briefing": "An AI agent files tickets and sends replies. The same crashes strike a different app.",
+    "briefing": "The Ticket Desk takes requests all night. A crash, an expired SSO token, a webhook that keeps retrying and a missed SLA strike a different app.",
     "lesson": [
       "The same skeleton protects a different application.",
-      "A crash after filing a ticket must not file it twice.",
-      "A repeated reply to a customer is as bad as a double charge."
+      "A crash after filing a ticket must not file it twice, and a retried webhook or SSO token must not make a second ticket or account.",
+      "A breached SLA escalates once, not every minute."
     ],
     "hint": "Wear all five parts.",
     "orders": 4,
@@ -146,7 +146,9 @@
     "app": "inbox",
     "plan": [
       { "when": { "lane": 1, "event": "stage_start", "stage": "assign", "attempt": 1 }, "forEachOrder": true, "delayMs": 600, "lane": 1, "fault": "crash", "creature": "reaper", "point": "after_effect_before_journal" },
-      { "when": { "lane": 1, "event": "stage_start", "stage": "notify", "order": "msg-0003", "attempt": 1 }, "lane": 1, "fault": "timeout", "creature": "zombie" }
+      { "when": { "lane": 1, "event": "stage_start", "stage": "login", "order": "ord-0002", "attempt": 1 }, "lane": 1, "fault": "sso_expired", "creature": "reaper" },
+      { "when": { "lane": 1, "event": "stage_start", "stage": "ingest", "order": "ord-0003", "attempt": 1 }, "lane": 1, "fault": "webhook_retry_storm", "creature": "doppelganger" },
+      { "when": { "lane": 1, "event": "stage_start", "stage": "sla", "order": "ord-0004", "attempt": 1 }, "lane": 1, "fault": "sla_breach", "creature": "banshee" }
     ],
     "rivals": ["retrier", "journaler", "reconciler", "phoenix"],
     "medals": {

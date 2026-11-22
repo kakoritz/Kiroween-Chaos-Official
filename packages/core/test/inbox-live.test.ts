@@ -7,10 +7,11 @@ import { LiveServer, createLiveRuntime, makeBotCommand } from '../src/live';
 import { findPython, inboxTarget } from '../src/live/inbox-command';
 import { startProvider } from '../src/provider';
 import type { EngineWaveSettings } from '../../haunt/src/runner/engine';
+import { pyTest } from './python-skip';
 
 const root = resolve(__dirname, '../../..');
 const py = findPython();
-const pyIt = py ? it : it.skip;
+const pyIt = pyTest(py);
 
 let srv: LiveServer | undefined;
 let stopProvider: (() => Promise<void>) | undefined;

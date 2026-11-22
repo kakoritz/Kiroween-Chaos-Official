@@ -19,9 +19,11 @@ PARTS = ("retry", "journal", "idempotency", "breaker", "offline_queue")
 CRASH_POINTS = ("before_effect", "after_effect_before_journal", "after_journal", "mid_stage")
 RECOVERY_POINTS = ("during_replay", "during_reconcile", "during_backoff")
 PROCESS_FAULTS = ("crash", "out_of_memory", "power_outage")
+# Ticket Desk faults the arena arms on the bot; desk.py applies each at its own stage (apps/haunted-inbox/bot/desk.py DESK_FAULTS).
+DESK_FAULTS = ("sla_breach", "wrong_queue", "duplicate_storm", "field_mapping_error", "webhook_retry_storm", "assignee_deleted", "rate_limited")
 RETRY = {"attempts": 3, "delay_ms": 500}
 BREAKER = {"attempts": 5, "base_ms": 500, "open_after": 4, "open_ms": 5000}
-PATHS = {"ticket": "/tickets", "reply": "/replies", "notify": "/notifications"}
+PATHS = {"account": "/accounts", "ticket": "/tickets", "reply": "/replies", "notify": "/notifications"}
 
 # Tier table, same five tiers and parts as App 1.
 TIERS = {
@@ -177,6 +179,7 @@ class Host:
         self._anchor_virtual = self._anchor_real
         self._out_lock = threading.Lock()
         self._armed: list[dict] = []
+        self._desk: list[dict] = []
         self._lock = threading.Lock()
         self.sdk: Sdk | None = None
         self.go = threading.Event()
@@ -246,6 +249,17 @@ class Host:
         elif fault in PROCESS_FAULTS:
             with self._lock:
                 self._armed.append(a)
+        elif fault in DESK_FAULTS:
+            with self._lock:
+                self._desk.append(a)
+
+    def take_desk(self, fault: str) -> dict | None:
+        """Consume one armed desk fault of this kind (the bot calls it at the stage where the fault lands), or None."""
+        with self._lock:
+            for i, a in enumerate(self._desk):
+                if a.get("fault") == fault:
+                    return self._desk.pop(i)
+        return None
 
     def _take(self, point: str) -> dict | None:
         with self._lock:
@@ -355,6 +369,7 @@ class Sdk:
         self.key_used = False
         self.order_id: str | None = None
         self.replaying = False
+        self.done_detail: dict | None = None  # facts the bot attaches to its order_done (the desk's CSAT facts)
         host.sdk = self
 
     def parts(self) -> list[str]:
@@ -390,11 +405,12 @@ class Sdk:
             return "skipped"
         self.order_id = oid
         self.replaying = False
+        self.done_detail = None
         self._ev("order_start", oid)
         try:
             fn(self)
             outcome = result = "done"
-            self._ev("order_done", oid)
+            self._ev("order_done", oid, None, self.done_detail)
         except ParkSignal as e:
             outcome = result = "parked"
             self._ev("order_parked", oid, None, {"reason": e.reason})
@@ -545,6 +561,11 @@ class Sdk:
         if b["fails"] >= BREAKER["open_after"] and b["open_until"] is None:
             b["open_until"] = self.host.now() + BREAKER["open_ms"]
             self.host.send({"type": "breaker", "order": self.order_id, "detail": {"service": service, "state": "open"}})
+
+    def recovery(self, order: str, stage: str, action: str) -> None:
+        """A recovery the app did by itself (not a retry): the pair of events that the arena and the casebook read as the mechanism."""
+        self._ev("recover_start", order, stage, {"action": action})
+        self._ev("recover_done", order, stage, {"action": action})
 
     def _end_replay(self, order: str, stage: str) -> None:
         if self.replaying:

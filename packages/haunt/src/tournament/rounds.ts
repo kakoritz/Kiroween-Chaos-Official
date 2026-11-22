@@ -47,6 +47,9 @@ export interface PlanPress {
 
 const STAGES = ['account', 'submit', 'payment', 'confirmation', 'receive', 'process', 'ship'];
 const POOL = ['crash', 'timeout', 'http_404', 'http_429', 'http_500', 'endpoint_down', 'slow_link'];
+/** The Ticket Desk's storm: every stage a fault can land on, the generic faults plus the desk's own six (packs spec section 4). */
+const INBOX_PLAN_STAGES = ['login', 'ingest', 'validate', 'dedupe', 'triage', 'assign', 'sla', 'notify', 'escalate'];
+const INBOX_POOL = [...POOL, 'sso_expired', 'field_mapping_error', 'webhook_retry_storm', 'duplicate_storm', 'wrong_queue', 'sla_breach', 'assignee_deleted', 'rate_limited'];
 const HEAVY = ['internet_outage', 'power_outage'];
 const POINTS = ['before_effect', 'after_effect_before_journal', 'after_journal'];
 
@@ -55,16 +58,18 @@ const POINTS = ['before_effect', 'after_effect_before_journal', 'after_journal']
  * two or three), at random effect stages. One plan for the whole round: every live lane meets the same presses at the same orders and
  * stages, so ranking is fair. Seeded by (seed, round).
  */
-export function roundPlan(seed: string | number, round: number, cfg: RoundCfg): PlanPress[] {
+export function roundPlan(seed: string | number, round: number, cfg: RoundCfg, app: 'orders' | 'inbox' = 'orders'): PlanPress[] {
+  const stages = app === 'inbox' ? INBOX_PLAN_STAGES : STAGES;
+  const basePool = app === 'inbox' ? INBOX_POOL : POOL;
   const rng = mulberry32(fnv1a32(`${seed}|plan|${round}`));
   const row = intensityRow(cfg.intensity);
   const presses: PlanPress[] = [];
   for (let order = 1; order <= cfg.orders; order++) {
     const n = Math.floor(row.rate) + (rng() < row.rate - Math.floor(row.rate) ? 1 : 0);
     for (let i = 0; i < Math.min(n, row.continuous ? 4 : row.simultaneous); i++) {
-      const stage = STAGES[Math.floor(rng() * STAGES.length)]!;
+      const stage = stages[Math.floor(rng() * stages.length)]!;
       const unknown = rng() < row.unknown ? fuzzFromRng(rng, stage) : null;
-      const pool = [...POOL, ...(cfg.intensity >= 6 ? HEAVY : [])].filter((id) => FAULTS.some((f) => f.id === id && f.stages.includes(stage)));
+      const pool = [...basePool, ...(cfg.intensity >= 6 ? HEAVY : [])].filter((id) => FAULTS.some((f) => f.id === id && f.stages.includes(stage)));
       const fault = unknown ? unknown.fault : pool[Math.floor(rng() * pool.length)]!;
       const press: PlanPress = { order, stage, fault };
       if (fault === 'crash' || fault === 'power_outage') press.point = POINTS[Math.floor(rng() * POINTS.length)]!;

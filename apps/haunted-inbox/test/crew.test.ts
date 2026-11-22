@@ -2,6 +2,7 @@
 import { execFileSync } from 'node:child_process';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { pyTest } from '../../../packages/core/test/python-skip';
 
 const root = resolve(__dirname, '../../..');
 const crew = join(root, 'apps/haunted-inbox/bot/crew.py');
@@ -16,7 +17,7 @@ function findPython(): string | null {
   return null;
 }
 const py = findPython();
-const pyIt = py ? it : it.skip;
+const pyIt = pyTest(py);
 
 const parts = (env: string | undefined): string[] => JSON.parse(execFileSync(py!, [crew, '--parts'], {
   encoding: 'utf8', env: { ...process.env, HAUNT_TIER: undefined, HAUNT_PARTS: env },

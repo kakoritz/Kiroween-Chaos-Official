@@ -382,7 +382,10 @@ export class LiveServer {
     if (body.lanes !== undefined && !(Number.isInteger(body.lanes) && body.lanes >= 2 && body.lanes <= 5)) fail(400, 'bad_request', 'lanes must be 2 to 5');
     let t: Tournament;
     try { t = new Tournament({ seed, rounds: body.rounds, lanes: body.lanes }); } catch (e) { return fail(400, 'bad_request', e instanceof Error ? e.message : 'bad rounds'); }
-    if (this.app !== 'orders') this.switchApp('orders');
+    // The tournament runs on the app that is selected (or the one asked for): the same rounds, curses, Casebook and rules for both.
+    const tApp = body.app ?? this.app;
+    if (tApp !== 'orders' && tApp !== 'inbox') fail(400, 'bad_request', 'bad app');
+    if (this.app !== tApp) this.switchApp(tApp);
     this.lanes.clear();
     this.corpses = [];
     this.engine.setChaosMode?.({ mode: 'manual', frequency: 0.3, seed });
@@ -402,7 +405,7 @@ export class LiveServer {
     for (const lane of rs.lanes) this.lessons.writePolicy(this.lessons.get(lane, tierOfLane(lane)));
     const cfg = tn.t.cfgOf(rs.round);
     const waveSeed = fnv1a32(String(tn.t.seed) + '|round' + rs.round) % 1_000_000;
-    const script = roundScript(tn.t.seed, rs.round, cfg, rs.lanes, waveSeed);
+    const script = roundScript(tn.t.seed, rs.round, cfg, rs.lanes, waveSeed, this.app);
     const r = this.startWave({}, { round: rs.round, total: rs.total, lanes: rs.lanes, orders: rs.orders, seed: waveSeed, level: rs.intensity, script, speed: tn.speed, pace: tn.pace });
     tn.wave = r.wave;
     return { round: rs.round, wave: r.wave, lanes: rs.lanes };
