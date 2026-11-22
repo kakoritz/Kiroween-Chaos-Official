@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" width="960" height="520" font-family="Segoe UI, Arial, sans-serif" font-size="14" role="img" aria-label="Haunt architecture: two apps on one skeleton, core server, arena UI, Kiro loop">
+  <title>Haunt architecture</title>
+  <rect width="960" height="520" fill="#14101f"/>
+  <defs>
+    <marker id="a" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#9b8cc4"/></marker>
+    <marker id="k" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#e0a84a"/></marker>
+  </defs>
+  <g fill="#231a3a" stroke="#6c5aa8" stroke-width="1.5">
+    <rect x="20" y="30" width="190" height="80" rx="8"/>
+    <rect x="20" y="130" width="190" height="80" rx="8"/>
+    <rect x="270" y="30" width="300" height="270" rx="8"/>
+    <rect x="630" y="30" width="310" height="110" rx="8"/>
+    <rect x="630" y="190" width="310" height="110" rx="8"/>
+    <rect x="20" y="340" width="920" height="80" rx="8" stroke="#e0a84a"/>
+    <rect x="20" y="440" width="920" height="60" rx="8" stroke-dasharray="6 4"/>
+  </g>
+  <g fill="none" stroke="#9b8cc4" stroke-width="2" marker-end="url(#a)">
+    <path d="M210 70 H270"/>
+    <path d="M210 170 H270"/>
+    <path d="M570 85 H630"/>
+    <path d="M785 140 V190"/>
+  </g>
+  <path d="M480 340 V300" fill="none" stroke="#e0a84a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#k)"/>
+  <path d="M480 440 V420" fill="none" stroke="#e0a84a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#k)"/>
+  <g fill="#efe9ff" text-anchor="middle">
+    <text x="115" y="64" font-weight="bold">Haunted Orders (Node)</text>
+    <text x="115" y="88" fill="#b9acdc">app 1: 11-step order pipeline</text>
+    <text x="115" y="164" font-weight="bold">Haunted Inbox (Python)</text>
+    <text x="115" y="188" fill="#b9acdc">app 2: mail to ticket and reply</text>
+    <text x="420" y="60" font-weight="bold">Haunt skeleton (packages/haunt)</text>
+    <text x="420" y="90" fill="#b9acdc">SDK: retry, journal, idempotency, breaker, queue</text>
+    <text x="420" y="112" fill="#b9acdc">adapters: SDK, Proxy, Process</text>
+    <text x="420" y="134" fill="#b9acdc">chaos engine, creatures, bosses, curses</text>
+    <text x="420" y="156" fill="#b9acdc">tournament, lessons, Casebook</text>
+    <text x="420" y="178" fill="#b9acdc">ledger and score, sweep, ramp, report</text>
+    <text x="420" y="200" fill="#b9acdc">reviewer, pattern miner, fix spec writer</text>
+    <text x="420" y="222" fill="#b9acdc">improve loop (run, mine, apply, rerun, compare)</text>
+    <text x="420" y="244" fill="#b9acdc">MCP server: haunt_define, sweep, ramp, report, badge</text>
+    <text x="420" y="278" fill="#b9acdc" font-size="12">bot processes write a journal; the provider keeps the ledger (truth)</text>
+    <text x="785" y="64" font-weight="bold">Core server (packages/core)</text>
+    <text x="785" y="88" fill="#b9acdc">REST and SSE on 127.0.0.1:7070</text>
+    <text x="785" y="110" fill="#b9acdc">provider and ledger on 127.0.0.1:7071</text>
+    <text x="785" y="224" font-weight="bold">Arena UI (packages/arena-ui)</text>
+    <text x="785" y="248" fill="#b9acdc">lanes, creatures, dial, corpses</text>
+    <text x="785" y="270" fill="#b9acdc">Casebook, Patterns, report, tour</text>
+    <text x="480" y="372" font-weight="bold" fill="#f3d9a0">Kiro: specs, steering, hooks, agents, MCP, Power, Crew app</text>
+    <text x="480" y="396" fill="#d9c08a" font-size="13">the reviewer and miner write a fix spec; Kiro applies it; the same plan reruns</text>
+    <text x="480" y="475" fill="#b9acdc">contract/: events schema, fixtures, PROTOCOL.md (the seam between core and visuals)</text>
+  </g>
+</svg>

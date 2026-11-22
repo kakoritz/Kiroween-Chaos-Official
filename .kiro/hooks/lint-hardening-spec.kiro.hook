@@ -1,0 +1,16 @@
+{
+    "enabled":  true,
+    "name":  "Lint hardening spec on save",
+    "description":  "When a generated hardening spec is edited, run the spec linter on that folder.",
+    "version":  "1",
+    "when":  {
+                 "type":  "fileEdited",
+                 "patterns":  [
+                                  ".kiro/specs/hardening-*/*.md"
+                              ]
+             },
+    "then":  {
+                 "type":  "askAgent",
+                 "prompt":  "A hardening spec file was edited. Run `npm run haunt -- spec-lint <the .kiro/specs/hardening-* folder of the edited file>`. If it exits 1, fix the named requirement, patch or test line in the spec only (do not touch source code) and run the lint again. Report the final lint result."
+             }
+}
