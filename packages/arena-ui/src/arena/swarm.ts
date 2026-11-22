@@ -96,6 +96,7 @@ export function seedOf(id: string, born: number): number {
 export function bugTint(id: string): { body: string; wing: string } {
   switch (id) {
     case 'banshee': case 'banshee_queen': case 'wisp': return { body: '#bda7ff', wing: 'rgba(220,210,255,0.7)' };
+    case 'gremlin': return { body: '#7fa89b', wing: 'rgba(255,200,120,0.7)' };
     case 'goblin': case 'imp': return { body: '#7fd36b', wing: 'rgba(200,255,190,0.65)' };
     case 'zombie': case 'mummy': return { body: '#a9b88a', wing: 'rgba(225,235,200,0.6)' };
     case 'witch': case 'poltergeist': return { body: '#d96bff', wing: 'rgba(240,190,255,0.65)' };

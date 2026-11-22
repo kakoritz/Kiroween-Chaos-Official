@@ -2,7 +2,7 @@
 import type { AnimDef, SpriteGroup } from '../lab/registry';
 
 export type CreatureId = 'reaper' | 'zombie' | 'ghost' | 'wraith' | 'poltergeist' | 'doppelganger' | 'lich'
-  | 'banshee' | 'goblin' | 'imp' | 'gargoyle' | 'mummy' | 'werewolf' | 'wisp' | 'witch' | 'banshee_queen' | 'horseman';
+  | 'banshee' | 'goblin' | 'imp' | 'gargoyle' | 'mummy' | 'werewolf' | 'wisp' | 'witch' | 'gremlin' | 'banshee_queen' | 'horseman';
 
 export interface CreatureDef {
   id: CreatureId;
@@ -32,6 +32,7 @@ export const CREATURES: CreatureDef[] = [
   { id: 'werewolf', name: 'Werewolf', group: 'creature', does: 'Howls. A full moon rises over the road.', anims: [idle(1800), act('howl', 'Howl', 1800)] },
   { id: 'wisp', name: "Will-o'-Wisp", group: 'creature', does: 'Leads the courier off the path.', anims: [idle(2000), act('lead', 'Lead astray', 1600)] },
   { id: 'witch', name: 'Witch', group: 'creature', does: 'Hexes the scroll. The text scrambles.', anims: [idle(2200), act('hex', 'Hex scroll', 1400)] },
+  { id: 'gremlin', name: 'Gremlin', group: 'creature', does: 'Tiny prankster. Pulls a wire so nobody gets a perfect run.', anims: [idle(1300), act('prank', 'Pull the wire', 1500)] },
   { id: 'banshee_queen', name: 'Banshee Queen', group: 'boss', does: 'Boss. Her wail shatters every connection line.', anims: [idle(3000), act('wail', 'Wail', 1800)] },
   { id: 'horseman', name: 'Headless Horseman', group: 'boss', does: 'Boss. Hurls a burning pumpkin into every lane.', anims: [idle(2600), act('hurl', 'Hurl pumpkin', 1600)] },
 ];

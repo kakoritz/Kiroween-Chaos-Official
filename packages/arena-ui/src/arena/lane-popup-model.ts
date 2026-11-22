@@ -2,6 +2,7 @@
 // events into orders, build the stage table, the lap summary, the review card and the filtered log.
 // No DOM, no clock. Server records (contract/V1_1.md section 9) fill in what the event buffer misses.
 import type { ArenaEvent } from '../api/types';
+import { chaosPhrase } from './creatures';
 import { CHIP_ICON, CHIP_WORD, chipState, isIssue, type ChipV2State } from './chips';
 
 export type Level = 'info' | 'warn' | 'error' | 'good';
@@ -275,7 +276,8 @@ function line(e: ArenaEvent, label: (id: string) => string): { level: Level; ico
       ? { level: 'good', icon: '\u21BA', text: `${st} skipped, replayed from the journal` }
       : { level: 'good', icon: '\u2713', text: `${st || 'Stage'} done in ${num(d.ms)} ms` };
     case 'stage_fail': return { level: 'error', icon: '\u2717', text: `${st || 'Stage'} failed: ${str(d.error) || 'error'}${d.retryable ? ' (retryable)' : ''}` };
-    case 'chaos': return { level: 'warn', icon: '\u2620', text: `Chaos hit: ${str(d.creature) || 'creature'} ${str(d.fault)}`.trim() };
+    case 'chaos': return { level: 'warn', icon: d.unknown === true ? '?' : '\u2620', text: d.unknown === true || d.source === 'gremlin' ? `Chaos: ${chaosPhrase(d)}` : `Chaos hit: ${str(d.creature) || 'creature'} ${str(d.fault)}`.trim() };
+    case 'outage': return { level: 'warn', icon: '\u23F3', text: `Outage: ${Math.round(num(d.outageMs) / 100) / 10} s window${str(d.fault) ? ` (${str(d.fault).replace(/_/g, ' ')})` : ''}` };
     case 'chaos_absorbed': return { level: 'good', icon: '\u26E8', text: 'Chaos absorbed' };
     case 'effect': return { level: 'info', icon: '\u270E', text: `Effect ${str(d.kind)} ${str(d.key)}${d.replayed ? ' (replayed)' : ''}`.trim() };
     case 'repeat': return { level: 'error', icon: '\u21BB', text: `Repeated side effect ${str(d.kind)} ${str(d.key)}`.trim() };

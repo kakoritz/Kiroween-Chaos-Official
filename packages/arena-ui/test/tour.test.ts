@@ -4,12 +4,12 @@ import { splashDecision } from '../src/onboarding/splash';
 
 describe('guided tour', () => {
   it('has the six steps in order', () => {
-    expect(TOUR_STEPS.map((s) => s.id)).toEqual(['race', 'gear', 'stages', 'chaos', 'ledger', 'report']);
+    expect(TOUR_STEPS.map((s) => s.id)).toEqual(['race', 'gear', 'stages', 'chaos', 'dial', 'ledger', 'report']);
     for (const s of TOUR_STEPS) { expect(s.text.length).toBeGreaterThan(10); expect(s.rect.w).toBeGreaterThan(0); }
   });
   it('fires chaos on step 4 and the report on step 6', () => {
     expect(TOUR_STEPS[3]!.action).toBe('chaos');
-    expect(TOUR_STEPS[5]!.action).toBe('report');
+    expect(TOUR_STEPS[6]!.action).toBe('report');
     expect(TOUR_STEPS[1]!.action).toBe('legend');
   });
   it('?tour=1 starts it, off values do not, and the splash is skipped', () => {
@@ -21,10 +21,10 @@ describe('guided tour', () => {
   it('steps forward and back, clamps at the start, ends after the last', () => {
     expect(stepAfter(0, 1)).toBe(1);
     expect(stepAfter(0, -1)).toBe(0);
-    expect(stepAfter(5, 1)).toBeNull();
-    expect(nextLabel(5)).toBe('Done');
+    expect(stepAfter(6, 1)).toBeNull();
+    expect(nextLabel(6)).toBe('Done');
     expect(nextLabel(2)).toBe('Next');
-    expect(progressLabel(2)).toBe('3 / 6');
+    expect(progressLabel(2)).toBe('3 / 7');
   });
   it('keeps the spotlight and bubble inside the stage', () => {
     for (const s of TOUR_STEPS) {

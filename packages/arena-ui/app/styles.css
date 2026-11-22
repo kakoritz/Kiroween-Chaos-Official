@@ -175,3 +175,14 @@ body.present .logo { font-size: 36px; }
 body.present .wave, body.present .total { font-size: 26px; }
 body.present .badge { font-size: 22px; }
 body.present .rb-row, body.present .lg td, body.present .lg th, body.present .tk-body { font-size: 20px; }
+
+/* TV3-U6: a crowded header stays on one line. The tagline gives way first (ellipsis), buttons never wrap. */
+.hdr { gap: 10px; padding: 0 16px; }
+.hdr > * { flex: none; white-space: nowrap; }
+.hdr > .tagline { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 16px; }
+.hdr > .spacer { flex: 1 1 0; min-width: 0; }
+.hdr .btn { padding: 7px 12px; font-size: 15px; }
+.hdr .wave, .hdr .total { font-size: 17px; }
+.hdr .badge { padding: 5px 12px; font-size: 14px; }
+.hdr .seg-b { padding: 6px 10px; font-size: 15px; white-space: nowrap; }
+.quiet-btns { display: flex; gap: 12px; }

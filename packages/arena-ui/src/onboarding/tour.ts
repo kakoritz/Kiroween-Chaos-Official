@@ -21,6 +21,7 @@ export const TOUR_STEPS: readonly TourStep[] = [
   { id: 'gear', title: 'The gear', text: 'These letters are their protections.', selector: null, rect: { x: 0, y: 72, w: 260, h: 768 }, action: 'legend' },
   { id: 'stages', title: 'The stages', text: 'Green passed, yellow in trouble, red failed. The flag counts problems.', selector: null, rect: { x: 260, y: 72, w: 1340, h: 40 } },
   { id: 'chaos', title: 'Chaos', text: 'Press a skull to throw a monster at a bot.', selector: '#chaos-mode', rect: { x: 300, y: 8, w: 520, h: 56 }, action: 'chaos' },
+  { id: 'dial', title: 'The dial', text: 'Turn the storm up or down, 1 to 10. Past 10 is 11: throw everything.', selector: '#dial', rect: { x: 900, y: 4, w: 270, h: 64 } },
   { id: 'ledger', title: 'The ledger', text: "The provider's own record. This is the truth.", selector: '#ledger', rect: { x: 646, y: 840, w: 628, h: 200 } },
   { id: 'report', title: 'The report', text: 'After a wave, get a grade and fixes.', selector: '#report-btn', rect: { x: 1286, y: 840, w: 626, h: 200 }, action: 'report' },
 ];

@@ -16,3 +16,4 @@
 .lgm-l { display: inline-block; min-width: 28px; text-align: center; color: var(--warn); font: 800 20px ui-monospace, Menlo, monospace; }
 .lgm-ex { color: var(--muted); }
 body.present .gear-pop, body.present .lgm { display: none !important; }
+.lgm-red { color: var(--fail); }

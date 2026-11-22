@@ -3,6 +3,7 @@
 // (600 ms each) when more are waiting. Model is pure (no DOM, no clock); LaneTickerView draws it.
 import type { ArenaEvent } from '../api/types';
 import { isIssue } from './chips';
+import { chaosPhrase } from './creatures';
 
 export type MsgTone = 'info' | 'good' | 'warn' | 'error';
 export interface LaneMsg { tone: MsgTone; icon: string; text: string }
@@ -35,7 +36,8 @@ export function laneMessage(ev: ArenaEvent, stageLabel: (id: string) => string):
     case 'order_parked': return { tone: 'warn', icon: '\u29D6', text: 'order parked' };
     case 'order_quarantined': return { tone: 'error', icon: '\u2620', text: 'order quarantined' };
     case 'stage_fail': return { tone: 'error', icon: '\u2717', text: `${stage || 'stage'} failed${str(d.error) ? ` (${str(d.error)})` : ''}` };
-    case 'chaos': return { tone: 'error', icon: '\u2620', text: `${str(d.fault) || 'chaos'} hits ${stage || 'a stage'}` };
+    case 'chaos': return { tone: d.source === 'gremlin' ? 'warn' : 'error', icon: d.unknown === true ? '?' : d.source === 'gremlin' ? '\u26A0' : '\u2620', text: chaosPhrase(d, stage) };
+    case 'outage': return { tone: 'warn', icon: '\u23F3', text: `outage ${Math.round(num(d.outageMs) / 100) / 10} s${stage ? ` at ${stage}` : ''}` };
     case 'chaos_absorbed': return { tone: 'good', icon: '\u26E8', text: 'chaos absorbed' };
     case 'process_dead': return { tone: 'error', icon: '\u2620', text: 'process died' };
     case 'process_up': return { tone: 'warn', icon: '\u21BB', text: 'process restarted' };

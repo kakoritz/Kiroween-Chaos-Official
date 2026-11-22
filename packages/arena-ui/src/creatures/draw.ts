@@ -917,9 +917,84 @@ function horseman(ctx: Ctx, o: DrawOpts, a: string, p: number): void {
   eyes(ctx, o, [[px, py + 5]], 2.2, '#14101f');
 }
 
+// ---------------------------------------------------------------- Gremlin
+// Small and mischievous (tournament-v3 section 5.3, the floor rule): batwing ears, a toothy grin, a cheeky hop.
+// idle: hops and rubs its hands. prank: yanks a wire out of the wall, a spark pops, it cackles.
+function gremlin(ctx: Ctx, o: DrawOpts, a: string, p: number): void {
+  const t = p * TAU;
+  const prank = a === 'prank';
+  const wind = prank ? ease.inOutCubic(seg(p, 0, 0.35)) : 0;
+  const yank = prank ? ease.inOutCubic(seg(p, 0.35, 0.5)) : 0;
+  const zap = prank ? seg(p, 0.5, 0.9) : 0;
+  const hop = prank ? -Math.abs(Math.sin(p * TAU * 2)) * 5 : -Math.abs(Math.sin(t)) * 6;
+  ctx.scale(0.92, 0.92);
+  ctx.translate(0, hop);
+  // the wire it pulls: from a little socket on the right to its hand
+  const hx = lerp(14, 30, yank) - wind * 4;
+  const hy = lerp(-30, -34, yank);
+  if (prank) {
+    ctx.beginPath();
+    ctx.moveTo(40, -14);
+    ctx.quadraticCurveTo(lerp(34, 44, yank), lerp(-6, -26, yank), hx, hy);
+    ctx.lineWidth = 8; ctx.strokeStyle = OUT; ctx.stroke();
+    if (!o.silhouette) { ctx.lineWidth = 3.4; ctx.strokeStyle = '#ffb020'; ctx.stroke(); }
+    if (zap > 0 && zap < 1 && !o.silhouette) {
+      glow(ctx, o, hx + 4, hy - 6, 26, '#fff08a', 0.85 * (1 - zap));
+      ctx.strokeStyle = '#fff08a'; ctx.lineWidth = 3; ctx.beginPath();
+      for (let k = 0; k < 5; k++) { const ang = (k / 5) * TAU + 0.4; ctx.moveTo(hx + Math.cos(ang) * 6, hy - 6 + Math.sin(ang) * 6); ctx.lineTo(hx + Math.cos(ang) * (12 + zap * 12), hy - 6 + Math.sin(ang) * (12 + zap * 12)); }
+      ctx.stroke();
+    }
+  }
+  // spindly legs and a tail with a spade tip
+  for (const x of [-7, 7]) limb(ctx, o, x, -16, x + (x < 0 ? -2 : 2), -1, 5, '#6f8f86');
+  ctx.save();
+  ctx.translate(-10, -18);
+  ctx.rotate(Math.sin(t * 2) * 0.25);
+  limb(ctx, o, 0, 0, -18, -8, 3, '#6f8f86');
+  blob(ctx, o, 'M-18,-8L-27,-14L-23,-3Z', '#ff8a2b', '#c9560c');
+  ctx.restore();
+  // body
+  blob(ctx, o, 'M-12,-16C-16,-32-8,-40,0,-40C8,-40,16,-32,12,-16Z', '#7fa89b', '#567a6f', '#b6dccf');
+  blob(ctx, o, 'M-6,-34C-4,-26,4,-26,6,-34C4,-18,-4,-18,-6,-34Z', '#d9ead3', '#a9c3a0');
+  // arms: rubbing hands while idle, one pulling while pranking
+  if (prank) {
+    limb(ctx, o, 10, -34, hx, hy, 5, '#7fa89b');
+    ball(ctx, o, hx, hy, 4.4, 4.4, '#9ac1b3', '#6f8f86', '#d4eee4');
+    limb(ctx, o, -10, -34, -18, -26 - wind * 8, 5, '#7fa89b');
+  } else {
+    const rub = Math.sin(t * 3) * 3;
+    limb(ctx, o, -10, -34, -2 + rub, -26, 5, '#7fa89b');
+    limb(ctx, o, 10, -34, 2 - rub, -26, 5, '#7fa89b');
+  }
+  // big batwing ears
+  for (const sd of [-1, 1]) {
+    ctx.save();
+    ctx.scale(sd, 1);
+    ctx.rotate(Math.sin(t * 2) * 0.08 * (prank ? 2 : 1));
+    blob(ctx, o, 'M9,-52C14,-62,26,-78,40,-84C38,-70,36,-58,24,-44C18,-46,12,-46,9,-46Z', '#7fa89b', '#567a6f', '#b6dccf');
+    blob(ctx, o, 'M14,-54C19,-62,27,-72,35,-77C34,-67,32,-58,24,-50C20,-50,16,-50,14,-50Z', '#e9a0a8', '#c06a7b');
+    ctx.restore();
+  }
+  // head: a tuft of spikes, glowing eyes, the grin
+  blob(ctx, o, 'M-6,-62L-3,-72L0,-63L4,-73L6,-62Z', '#567a6f', '#3d5a51');
+  ball(ctx, o, 0, -52, 14.5, 12.5, '#7fa89b', '#567a6f', '#b6dccf');
+  glow(ctx, o, 0, -54, 24, '#ffb020', 0.22);
+  eyes(ctx, o, [[-5.5, -54], [5.5, -54]], 4, '#fff6c8');
+  eyes(ctx, o, [[-5, -54 + (prank ? 0.5 : 0)], [6, -54 + (prank ? 0.5 : 0)]], 1.8, OUT);
+  if (!o.silhouette) {
+    ctx.strokeStyle = OUT; ctx.lineWidth = 2.4;
+    ctx.beginPath(); ctx.moveTo(-9, -60); ctx.lineTo(-3, -57); ctx.moveTo(9, -60); ctx.lineTo(3, -57); ctx.stroke(); // slanted brows
+    const grin = prank ? 5 + Math.sin(p * TAU * 6) * 1.2 : 3;
+    ctx.fillStyle = OUT;
+    ctx.beginPath(); ctx.moveTo(-8, -48); ctx.quadraticCurveTo(0, -48 + grin * 2.2, 8, -48); ctx.quadraticCurveTo(0, -47, -8, -48); ctx.fill();
+    ctx.fillStyle = '#fff6e0';
+    for (const x of [-5, -1.5, 2, 5]) { ctx.beginPath(); ctx.moveTo(x - 1.4, -47.6); ctx.lineTo(x + 1.4, -47.6); ctx.lineTo(x, -44.4); ctx.closePath(); ctx.fill(); }
+  }
+}
+
 const DRAW: Record<CreatureId, (ctx: Ctx, o: DrawOpts, anim: string, p: number) => void> = {
   reaper, zombie, ghost, wraith, poltergeist, doppelganger, lich,
-  banshee, goblin, imp, gargoyle, mummy, werewolf, wisp, witch,
+  banshee, goblin, imp, gargoyle, mummy, werewolf, wisp, witch, gremlin,
   banshee_queen: bansheeQueen, horseman,
 };
 

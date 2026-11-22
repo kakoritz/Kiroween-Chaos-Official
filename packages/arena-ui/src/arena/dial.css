@@ -1,0 +1,33 @@
+/* TV3-U6: header intensity dial. Colour is never the only cue: the number and a word always show. */
+.dial { display: flex; flex-direction: column; gap: 2px; width: 282px; flex: none; padding: 5px 10px 4px; border: 2px solid var(--stone-2); border-radius: 10px; background: rgba(13,11,20,0.55); }
+.dial-top { display: flex; align-items: baseline; gap: 8px; height: 20px; white-space: nowrap; position: relative; }
+.dial-l { font: 700 11px ui-monospace, Menlo, monospace; letter-spacing: 0.16em; color: var(--muted); }
+.dial-n { font: 800 18px ui-monospace, Menlo, monospace; color: var(--bone); min-width: 22px; text-align: right; }
+.dial-w { font-size: 13px; font-weight: 700; color: var(--torch); overflow: hidden; text-overflow: ellipsis; }
+.dial-f { position: absolute; right: 0; top: -2px; font: 800 12px ui-monospace, Menlo, monospace; color: var(--ok); opacity: 0; }
+.dial-f.on { animation: dial-flash 1.6s ease-out; }
+@keyframes dial-flash { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-8px); } }
+.dial-body { display: flex; align-items: center; gap: 10px; }
+.dial-range { -webkit-appearance: none; appearance: none; flex: 1; min-width: 0; height: 22px; margin: 0; background: transparent; cursor: pointer; }
+.dial-range::-webkit-slider-runnable-track { height: 8px; border-radius: 5px; border: 2px solid #14101f;
+  background:
+    linear-gradient(90deg, #ff9a3c var(--dial-fill, 20%), transparent var(--dial-fill, 20%)),
+    linear-gradient(90deg, #2a2446 0, #2a2446 90%, #5a1824 90%, #5a1824 100%); }
+.dial-range::-moz-range-track { height: 8px; border-radius: 5px; border: 2px solid #14101f; background: #2a2446; }
+.dial-range::-moz-range-progress { height: 8px; border-radius: 5px; background: #ff9a3c; }
+.dial-range::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -7px; border-radius: 50%; background: var(--bone); border: 3px solid #14101f; box-shadow: 0 0 0 2px var(--torch); }
+.dial-range::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--bone); border: 3px solid #14101f; box-shadow: 0 0 0 2px var(--torch); }
+.dial-range:focus-visible { outline: 3px solid var(--bone); outline-offset: 3px; border-radius: 6px; }
+.dial-ramp { font: 800 11px ui-monospace, Menlo, monospace; letter-spacing: 0.1em; padding: 3px 8px; border-radius: 999px; border: 2px solid var(--muted); background: transparent; color: var(--muted); cursor: pointer; }
+.dial-ramp.on { border-color: var(--ok); color: #0d0b14; background: var(--ok); }
+.dial-ramp:focus-visible { outline: 3px solid var(--bone); outline-offset: 2px; }
+.dial--hot { border-color: #8a4a2c; }
+.dial--hot .dial-w { color: #ff7a3c; }
+.dial--max { border-color: var(--fail); background: rgba(90,24,36,0.55); box-shadow: 0 0 14px rgba(255,77,94,0.45); }
+.dial--max .dial-n, .dial--max .dial-w { color: #ff4d5e; }
+.dial--max .dial-w { letter-spacing: 0.04em; font-weight: 800; animation: dial-throb 1.1s ease-in-out infinite; }
+.dial--max .dial-range::-webkit-slider-thumb { background: #ff4d5e; box-shadow: 0 0 0 2px #ff4d5e, 0 0 10px #ff4d5e; }
+@keyframes dial-throb { 50% { opacity: 0.6; } }
+body.reduced-motion .dial--max .dial-w, body.reduced-motion .dial-f.on { animation: none; }
+body.reduced-motion .dial-f.on { opacity: 1; }
+body.present .dial { display: none; }

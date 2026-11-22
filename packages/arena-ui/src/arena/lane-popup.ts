@@ -10,6 +10,8 @@ import {
 import { replayCount } from './inspector';
 import { lapRowsFromEvents, lapRowsOf, mergeLapRows } from './laps-model';
 import { renderLapTable } from './laps-view';
+import type { Lesson } from './casebook';
+import { lessonsList } from './casebook-view';
 
 const MAX_BUF = 1500;
 const ALL_ORDERS = '*';
@@ -29,6 +31,8 @@ export interface LanePopupHost {
   creatures(): Promise<Creature[]>;
   fetchOrder(lane: number, order: string): Promise<unknown>;
   fetchLaps(lane: number): Promise<unknown>;
+  /** TV3-U9: the lane's lessons, newest last. Optional: older hosts have none. */
+  lessons?(lane: number): Lesson[];
   onError(e: unknown): void;
 }
 
@@ -72,6 +76,8 @@ export class LanePopup {
   private readonly review: HTMLElement;
   private readonly lapsBox: HTMLDetailsElement;
   private readonly lapsBody: HTMLElement;
+  private readonly lessonsBox: HTMLDetailsElement;
+  private readonly lessonsBody: HTMLElement;
   private readonly followBox: HTMLInputElement;
   private readonly scrubber: HTMLInputElement;
   private readonly replayBtn: HTMLButtonElement;
@@ -157,7 +163,11 @@ export class LanePopup {
     this.lapsBody = el('div', 'lp-lapsbody');
     this.lapsBox.append(el('summary', '', 'Laps of this wave'), this.lapsBody);
     this.lapsBox.addEventListener('toggle', () => { this.sig = ''; });
-    dlg.append(head, sceneBar, mid, this.lapsBox, foot);
+    this.lessonsBox = el('details', 'lp-laps') as HTMLDetailsElement;
+    this.lessonsBody = el('div', 'lp-lapsbody');
+    this.lessonsBox.append(el('summary', '', 'Lessons'), this.lessonsBody);
+    this.lessonsBox.addEventListener('toggle', () => { this.sig = ''; });
+    dlg.append(head, sceneBar, mid, this.lapsBox, this.lessonsBox, foot);
     root.append(dlg);
     root.addEventListener('mousedown', (e) => { if (e.target === root) this.close(); });
     window.addEventListener('keydown', (e) => this.onKey(e));
@@ -286,7 +296,7 @@ export class LanePopup {
     const last = pinned ? lastOwn : lastAny;
     const missed = pinned ? this.buf.filter((e) => e.lane === this.lane && e.seq > this.pinSeq).length : 0;
     const key = [this.lane, order, this.filter, this.stageFocus, shown.length, last, live, replaying, this.follow, this.scrub,
-      this.serverOrder ? 1 : 0, this.serverLaps ? 1 : 0, info?.tier, outcome, pinned ? 'p' : cur, pinned ? Math.min(missed, 99) : ''].join('|');
+      this.serverOrder ? 1 : 0, this.serverLaps ? 1 : 0, info?.tier, outcome, pinned ? 'p' : cur, pinned ? Math.min(missed, 99) : '', this.host.lessons?.(this.lane).length ?? 0].join('|');
     this.replayBtn.disabled = live || replaying || all.length === 0;
     this.chaosBtn.classList.toggle('hidden', !live);
     this.chaosSel.classList.toggle('hidden', !live);
@@ -304,6 +314,10 @@ export class LanePopup {
     const cum = rv?.cum ?? this.latestCum();
     this.pace.textContent = cum ? `\u2605 ${starText(cum.stars)}/${cum.max}` : '';
     this.pace.title = 'Stars so far in this wave';
+    const ls = this.host.lessons?.(this.lane) ?? [];
+    this.lessonsBox.classList.toggle('hidden', !this.host.lessons);
+    this.lessonsBox.querySelector('summary')!.textContent = `Lessons${ls.length ? ` (${ls.length})` : ''}`;
+    if (this.lessonsBox.open) this.lessonsBody.replaceChildren(lessonsList(ls, (id) => this.host.stageLabel(id)));
     if (this.lapsBox.open) this.lapsBody.replaceChildren(renderLapTable(mergeLapRows(lapRowsOf(this.serverLaps), lapRowsFromEvents(this.buf, this.lane)), 'Laps of this wave'));
   }
 

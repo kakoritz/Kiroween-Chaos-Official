@@ -14,6 +14,15 @@ import { ChaosModeControl, readChaosState } from '../src/arena/chaosmode';
 import { AppSwitcher, currentApp } from '../src/arena/appswitch';
 import { GearMenu, DEFAULT_PACE, badgeTitle, type Pace } from '../src/arena/gearmenu';
 import '../src/arena/gearmenu.css';
+import { IntensityDial, applyIntensity, readDial, defaultDial } from '../src/arena/dial';
+import '../src/arena/dial.css';
+import { RoundIndicator, RoundCard, FinalScreen, type TournamentHost } from '../src/arena/tournament-view';
+import '../src/arena/tournament.css';
+import { applyCasebookEvent, emptyCasebook, lessonsTip, loadCasebook, loadLessons, mechanismWord } from '../src/arena/casebook';
+import { awardsRow, casebookTable, curseTableEl, fallbackAwards } from '../src/arena/casebook-view';
+import { countAnswer, emptyCurseLedger, isClass } from '../src/arena/curses';
+import { PatternsPanel } from '../src/arena/patterns-view';
+import '../src/arena/patterns.css';
 import { LegendModal } from '../src/arena/legend-modal';
 import { ArenaSound } from '../src/sound';
 import { FrameSampler, perfSecondsFromQuery } from '../src/perf';
@@ -51,12 +60,15 @@ root.innerHTML = `
       <span class="logo">HAUNT</span>
       <span class="tagline">${SPLASH_TAGLINE}</span>
       <span class="wave" id="wave"></span>
+      <span id="round-ind"></span>
       <div id="app-switch"></div>
       <div id="chaos-mode"></div>
+      <div id="dial"></div>
       <span class="spacer"></span>
       <span class="total" id="total" title="Total score"></span>
-      <button class="btn btn--ghost" id="tour-open" type="button" title="Six-step guided tour">Tour</button>
+      <button class="btn btn--ghost" id="tour-open" type="button" title="Guided tour">Tour</button>
       <button class="btn btn--ghost" id="keys-btn" type="button" aria-expanded="false" aria-controls="keys-pop" title="Keyboard and state legend (?)">&#9000; Keys</button>
+      <button class="btn btn--ghost" id="patterns-btn" type="button" title="Recurring trouble, fix specs and the improve loop">Patterns<span class="pt-badge hidden" id="patterns-badge"></span></button>
       <button class="btn btn--ghost" id="legend-btn" type="button" aria-expanded="false" title="What do R J I B Q mean?">?</button>
       <span class="gear-wrap" id="gear-wrap"><button class="btn btn--ghost" id="gear-btn" type="button" title="Settings: chaos, pace, speed, sound, motion" aria-label="Settings">&#9881;</button></span>
       <span class="pace-tag" id="pace-tag" title="Slow pace is on"></span>
@@ -79,7 +91,7 @@ root.innerHTML = `
     <section class="quiet" id="quiet">
       <h1>The crypt is quiet</h1>
       <p>Five skeletons are asleep. Start the show.</p>
-      <button class="btn btn--big" id="demo-big" type="button">&#9654; Play demo</button>
+      <div class="quiet-btns"><button class="btn btn--big" id="demo-big" type="button">&#9654; Play demo</button><button class="btn btn--big btn--ghost" id="tour-big" type="button" title="Five lanes race. The worst drops each round.">&#9876; Start tournament</button></div>
       <div class="err" id="err" role="alert"></div>
       <div class="stats" id="stats"></div>
     </section>
@@ -105,6 +117,9 @@ let lastSeq = 0;
 let waveNo = 0;
 let api: ArenaApi;
 let chaosCtl: ChaosModeControl;
+let dial: IntensityDial | null = null;
+// TV3-U8: true once any tournament event arrived; Next then calls POST /api/next instead of starting a wave.
+let tourActive = false;
 let appSwitch: AppSwitcher | null = null;
 let demoRunning = false;
 let waveRunning = false;
@@ -139,7 +154,8 @@ const queue: ArenaEvent[] = [];
 const scene = new ArenaScene(canvas.getContext('2d')!);
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 scene.reducedMotion = reduceMotion.matches;
-reduceMotion.addEventListener('change', () => { scene.reducedMotion = reduceMotion.matches; });
+document.body.classList.toggle('reduced-motion', reduceMotion.matches);
+reduceMotion.addEventListener('change', () => { scene.reducedMotion = reduceMotion.matches; document.body.classList.toggle('reduced-motion', reduceMotion.matches); });
 const rankBoard = new RankBoard($('rank-body'));
 const ledgerPanel = new LedgerPanel($('ledger-body'));
 const rankEl = $('rank');
@@ -167,6 +183,7 @@ const inspector = new LanePopup($('insp'), {
   laneBox: (n) => { const i = vm.lanes.findIndex((x) => x.lane === n); return i < 0 ? null : laneBoxes(vm.lanes.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET)[i] ?? null; },
   chaos: (lane, creature) => api.chaos(creature ? { lane, creature } : { lane }),
   creatures: () => api.getCreatures(),
+  lessons: (lane) => casebook.lessons[lane] ?? [],
   fetchOrder: (lane, order) => api.getLaneOrder(lane, order),
   fetchLaps: (lane) => api.getLaneLaps(lane),
   onError: showError,
@@ -190,7 +207,9 @@ canvas.addEventListener('click', (e) => {
 canvas.addEventListener('mousemove', (e) => {
   const r = canvas.getBoundingClientRect();
   canvas.style.cursor = chipAt(((e.clientX - r.left) / r.width) * STAGE_W, ((e.clientY - r.top) / r.height) * STAGE_H, vm.lanes.length, vm.stages.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET) ? 'pointer' : 'default';
-  canvas.title = chipTipAt(vm, ((e.clientX - r.left) / r.width) * STAGE_W, ((e.clientY - r.top) / r.height) * STAGE_H, vm.boss.phase === 'none' ? 0 : BOSS_INSET);
+  const dx = ((e.clientX - r.left) / r.width) * STAGE_W, dy = ((e.clientY - r.top) / r.height) * STAGE_H;
+  const hot = scene.hot.find((h) => dx >= h.x && dx <= h.x + h.w && dy >= h.y && dy <= h.y + h.h);
+  canvas.title = hot ? hot.tip : chipTipAt(vm, dx, dy, vm.boss.phase === 'none' ? 0 : BOSS_INSET);
 });
 const keysPop = $('keys-pop');
 const keysBtn = $<HTMLButtonElement>('keys-btn');
@@ -242,6 +261,7 @@ muteBtn.addEventListener('click', () => {
 const captionPlayer = new CaptionPlayer(freezeFromQuery(window.location.search));
 const captionOverlay = new CaptionOverlay(stageEl, captionPlayer, { demoRunning: new URLSearchParams(window.location.search).get('demo') !== 'off' });
 
+let curseLedger = emptyCurseLedger();
 const waveSummary = new WaveSummary(stageEl, {
   stageIds: () => vm.stages.map((s) => s.id),
   stageLabel: (id) => vm.stages.find((s) => s.id === id)?.label ?? id,
@@ -250,6 +270,7 @@ const waveSummary = new WaveSummary(stageEl, {
   nextWave: () => { awaitingNext = true; void goNext(); },
   playDemo: () => { void startDemo(pickScript(currentScript, demoScripts) ?? 'hero'); },
   reportUrl: (n) => `report.html?live=1#/report/${n}`,
+  extra: () => curseTableEl(curseLedger, casebookHost),
 }); // PT-U6
 const shopStart = gearShopStarter(stageEl, { getCampaign: () => api.getCampaign(), startWave: async (o) => {
   // The attract demo (or a leftover wave) plays behind the splash; a night cannot start until it stops.
@@ -270,11 +291,71 @@ const campaignSandbox = mountCampaignSandbox(stageEl, { getCampaign: () => api.g
   waveSummary.suppressNext();
   return api.startWave(o);
 } });
+const tournamentHost: TournamentHost = {
+  laneTitle: (n) => vm.lanes.find((l) => l.lane === n)?.label || vm.lanes.find((l) => l.lane === n)?.tier || '',
+  laneTier: (n) => vm.lanes.find((l) => l.lane === n)?.tier ?? 'rookie',
+  stageLabel: (id) => vm.stages.find((s) => s.id === id)?.label ?? id,
+  next: () => { awaitingNext = true; void goNext(); },
+  startTournament: () => { void beginTournament(); },
+  reducedMotion: () => reduceMotion.matches || document.body.classList.contains('reduced-motion'),
+};
+const roundInd = new RoundIndicator($('round-ind'));
+const roundCard = new RoundCard(stageEl, tournamentHost);
+const finalScreen = new FinalScreen(stageEl, tournamentHost);
+// TV3-U9: lessons ledger and Casebook, fed straight from the event stream (the DOM cards need them the moment round_end lands).
+const patternsBtn = $<HTMLButtonElement>('patterns-btn');
+const patternsBadge = $('patterns-badge');
+const patternsPanel = new PatternsPanel(stageEl, {
+  getPatterns: () => api.getPatterns(), writeSpecs: () => api.writeSpecs(), startImprove: () => api.startImprove({ speed: 4, pace: 'normal' }), getImprove: () => api.getImprove(),
+  stageLabel: tournamentHost.stageLabel, laneTitle: tournamentHost.laneTitle, onError: showError,
+  onBadge: (n, running) => { patternsBadge.textContent = running ? '\u21BB' : String(n); patternsBadge.classList.toggle('hidden', !running && n === 0); patternsBadge.classList.toggle('run', running); },
+}, () => reduceMotion.matches || document.body.classList.contains('reduced-motion'));
+patternsBtn.addEventListener('click', () => void patternsPanel.open());
+roundCard.muted = () => patternsPanel.running;
+finalScreen.muted = () => patternsPanel.running;
+const casebook = emptyCasebook();
+const casebookHost = { laneTitle: tournamentHost.laneTitle, stageLabel: tournamentHost.stageLabel };
+scene.lessonInfo = (lane) => {
+  const list = casebook.lessons[lane] ?? [];
+  const la = casebook.learnedAt[lane];
+  return { count: list.length, tip: list.length ? lessonsTip(list, tournamentHost.stageLabel) : '', learnedAt: la?.at ?? -1, mechanism: la ? mechanismWord(la.mechanism) : '' };
+};
+roundCard.extra = (r) => {
+  const box = document.createElement('div');
+  const learned = Object.entries(casebook.lessons).map(([lane, list]) => ({ lane: Number(lane), n: list.filter((x) => x.round === r.round).length })).filter((x) => x.n > 0);
+  if (learned.length > 0) {
+    const p = document.createElement('p'); p.className = 'tv-learned';
+    p.textContent = `Learned this round: ${learned.map((x) => `${tournamentHost.laneTitle(x.lane) || `Lane ${x.lane}`} +${x.n}`).join(', ')}`;
+    box.append(p);
+  }
+  const crs = curseTableEl(curseLedger, casebookHost);
+  if (crs) box.append(crs);
+  box.append(casebookTable(casebook, casebookHost, { max: 4, title: 'Casebook so far' }));
+  return box;
+};
+finalScreen.sections = [
+  (t) => awardsRow(t.awards.length > 0 ? t.awards : fallbackAwards(t, casebook), casebookHost),
+  () => casebookTable(casebook, casebookHost, { max: 6 }),
+];
+$('round-ind').addEventListener('click', () => { if (vm.tournament.phase === 'ended') finalScreen.reopen(); });
+const TOURNAMENT_EVENTS = new Set(['round_start', 'round_end', 'awaiting_next', 'lane_eliminated', 'corpse', 'tournament_end']);
 const campaignResults = mountCampaignResults(stageEl, { getCampaign: () => api.getCampaign() }, { onNight: (n) => shopStart(n), onHub: () => window.dispatchEvent(new CustomEvent('haunt:splash', { detail: { action: 'campaign' } })) }); // CP-U3
 
 function onEvent(ev: ArenaEvent) {
+  if (TOURNAMENT_EVENTS.has(ev.type)) tourActive = true;
+  if (ev.type === 'reset') tourActive = false;
+  applyCasebookEvent(casebook, ev, performance.now());
+  if ((ev.type === 'round_end' || ev.type === 'tournament_end') && ev.detail?.casebook) loadCasebook(casebook, ev.detail.casebook);
+  if (ev.type === 'wave_start' || ev.type === 'reset') curseLedger = emptyCurseLedger();
+  if (ev.type === 'curse_response' && typeof ev.lane === 'number' && isClass(ev.detail?.class)) countAnswer(curseLedger, ev.lane, ev.detail!.class as never);
+  patternsPanel.onEvent(ev);
+  roundCard.onEvent(ev);
+  finalScreen.onEvent(ev);
   campaignResults.onEvent(ev);
   campaignSandbox.onEvent(ev);
+  // In a tournament the standings card replaces the wave card.
+  if (tourActive && ev.type === 'wave_end') waveSummary.suppressNext();
+  if (tourActive && ev.type === 'round_end') waveSummary.close();
   waveSummary.onEvent(ev);
   queue.push(ev);
   captionPlayer.event(ev, performance.now());
@@ -285,6 +366,10 @@ function onEvent(ev: ArenaEvent) {
   scoreVisuals.onEvent(ev);
   events++;
   if (typeof ev.seq === 'number') lastSeq = ev.seq;
+  if (ev.type === 'intensity') {
+    const next = defaultDial();
+    if (applyIntensity(next, ev.detail)) dial?.adopt({ level: next.level, source: next.source, ...(typeof ev.detail?.autoRamp === 'boolean' ? { autoRamp: next.autoRamp } : {}) });
+  }
   if (ev.type === 'hello') {
     mode = typeof ev.mode === 'string' ? ev.mode : mode;
     if (ev.contractVersion !== 1) errEl.textContent = 'Update the UI: the server speaks contract version ' + String(ev.contractVersion) + '.';
@@ -295,9 +380,17 @@ function onEvent(ev: ArenaEvent) {
     waveRunning = true;
     awaitingNext = false; nextBtn.classList.add('hidden');
     errEl.textContent = '';
+  } else if (ev.type === 'awaiting_next') {
+    awaitingNext = true; waveRunning = false;
+    nextBtn.textContent = '\u25B6 Next round';
+    nextBtn.classList.remove('hidden');
+    void reconcile();
+  } else if (ev.type === 'round_start' || ev.type === 'tournament_end') {
+    awaitingNext = false; nextBtn.classList.add('hidden');
   } else if (ev.type === 'wave_end') {
     waveRunning = false;
     awaitingNext = !(ev.detail && (ev.detail as { stopped?: unknown }).stopped);
+    nextBtn.textContent = tourActive ? '▶ Next round' : '▶ Next wave';
     nextBtn.classList.toggle('hidden', !awaitingNext);
     void reconcile();
   }
@@ -311,6 +404,8 @@ async function loadState() {
   try {
     const s = await api.getState();
     mode = String(s.mode);
+    const ds = readDial(s);
+    if (ds) dial?.adopt(ds);
     const cs = readChaosState(s);
     if (cs) chaosCtl.adopt(cs);
     appSwitch?.setActive(currentApp(s));
@@ -320,11 +415,25 @@ async function loadState() {
     demoScripts = Array.isArray(s.demo?.scripts) ? s.demo.scripts : demoScripts;
     waveEl.textContent = waveLabel(waveNo);
     queue.length = 0;
-    loadSnapshot(vm, s, performance.now());
+    // Rounds, standings and awards for a late joiner; a server without the tournament endpoint just answers 404.
+    const tour = await api.getTournament().catch(() => null);
+    loadSnapshot(vm, tour ? { ...s, tournament: { ...(s.tournament ?? {}), ...(tour as object) } } : s, performance.now());
+    if (vm.tournament.active) {
+      tourActive = true;
+      if (vm.tournament.awaitingNext) { awaitingNext = true; nextBtn.textContent = '\u25B6 Next round'; nextBtn.classList.remove('hidden'); }
+      void hydrateCasebook().then(() => { roundCard.adopt(vm.tournament); finalScreen.adopt(vm.tournament); });
+    }
     await reconcile();
+    void patternsPanel.hydrate();
   } catch (e) { showError(e); }
   paintBadge();
   paintDemo();
+}
+
+/** Casebook and lessons for a page that loads mid-tournament (GET /api/casebook, GET /api/lessons/:lane). A server without them answers 404. */
+async function hydrateCasebook() {
+  try { loadCasebook(casebook, await api.getCasebook()); } catch { /* the events fill it from here */ }
+  await Promise.all(vm.lanes.map((l) => api.getLessons(l.lane).then((raw) => loadLessons(casebook, l.lane, raw)).catch(() => { /* none yet */ })));
 }
 
 async function startCaptions(script: string) {
@@ -356,11 +465,14 @@ async function boot() {
   api.startWave = (o) => startWave0({ pace, ...o });
   chaosCtl = new ChaosModeControl($('chaos-mode'), { setChaosMode: (o) => api.setChaosMode(o), onError: showError });
 
+  dial = new IntensityDial($('dial'), { setIntensity: (level, o) => api.setIntensity(level, o).then((st) => { const ds = readDial({ intensity: st as never }); if (ds) dial?.adopt(ds); return st; }), onError: showError });
   new GearMenu($<HTMLButtonElement>('gear-btn'), $('gear-wrap'), $('pace-tag'), {
     setPace: (p) => { pace = p; },
     setSpeed: (s) => { void api.setSpeed(s).catch(showError); },
     toggleSound: () => muteBtn.click(),
-    setReducedMotion: (on) => { scene.reducedMotion = on || reduceMotion.matches; },
+    startTournament: () => { void beginTournament(); },
+    resetLessons: () => { void api.resetLessons().then(() => { casebook.lessons = {}; casebook.learnedAt = {}; }).catch(showError); },
+    setReducedMotion: (on) => { scene.reducedMotion = on || reduceMotion.matches; document.body.classList.toggle('reduced-motion', on || reduceMotion.matches); },
   }, $('chaos-mode'));
   new LegendModal(stageEl, $<HTMLButtonElement>('legend-btn'));
 
@@ -406,11 +518,26 @@ async function boot() {
   }, 3000);
 }
 
-// Next wave (TV3-U2): the only thing that starts the next wave after a wave ends.
+// Start tournament (TV3-U8): five lanes, the worst drops each round. Clears whatever plays behind the splash first.
+async function beginTournament() {
+  errEl.textContent = '';
+  try {
+    chainDemo = false; captionPlayer.stop();
+    if (demoRunning) { await api.stopDemo(); demoRunning = false; paintDemo(); }
+    if (waveRunning) { try { await api.stopWave(); } catch { /* none running */ } waveRunning = false; }
+    waveSummary.suppressNext();
+    await api.startTournament();
+    tourActive = true;
+  } catch (e) { showError(e); }
+}
+$('tour-big').addEventListener('click', () => void beginTournament());
+
+// Next wave (TV3-U2) and next round (TV3-U8): the only thing that starts the next one after a review.
 async function goNext() {
   if (!awaitingNext) return;
   awaitingNext = false; nextBtn.classList.add('hidden');
   try {
+    if (tourActive) { await api.next(); return; }
     if (chainDemo) {
       const s = await api.getState();
       const next = pickScript(currentScript, Array.isArray(s.demo?.scripts) ? s.demo.scripts : demoScripts);
@@ -522,6 +649,8 @@ function frame(now: number) {
   }
   scene.speed = vm.speed || 1;
   totalEl.textContent = vm.lanes.length ? `Score ${totalScore(vm)}` : '';
+  roundInd.update(vm.tournament);
+  document.body.classList.toggle('tour-on', vm.tournament.active && vm.tournament.round > 0);
   quietEl.classList.toggle('hidden', vm.lanes.length > 0);
   rankEl.classList.toggle('hidden', vm.lanes.length === 0);
   ledgerEl.classList.toggle('hidden', vm.lanes.length === 0);
@@ -556,4 +685,5 @@ function reportPerf(summary: unknown) {
 }
 requestAnimationFrame(frame);
 
-(window as unknown as { __arena?: unknown }).__arena = { vm };
+// Dev and screenshot hook: __arena.inject(event) feeds one event through the normal pipeline (no server needed).
+(window as unknown as { __arena?: unknown }).__arena = { vm, inject: (ev: Partial<ArenaEvent> & { type: string }) => onEvent({ seq: ++lastSeq, ts: Date.now(), ...ev } as ArenaEvent) };
