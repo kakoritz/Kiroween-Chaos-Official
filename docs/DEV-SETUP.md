@@ -1,15 +1,21 @@
 # Dev setup and repo conventions
 
-## Where to work (important)
+## Quick start
 
-The repo lives on a Synology NAS (`<local path, not the repo>`). **Do not build there.** `npm install` on the NAS breaks (no symlinks, slow). Each session works in its **own local clone** and pushes to GitHub. The NAS copy is a convenience and is only updated with `git pull`.
+Needs Node 20 or newer (Python 3.12 for the Ticket Desk, standard library only).
 
 ```
-git clone https://github.com/kakoritz/Kiroween-Chaos.git C:\dev\Kiroween-Chaos-core      # Lane A
-git clone https://github.com/kakoritz/Kiroween-Chaos.git C:\dev\Kiroween-Chaos-ui        # Lane B
+git clone https://github.com/kakoritz/Kiroween-Chaos.git
+cd Kiroween-Chaos
+npm ci
+npm run demo
 ```
 
-(Any local, non-network path is fine.) The NAS copy trips git's "dubious ownership" check. Use `git -c safe.directory='*' ...` there, or just avoid it.
+Work on a **local disk**, not a network share: `npm ci` needs symlinks and many small files, and the live server writes JSONL under `.haunt/`. Several sessions can work side by side in separate clones or `git worktree`s, each on its own ports (below).
+
+Ports: the live server uses 7070 and the provider 7071. If something else holds them, set `HAUNT_PORT` and `HAUNT_PROVIDER_PORT` (for example `17070` and `17071`). `npm run demo -- --check` and `npm run validate:live` pick free ports themselves.
+
+The CLI is `npm run haunt -- <command>`. There is no `haunt` binary and `npx haunt` does not exist.
 
 ## Stack (decided, do not relitigate)
 
@@ -52,14 +58,20 @@ git clone https://github.com/kakoritz/Kiroween-Chaos.git C:\dev\Kiroween-Chaos-u
 | `npm run mock` | Mock server on 7070 (fixtures plus simulator) |
 | `npm run live` | Live server on 7070 (real engine) and the fake provider on 7071. `HAUNT_PORT` and `HAUNT_PROVIDER_PORT` move both, so a second server can run beside the first |
 | `npm run ui:dev` | Vite dev server on 5173, API at 7070 |
-| `npm run ui:build` | Builds `packages/arena-ui/dist` |
+| `npm run ui:build` | Builds `packages/arena-ui/dist`. The folder is gitignored and untracked, so building leaves a clean tree |
 | `npm run build:bots` | esbuild bundles `dist/bots/<tier>.js` (Rookie to Phoenix, the campaign Crew, the hero demo bundles). Needed once before the live server or `npm run e2e`: the live lanes spawn these bundles |
 | `npm run e2e` | End-to-end smoke (`tools/e2e.mjs`): starts the live server on private ports (default 7171 and 7172, `HAUNT_PORT` and `HAUNT_PROVIDER_PORT` override), plays the hero demo wave, campaign night 1, a tournament at speed 4 pressing Next between rounds, the improve loop and an app switch to the inbox, then checks invariants on the event stream and prints a pass/fail table. About 6 to 10 minutes. Hardening specs the run writes under `.kiro/specs/` are removed afterwards (never applied). `-- --quick` skips the improve loop. Exit code 1 on any failure; the event stream is kept in `.tmp/e2e/events.jsonl` |
 | `npm run demo` | Builds if needed, starts the server (live if available, else mock) and opens the arena in demo mode. `npm run demo -- --check` starts, verifies and exits (used by fresh-clone) |
 | `npm test` | All unit and property tests |
 | `npm run test:contract` | Contract suite against the running server (mock and live) |
 | `npm run validate:events` | Fixtures against `events.schema.json` and the ordering rules |
-| `npm run haunt -- <cmd>` | The CLI (`sweep`, `ramp`, `report`, ...) |
+| `npm run validate:live` | Starts the live server on free ports, plays the hero demo, a wave, a campaign night and an inbox wave at speed 4, and checks the whole event stream against the contract rules. About 2.5 minutes, prints violations by rule, exit 1 on any. `-- --keep-log` keeps the stream in `.tmp/validate-live/events.jsonl` |
+| `npm run build:hosted` | Arena build plus `dist/hosted` (static, about 4 MB, recorded runs included) |
+| `npm run serve:hosted [port]` | Serves `dist/hosted` on `127.0.0.1` (default 8080; add `--base=/Kiroween-Chaos/` to test a sub path) |
+| `npm run check:hosted` | Headless Chrome check of the hosted build, screenshots to `docs/proof/hosted` |
+| `npm run verify` | typecheck, vitest, build:bots, ui:build and `demo --check` in one command; `-- --quick` skips the demo check. Reruns failed test files alone and says `flake` if they pass. The script is in PR #253; once merged it is in every clone |
+| `npm run haunt -- <cmd>` | The CLI: `sweep`, `ramp`, `stack`, `soak`, `boss`, `compare`, `badge`, `improve`, `spec-lint`, `monkey`, `stop`. A default `sweep` takes more than 5 minutes (about 5 with `--orders 1 --speed 16`). `ramp --tier phoenix --orders 4 --steps 1,2 --speed 16 --no-gate` takes about 12 s. `improve` needs a running live server (`--url`) and takes more than 8 minutes until the deterministic version merges |
+| `npm run haunt -- monkey --mode observe\|staging\|prod-guarded [--dry-run] [--config file.yaml]` | The guarded production monkey. `--dry-run` prints the plan. `prod-guarded` needs `--config` with a schedule window and allowlist. `npm run haunt -- stop --port N` is the kill switch. See `docs/PRODUCTION-MODE.md` |
 | `npm run fresh-clone` | Runs `tools/fresh-clone-test`: clones to a temp folder, installs, runs `npm run demo -- --check`, must pass in under 3 min |
 
 ## The product today, in one page
@@ -75,11 +87,14 @@ git clone https://github.com/kakoritz/Kiroween-Chaos.git C:\dev\Kiroween-Chaos-u
 ## Checking everything before a PR
 
 ```
+npm run verify                 # the five checks below in one command (PR #253), reruns flaky files alone
+# or by hand:
 npx tsc --noEmit
-npx vitest run                 # about 1,500 tests; a worker timeout under load is a known flake, rerun that file alone
+npx vitest run                 # a worker timeout under load is a known flake, rerun that file alone
 npm run build:bots
 npm run ui:build
-HAUNT_PROVIDER_PORT=7172 npm run demo -- --check
+npm run demo -- --check
+npm run validate:live          # optional, about 2.5 minutes, must print 0 violations
 npm run e2e                    # optional, 6 to 10 minutes, starts its own server on 7171 and 7172
 ```
 
@@ -103,9 +118,9 @@ npm run e2e                    # optional, 6 to 10 minutes, starts its own serve
 
 No secrets exist. No real payment, no real keys. All servers bind `127.0.0.1`. The reviewer's optional LLM pass reads `ANTHROPIC_API_KEY` from the environment if present and is off otherwise. Never commit keys.
 
-## Kiro artifacts that must exist by Dec 2
+## Kiro artifacts that must stay in the repo
 
-`.kiro/specs/` (all lanes), `.kiro/steering/` (product, tech, contract rules), `.kiro/hooks/` (5 hooks: validate fixtures on contract save, lint hardening specs, property test on SDK save, reviewer at wave end, trace on merge), `.kiro/agents/` (`chaos-director`, `reviewer`), `docs/KIRO-LOG.md`. See `docs/WINNING.md` for what each must show.
+`.kiro/specs/` (all lanes), `.kiro/steering/` (product, tech, contract rules), `.kiro/hooks/` (5 hooks: validate fixtures on contract save, lint hardening specs, property test on SDK save, reviewer at wave end, trace on merge), `.kiro/agents/` (`chaos-director`, `reviewer`), `docs/KIRO-LOG.md`. `.kiro/` is never gitignored.
 
 ## Runtime folders
 

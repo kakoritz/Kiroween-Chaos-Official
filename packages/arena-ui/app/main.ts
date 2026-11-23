@@ -167,7 +167,7 @@ const reviewCards = new ReviewCardView(stageEl, (n) => { const i = vm.lanes.find
 const decisionPopup = new DecisionPopupView(stageEl, (n) => { const i = vm.lanes.findIndex((x) => x.lane === n); const b = i < 0 ? null : laneBoxes(vm.lanes.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET)[i]; return b ? { top: b.top, h: b.h } : null; }, (lane, order, choice) => api.decide(lane, order, choice), (id) => vm.stages.find((s) => s.id === id)?.label ?? id);
 const scoreVisuals = new ScoreVisuals(stageEl, (n) => { const i = vm.lanes.findIndex((x) => x.lane === n); return i < 0 ? null : laneBoxes(vm.lanes.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET)[i] ?? null; });
 const tickerEl = $('ticker');
-const tickerModel = new LaneTickerModel((id) => vm.stages.find((s) => s.id === id)?.label ?? id);
+const tickerModel = new LaneTickerModel((id) => vm.stages.find((s) => s.id === id)?.label ?? id, () => vm.app);
 const ticker = new LaneTickerView($('ticker-body'), tickerModel, {
   tier: (lane) => vm.lanes.find((l) => l.lane === lane)?.tier ?? '',
   open: (lane) => {
@@ -183,6 +183,7 @@ const liveAssertive = $('live-assertive');
 const inspector = new LanePopup($('insp'), {
   stageIds: () => vm.stages.map((s) => s.id),
   stageLabel: (id) => vm.stages.find((s) => s.id === id)?.label ?? id,
+  app: () => vm.app,
   laneInfo: (n) => { const l = vm.lanes.find((x) => x.lane === n); return l ? { tier: l.tier, order: l.order, running: l.mode !== 'sleep' && l.mode !== 'done' && l.order !== null } : null; },
   laneBox: (n) => { const i = vm.lanes.findIndex((x) => x.lane === n); return i < 0 ? null : laneBoxes(vm.lanes.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET)[i] ?? null; },
   chaos: (lane, creature) => api.chaos(creature ? { lane, creature } : { lane }),

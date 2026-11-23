@@ -10,7 +10,7 @@ import { postProviderArm, type PostFault } from './provider';
 import { IssueFloor, gremlinVariant } from './floor';
 import { CURSE_KINDS, classifyHit, drawCurse, stageOfCall, type CurseKind, type CurseRec, type OrderTrace } from '../tournament/curses';
 import { unit } from '../shared/rng';
-import { APPS } from '../shared/catalog';
+import { APPS, type AppId } from '../shared/catalog';
 
 /** What the provider tells the engine when a curse lied (see `CurseHit` in the provider). */
 export interface ProviderCurseHit { lane: string; service: string; order: string; index?: number; curse: CurseKind; id: string; status: number }
@@ -67,10 +67,12 @@ export class RunnerEngine {
   }
 
   private appStages = new Set<string>();
+  private appId: AppId = 'orders';
 
   startWave = (wave: number, settings: EngineWaveSettings, record: (ev: HauntEvent) => void): void => {
     this.wave = wave;
     this.seed = settings.seed;
+    this.appId = settings.app in APPS ? (settings.app as AppId) : 'orders';
     this.appStages = new Set((APPS[settings.app as keyof typeof APPS] ?? APPS.orders).stages.map((d) => d.id));
     this.record = record;
     this.speed = settings.speed;
@@ -239,11 +241,11 @@ export class RunnerEngine {
     this.hits.set(lane, (this.hits.get(lane) ?? []).filter((h) => !mine.includes(h)));
     const seen = new Set<string>();
     for (const h of mine) {
-      const stage = stageOfCall(h.service, h.index);
+      const stage = stageOfCall(h.service, h.index, this.appId);
       const key = `${stage}|${h.id}`;
       if (seen.has(key)) continue;
       seen.add(key);
-      const cls = classifyHit(ev.type as never, t, h.service, h.index);
+      const cls = classifyHit(ev.type as never, t, h.service, h.index, this.appId);
       this.record?.({ type: 'curse_response', lane, order: t.order, stage, detail: { order: t.order, stage, curse: h.curse, class: cls, id: h.id, endpoint: h.service, status: h.status } } as HauntEvent);
     }
   }

@@ -23,6 +23,7 @@ const REPLAY_BASE_MS = 3000;
 export interface LanePopupHost {
   stageIds(): string[];
   stageLabel(id: string): string;
+  app?(): string;
   /** Lane tier name and the order it is running now. */
   laneInfo(lane: number): { tier: string; order: string | null; running: boolean } | null;
   /** Where the lane sits on the arena canvas (design pixels), or null when it is not drawn. */
@@ -274,7 +275,7 @@ export class LanePopup {
     const stageIds = this.host.stageIds();
     const rows = stageRows(evs, stageIds, this.serverOrder);
     const orders = orderRows(this.buf, this.lane, this.serverLaps);
-    const all = logEntries(logEvs, this.host.stageLabel);
+    const all = logEntries(logEvs, this.host.stageLabel, this.host.app?.() ?? 'orders');
     const outcomeRow = orders.find((o) => o.order === (allOrders ? cur : order));
     const outcome = outcomeRow?.outcome ?? 'running';
     const live = !!info?.running && order === cur && outcome === 'running';
