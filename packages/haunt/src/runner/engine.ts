@@ -272,7 +272,7 @@ export class RunnerEngine {
     this.seq++;
     const creature = req.creature ?? FAULTS.find((f) => f.id === req.fault)?.creature ?? req.fault;
     const gremlin = req.source === 'gremlin';
-    this.record?.({ type: 'chaos', lane, detail: { id: chaosId, creature, source: req.source === undefined || req.source === 'manual' ? 'user' : req.source, ...r.detail, ...(gremlin ? { fault: 'gremlin', variant: req.fault } : {}),
+    this.record?.({ type: 'chaos', lane, detail: { id: chaosId, creature, source: req.source === undefined || (req.source as string) === 'manual' ? 'user' : req.source, ...r.detail, ...(gremlin ? { fault: 'gremlin', variant: req.fault } : {}),
       ...(fz ? { unknown: true, fingerprint: fz.fingerprint, fuzz: { fault: fz.fault, ...(fz.status !== undefined ? { status: fz.status } : {}), ...(fz.forMs !== undefined ? { forMs: fz.forMs } : {}), ...(fz.count !== undefined ? { count: fz.count } : {}), ...(fz.truncated ? { truncated: true } : {}), ...(fz.clockJumpMs !== undefined ? { clockJumpMs: fz.clockJumpMs } : {}) } } : {}) } });
     if (outageMs !== undefined) {
       // A transit or updates stall deferred to a stage the running app does not have (the inbox) names no stage: the outage window still shows.
