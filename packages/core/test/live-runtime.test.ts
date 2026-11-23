@@ -146,7 +146,7 @@ describe('ledger and hardening payloads', () => {
     const rows = [row('a', '1', 'charge', 'k1'), row('b', '1', 'charge', 'k1'), row('c', '1', 'account', 'k2')];
     const out = buildLedger(['1', '2'], (l) => rows.filter((r) => r.lane === l)) as { lanes: any[] };
     expect(out.lanes[0].byKind.charge).toEqual({ rows: 2, repeats: 1 });
-    expect(out.lanes[0].byKind.account).toEqual({ rows: 1, repeats: 0 });
+    expect(out.lanes[0].byKind.account_create).toEqual({ rows: 1, repeats: 0 });
     expect(out.lanes[1]).toEqual({ lane: 2, byKind: {}, rows: [] });
   });
 

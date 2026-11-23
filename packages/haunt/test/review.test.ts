@@ -86,6 +86,11 @@ describe('star tracker, rating and score', () => {
     expect(t.add(2)).toEqual({ stars: 8, max: 15, count: 3 });
     expect(t.summary().rating).toBe(ratingFor(8 / 3));
   });
+  it('a lane with no reviews has no rating (not Cursed)', () => {
+    const s = new StarTracker().summary();
+    expect(s).toEqual({ sum: 0, max: 0, count: 0, avg: 0 });
+    expect('rating' in s).toBe(false);
+  });
   it.each([[5, 'Five-Star Crypt'], [4.5, 'Five-Star Crypt'], [4.4, 'Respectable'], [3.5, 'Respectable'], [3.4, 'Spooky Service'], [2.5, 'Spooky Service'], [2.4, 'Cursed'], [1, 'Cursed']])('avg %s is %s', (a, r) => {
     expect(ratingFor(a)).toBe(r);
   });

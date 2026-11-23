@@ -210,7 +210,7 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
     need('issuesByStage', !!s.issuesByStage && typeof s.issuesByStage === 'object' && Object.entries(s.issuesByStage).every(([k, v]) => stageIds.includes(k) && Number.isInteger(v) && (v as number) >= 0));
     const st = s.stars;
     const okStars = need('stars', !!st && num(st.sum) && num(st.max) && Number.isInteger(st.count) && num(st.avg));
-    need('rating', ['Five-Star Crypt', 'Respectable', 'Spooky Service', 'Cursed'].includes(s.rating));
+    need('rating', (st && st.count === 0 && s.rating === undefined) || ['Five-Star Crypt', 'Respectable', 'Spooky Service', 'Cursed'].includes(s.rating));
     if (okOrders) {
       const done = o.done as number;
       if (done > 0) {

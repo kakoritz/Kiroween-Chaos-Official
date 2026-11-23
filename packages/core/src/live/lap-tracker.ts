@@ -213,7 +213,7 @@ export class LapTracker {
       // Issues of the lane this wave (spec 5.3): finished orders plus the one in flight. P19: never zero.
       issues: Object.values(S.issuesByStage).reduce((a, b) => a + b, 0) + (S.rec ? [...S.rec.issues.values()].reduce((a, b) => a + b, 0) : 0),
       stars: { sum: st.sum, max: st.max, count: st.count, avg },
-      rating: ratingFor(avg),
+      ...(st.count ? { rating: ratingFor(avg) } : {}),
     };
   }
 }
