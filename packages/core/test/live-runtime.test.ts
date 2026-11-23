@@ -311,3 +311,12 @@ describe('makeBotCommand wave reset', () => {
     expect(cmd('1', 3, s)?.env?.HAUNT_ATTEMPT).toBe('1');
   });
 });
+
+describe('buildLedger kind names', () => {
+  it('maps the desk ledger kinds to the effect-event names so the inbox columns agree with live counts', () => {
+    const row = (kind: string, order: string, index = 1) => ({ lane: '1', kind, order, index, key: null }) as never;
+    const out = buildLedger(['1'], () => [row('account', 'o1'), row('ticket', 'o1'), row('reply', 'o1'), row('reply', 'o1'), row('notify', 'o1')]) as { lanes: { byKind: Record<string, { rows: number; repeats: number }> }[] };
+    expect(Object.keys(out.lanes[0]!.byKind).sort()).toEqual(['account_create', 'email', 'notify', 'ticket']);
+    expect(out.lanes[0]!.byKind.email).toEqual({ rows: 2, repeats: 1 });
+  });
+});

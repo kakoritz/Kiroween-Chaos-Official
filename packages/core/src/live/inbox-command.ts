@@ -40,7 +40,11 @@ export function writeInboxMail(ordersDir: string, count: number, corpusFile: str
   const corpus = JSON.parse(readFileSync(corpusFile, 'utf8')) as Record<string, unknown>[];
   if (corpus.length === 0) return;
   for (let i = 1; i <= count; i++) {
-    writeFileSync(join(ordersDir, `ord-${String(i).padStart(4, '0')}.json`), JSON.stringify(corpus[(i - 1) % corpus.length]));
+    // A corpus that cycles gets a new external id each time round (the same text is a new request, not a webhook retry).
+    const base = corpus[(i - 1) % corpus.length]!;
+    const cycle = Math.floor((i - 1) / corpus.length);
+    const mail = cycle > 0 && typeof base.id === 'string' ? { ...base, id: `${base.id}-c${cycle + 1}` } : base;
+    writeFileSync(join(ordersDir, `ord-${String(i).padStart(4, '0')}.json`), JSON.stringify(mail));
   }
 }
 

@@ -10,6 +10,11 @@ export const HEAD_H = 20;
 const SHORT_LABEL: Record<string, string> = { Accounts: 'Accts', Orders: 'Placed', Shipments: 'Ships', Notices: 'Notes', Receipts: 'Receipts' };
 export const ledgerHeader = (full: string): string => SHORT_LABEL[full] ?? full;
 const KIND_ORDER = ['account_create', 'order', 'charge', 'email', 'store', 'dispatch', 'notify', 'ticket'];
+/** The Ticket Desk's ledger, in pipeline order: SSO accounts, tickets, replies, escalation notices. */
+const INBOX_KIND_ORDER = ['account_create', 'ticket', 'email', 'notify'];
+export const INBOX_KIND_LABEL: Record<string, string> = { account_create: 'Accounts', ticket: 'Tickets', email: 'Replies', notify: 'Notices' };
+/** The inbox app has an `assign` stage; the orders app has none. */
+export const isInboxVM = (vm: Pick<ArenaVM, 'stages'>): boolean => vm.stages.some((s) => s.id === 'assign');
 export const KIND_LABEL: Record<string, string> = {
   account_create: 'Accounts', order: 'Orders', charge: 'Charges', email: 'Emails', store: 'Store', dispatch: 'Shipments', notify: 'Notices', ticket: 'Tickets',
 };
@@ -27,6 +32,10 @@ export const canonKind = (k: string): string => (k === 'account' ? 'account_crea
 export function ledgerKinds(vm: ArenaVM): string[] {
   const seen = new Set<string>();
   for (const l of vm.lanes) for (const k of Object.keys(l.ledger)) seen.add(canonKind(k));
+  if (isInboxVM(vm)) {
+    const extra = [...seen].filter((k) => !INBOX_KIND_ORDER.includes(k)).sort();
+    return [...INBOX_KIND_ORDER, ...extra];
+  }
   if (!seen.size) return DEFAULT_KINDS;
   const known = KIND_ORDER.filter((k) => seen.has(k));
   const extra = [...seen].filter((k) => !KIND_ORDER.includes(k)).sort();
@@ -41,7 +50,7 @@ export function cellView(l: LaneVM, kind: string): CellView {
 }
 
 /** Column title. In the orders app (a `charge` column is present) the confirmation email is the customer's receipt. */
-export const kindLabel = (k: string, orders = false): string => (k === 'email' && orders ? 'Receipts' : KIND_LABEL[k] ?? k.replace(/_/g, ' '));
+export const kindLabel = (k: string, orders = false, inbox = false): string => (inbox && INBOX_KIND_LABEL[k] ? INBOX_KIND_LABEL[k]! : k === 'email' && orders ? 'Receipts' : KIND_LABEL[k] ?? k.replace(/_/g, ' '));
 
 /** Icon plus color for the state: dead dims, halted is struck through, done is checked. */
 export function stateIcon(m: SkelMode): { icon: string; label: string } {
@@ -114,11 +123,12 @@ export class LedgerPanel {
   }
   update(vm: ArenaVM, now: number): void {
     const kinds = ledgerKinds(vm);
+    const inbox = isInboxVM(vm);
     const flash = vm.lanes.map((l) => kinds.map((k) => (l.flash[k] !== undefined && now - l.flash[k]! < 1200 ? 1 : 0)).join('')).join(',');
-    const sig = kinds.join() + '#' + vm.lanes.map((l) => `${l.lane}:${l.counts.completed}:${kinds.map((k) => cellView(l, k).text).join(',')}`).join('|') + '#' + flash;
+    const sig = (inbox ? 'i' : 'o') + kinds.join() + '#' + vm.lanes.map((l) => `${l.lane}:${l.counts.completed}:${kinds.map((k) => cellView(l, k).text).join(',')}`).join('|') + '#' + flash;
     if (sig === this.sig) return;
     this.sig = sig;
-    const head = `<tr><th>Lane</th>${kinds.map((k) => { const full = kindLabel(k, kinds.includes('charge')); return `<th title="${esc(full)} written to the outside world">${esc(ledgerHeader(full))}</th>`; }).join('')}</tr>`;
+    const head = `<tr><th>Lane</th>${kinds.map((k) => { const full = kindLabel(k, kinds.includes('charge'), inbox); return `<th title="${esc(full)} written to the outside world">${esc(ledgerHeader(full))}</th>`; }).join('')}</tr>`;
     const rows = vm.lanes.map((l) => {
       const cells = kinds.map((k) => {
         const c = cellView(l, k);
@@ -126,9 +136,9 @@ export class LedgerPanel {
         const txt = c.dup ? `<b>${c.rows}</b> <em>+${c.repeats}</em>` : String(c.rows);
         return `<td class="${c.dup ? 'dup' : ''}${fl ? ' flash' : ''}">${c.dup ? '\u26A0 ' : ''}${txt}</td>`;
       }).join('');
-      return `<tr><th>${esc(tierName(l.tier))} <i>#${l.lane}</i></th>${cells}<td class="lg-exp-c" title="orders completed so far">${l.counts.completed}</td></tr>`;
+      return `<tr><th>${esc(tierName(l.tier))} <i>#${l.lane}</i></th>${cells}<td class="lg-exp-c" title="${inbox ? 'tickets closed so far' : 'orders completed so far'}">${l.counts.completed}</td></tr>`;
     }).join('');
-    this.body.querySelector('thead')!.innerHTML = head.replace('</tr>', '<th title="orders completed so far">Done</th></tr>');
+    this.body.querySelector('thead')!.innerHTML = head.replace('</tr>', inbox ? '<th title="tickets closed so far">Closed</th></tr>' : '<th title="orders completed so far">Done</th></tr>');
     this.body.querySelector('tbody')!.innerHTML = rows;
   }
 }

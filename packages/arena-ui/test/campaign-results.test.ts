@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyResult, creditsFor, exportProgress, explain, loadEarned, medalFor, nextGoal, parseImport, saveImport, saveOutcome, EARNED_KEY, type ResultGear, type ResultNight } from '../src/campaign/results-model';
+import { nightCases, applyResult, creditsFor, exportProgress, explain, loadEarned, medalFor, nextGoal, parseImport, saveImport, saveOutcome, EARNED_KEY, type ResultGear, type ResultNight } from '../src/campaign/results-model';
 import { STORAGE_KEY, emptyProgress, isUnlocked, loadProgress } from '../src/campaign/hub-model';
 import { renderResults } from '../src/campaign/results';
 import data from '../../core/campaign/nights.json';
@@ -110,5 +110,39 @@ describe('results screen', () => {
     expect(html).toContain('data-act="retry"');
     expect(html).toContain('Try the <b>Seal</b>');
     expect(html).toContain('A new door opens');
+  });
+});
+
+describe('night casebook', () => {
+  const raw = { cases: [
+    { signature: 'charge:timeout:late', lanes: [{ lane: 1, outcome: 'lost' }], solvedBy: [], cost: { downtimeMs: 900, points: 40 }, recommendedFix: { part: 'retry', rule: 'R2' } },
+    { signature: 'email:slow:late', lanes: [{ lane: 1, outcome: 'solved', mechanism: 'retry' }], solvedBy: [{ lane: 1, mechanism: 'retry', round: 1 }] },
+  ] };
+  it('turns GET /api/casebook into plain-word cases, open ones first with a fix', () => {
+    const c = nightCases(raw);
+    expect(c.length).toBe(2);
+    expect(c[0].verdict).toMatch(/Not solved/);
+    expect(c[0].fix).not.toBe('');
+    expect(c[1].verdict).toMatch(/^Solved by/);
+    expect(c[1].fix).toBe('');
+  });
+  it('caps rows and survives junk', () => {
+    expect(nightCases(raw, 1).length).toBe(1);
+    expect(nightCases(null)).toEqual([]);
+    expect(nightCases('x')).toEqual([]);
+  });
+  it('ignores a casebook stamped for another night or none', () => {
+    expect(nightCases({ ...raw, night: 2 }, 5, 2).length).toBe(2);
+    expect(nightCases({ ...raw, night: 1 }, 5, 2)).toEqual([]);
+    expect(nightCases(raw, 5, 2)).toEqual([]);
+  });
+  it('renders the section only when there are cases', () => {
+    const o = applyResult(n1, { score: 0 }, emptyProgress(), {});
+    expect(renderResults(n1, o, {}, [], gear, nights, nightCases(raw))).toContain('Casebook for this night');
+    expect(renderResults(n1, o, {}, [], gear, nights)).not.toContain('Casebook for this night');
+  });
+  it('escapes case text', () => {
+    const o = applyResult(n1, { score: 0 }, emptyProgress(), {});
+    expect(renderResults(n1, o, {}, [], gear, nights, [{ title: '<b>x</b>', verdict: 'v', fix: '' }])).not.toContain('<b>x</b>');
   });
 });

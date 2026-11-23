@@ -8,7 +8,12 @@ targets:
   repeats: 0
   concurrency: 8
 stages:
-  - { id: login, label: SSO login, role: work, duration: [300, 600] }
+  - id: login
+    label: SSO login
+    role: effect
+    effects:
+      - { kind: account, key: login, idempotent: required }
+    duration: [300, 600]
   - { id: ingest, label: Ingest request, role: input, duration: [400, 700] }
   - { id: validate, label: Validate, role: work, duration: [300, 600] }
   - { id: dedupe, label: Deduplicate, role: work, duration: [300, 600] }
@@ -19,6 +24,7 @@ stages:
     effects:
       - { kind: ticket, key: ticket, idempotent: required }
     duration: [500, 900]
+  - { id: sla, label: SLA clock, role: work, duration: [200, 400] }
   - id: notify
     label: Notify requester
     role: effect

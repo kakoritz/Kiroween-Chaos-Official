@@ -31,6 +31,66 @@ export interface ReviewInput {
   paceFactor?: number;
   /** App whose wording and double-effect kind apply. Default orders. */
   app?: string;
+  /** The inbox app: a requester's CSAT review (first response, resolution, reassignments, SLA, ease) in the requester's voice. */
+  inbox?: boolean;
+  desk?: DeskFacts;
+}
+
+/** The five review slots keep their contract keys; in the inbox they mean these. */
+export const INBOX_SUB_LABELS: Readonly<Record<keyof ReviewSub, string>> = {
+  timeliness: 'First response', delays: 'Resolution time', issues: 'Reassignments', delivery: 'SLA', ease: 'Ease',
+};
+const DESK_LOW: Record<keyof ReviewSub, [string, string]> = {
+  timeliness: ['Slow first reply', 'Nobody answered me for ages.'],
+  delays: ['Slow to resolve', 'It took far too long to get fixed.'],
+  issues: ['Passed around', 'I got passed around between queues.'],
+  delivery: ['Missed the SLA', 'They blew their own deadline.'],
+  ease: ['Hard to get help', 'I had to ask more than once.'],
+};
+const DESK_HIGH: Record<keyof ReviewSub, [string, string]> = {
+  timeliness: ['Quick first reply', 'I got an answer straight away.'],
+  delays: ['Fast fix', 'It was sorted quickly.'],
+  issues: ['Right desk first time', 'I went straight to the right person.'],
+  delivery: ['Within the SLA', 'They kept to their deadline.'],
+  ease: ['Easy to get help', 'Getting help was easy.'],
+};
+
+/** Requester CSAT (packs spec section 4): the sub-scores come from the ticket's own clock and history. */
+function deskReview(inp: ReviewInput): ReviewResult {
+  const f = inp.desk!;
+  const first = f.firstResponseMs;
+  const timeliness = first <= 3000 ? 5 : first <= 5000 ? 4 : first <= 7500 ? 3 : first <= 11000 ? 2 : 1;
+  const res = f.resolveMs;
+  const delays = res <= 7000 ? 5 : res <= 10000 ? 4 : res <= 14000 ? 3 : res <= 20000 ? 2 : 1;
+  const issues = f.reassignments <= 0 ? 5 : f.reassignments === 1 ? 3 : f.reassignments === 2 ? 2 : 1;
+  const delivery = f.slaBreached ? 2 : 5;
+  const n = inp.lap.issues.reduce((s, x) => s + x.count, 0);
+  const ease = n === 0 ? 5 : n === 1 ? 4 : n <= 3 ? 3 : 2;
+  const sub: ReviewSub = { timeliness, delays, issues, delivery, ease };
+  const extraRows = Object.values(inp.extra).reduce((s, x) => s + x, 0);
+  let stars = Math.round(((timeliness + delays + issues + delivery + ease) / 5) * 2) / 2;
+  if (extraRows >= 2) stars = Math.min(stars, 2);
+  else if (extraRows === 1) stars = Math.min(stars, 3);
+  if (f.slaBreached || timeliness <= 1 || delays <= 1) stars = Math.min(stars, 3);
+  stars = Math.max(1, stars);
+  let keys = SUBS.filter((k) => sub[k] <= 3);
+  const low = keys.length > 0 || extraRows > 0;
+  if (!low) keys = [...SUBS].sort((a, b) => sub[b] - sub[a]).slice(0, 2);
+  keys = keys.slice(0, 2);
+  const table = low ? DESK_LOW : DESK_HIGH;
+  const reasons = keys.map((k) => table[k][0]);
+  const said = keys.map((k) => table[k][1]);
+  if (extraRows > 0) { reasons.push('Duplicate notices'); said.push('I got the same notice more than once.'); }
+  return { stars, sub, reasons, text: `“${said.join(' ')}”` };
+}
+
+/** What the Ticket Desk's bot reports about one ticket (order_done.detail.desk), in virtual ms (speed does not change them). */
+export interface DeskFacts {
+  firstResponseMs: number;
+  resolveMs: number;
+  reassignments: number;
+  slaBreached: boolean;
+  spam?: boolean;
 }
 
 export interface ReviewSub {
@@ -51,6 +111,10 @@ export interface ReviewResult {
 const SUBS = ['timeliness', 'delays', 'issues', 'delivery', 'ease'] as const;
 
 export function review(inp: ReviewInput): ReviewResult {
+  if (inp.cancelled && inp.inbox) {
+    return { stars: 1, sub: { timeliness: 1, delays: 1, issues: 1, delivery: 1, ease: 1 }, reasons: ['No reply'], text: '“My ticket vanished and nobody ever answered me.”' };
+  }
+  if (!inp.cancelled && inp.inbox && inp.desk) return deskReview(inp);
   const v = vocabOf(inp.app);
   const dup = inp.extra[v.dupKind] ?? 0;
   if (inp.cancelled) {

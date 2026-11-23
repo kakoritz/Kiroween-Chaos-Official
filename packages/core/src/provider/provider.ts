@@ -36,7 +36,7 @@ export interface LedgerRow {
   ts: number;
 }
 
-export type FaultMode = 'latency' | 'status' | 'drop' | 'stall' | 'no_driver' | 'handoff_block' | 'typo' | 'curse';
+export type FaultMode = 'latency' | 'status' | 'drop' | 'stall' | 'no_driver' | 'handoff_block' | 'typo' | 'curse' | 'expire';
 
 /** Curses (spec 5.2, TV3-C9): a persistent trait of one endpoint of one lane. */
 export type CurseKind = '404' | 'slow' | 'flaky500' | 'clock_skew' | 'rate_limit';
@@ -341,6 +341,8 @@ export class Provider {
         }
         if (fault.mode === 'latency') return await run(baseMs + v, fault);
         if (fault.mode === 'typo') return await run(baseMs, fault);
+        // sso_expired: the call is processed (the account row exists) and the answer says the token expired, so a retry with no key repeats it.
+        if (fault.mode === 'expire') { await run(baseMs, fault); return json(401, { error: 'sso_expired' }, { 'WWW-Authenticate': 'Bearer error="invalid_token"' }); }
         if (fault.mode === 'handoff_block') return service === 'handoff' ? await run(baseMs, fault) : await run(baseMs, null);
         if (service !== 'tracking') return await run(baseMs, null);
         return await run(baseMs + (fault.mode === 'stall' ? v : 0), fault);

@@ -2,7 +2,7 @@
 // Spec: design.md section 5 (Nesting, Crash points); runtime.md sections 3, 19, 29.
 import type { HookPoint, Part } from '../sdk/sdk';
 import {
-  BOSSES, JOURNALED_EFFECT_STAGES, MAX_DEPTH, faultById, injectedAtFor, nextApplicableStage, restartDelay,
+  BOSSES, INBOX_ORDER, JOURNALED_EFFECT_STAGES, MAX_DEPTH, faultById, injectedAtFor, nextApplicableStage, restartDelay,
   type BossId, type FaultDef, type InjectedAt,
 } from './catalog';
 import { innerPoints, matchesHook, type ArmMsg } from './hooks';
@@ -14,6 +14,8 @@ export interface LaneInfo {
   state: LaneState;
   /** Stage in flight, or null between orders. */
   stage: string | null;
+  /** The app of the wave, for the stage order when `stage` is unknown. Orders when omitted. */
+  app?: 'orders' | 'inbox';
 }
 
 export interface ArmRequest {
@@ -149,11 +151,19 @@ export class ChaosDirector {
         detail.deferred = true;
         detail.deferredTo = 'create';
       }
+    } else if (def.kind === 'desk') {
+      // Ticket Desk faults go to the bot at once; the bot applies each at its own stage. A stage already behind means the next order.
+      entry.fired = true;
+      const at = def.stages[0]!;
+      if (info.stage !== null && INBOX_ORDER.indexOf(info.stage) > INBOX_ORDER.indexOf(at)) {
+        detail.deferred = true;
+        detail.deferredTo = at;
+      }
     } else if (def.kind !== 'process') {
       const applies = info.stage !== null && def.stages.includes(info.stage);
       // Inner provider faults go to the next call made by recovery code, whatever the stage.
       if (!applies && eff === 'outer') {
-        const next = nextApplicableStage(def, info.stage);
+        const next = nextApplicableStage(def, info.stage, info.app);
         entry.waitStage = next.stage;
         detail.deferred = true;
         detail.deferredTo = next.stage;
@@ -164,7 +174,7 @@ export class ChaosDirector {
       }
     }
     L.entries.push(entry);
-    return { ok: true, id: entry.id, detail, arm: def.kind === 'process' ? armMsg(entry) : null, provider };
+    return { ok: true, id: entry.id, detail, arm: def.kind === 'process' || def.kind === 'desk' ? armMsg(entry) : null, provider };
   }
 
   /** A stage starts. Returns deferred non-process faults that now apply, for the runner to post. */

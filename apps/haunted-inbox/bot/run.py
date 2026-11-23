@@ -25,13 +25,14 @@ STAGES = (
     ("dedupe", "Deduplicate", 300, 600),
     ("triage", "Triage", 400, 800),
     ("assign", "Assign ticket", 500, 900),
+    ("sla", "SLA clock", 200, 400),
     ("notify", "Notify requester", 400, 800),
     ("escalate", "Escalate", 300, 600),
     ("resolve", "Resolve", 300, 600),
     ("close", "Close and survey", 300, 500),
 )
 CLASSES = ("billing", "bug", "account", "spam")
-ORDER_FILE = re.compile(r"^ord-(\d{4})(\.dup)?\.json$")
+ORDER_FILE = re.compile(r"^ord-(\d{4})(\.dup\d?)?\.json$")
 TEMPLATES = {
     "billing": "Thanks for contacting billing. We are reviewing your invoice and will reply within one business day.",
     "bug": "Thanks for the report. Our engineers have a ticket open and will follow up with a fix or workaround.",
@@ -63,13 +64,14 @@ def list_orders(d: str) -> list[str]:
 
     def key(f: str) -> tuple[int, int]:
         m = ORDER_FILE.match(f)
-        return int(m.group(1)), 1 if m.group(2) else 0  # type: ignore[union-attr]
+        n = m.group(2)  # type: ignore[union-attr]
+        return int(m.group(1)), (int(n[4:] or 1) if n else 0)  # type: ignore[union-attr]
 
     return sorted(files, key=key)
 
 
 def order_id_of(f: str) -> str:
-    return re.sub(r"(\.dup)?\.json$", "", f)
+    return re.sub(r"(\.dup\d?)?\.json$", "", f)
 
 
 def main() -> None:
@@ -163,7 +165,7 @@ def main() -> None:
             v = json.loads(text)
         except ValueError as e:
             raise hp.InputError("malformed", f"{state['file']} is not valid JSON") from e
-        if not isinstance(v, dict) or not all(isinstance(v.get(k), str) for k in ("id", "from", "subject", "body")):
+        if not isinstance(v, dict) or not isinstance(v.get("id"), str):
             raise hp.InputError("malformed", f"{state['file']} is not an email")
         return v
 
@@ -179,12 +181,30 @@ def main() -> None:
     def key(s: hp.StageCtx, name: str) -> str | None:
         return s.key(name) if idem else None
 
-    desk_fake = desk.Desk(seed, lane, lambda mode, order, prov: send({"type": "desk_fault", "order": order, "detail": {"mode": mode, "provider": prov}}))
+    journal = "journal" in use
+    desk_fake = desk.Desk(seed, lane, lambda mode, order, prov: send({"type": "desk_fault", "order": order, "detail": {"mode": mode, "provider": prov}}), host.take_desk)
     transport.gate = lambda kind, body: desk_fake.gate(body.get("provider", ""), body.get("order", ""), body) if kind == "ticket" else None
+    sla = desk.SlaClock(lambda: host.speed, os.path.join(scratch, "sla.json") if journal else None)
+    dedupe = desk.Dedupe(journal, os.path.join(scratch, "dedupe.json"))
+    audit_path = os.path.join(scratch, "audit.jsonl")
+    repaired: set[str] = set()  # orders whose drifted field was mapped back from an alias (a parked order resumes with it)
+
+    def audit(rec: dict) -> None:
+        """The audit trail of a journaled desk: every reclassification is written down."""
+        try:
+            with open(audit_path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(rec, separators=(",", ":")) + "\n")
+        except OSError:
+            pass
+
+    def note(oid: str, stage: str, label: str, pct: int = 90) -> None:
+        send({"type": "stage_progress", "order": oid, "stage": stage, "detail": {"pct": pct, "label": label}})
 
     def stages(oid: str) -> None:
         mail: dict = {}
-        cls = {"v": "", "dup": None}
+        info: dict = {"cls": "", "queue": "", "dedupe": {"duplicate": False, "master": None, "children": []}, "reclass": 0, "faults": []}
+        path = os.path.join(dirs["orders"], state["file"])
+        sla.start(oid)  # the SLA clock starts when the request is received, not when a ticket exists
 
         def load() -> None:
             try:
@@ -193,7 +213,9 @@ def main() -> None:
                 raise input_failure(e) from e
 
         def do_login(s: hp.StageCtx) -> None:
-            s.work(duration("login", oid))  # SSO refresh: a session token, never a second account
+            s.work(duration("login", oid))
+            # SSO: one session record (an account) per request. A second one for the same request is a visible repeat in the ledger.
+            s.effect("account", key(s, "login"), {"sso": f"desk-{lane}", "session": True})
 
         def ingest(s: hp.StageCtx) -> None:
             s.work(duration("ingest", oid))
@@ -202,6 +224,11 @@ def main() -> None:
             host.proceed.clear()
             host.wait_for(host.proceed, 2000)
             load()
+            if host.take_desk("webhook_retry_storm"):
+                # the sender's webhook retries the same payload (same external id) three more times
+                n = len(desk.write_retries(dirs["orders"], state["file"], 3))
+                info["faults"].append("webhook_retry_storm")
+                note(oid, "ingest", f"Webhook retry storm: {n} more deliveries of {mail['id']}")
 
         sdk.stage("login", do_login)
         sdk.stage("ingest", ingest)
@@ -210,31 +237,82 @@ def main() -> None:
 
         def do_validate(s: hp.StageCtx) -> None:
             s.work(duration("validate", oid))
+            if host.take_desk("field_mapping_error"):
+                alias = desk.drift_field(mail, "subject")
+                desk.persist_mail(path, mail)
+                info["faults"].append("field_mapping_error")
+                note(oid, "validate", f"Field mapping drift: subject now arrives as {alias}", 60)
+            missing = desk.missing_fields(mail)
+            if not missing or oid in repaired:
+                return
+            field = missing[0]
+            if not any(a in mail for a in desk.ALIASES.get(field, ())):
+                raise input_failure(hp.InputError("malformed", f"{state['file']} has no {field}"))
+            reason = f"field_mapping_error: {field}"
+            if queue:  # park with the field named; the ticket is not dropped, it resumes once the field is mapped
+                repaired.add(oid)
+                raise hp.ParkSignal(reason)
+            raise input_failure(hp.InputError("field_mapping", f"{reason} (the source sends it under another name)"))
 
         def do_dedupe(s: hp.StageCtx) -> None:
             s.work(duration("dedupe", oid))
+            if host.take_desk("duplicate_storm"):
+                ids = desk.add_siblings(mail, 2)
+                desk.persist_mail(path, mail)
+                info["faults"].append("duplicate_storm")
+                note(oid, "dedupe", f"Duplicate storm: {len(ids)} more messages about the same problem", 60)
 
         def do_triage(s: hp.StageCtx) -> None:
             s.work(duration("triage", oid))
+            if host.take_desk("wrong_queue"):
+                mail["queue"] = desk.wrong_queue_for(classify(mail["subject"], mail["body"]))
+                desk.persist_mail(path, mail)
+                info["faults"].append("wrong_queue")
+                note(oid, "triage", f"Requester picked the {mail['queue']} queue", 60)
 
         def prov() -> str:
             return desk.provider_for(mail["id"])
 
         def do_assign(s: hp.StageCtx) -> None:
             s.work(duration("assign", oid))
-            if cls["v"] != "spam":
-                body = desk.map_ticket(prov(), mail, cls["v"], cls["dup"])
-                s.effect("ticket", key(s, "ticket"), body)
+            if info["cls"] == "spam" or info["dedupe"]["duplicate"]:
+                return
+            body = desk.map_ticket(prov(), mail, info["cls"], info["dedupe"]["master"], info["queue"], info["dedupe"]["children"])
+            s.effect("ticket", key(s, "ticket"), body)
+            if not journal:  # no dedupe memory: every message of a storm gets its own ticket
+                for sib in mail.get("siblings", []):
+                    s.effect("ticket", key(s, "ticket"), {**body, "externalId": sib.get("id"), "children": []})
+
+        def do_sla(s: hp.StageCtx) -> None:
+            s.work(duration("sla", oid))
+            if info["cls"] == "spam":
+                return
+            target = sla.set_target(oid, info["cls"])
+            if host.take_desk("sla_breach"):
+                sla.force_breach(oid)
+                info["faults"].append("sla_breach")
+            left = sla.left(oid)
+            note(oid, "sla", f"SLA {target / 1000:.0f}s, " + ("BREACHED" if sla.breached(oid) else f"{max(0.0, (left or 0) / 1000):.1f}s left"))
 
         def do_notify(s: hp.StageCtx) -> None:
             s.work(duration("notify", oid))
-            if cls["v"] != "spam":
-                s.effect("reply", key(s, "reply"), {"text": TEMPLATES.get(cls["v"], TEMPLATES["account"])})
+            if info["cls"] != "spam" and not info["dedupe"]["duplicate"]:
+                s.effect("reply", key(s, "reply"), {"text": TEMPLATES.get(info["cls"], TEMPLATES["account"])})
+                sla.mark(oid, "first_response")
 
         def do_escalate(s: hp.StageCtx) -> None:
             s.work(duration("escalate", oid))
-            if cls["v"] == "bug":  # once per ticket: the key is the ticket, not the minute
-                s.effect("notify", key(s, "escalate"), {"queue": "engineering", "provider": prov()})
+            if info["cls"] == "spam" or info["dedupe"]["duplicate"]:
+                return
+            breached = sla.breached(oid)
+            if info["cls"] == "bug" or breached:
+                # Once per ticket: the key is the ticket, not the minute. A breached ticket stays unacknowledged, so the monitor fires on
+                # every tick; with the ticket's key (or a journal) the repeats are replays, without them each tick is another notice.
+                ticks = desk.BREACH_TICKS if breached else 1
+                for t in range(ticks):
+                    s.effect("notify", key(s, "escalate"), {"queue": "engineering", "provider": prov(), "reason": "sla_breach" if breached else "bug", "tick": t + 1})
+                    if t + 1 < ticks:
+                        host.sleep(desk.TICK_MS)
 
         def do_resolve(s: hp.StageCtx) -> None:
             s.work(duration("resolve", oid))
@@ -244,15 +322,40 @@ def main() -> None:
 
         # validation, dedupe and triage are deterministic and free, so they also re-run on a journal replay
         sdk.stage("validate", do_validate)
+        desk.repair_mail(mail)
         sdk.stage("dedupe", do_dedupe)
-        cls["dup"] = desk_fake.dedupe(mail, oid)
+        info["dedupe"] = dedupe.check(mail, oid)
         sdk.stage("triage", do_triage)
-        cls["v"] = classify(mail["subject"], mail["body"])
+        info["cls"] = classify(mail["subject"], mail["body"])
+        declared = mail.get("queue")
+        info["queue"] = info["cls"]
+        if isinstance(declared, str) and declared != info["cls"]:
+            if journal:  # the audit trail: reclassify, and write down why
+                audit({"order": oid, "event": "reclassify", "from": declared, "to": info["cls"], "ts": host.now()})
+                info["reclass"] += 1
+                note(oid, "triage", f"Reclassified {declared} to {info['cls']} (audited)")
+                sdk.recovery(oid, "triage", "replay")
+            else:  # trusts the requester's queue
+                info["queue"] = declared
         sdk.stage("assign", do_assign)
+        sdk.stage("sla", do_sla)
         sdk.stage("notify", do_notify)
         sdk.stage("escalate", do_escalate)
         sdk.stage("resolve", do_resolve)
         sdk.stage("close", do_close)
+
+        # the requester's side of the story, for the CSAT review (the arena computes the stars from these facts)
+        spam = info["cls"] == "spam"
+        total = sla.elapsed(oid)
+        first = sla.marked(oid, "first_response")
+        sdk.done_detail = {"desk": {
+            "cls": info["cls"], "queue": info["queue"], "provider": prov(), "spam": spam,
+            "firstResponseMs": round(first if first is not None else total), "resolveMs": round(total),
+            "reassignments": info["reclass"] + desk_fake.reassignments(oid),
+            "slaMs": sla.target(oid), "slaBreached": sla.breached(oid) and not spam,
+            "master": info["dedupe"]["master"], "children": len(info["dedupe"]["children"]), "faults": info["faults"],
+        }}
+        dedupe.finish(mail, oid)
 
     def run_order(oid: str) -> str:
         halted = {"v": False}
@@ -297,8 +400,11 @@ def main() -> None:
         for f in parked_files():
             oid = order_id_of(f)
             reason = parked.get(oid, "breaker_open")
-            if reason != "missing_file" and not breakers_clear():
+            mapped = reason.startswith("field_mapping_error")
+            if reason != "missing_file" and not mapped and not breakers_clear():
                 continue
+            if mapped:
+                host.sleep(600)  # the mapping is applied, then the ticket goes on where it stopped
             os.replace(os.path.join(dirs["parked"], f), os.path.join(dirs["orders"], f))
             parked.pop(oid, None)
             send({"type": "order_resumed", "order": oid})

@@ -16,6 +16,11 @@ const STAGE_SERVICE: Record<string, Service> = {
   updates: 'notify',
   transit: 'tracking',
   handoff: 'handoff',
+  // Ticket Desk (inbox) stages
+  login: 'account',
+  assign: 'ticket',
+  notify: 'reply',
+  escalate: 'notify',
 };
 
 /** Transit faults (V1_2 section 4): stalls and reroutes on the tracking poll. */
@@ -49,6 +54,8 @@ export function faultBody(lane: string, stage: string | null, arm: ProviderArm):
     case 'gated_house': base = { mode: 'handoff_block', block: 'gated', forMs: 3000 }; break;
     case 'car_accident': base = { mode: 'handoff_block', block: 'accident', forMs: 7000 }; break;
     case 'driver_unreachable': base = { mode: 'no_driver', forMs: 3000 }; break;
+    // Ticket Desk: the SSO token expired. The account is created, the answer is 401, and the retry makes another one unless it carries the key.
+    case 'sso_expired': base = { mode: 'expire', count: 1 }; break;
     // Wrong order (design.md section 8): the complaint comes back at confirmation (default) or handoff, once, for one order.
     case 'order_typo': base = { mode: 'typo', count: arm.detect === 'process' ? 2 : 1, ...(arm.order ? { order: arm.order } : {}), ...(arm.detect === 'handoff' ? { block: 'wrong_order' as const } : {}) }; break;
     default: return null;

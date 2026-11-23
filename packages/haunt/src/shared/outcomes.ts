@@ -2,7 +2,7 @@
 // One function, `resolveOutcome`, answers: what happens to one order when this fault hits this stage
 // of this tier? The mock simulator, the mock's sample reports and the acceptance tests all use it, so
 // they cannot drift apart. `packages/core/mock/outcomes.json` is this table written out as data.
-import { TIER_DECISION_DEFAULT, APPS, TIERS, TIER_ORDER, FAULTS, CRASH_POINTS, faultApplies, isCrashFault, type AppId, type EffectKind, type TierId } from './catalog';
+import { TIER_DECISION_DEFAULT, APPS, TIERS, TIER_ORDER, FAULTS, CRASH_POINTS, faultApplies, isCrashFault, isDeskFault, type AppId, type EffectKind, type TierId } from './catalog';
 
 export type OutcomeCode = 'OK' | 'REPEAT' | 'FAILED' | 'HALT' | 'PARKED_OK' | 'QUAR' | 'CANCELLED';
 export type Template = 'T_OK' | 'T_REPEAT' | 'T_FAILED' | 'T_HALT' | 'T_PARKED_OK' | 'T_QUAR' | 'T_ABSORBED' | 'T_DEGRADED'
@@ -64,6 +64,9 @@ export function resolveOutcome(app: AppId, tierId: TierId, fault: string, stageI
   const idem = parts.has('idempotency');
   const phoenix = parts.has('breaker') && parts.has('offline_queue');
   const selfRows = (n = stage.effects.length): Rows => { const r: Rows = {}; stage.effects.slice(0, n).forEach((e) => add(r, e.kind)); return r; };
+
+  // Ticket Desk faults act only on the real Python desk (the arena, tournaments, the improve loop). The mock model has no row for them.
+  if (isDeskFault(fault)) return null;
 
   if (isCrashFault(fault)) {
     if (!point || !crashPointsFor(app, stageId).includes(point)) return null;

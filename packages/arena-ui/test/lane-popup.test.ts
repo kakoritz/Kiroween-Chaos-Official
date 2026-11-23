@@ -131,3 +131,15 @@ describe('log', () => {
     expect(downtimePoints(orderOne())).toBe(2);
   });
 });
+
+describe('review sub labels', () => {
+  it('relabels the five slots from subLabels and keeps defaults otherwise', () => {
+    const base = { stars: 4, sub: { a: 1 } };
+    const def = normReview(base)!;
+    const key = def.sub[0].key;
+    const r = normReview({ ...base, subLabels: { [key]: 'First response' } })!;
+    expect(r.sub[0].label).toBe('First response');
+    expect(r.sub[1].label).toBe(def.sub[1].label);
+    expect(def.sub[0].label).not.toBe('First response');
+  });
+});

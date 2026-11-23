@@ -276,6 +276,7 @@ export function buildLedger(lanes: readonly string[], rowsOf: (lane: string) => 
       const repeatsByKind: Record<string, number> = {};
       const byKind: Record<string, { rows: number; repeats: number }> = {};
       for (const r of rows) {
+        // Same names as the `effect` events (reply is an email, account is account_create), so the arena's columns agree with its live counts.
         const wire = EFFECT_KIND[r.kind] ?? r.kind;
         const e = (byKind[wire] ??= { rows: 0, repeats: 0 });
         e.rows++;
@@ -346,7 +347,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
   // A tournament round presses faults by stage too, so it tracks the lane stage the same way.
   let tourneyOn = false;
   const trackNight = (e: { type?: string; lane?: unknown; stage?: unknown }): void => {
-    if ((night.length === 0 && !tourneyOn) || e.lane === undefined) return;
+    if (e.lane === undefined) return;
     const lane = String(e.lane);
     if (e.type === 'stage_start' && typeof e.stage === 'string') {
       laneStage.set(lane, e.stage);
@@ -392,7 +393,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
   };
   const engine: RunnerEngine = new RunnerEngine({
     post: opts.post,
-    laneInfo: (lane) => ({ state: 'working', stage: night.length > 0 || tourneyOn ? laneStage.get(lane) ?? null : null }),
+    laneInfo: (lane) => ({ state: 'working', stage: laneStage.get(lane) ?? null }),
     sendArm: (lane, arm) => spawner?.send(lane, arm),
     onWaveStart: (wave, settings, lanes) => {
       repeats.reset();

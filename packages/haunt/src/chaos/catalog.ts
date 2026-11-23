@@ -2,7 +2,8 @@
 // Spec: .kiro/specs/engine/design.md section 5; runtime.md sections 3, 19, 29.
 import type { HookPoint } from '../sdk/sdk';
 
-export type FaultKind = 'process' | 'provider' | 'file' | 'disk';
+/** `desk`: armed on the Python Ticket Desk, which applies the fault at its own stage (apps/haunted-inbox/bot/desk.py). */
+export type FaultKind = 'process' | 'provider' | 'file' | 'disk' | 'desk';
 export type Family = 'process' | 'network' | 'http' | 'data' | 'world';
 
 export const CRASH_POINTS: readonly HookPoint[] = [
@@ -10,13 +11,18 @@ export const CRASH_POINTS: readonly HookPoint[] = [
 ];
 export const RECOVERY_POINTS: readonly HookPoint[] = ['during_replay', 'during_reconcile', 'during_backoff'];
 
+/** The Ticket Desk's stages in order (shared/catalog INBOX_STAGES). */
+export const INBOX_ORDER: readonly string[] = ['login', 'ingest', 'validate', 'dedupe', 'triage', 'assign', 'sla', 'notify', 'escalate', 'resolve', 'close'];
+/** Inbox stages that make provider calls. */
+const INBOX_EFFECT: readonly string[] = ['login', 'assign', 'notify', 'escalate'];
 /** Stages that make provider calls. */
-export const EFFECT_STAGES: readonly string[] = ['account', 'submit', 'payment', 'confirmation', 'receive', 'process', 'updates', 'ship', 'transit'];
+export const EFFECT_STAGES: readonly string[] = ['account', 'submit', 'payment', 'confirmation', 'receive', 'process', 'updates', 'ship', 'transit', ...INBOX_EFFECT];
 /** Stages that run a journaled effect (transit only polls), so only these have an after_effect_before_journal hook. */
 export const JOURNALED_EFFECT_STAGES: readonly string[] = EFFECT_STAGES.filter((s) => s !== 'transit');
-const ALL = ['account', 'create', 'submit', 'payment', 'confirmation', 'receive', 'process', 'updates', 'ship', 'transit', 'handoff'];
+const ORDERS_ORDER = ['account', 'create', 'submit', 'payment', 'confirmation', 'receive', 'process', 'updates', 'ship', 'transit', 'handoff'];
+const ALL = [...ORDERS_ORDER, ...INBOX_ORDER];
 /** Effect stages that retry on a count fault (updates degrades instead, transit polls). */
-const CALL_STAGES: readonly string[] = ['account', 'submit', 'payment', 'confirmation', 'receive', 'process', 'ship'];
+const CALL_STAGES: readonly string[] = ['account', 'submit', 'payment', 'confirmation', 'receive', 'process', 'ship', 'login', 'assign', 'notify', 'escalate'];
 
 export interface FaultDef {
   id: string;
@@ -44,7 +50,7 @@ export const FAULTS: readonly FaultDef[] = [
   def({ id: 'comm_timeout', creature: 'zombie', family: 'network', kind: 'provider', stages: CALL_STAGES, count: 1 }),
   def({ id: 'slow_link', creature: 'zombie', family: 'network', kind: 'provider', stages: EFFECT_STAGES, forMs: 6000 }),
   def({ id: 'http_404', creature: 'ghost', family: 'http', kind: 'provider', stages: CALL_STAGES, count: 2 }),
-  def({ id: 'http_429', creature: 'goblin', family: 'http', kind: 'provider', stages: ['payment', 'confirmation', 'ship'], count: 3 }),
+  def({ id: 'http_429', creature: 'goblin', family: 'http', kind: 'provider', stages: ['payment', 'confirmation', 'ship', 'assign', 'notify'], count: 3 }),
   def({ id: 'http_500', creature: 'imp', family: 'http', kind: 'provider', stages: EFFECT_STAGES, count: 2 }),
   def({ id: 'missing_file', creature: 'poltergeist', family: 'data', kind: 'file', stages: ['create'], forMs: 6000 }),
   def({ id: 'duplicate_request', creature: 'doppelganger', family: 'data', kind: 'file', stages: ['create'], count: 1 }),
@@ -65,6 +71,15 @@ export const FAULTS: readonly FaultDef[] = [
   def({ id: 'out_of_gas', creature: 'fuel_wraith', family: 'world', kind: 'provider', stages: ['transit'], forMs: 7000 }),
   def({ id: 'not_on_truck', creature: 'lost_parcel_ghoul', family: 'world', kind: 'provider', stages: ['transit'], forMs: 4000 }),
   def({ id: 'driver_unreachable', creature: 'will_o_wisp', family: 'world', kind: 'provider', stages: ['transit'], forMs: 3000 }),
+  // Ticket Desk faults (packs spec section 4), creatures by name from the art we have. The Python desk applies the `desk` ones itself.
+  def({ id: 'sla_breach', creature: 'banshee', family: 'network', kind: 'desk', stages: ['sla'], count: 1 }),
+  def({ id: 'wrong_queue', creature: 'poltergeist', family: 'data', kind: 'desk', stages: ['triage'], count: 1 }),
+  def({ id: 'duplicate_storm', creature: 'zombie', family: 'network', kind: 'desk', stages: ['dedupe'], count: 1 }),
+  def({ id: 'sso_expired', creature: 'reaper', family: 'process', kind: 'provider', stages: ['login'], count: 1 }),
+  def({ id: 'field_mapping_error', creature: 'witch', family: 'data', kind: 'desk', stages: ['validate'], count: 1 }),
+  def({ id: 'webhook_retry_storm', creature: 'doppelganger', family: 'data', kind: 'desk', stages: ['ingest'], count: 1 }),
+  def({ id: 'assignee_deleted', creature: 'ghost', family: 'http', kind: 'desk', stages: ['assign'], count: 1 }),
+  def({ id: 'rate_limited', creature: 'goblin', family: 'http', kind: 'desk', stages: ['assign'], count: 1 }),
 ];
 
 export const BOSSES = ['boss_power_outage', 'boss_internet_outage', 'boss_hazard_storm'] as const;
@@ -88,11 +103,12 @@ export function restartDelay(base: number, nested: number): number {
   return Math.min(base * 2 ** nested, RESTART_CAP_MS);
 }
 
-/** First stage at or after `from` (wrapping into the next order) where the fault applies. */
-export function nextApplicableStage(f: FaultDef, from: string | null): { stage: string; nextOrder: boolean } {
-  const i = from === null ? 0 : Math.max(0, ALL.indexOf(from));
-  for (let j = i; j < ALL.length; j++) if (f.stages.includes(ALL[j]!)) return { stage: ALL[j]!, nextOrder: false };
-  for (let j = 0; j < ALL.length; j++) if (f.stages.includes(ALL[j]!)) return { stage: ALL[j]!, nextOrder: true };
+/** First stage at or after `from` (wrapping into the next order) where the fault applies. `app` picks the stage list when `from` is unknown. */
+export function nextApplicableStage(f: FaultDef, from: string | null, app: 'orders' | 'inbox' = 'orders'): { stage: string; nextOrder: boolean } {
+  const order = from !== null && INBOX_ORDER.includes(from) && !ORDERS_ORDER.includes(from) ? INBOX_ORDER : from === null && app === 'inbox' ? INBOX_ORDER : ORDERS_ORDER;
+  const i = from === null ? 0 : Math.max(0, order.indexOf(from));
+  for (let j = i; j < order.length; j++) if (f.stages.includes(order[j]!)) return { stage: order[j]!, nextOrder: false };
+  for (let j = 0; j < order.length; j++) if (f.stages.includes(order[j]!)) return { stage: order[j]!, nextOrder: true };
   throw new Error(`fault ${f.id} applies to no stage`);
 }
 

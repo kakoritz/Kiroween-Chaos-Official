@@ -49,6 +49,7 @@ export class RunnerEngine {
   lanes: string[] = [];
   private record?: (ev: HauntEvent) => void;
   private wave = 0;
+  private app: 'orders' | 'inbox' = 'orders';
   private seq = 0;
   private seed: number | string = 7;
   /** The intensity dial (spec 5.1): level 1 to 11, default 3, optional auto-ramp. */
@@ -71,6 +72,7 @@ export class RunnerEngine {
 
   startWave = (wave: number, settings: EngineWaveSettings, record: (ev: HauntEvent) => void): void => {
     this.wave = wave;
+    this.app = settings.app === 'inbox' ? 'inbox' : 'orders';
     this.seed = settings.seed;
     this.appId = settings.app in APPS ? (settings.app as AppId) : 'orders';
     this.appStages = new Set((APPS[settings.app as keyof typeof APPS] ?? APPS.orders).stages.map((d) => d.id));
@@ -253,7 +255,7 @@ export class RunnerEngine {
   chaos = (req: EngineChaosRequest): EngineChaosResult => {
     const lane = String(req.lane ?? this.lanes[0] ?? '1');
     if (!this.lanes.includes(lane)) throw new Error(`lane ${lane} is not in the current wave`);
-    const info = this.opts.laneInfo?.(lane) ?? { state: 'working' as const, stage: null };
+    const info = { ...(this.opts.laneInfo?.(lane) ?? { state: 'working' as const, stage: null }), app: this.app };
     const nextId = `c${this.wave}-${this.seq + 1}`;
     // Outage timer (spec 5.4): unless the press fixes its window, draw it from the dial level. The window is 1x ms; real ms is divided by speed.
     const fz = req.fuzz;

@@ -10135,8 +10135,45 @@
   "tier": "rookie",
   "fault": "crash",
   "stage": "login",
-  "role": "work",
-  "point": "mid_stage",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "rookie",
+  "fault": "crash",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "inbox",
+  "tier": "rookie",
+  "fault": "crash",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "inbox",
+  "tier": "rookie",
+  "fault": "out_of_memory",
+  "stage": "login",
+  "role": "effect",
+  "point": "before_effect",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -10146,8 +10183,34 @@
   "tier": "rookie",
   "fault": "out_of_memory",
   "stage": "login",
-  "role": "work",
-  "point": "mid_stage",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "inbox",
+  "tier": "rookie",
+  "fault": "out_of_memory",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "inbox",
+  "tier": "rookie",
+  "fault": "power_outage",
+  "stage": "login",
+  "role": "effect",
+  "point": "before_effect",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -10157,8 +10220,73 @@
   "tier": "rookie",
   "fault": "power_outage",
   "stage": "login",
-  "role": "work",
-  "point": "mid_stage",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "inbox",
+  "tier": "rookie",
+  "fault": "power_outage",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "inbox",
+  "tier": "rookie",
+  "fault": "internet_outage",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "inbox",
+  "tier": "rookie",
+  "fault": "endpoint_down",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "inbox",
+  "tier": "rookie",
+  "fault": "timeout",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "inbox",
+  "tier": "rookie",
+  "fault": "comm_timeout",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "inbox",
+  "tier": "rookie",
+  "fault": "slow_link",
+  "stage": "login",
+  "role": "effect",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -10166,9 +10294,39 @@
  {
   "app": "inbox",
   "tier": "rookie",
+  "fault": "http_404",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "inbox",
+  "tier": "rookie",
+  "fault": "http_429",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "inbox",
+  "tier": "rookie",
+  "fault": "http_500",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "inbox",
+  "tier": "rookie",
   "fault": "disk_full",
   "stage": "login",
-  "role": "work",
+  "role": "effect",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -10180,9 +10338,11 @@
   "stage": "ingest",
   "role": "input",
   "point": "mid_stage",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -10191,9 +10351,11 @@
   "stage": "ingest",
   "role": "input",
   "point": "mid_stage",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -10202,9 +10364,11 @@
   "stage": "ingest",
   "role": "input",
   "point": "mid_stage",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -10224,6 +10388,7 @@
   "role": "input",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -10257,9 +10422,11 @@
   "stage": "validate",
   "role": "work",
   "point": "mid_stage",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -10268,9 +10435,11 @@
   "stage": "validate",
   "role": "work",
   "point": "mid_stage",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -10279,9 +10448,11 @@
   "stage": "validate",
   "role": "work",
   "point": "mid_stage",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -10300,9 +10471,11 @@
   "stage": "dedupe",
   "role": "work",
   "point": "mid_stage",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -10311,9 +10484,11 @@
   "stage": "dedupe",
   "role": "work",
   "point": "mid_stage",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -10322,9 +10497,11 @@
   "stage": "dedupe",
   "role": "work",
   "point": "mid_stage",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -10343,9 +10520,11 @@
   "stage": "triage",
   "role": "work",
   "point": "mid_stage",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -10354,9 +10533,11 @@
   "stage": "triage",
   "role": "work",
   "point": "mid_stage",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -10365,9 +10546,11 @@
   "stage": "triage",
   "role": "work",
   "point": "mid_stage",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -10386,9 +10569,11 @@
   "stage": "assign",
   "role": "effect",
   "point": "before_effect",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -10399,6 +10584,7 @@
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1
   },
   "template": "T_REPEAT"
@@ -10412,6 +10598,7 @@
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1
   },
   "template": "T_REPEAT"
@@ -10423,9 +10610,11 @@
   "stage": "assign",
   "role": "effect",
   "point": "before_effect",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -10436,6 +10625,7 @@
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1
   },
   "template": "T_REPEAT"
@@ -10449,6 +10639,7 @@
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1
   },
   "template": "T_REPEAT"
@@ -10460,9 +10651,11 @@
   "stage": "assign",
   "role": "effect",
   "point": "before_effect",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -10473,6 +10666,7 @@
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1
   },
   "template": "T_REPEAT"
@@ -10486,6 +10680,7 @@
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1
   },
   "template": "T_REPEAT"
@@ -10584,11 +10779,64 @@
   "app": "inbox",
   "tier": "rookie",
   "fault": "crash",
+  "stage": "sla",
+  "role": "work",
+  "point": "mid_stage",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "ticket": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "inbox",
+  "tier": "rookie",
+  "fault": "out_of_memory",
+  "stage": "sla",
+  "role": "work",
+  "point": "mid_stage",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "ticket": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "inbox",
+  "tier": "rookie",
+  "fault": "power_outage",
+  "stage": "sla",
+  "role": "work",
+  "point": "mid_stage",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "ticket": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "inbox",
+  "tier": "rookie",
+  "fault": "disk_full",
+  "stage": "sla",
+  "role": "work",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "rookie",
+  "fault": "crash",
   "stage": "notify",
   "role": "effect",
   "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1
   },
   "template": "T_REPEAT"
@@ -10602,6 +10850,7 @@
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1
   },
@@ -10616,6 +10865,7 @@
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1
   },
@@ -10630,6 +10880,7 @@
   "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1
   },
   "template": "T_REPEAT"
@@ -10643,6 +10894,7 @@
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1
   },
@@ -10657,6 +10909,7 @@
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1
   },
@@ -10671,6 +10924,7 @@
   "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1
   },
   "template": "T_REPEAT"
@@ -10684,6 +10938,7 @@
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1
   },
@@ -10698,6 +10953,7 @@
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1
   },
@@ -10802,6 +11058,7 @@
   "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1
   },
@@ -10816,6 +11073,7 @@
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -10831,6 +11089,7 @@
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -10846,6 +11105,7 @@
   "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1
   },
@@ -10860,6 +11120,7 @@
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -10875,6 +11136,7 @@
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -10890,6 +11152,7 @@
   "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1
   },
@@ -10904,6 +11167,7 @@
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -10919,6 +11183,7 @@
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -11024,6 +11289,7 @@
   "point": "mid_stage",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -11039,6 +11305,7 @@
   "point": "mid_stage",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -11054,6 +11321,7 @@
   "point": "mid_stage",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -11079,6 +11347,7 @@
   "point": "mid_stage",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -11094,6 +11363,7 @@
   "point": "mid_stage",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -11109,6 +11379,7 @@
   "point": "mid_stage",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -11130,8 +11401,45 @@
   "tier": "retrier",
   "fault": "crash",
   "stage": "login",
-  "role": "work",
-  "point": "mid_stage",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "retrier",
+  "fault": "crash",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "inbox",
+  "tier": "retrier",
+  "fault": "crash",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "inbox",
+  "tier": "retrier",
+  "fault": "out_of_memory",
+  "stage": "login",
+  "role": "effect",
+  "point": "before_effect",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -11141,8 +11449,34 @@
   "tier": "retrier",
   "fault": "out_of_memory",
   "stage": "login",
-  "role": "work",
-  "point": "mid_stage",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "inbox",
+  "tier": "retrier",
+  "fault": "out_of_memory",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "inbox",
+  "tier": "retrier",
+  "fault": "power_outage",
+  "stage": "login",
+  "role": "effect",
+  "point": "before_effect",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -11152,8 +11486,107 @@
   "tier": "retrier",
   "fault": "power_outage",
   "stage": "login",
-  "role": "work",
-  "point": "mid_stage",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "inbox",
+  "tier": "retrier",
+  "fault": "power_outage",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "inbox",
+  "tier": "retrier",
+  "fault": "internet_outage",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "inbox",
+  "tier": "retrier",
+  "fault": "endpoint_down",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "inbox",
+  "tier": "retrier",
+  "fault": "timeout",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "inbox",
+  "tier": "retrier",
+  "fault": "comm_timeout",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "inbox",
+  "tier": "retrier",
+  "fault": "slow_link",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "retrier",
+  "fault": "http_404",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "retrier",
+  "fault": "http_429",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "inbox",
+  "tier": "retrier",
+  "fault": "http_500",
+  "stage": "login",
+  "role": "effect",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -11163,7 +11596,7 @@
   "tier": "retrier",
   "fault": "disk_full",
   "stage": "login",
-  "role": "work",
+  "role": "effect",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -11175,9 +11608,11 @@
   "stage": "ingest",
   "role": "input",
   "point": "mid_stage",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -11186,9 +11621,11 @@
   "stage": "ingest",
   "role": "input",
   "point": "mid_stage",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -11197,9 +11634,11 @@
   "stage": "ingest",
   "role": "input",
   "point": "mid_stage",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -11219,6 +11658,7 @@
   "role": "input",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -11252,9 +11692,11 @@
   "stage": "validate",
   "role": "work",
   "point": "mid_stage",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -11263,9 +11705,11 @@
   "stage": "validate",
   "role": "work",
   "point": "mid_stage",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -11274,9 +11718,11 @@
   "stage": "validate",
   "role": "work",
   "point": "mid_stage",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -11295,9 +11741,11 @@
   "stage": "dedupe",
   "role": "work",
   "point": "mid_stage",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -11306,9 +11754,11 @@
   "stage": "dedupe",
   "role": "work",
   "point": "mid_stage",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -11317,9 +11767,11 @@
   "stage": "dedupe",
   "role": "work",
   "point": "mid_stage",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -11338,9 +11790,11 @@
   "stage": "triage",
   "role": "work",
   "point": "mid_stage",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -11349,9 +11803,11 @@
   "stage": "triage",
   "role": "work",
   "point": "mid_stage",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -11360,9 +11816,11 @@
   "stage": "triage",
   "role": "work",
   "point": "mid_stage",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -11381,9 +11839,11 @@
   "stage": "assign",
   "role": "effect",
   "point": "before_effect",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -11394,6 +11854,7 @@
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1
   },
   "template": "T_REPEAT"
@@ -11407,6 +11868,7 @@
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1
   },
   "template": "T_REPEAT"
@@ -11418,9 +11880,11 @@
   "stage": "assign",
   "role": "effect",
   "point": "before_effect",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -11431,6 +11895,7 @@
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1
   },
   "template": "T_REPEAT"
@@ -11444,6 +11909,7 @@
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1
   },
   "template": "T_REPEAT"
@@ -11455,9 +11921,11 @@
   "stage": "assign",
   "role": "effect",
   "point": "before_effect",
-  "outcome": "OK",
-  "extraRows": {},
-  "template": "T_OK"
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
  },
  {
   "app": "inbox",
@@ -11468,6 +11936,7 @@
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1
   },
   "template": "T_REPEAT"
@@ -11481,6 +11950,7 @@
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1
   },
   "template": "T_REPEAT"
@@ -11583,11 +12053,64 @@
   "app": "inbox",
   "tier": "retrier",
   "fault": "crash",
+  "stage": "sla",
+  "role": "work",
+  "point": "mid_stage",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "ticket": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "inbox",
+  "tier": "retrier",
+  "fault": "out_of_memory",
+  "stage": "sla",
+  "role": "work",
+  "point": "mid_stage",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "ticket": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "inbox",
+  "tier": "retrier",
+  "fault": "power_outage",
+  "stage": "sla",
+  "role": "work",
+  "point": "mid_stage",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1,
+   "ticket": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "inbox",
+  "tier": "retrier",
+  "fault": "disk_full",
+  "stage": "sla",
+  "role": "work",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "retrier",
+  "fault": "crash",
   "stage": "notify",
   "role": "effect",
   "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1
   },
   "template": "T_REPEAT"
@@ -11601,6 +12124,7 @@
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1
   },
@@ -11615,6 +12139,7 @@
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1
   },
@@ -11629,6 +12154,7 @@
   "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1
   },
   "template": "T_REPEAT"
@@ -11642,6 +12168,7 @@
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1
   },
@@ -11656,6 +12183,7 @@
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1
   },
@@ -11670,6 +12198,7 @@
   "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1
   },
   "template": "T_REPEAT"
@@ -11683,6 +12212,7 @@
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1
   },
@@ -11697,6 +12227,7 @@
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1
   },
@@ -11805,6 +12336,7 @@
   "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1
   },
@@ -11819,6 +12351,7 @@
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -11834,6 +12367,7 @@
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -11849,6 +12383,7 @@
   "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1
   },
@@ -11863,6 +12398,7 @@
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -11878,6 +12414,7 @@
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -11893,6 +12430,7 @@
   "point": "before_effect",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1
   },
@@ -11907,6 +12445,7 @@
   "point": "after_effect_before_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -11922,6 +12461,7 @@
   "point": "after_journal",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -12031,6 +12571,7 @@
   "point": "mid_stage",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -12046,6 +12587,7 @@
   "point": "mid_stage",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -12061,6 +12603,7 @@
   "point": "mid_stage",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -12086,6 +12629,7 @@
   "point": "mid_stage",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -12101,6 +12645,7 @@
   "point": "mid_stage",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -12116,6 +12661,7 @@
   "point": "mid_stage",
   "outcome": "REPEAT",
   "extraRows": {
+   "account_create": 1,
    "ticket": 1,
    "email": 1,
    "notify": 1
@@ -12137,8 +12683,32 @@
   "tier": "journaler",
   "fault": "crash",
   "stage": "login",
-  "role": "work",
-  "point": "mid_stage",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "journaler",
+  "fault": "crash",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "inbox",
+  "tier": "journaler",
+  "fault": "crash",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_journal",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -12148,8 +12718,32 @@
   "tier": "journaler",
   "fault": "out_of_memory",
   "stage": "login",
-  "role": "work",
-  "point": "mid_stage",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "journaler",
+  "fault": "out_of_memory",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "inbox",
+  "tier": "journaler",
+  "fault": "out_of_memory",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_journal",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -12159,8 +12753,116 @@
   "tier": "journaler",
   "fault": "power_outage",
   "stage": "login",
-  "role": "work",
-  "point": "mid_stage",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "journaler",
+  "fault": "power_outage",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "inbox",
+  "tier": "journaler",
+  "fault": "power_outage",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "journaler",
+  "fault": "internet_outage",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "inbox",
+  "tier": "journaler",
+  "fault": "endpoint_down",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "inbox",
+  "tier": "journaler",
+  "fault": "timeout",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "inbox",
+  "tier": "journaler",
+  "fault": "comm_timeout",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "REPEAT",
+  "extraRows": {
+   "account_create": 1
+  },
+  "template": "T_REPEAT"
+ },
+ {
+  "app": "inbox",
+  "tier": "journaler",
+  "fault": "slow_link",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "journaler",
+  "fault": "http_404",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "journaler",
+  "fault": "http_429",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "inbox",
+  "tier": "journaler",
+  "fault": "http_500",
+  "stage": "login",
+  "role": "effect",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -12170,7 +12872,7 @@
   "tier": "journaler",
   "fault": "disk_full",
   "stage": "login",
-  "role": "work",
+  "role": "effect",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -12580,6 +13282,49 @@
   "app": "inbox",
   "tier": "journaler",
   "fault": "crash",
+  "stage": "sla",
+  "role": "work",
+  "point": "mid_stage",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "journaler",
+  "fault": "out_of_memory",
+  "stage": "sla",
+  "role": "work",
+  "point": "mid_stage",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "journaler",
+  "fault": "power_outage",
+  "stage": "sla",
+  "role": "work",
+  "point": "mid_stage",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "journaler",
+  "fault": "disk_full",
+  "stage": "sla",
+  "role": "work",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "journaler",
+  "fault": "crash",
   "stage": "notify",
   "role": "effect",
   "point": "before_effect",
@@ -13065,8 +13810,30 @@
   "tier": "reconciler",
   "fault": "crash",
   "stage": "login",
-  "role": "work",
-  "point": "mid_stage",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "reconciler",
+  "fault": "crash",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "reconciler",
+  "fault": "crash",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_journal",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -13076,8 +13843,30 @@
   "tier": "reconciler",
   "fault": "out_of_memory",
   "stage": "login",
-  "role": "work",
-  "point": "mid_stage",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "reconciler",
+  "fault": "out_of_memory",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "reconciler",
+  "fault": "out_of_memory",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_journal",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -13087,8 +13876,110 @@
   "tier": "reconciler",
   "fault": "power_outage",
   "stage": "login",
-  "role": "work",
-  "point": "mid_stage",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "reconciler",
+  "fault": "power_outage",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "reconciler",
+  "fault": "power_outage",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "reconciler",
+  "fault": "internet_outage",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "inbox",
+  "tier": "reconciler",
+  "fault": "endpoint_down",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "inbox",
+  "tier": "reconciler",
+  "fault": "timeout",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "reconciler",
+  "fault": "comm_timeout",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "reconciler",
+  "fault": "slow_link",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "reconciler",
+  "fault": "http_404",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "reconciler",
+  "fault": "http_429",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "inbox",
+  "tier": "reconciler",
+  "fault": "http_500",
+  "stage": "login",
+  "role": "effect",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -13098,7 +13989,7 @@
   "tier": "reconciler",
   "fault": "disk_full",
   "stage": "login",
-  "role": "work",
+  "role": "effect",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -13498,6 +14389,49 @@
   "app": "inbox",
   "tier": "reconciler",
   "fault": "crash",
+  "stage": "sla",
+  "role": "work",
+  "point": "mid_stage",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "reconciler",
+  "fault": "out_of_memory",
+  "stage": "sla",
+  "role": "work",
+  "point": "mid_stage",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "reconciler",
+  "fault": "power_outage",
+  "stage": "sla",
+  "role": "work",
+  "point": "mid_stage",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "reconciler",
+  "fault": "disk_full",
+  "stage": "sla",
+  "role": "work",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "reconciler",
+  "fault": "crash",
   "stage": "notify",
   "role": "effect",
   "point": "before_effect",
@@ -13963,8 +14897,30 @@
   "tier": "phoenix",
   "fault": "crash",
   "stage": "login",
-  "role": "work",
-  "point": "mid_stage",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "phoenix",
+  "fault": "crash",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "phoenix",
+  "fault": "crash",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_journal",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -13974,8 +14930,30 @@
   "tier": "phoenix",
   "fault": "out_of_memory",
   "stage": "login",
-  "role": "work",
-  "point": "mid_stage",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "phoenix",
+  "fault": "out_of_memory",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "phoenix",
+  "fault": "out_of_memory",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_journal",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -13985,8 +14963,110 @@
   "tier": "phoenix",
   "fault": "power_outage",
   "stage": "login",
-  "role": "work",
-  "point": "mid_stage",
+  "role": "effect",
+  "point": "before_effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "phoenix",
+  "fault": "power_outage",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_effect_before_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "phoenix",
+  "fault": "power_outage",
+  "stage": "login",
+  "role": "effect",
+  "point": "after_journal",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "phoenix",
+  "fault": "internet_outage",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "PARKED_OK",
+  "extraRows": {},
+  "template": "T_PARKED_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "phoenix",
+  "fault": "endpoint_down",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "PARKED_OK",
+  "extraRows": {},
+  "template": "T_PARKED_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "phoenix",
+  "fault": "timeout",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "phoenix",
+  "fault": "comm_timeout",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "phoenix",
+  "fault": "slow_link",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "phoenix",
+  "fault": "http_404",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "phoenix",
+  "fault": "http_429",
+  "stage": "login",
+  "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "phoenix",
+  "fault": "http_500",
+  "stage": "login",
+  "role": "effect",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -13996,7 +15076,7 @@
   "tier": "phoenix",
   "fault": "disk_full",
   "stage": "login",
-  "role": "work",
+  "role": "effect",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
@@ -14388,6 +15468,49 @@
   "fault": "disk_full",
   "stage": "assign",
   "role": "effect",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "phoenix",
+  "fault": "crash",
+  "stage": "sla",
+  "role": "work",
+  "point": "mid_stage",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "phoenix",
+  "fault": "out_of_memory",
+  "stage": "sla",
+  "role": "work",
+  "point": "mid_stage",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "phoenix",
+  "fault": "power_outage",
+  "stage": "sla",
+  "role": "work",
+  "point": "mid_stage",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "inbox",
+  "tier": "phoenix",
+  "fault": "disk_full",
+  "stage": "sla",
+  "role": "work",
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
