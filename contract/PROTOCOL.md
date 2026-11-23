@@ -119,10 +119,42 @@ Effect kinds: `account_create`, `charge`, `email`, `dispatch`, `notify`, `ticket
 | `GET /api/waves/:n/report` | | report JSON (see `.kiro/specs/engine/runtime.md` section 9) |
 | `GET /api/waves/:n/compare/:m` | | `{a: {score, grade, repeats}, b: {}, cells: []}` |
 | `GET /api/waves/:n/postmortem` | | `text/markdown`, or `404 {error:{code:"not_ready"}}` before the wave ends |
+| `GET /api/monkey?audit=<n>` | `audit` optional, default 20 | `MonkeyPanelState` (below) |
+| `GET /api/monkey/preview?mode=` | `mode`: `observe`\|`staging`\|`prod-guarded` | `GuardSummary` (below), or `400 bad_request` on another mode |
+| `POST /api/monkey/start` | `{mode: "observe"\|"staging"\|"prod-guarded"}` | `200 MonkeyPanelState` with `running: true`; `400 bad_request` on a bad mode; `409 monkey_running` while a run is active |
+| `POST /api/monkey/stop` | none | `200 MonkeyPanelState`; the kill switch, idempotent (idle answers `status: "idle"`) |
 
 Errors: `{"error":{"code","message"}}`. Codes: `no_wave` (409), `wave_running` (409), `bad_lane` (400), `bad_creature` (400), `bad_fault` (400), `not_applicable` (409, only when a fault cannot be deferred), `depth_limit` (409), `bad_request` (400), `gone` (410).
 
 `POST /api/chaos` with neither `creature` nor `fault` picks a random applicable one. A `creature` with several faults picks one (random, seeded). `chaos` detail uses the fields `creature` and `fault`.
+
+## Chaos monkey endpoints (additive)
+
+The arena's monkey panel drives a **built-in demo target only** (a local server behind the fault proxy, 127.0.0.1). The routes never touch a third-party system and emit no SSE events; the panel polls `GET /api/monkey`. The host is created on first use and is closed with the server. One run at a time. Clients ignore unknown fields.
+
+`MonkeyPanelState`:
+```
+{demoOnly: true, modes: ["observe","staging","prod-guarded"], mode, running: bool,
+ status: "idle"|"running"|"completed"|"aborted"|"stopped"|"dead_man"|"refused", reason: string, injections: int,
+ guard: GuardSummary,
+ steady: {sli: "success_rate"|"latency_p95_ms", threshold, value: number|null, held: bool|null, samples: int, recent: (0|1)[]},
+ audit: AuditEntry[], lastStopMs: number|null}
+```
+- `steady.value` is null before any probe; `held` is null until `minSamples` probes exist, then false on a breach (a breach removes every injection). `recent` is oldest first, 1 ok, 0 failed.
+- `audit` is the last `n` entries (default 20, kept up to 500), oldest first. `AuditEntry` is `{ts: ISO string, who: string, mode, event: "start"|"refused"|"inject"|"remove"|"breach"|"stop"|"dead_man"|"duration"|"end", fault?, endpoint?, result?, reason?, detail?}`.
+- `lastStopMs` is how long the last kill switch took to restore normal behaviour (under 1000 ms), null if none was pulled.
+
+`GuardSummary`:
+```
+{mode, allowFaults: string[], endpoints: string[], blast: {maxPercent, maxConcurrent, maxDurationMs},
+ ceiling: {maxPercent: 10, maxConcurrent: 3, maxDurationMs: 900000}|null,
+ deadManMs, syntheticHeader, schedule: {startHourUtc, endHourUtc}|null,
+ hypothesis: {sli, threshold, window, minSamples, intervalMs},
+ plan: [{fault, endpoint, decision: "inject"|"refuse"|"skip", reason, rule: object|null}], lines: string[]}
+```
+- `ceiling` is non-null only in `prod-guarded` (hard limits a config cannot raise). `observe` injects nothing. `data_corruption` is refused in every mode. In `prod-guarded` only `latency`, `error` and `dependency_down` are allowed, on synthetic traffic tagged with `syntheticHeader` (default `x-haunt-synthetic`).
+- `lines` are plain sentences for the panel, one per rail.
+- Errors use the standard shape: `bad_request` (400), `monkey_running` (409).
 
 ## Demo mode
 
