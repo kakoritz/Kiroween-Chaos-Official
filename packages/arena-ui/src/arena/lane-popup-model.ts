@@ -3,6 +3,7 @@
 // No DOM, no clock. Server records (contract/V1_1.md section 9) fill in what the event buffer misses.
 import type { ArenaEvent } from '../api/types';
 import { chaosPhrase } from './creatures';
+import { displayId, vocabOf } from './vocab';
 import { CHIP_ICON, CHIP_WORD, chipState, isIssue, type ChipV2State } from './chips';
 
 export type Level = 'info' | 'warn' | 'error' | 'good';
@@ -265,9 +266,11 @@ export interface LogEntry {
 /** Format an offset like `+3.2s`. */
 export const offsetText = (t: number): string => `+${Math.max(0, t).toFixed(1)}s`;
 
-function line(e: ArenaEvent, label: (id: string) => string): { level: Level; icon: string; text: string } | null {
+function line(e: ArenaEvent, label: (id: string) => string, app = 'orders'): { level: Level; icon: string; text: string } | null {
   const d = rec(e.detail);
   const st = e.stage ? label(e.stage) : '';
+  const v = vocabOf(app);
+  const Unit = v.unit.charAt(0).toUpperCase() + v.unit.slice(1);
   switch (e.type) {
     case 'order_start': return { level: 'info', icon: '\u25B7', text: `Grabbed order ${str(e.order)}${d.redo === true ? ' (redo)' : ''}`.trim() };
     case 'stage_start': return { level: 'info', icon: '\u25B6', text: `${st || 'Stage'} started, attempt ${num(d.attempt, 1)}` };
@@ -286,10 +289,10 @@ function line(e: ArenaEvent, label: (id: string) => string): { level: Level; ico
     case 'breaker': return { level: d.state === 'open' ? 'error' : 'good', icon: '\u26A1', text: `Breaker ${str(d.state) || 'changed'}` };
     case 'process_dead': return { level: 'error', icon: '\u2620', text: 'Process died' };
     case 'process_up': return { level: 'warn', icon: '\u21BB', text: 'Process restarted' };
-    case 'order_done': return { level: 'good', icon: '\u2713', text: `Order ${str(e.order)} delivered`.replace('  ', ' ') };
-    case 'order_failed': return { level: 'error', icon: '\u2717', text: 'ORDER CANCELLED' };
-    case 'order_parked': return { level: 'warn', icon: '\u26B0', text: 'Order parked' };
-    case 'order_quarantined': return { level: 'error', icon: '\u2697', text: 'Order quarantined' };
+    case 'order_done': return { level: 'good', icon: '\u2713', text: `${Unit} ${displayId(app, str(e.order))} ${v.done}`.replace('  ', ' ') };
+    case 'order_failed': return { level: 'error', icon: '\u2717', text: v.cancelled };
+    case 'order_parked': return { level: 'warn', icon: '\u26B0', text: `${Unit} parked` };
+    case 'order_quarantined': return { level: 'error', icon: '\u2697', text: `${Unit} quarantined` };
     case 'decision_needed': return { level: 'warn', icon: '\u26A0', text: 'WRONG ORDER: a decision is needed' };
     case 'decision_made': return { level: 'info', icon: '\u2714', text: `Decision: ${str(d.choice)} (${str(d.source) || 'user'})` };
     case 'review': {
@@ -306,12 +309,12 @@ function line(e: ArenaEvent, label: (id: string) => string): { level: Level; ico
 }
 
 /** Log lines for one order, oldest first. */
-export function logEntries(events: readonly ArenaEvent[], stageLabel: (id: string) => string): LogEntry[] {
+export function logEntries(events: readonly ArenaEvent[], stageLabel: (id: string) => string, app = 'orders'): LogEntry[] {
   const ordered = sortUnique(events);
   const t0 = ordered.length > 0 ? num((ordered.find((e) => e.type === 'order_start') ?? ordered[0]!).ts) : 0;
   const out: LogEntry[] = [];
   for (const e of ordered) {
-    const l = line(e, stageLabel);
+    const l = line(e, stageLabel, app);
     if (!l) continue;
     out.push({
       seq: e.seq, t: (num(e.ts) - t0) / 1000, ...l,

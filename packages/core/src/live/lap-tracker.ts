@@ -56,6 +56,7 @@ export interface LapTrackerOptions {
 export class LapTracker {
   private readonly stageIds: string[];
   private readonly base: number;
+  private readonly app: AppId;
   private readonly normFactor: number;
   private readonly now: () => number;
   private readonly lanes = new Map<string, LaneAcc>();
@@ -63,6 +64,7 @@ export class LapTracker {
   constructor(o: LapTrackerOptions) {
     this.stageIds = APPS[o.app].stages.map((s) => s.id);
     const speed = o.speed > 0 ? o.speed : 1;
+    this.app = o.app;
     this.base = baselineMs(o.app, o.pace) / speed;
     this.normFactor = o.pace / speed;
     this.now = o.now ?? Date.now;
@@ -178,7 +180,7 @@ export class LapTracker {
       const lap = { ms, workMs: Math.max(0, ms - r.grab - r.walks), attempts: r.attempts, retries: r.retries, downtimeMs, issues, recoveries: r.recov };
       const cancelled = ev.type === 'order_failed';
       const rv: ReviewResult = review({
-        lap, extra: r.extra, degraded: r.degraded, gremlin: r.gremlin, swallowed: r.swallowed, cancelled, baselineMs: this.base, paceFactor: this.normFactor,
+        lap, extra: r.extra, degraded: r.degraded, gremlin: r.gremlin, swallowed: r.swallowed, cancelled, baselineMs: this.base, app: this.app, paceFactor: this.normFactor,
         decision: r.decision?.choice ? { choice: r.decision.choice, detectedAt: r.decision.detectedAt } : undefined,
       });
       const cum = S.stars.add(rv.stars);

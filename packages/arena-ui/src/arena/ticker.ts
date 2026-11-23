@@ -2,6 +2,7 @@
 // never the only signal. Pure formatting is exported for tests; the DOM class only appends rows.
 import type { ArenaEvent } from '../api/types';
 import { chaosPhrase } from './creatures';
+import { displayId, vocabOf } from './vocab';
 
 export type Tone = 'ok' | 'bad' | 'warn' | 'info' | 'boss';
 export interface TickerLine { tone: Tone; icon: string; text: string }
@@ -11,19 +12,21 @@ const MAX_ROWS = 7;
 const str = (v: unknown): string => (typeof v === 'string' ? v : '');
 
 /** One short line per notable event, or null for events that are too chatty (progress, effects, scores). */
-export function tickerLine(ev: ArenaEvent, stageLabel: (id: string) => string): TickerLine | null {
+export function tickerLine(ev: ArenaEvent, stageLabel: (id: string) => string, app = 'orders'): TickerLine | null {
+  const unit = vocabOf(app).unit;
+  const order = displayId(app, str(ev.order));
   const lane = ev.lane ? `L${ev.lane} ` : '';
   const stage = ev.stage ? stageLabel(ev.stage) : '';
   const d = (ev.detail ?? {}) as Record<string, unknown>;
   switch (ev.type) {
     case 'wave_start': return { tone: 'info', icon: '\u25B6', text: `Wave ${typeof ev.wave === 'number' ? ev.wave : ''} started` };
     case 'wave_end': return { tone: 'info', icon: '\u25A0', text: 'Wave ended' };
-    case 'order_start': return { tone: 'info', icon: '\u25B7', text: `${lane}order ${str(ev.order)} started`.replace('  ', ' ') };
+    case 'order_start': return { tone: 'info', icon: '\u25B7', text: `${lane}${unit} ${order} started`.replace('  ', ' ') };
     case 'stage_done': return { tone: 'ok', icon: '\u2713', text: `${lane}${stage || 'stage'} done` };
-    case 'order_done': return { tone: 'ok', icon: '\u2713', text: `${lane}order ${str(ev.order)} done`.replace('  ', ' ') };
-    case 'order_failed': return { tone: 'bad', icon: '\u2717', text: `${lane}order ${str(ev.order)} failed`.replace('  ', ' ') };
-    case 'order_parked': return { tone: 'warn', icon: '\u29D6', text: `${lane}order parked` };
-    case 'order_quarantined': return { tone: 'boss', icon: '\u2620', text: `${lane}order quarantined` };
+    case 'order_done': return { tone: 'ok', icon: '\u2713', text: `${lane}${unit} ${order} done`.replace('  ', ' ') };
+    case 'order_failed': return { tone: 'bad', icon: '\u2717', text: `${lane}${unit} ${order} failed`.replace('  ', ' ') };
+    case 'order_parked': return { tone: 'warn', icon: '\u29D6', text: `${lane}${unit} parked` };
+    case 'order_quarantined': return { tone: 'boss', icon: '\u2620', text: `${lane}${unit} quarantined` };
     case 'stage_fail': return { tone: 'bad', icon: '\u2717', text: `${lane}${stage || 'stage'} failed` };
     case 'chaos': return { tone: 'bad', icon: d.unknown === true ? '?' : '\u2620', text: `${lane}${chaosPhrase(d, stage)}` };
     case 'chaos_absorbed': return { tone: 'ok', icon: '\u26E8', text: `${lane}chaos absorbed` };
@@ -43,13 +46,13 @@ export class EventTicker {
   private rows: TickerLine[] = [];
   private dirty = true;
   private seen = 0;
-  constructor(private readonly el: HTMLElement, private readonly stageLabel: (id: string) => string) {}
+  constructor(private readonly el: HTMLElement, private readonly stageLabel: (id: string) => string, private readonly app: () => string = () => 'orders') {}
 
   push(ev: ArenaEvent): void {
     if (ev.type === 'reset') { this.rows = []; this.seen = 0; this.dirty = true; return; }
     this.seen++;
     if (this.seen === 2) this.dirty = true;
-    const line = tickerLine(ev, this.stageLabel);
+    const line = tickerLine(ev, this.stageLabel, this.app());
     if (!line) return;
     this.rows.unshift(line);
     if (this.rows.length > MAX_ROWS) this.rows.length = MAX_ROWS;
