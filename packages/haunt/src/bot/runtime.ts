@@ -97,15 +97,18 @@ export async function runBot(def: BotDef): Promise<void> {
   // ---- stdout channel, with event bookkeeping for the progress heartbeat and park reasons ----
   let cur: { order: string; stage: string; at: number } | null = null;
   let lastParkReason = 'breaker_open';
+  let paused = false;
   const send = (m: Record<string, unknown>) => {
     if (m.type === 'progress') m = { ...m, type: 'stage_progress' };
-    if (m.type === 'stage_start') cur = { order: String(m.order), stage: String(m.stage), at: now() };
+    if (m.type === 'stage_start') { cur = { order: String(m.order), stage: String(m.stage), at: now() }; paused = false; }
+    else if (m.type === 'stage_fail') paused = true; // no progress between a failure and its recovery (PROTOCOL.md rule 3)
+    else if (m.type === 'recover_done') paused = false;
     else if (m.type === 'stage_done' || m.type === 'order_done' || m.type === 'order_failed' || m.type === 'order_parked') cur = null;
     if (m.type === 'order_parked') lastParkReason = String((m.detail as { reason?: string } | undefined)?.reason ?? 'breaker_open');
     process.stdout.write(`${JSON.stringify(m)}\n`);
   };
   const heartbeat = setInterval(() => {
-    if (!cur) return;
+    if (!cur || paused) return;
     const def_ = STAGES.find((s) => s.id === cur!.stage);
     const pct = Math.min(95, Math.floor(((now() - cur.at) / (def_?.max ?? 1000)) * 100));
     send({ type: 'stage_progress', order: cur.order, stage: cur.stage, detail: { pct, label: def_?.label ?? cur.stage } });
@@ -241,9 +244,11 @@ export async function runBot(def: BotDef): Promise<void> {
     for (let n = 1; ; n++) {
       let failure: string;
       let status: number | null = null;
+      let wrongOrder = false;
       try {
         const r = await call(`/tracking/${encodeURIComponent(shipment)}?lane=${encodeURIComponent(lane)}`, { method: 'GET' }, 800);
         const b = r.body as { status?: string };
+        wrongOrder = r.status === 200 && b.status === 'wrong_order';
         if (r.status === 200 && b.status === 'delivered') { if (hasPart('breaker')) sdk.noteSuccess('tracking'); return true; }
         if (r.status === 200 && b.status === 'in_transit') { if (hasPart('breaker')) sdk.noteSuccess('tracking'); return false; }
         failure = r.status === 200 ? String(b.status ?? 'unexpected') : `status ${r.status}`;
@@ -251,6 +256,8 @@ export async function runBot(def: BotDef): Promise<void> {
       } catch (e) {
         failure = e instanceof Error ? e.message : String(e);
       }
+      // The customer's order is wrong (detect: transit): the SDK asks for a decision, it is not a transient failure.
+      if (wrongOrder) throw new WrongOrder('transit');
       send({ type: 'stage_fail', order: curOrder, stage: 'transit', detail: { attempt: n, reason: failure } });
       if (hasPart('breaker')) sdk.noteFailure('tracking');
       // A learned lesson for this stage (spec 4): backoff and more attempts, for a bot with retry and no breaker.
@@ -340,6 +347,7 @@ export async function runBot(def: BotDef): Promise<void> {
       parked.delete(id);
       send({ type: 'order_resumed', order: id });
       resumed = true;
+      break; // one at a time: its order_start must follow at once (PROTOCOL.md rule 23)
     }
     return resumed;
   };

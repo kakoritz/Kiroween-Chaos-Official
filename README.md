@@ -5,77 +5,69 @@
 
 ![Haunt: five bots race through an order pipeline while chaos creatures attack](packages/arena-ui/docs/screens/demo-autoplay-25s.png)
 
-**Break your bots before the world does.** Haunt is chaos engineering played as a tournament: five bots take the same crashes, the worst one dies each round and leaves a corpse, and what is left is a Casebook of every edge case plus a real fix spec that Kiro applies.
+**Break your bots before the world does.** Haunt is chaos engineering played as a tournament: five bots take the same crashes, the worst one dies each round and leaves a corpse, and what is left is a Casebook of every edge case plus a fix spec that Kiro can apply.
 
-## The one story: the same bug in three outfits
+**The hero moment:** a process crashes right after charging a customer, restarts, and charges again. The provider's own ledger decides who is right: **Rookie: 2 charges. Phoenix: 1** ([`hero-crash.test.ts`](packages/haunt/test/hero-crash.test.ts)). The same bug shows up as a duplicate ticket in the second app.
 
-A process crashes halfway through, restarts, and does the work again.
+## Try it
 
-| Outfit | What the customer sees | Where it lives in this repo |
-|---|---|---|
-| Duplicate charge | "Charged. Charged again." | Haunted Orders (Node), running |
-| Duplicate ticket | Two tickets and two replies for one email | Haunted Inbox (Python), running. Its ticket step requires an idempotency key |
-| Double stream | Two streams for one account | Specified in [`.kiro/specs/packs/spec.md`](.kiro/specs/packs/spec.md), **not built yet** |
+**No install (hosted build).** The arena, Workflow Lab and campaign run in your browser. The tournament, Casebook and improve loop replay recorded runs of the real engine, and a banner says so. The public URL is in [`docs/JUDGES.md`](docs/JUDGES.md). To serve the same build yourself: `npm ci && npm run build:hosted && npm run serve:hosted` (http://127.0.0.1:8080/; `npm run serve:hosted -- 18080` picks another port).
 
-The hero number comes from the provider's own ledger, not from the bot: after the same crash right after the charge, **Rookie: 2 charges. Phoenix: 1.** (`packages/haunt/test/hero-crash.test.ts`).
-
-## What it is
-
-- **A skeleton**, the Haunt harness in [`packages/haunt/`](packages/haunt/): the SDK (retry, journal, idempotency keys, circuit breaker, offline queue), the chaos engine and creatures, the ledger and scoring, sweep and ramp runs, the report, the reviewer, the pattern miner and the fix spec writer, and an MCP server.
-- **Two real apps** on it, in two folders and two languages:
-  - [`apps/haunted-orders/`](apps/haunted-orders/) (Node): an 11-step order pipeline from account to handoff, with five bot tiers from Rookie to Phoenix.
-  - [`apps/haunted-inbox/`](apps/haunted-inbox/) (Python 3.12, standard library only): the Ticket Desk inbox bot. It reads mail, classifies it, files a ticket, drafts and sends a reply, and archives. It runs through the same harness with a `haunt.yaml` and no engine changes.
-- **A streaming demo** is the planned third outfit. Today the Workflow Lab ships presets for Orders, Inbox, Payments and Report generator, all labelled model-based. There is no streaming preset yet.
-
-## Features
-
-| Feature | What it does | Where |
-|---|---|---|
-| Tournament | Rounds of 5, 4, 3, 2 lanes on the same seeded storm. The lowest lane is eliminated each round and leaves a corpse on the stage where it died | `packages/haunt/src/tournament`, `packages/arena-ui/src/arena/tournament*.ts` |
-| Intensity dial | Live dial from 1 to 10, then **11 THROW EVERYTHING**, with a RAMP toggle | `packages/arena-ui/src/arena/dial.ts` |
-| Curses | Persistent per-lane traits (cursed 404, slow endpoint, flaky 500, clock skew, rate limit). The report shows how each lane reacted | `packages/arena-ui/src/arena/curses.ts` |
-| Lessons | A lane that overcomes an edge case records the mechanism and applies it in later rounds (a policy overlay, not code) | `packages/haunt/src/tournament` |
-| Casebook | Every edge case seen, who solved it, how, and what it cost. Awards: Champion, Battle-Tested, Iron Skeleton, Fastest Recovery, Wooden Spoon | `packages/arena-ui/src/arena/casebook-view.ts` |
-| Pattern miner | Clusters recurring problems across runs into `.haunt/patterns.json` | `packages/haunt/src/miner` |
-| Fix specs | Writes `.kiro/specs/hardening-<run>/` (requirements with evidence, smallest patch, a test per requirement) and lints it with `haunt spec-lint` | [sample](docs/proof/sample-hardening-spec/index.md) |
-| Improve loop | Run, mine, apply cheap fixes as policy, rerun the same plan, compare | [sample report](docs/proof/sample-hardening-spec/improve-report.txt) |
-| Report and badge | Graded JSON, Markdown and offline HTML; SVG badge and scorecard | `haunt badge` |
-| Workflow Lab | Model your own workflow in the browser and get a graded what-if | `packages/arena-ui/workflow-lab.html` |
-| MCP server and Power | `haunt_define`, `haunt_sweep`, `haunt_ramp`, `haunt_report`, `haunt_badge` | `packages/haunt/src/mcp`, [`kiro-power/`](kiro-power/) |
-
-## Screenshots
-
-Captured from the running UI ([`docs/proof/ui-tv3/`](docs/proof/ui-tv3/)).
-
-| | |
-|---|---|
-| ![Dial at 11, THROW EVERYTHING](docs/proof/ui-tv3/dial-11-throw-everything.png) | ![Corpses and fallen lanes](docs/proof/ui-tv3/corpses-fallen-lanes.png) |
-| Dial at 11 | Corpses and fallen lanes |
-| ![Round end with standings and Casebook](docs/proof/ui-tv3/round-end-standings-casebook.png) | ![Champion, awards and Casebook](docs/proof/ui-tv3/champion-awards-casebook.png) |
-| Round end: standings and Casebook | Final screen: champion, awards, Casebook |
-| ![Patterns and the improve loop running](docs/proof/ui-tv3/patterns-loop-running.png) | ![Improve loop compare report](docs/proof/ui-tv3/patterns-compare-report.png) |
-| Patterns and the improve loop running | Compare report |
-
-More: [lessons learned](docs/proof/ui-tv3/lessons-learned.png), [curses board](docs/proof/ui-tv3/curses-board.png).
-
-## Quick start
-
-Needs Node 20 or newer. The inbox app also needs Python 3.12 (standard library only).
+**Local, real engine** (Node 20+; Python 3.12 only for the Ticket Desk, standard library only):
 
 ```
 npm ci
 npm run demo
 ```
 
-`npm run demo` builds the bots (and the arena UI if it is missing), starts the live server on `127.0.0.1:7070` and opens the arena on the 60-second hero demo. Use `npm run demo -- --script=loop` for the fix-and-rerun story. Everything binds to `127.0.0.1`; stop with Ctrl+C.
+`npm run demo` builds the bots and arena if needed, starts the live server on `127.0.0.1:7070` (provider on 7071) and opens the 60-second hero demo. Other ports: `HAUNT_PORT=17070 HAUNT_PROVIDER_PORT=17071 npm run demo`. `-- --script=loop` plays the fix-and-rerun story, `-- --no-open` only prints the URL. Everything binds to `127.0.0.1`. Stop with Ctrl+C.
+
+In the arena: **Start tournament**, press **Next** between rounds, drag **INTENSITY**, open **Patterns**, switch the app to **Haunted Inbox**. Full tour: [`docs/JUDGES.md`](docs/JUDGES.md).
+
+## The two apps
+
+| App | Language | What it does |
+|---|---|---|
+| [`apps/haunted-orders/`](apps/haunted-orders/) | Node | 11-stage order pipeline (account to handoff), five bot tiers Rookie to Phoenix. Money and parcels |
+| [`apps/haunted-inbox/`](apps/haunted-inbox/) | Python 3.12 | Ticket Desk: reads mail, classifies, files a ticket, drafts and sends a reply, archives. Same harness: a `haunt.yaml` and no engine change |
+
+A third outfit (streaming) exists only as a model-based pack in [`packs/`](packs/) and a Workflow Lab preset. It has no runnable app.
+
+## What is in the box
+
+| Feature | What it does |
+|---|---|
+| Tournament | Rounds of 5, 4, 3, 2 lanes on one seeded storm. The lowest lane falls and leaves a corpse where it died. Lessons carry into later rounds as a policy overlay, not code |
+| Campaign | Haunted Nights: seven nights, a gear shop, medals. You choose which protections your crew wears |
+| Intensity dial | 1 to 10, then **11 THROW EVERYTHING**, with a RAMP toggle |
+| Curses | Per-lane traits: cursed 404, slow endpoint, flaky 500, clock skew, rate limit |
+| Casebook | Every edge case, who solved it, how, what it cost. Awards: Champion, Battle-Tested, Iron Skeleton, Fastest Recovery, Wooden Spoon |
+| Fix specs | The miner clusters recurring problems into `.haunt/patterns.json` and writes `.kiro/specs/hardening-<run>/` ([sample](docs/proof/sample-hardening-spec/index.md)). Nothing is applied automatically |
+| Monkey (guarded) | `haunt monkey` injects faults through a proxy. `observe` injects nothing, `staging` is capped, `prod-guarded` needs a config with a schedule window and an allowlist, `haunt stop` is the kill switch ([`docs/PRODUCTION-MODE.md`](docs/PRODUCTION-MODE.md)) |
+| Workflow Lab and packs | Model your own workflow in the browser (`/workflow-lab.html`) and get a graded what-if. Presets: Orders, Inbox, Payments, Report generator, Streaming pack. Always labelled model-based |
+| Reports | Graded JSON, Markdown, offline HTML, SVG badge (`haunt badge`) |
+| MCP server and Power | `haunt_define`, `haunt_sweep`, `haunt_ramp`, `haunt_report`, `haunt_badge` ([`kiro-power/`](kiro-power/)) |
+
+## Commands
+
+The CLI is `npm run haunt -- <args>`. There is no `haunt` binary on your PATH (`npx haunt` does not work).
 
 | Command | Does |
 |---|---|
-| `npm run haunt -- sweep [--tier T] [--seed N] [--orders N]` | Graded sweep of one bot tier |
-| `npm run haunt -- ramp [--tier T]` | Raises load until the bot breaks |
+| `npm run haunt -- ramp --tier phoenix --orders 4 --steps 1,2 --speed 16 --no-gate` | Raises concurrency until the bot breaks. About 12 s as written |
+| `npm run haunt -- sweep --tier phoenix --orders 1 --speed 16` | Graded sweep, one fault per stage and creature. **About 5 minutes even with these flags** |
+| `npm run haunt -- monkey --mode staging --dry-run` | Prints what the monkey would inject; nothing runs |
 | `npm run haunt -- spec-lint <dir>` | Lints a generated fix spec |
-| `npm run live` / `npm run mock` | Live server only / mock server (no engine) |
-| `npm run typecheck`, `npm test`, `npm run validate:events` | Local checks |
+| `npm run demo -- --check` | Starts a server on a free port, checks it answers, exits. About 6 s |
+| `npm run validate:events` | Fixtures against the event schema and ordering rules |
+| `npm run validate:live` | Plays hero, a wave, a campaign night and an inbox wave on a private server and checks every event against the contract rules. About 2.5 minutes. Expect `0 violations` |
+| `npm run verify` | typecheck, tests, bots, UI build and demo check in one command. The script is in PR #253; once that merges it works from a clean checkout |
+
+Everything else (`npm run live`, `mock`, `test`, `typecheck`, `e2e`) is in [`docs/DEV-SETUP.md`](docs/DEV-SETUP.md).
+
+## The improve loop, plainly
+
+The loop runs the plan, mines patterns, applies the cheap fixes as policy overlays, reruns the same seed and compares. It never applies code. The deterministic version (an in-process virtual-time engine, so grades reproduce) reaches grade A on seeds 7, 11 and 23 **in the simulator**. That is a projection: parts a lane lacks are simulated in the rerun, so it is not a live rerun of patched code. The code fix itself is applied by Kiro from the generated spec ([`docs/proof/live-fix.md`](docs/proof/live-fix.md) records one). Until the deterministic version merges, `haunt improve` replays in real time and takes more than 8 minutes (measured).
 
 ## Architecture
 
@@ -98,57 +90,40 @@ flowchart LR
 
 Static copy: [`docs/img/architecture.svg`](docs/img/architecture.svg). The seam between core and visuals is [`contract/`](contract/).
 
-## Status: what is real, model-based and recorded
-
-| Item | Status |
-|---|---|
-| Orders app, five tiers, hero crash (2 charges vs 1) | **Real.** Real child processes against a real local provider and ledger |
-| Inbox app (Python) through the same harness | **Real.** Spawned through the runner and covered by tests in `apps/haunted-inbox/test` |
-| Tournament, dial, curses, lessons, Casebook, miner, fix specs, improve loop | **Real code**, merged in the TV3 PRs. Sample output is in `docs/proof/sample-hardening-spec/` (improve loop on that seeded run: "closed 5 of 9 patterns", grade C to B) |
-| F to A loop proof | **Recorded fix.** On the crash-only loop plan wave 1 is F and wave 2 is A, but `rookie.hardened.ts` was written ahead of time, not applied by a live Kiro session ([live-fix.md](docs/proof/live-fix.md)) |
-| Kiro applies a generated fix spec live | **Not yet recorded.** Planned for the video |
-| Workflow Lab | **Model-based.** Rules over declared protections, not your real code |
-| Ticket Desk full 11-stage flow, Jira/Asana/KACE fake adapters | **Specified, not built** (task PK-C3). Today the inbox has 6 stages |
-| Streaming pack, production mode (`haunt monkey`) | **Specified, not built** |
-| Kiro Power and Crew app | Manifests start the same MCP server (handshake proof in [`docs/proof/installed/`](docs/proof/installed/)). **Not yet installed into a Kiro IDE or Kiro Crew window** |
-| Hosted demo URL | **Not published yet** (build exists: `npm run build:hosted`) |
-| Tests | 1,434 tests in 157 files, local only. On one run 1,432 passed and 1 failed with a worker timeout under load. CI is manual only (GitHub billing) and never runs tests |
-
-## Skeleton Crew fit
-
-The rule: "Build a skeleton code template lean enough to be clear but flexible enough to support various use cases. Show us its versatility with two distinct applications from your foundation."
-
-The skeleton is the harness. An app is a process definition (`haunt.yaml`: stages, effects, start command, truth endpoint, targets) plus a bot. Orders is Node and moves money and parcels. Inbox is Python and files tickets and sends replies. Neither needed an engine change, and the inbox uses a small Python SDK (`apps/haunted-inbox/bot/haunt_py.py`) with the same journal format. Where we are weaker: the third outfit (streaming) is only designed. The honest fit check is [`docs/FIT-CHECK.md`](docs/FIT-CHECK.md).
-
-## How Kiro built this
-
-| Kiro feature | What it did here | Where |
-|---|---|---|
-| Specs | 12 spec folders, 30 files, with requirements, design, tasks and acceptance | [`.kiro/specs/`](.kiro/specs/) |
-| Steering | Product, tech, contract and art rules | [`.kiro/steering/`](.kiro/steering/) |
-| Hooks | Validate fixtures on contract save, property test on SDK save, trace on spec or test save, lint hardening specs, reviewer at wave end | [`.kiro/hooks/`](.kiro/hooks/) |
-| Agents | `chaos-director` and `reviewer`, with path-limited write access | [`.kiro/agents/`](.kiro/agents/) |
-| MCP | `haunt-mcp` stdio server | `packages/haunt/src/mcp` |
-| Power and Crew app | The MCP server packaged twice | [`kiro-power/`](kiro-power/), [`kiro-crew-app/`](kiro-crew-app/) |
-| Property tests | fast-check kills the bot at every hook call | `packages/haunt/test/pbt-crash-point.test.ts` |
-
-The candid account, including what Kiro got wrong, is [`docs/KIRO-WRITEUP.md`](docs/KIRO-WRITEUP.md). The log is [`docs/KIRO-LOG.md`](docs/KIRO-LOG.md). The repo has 216 pull requests, one per task.
-
 ## Layout
 
 ```
-packages/haunt/       the skeleton: engine, SDK, CLI, reports, miner, MCP
-packages/core/        server, provider, contract implementation
-packages/arena-ui/    the arena
+packages/haunt/       the skeleton: engine, SDK, CLI, reports, miner, monkey, MCP
+packages/core/        live server, mock server, provider, campaign data
+packages/arena-ui/    the arena, Workflow Lab, hosted build
 apps/haunted-orders/  app 1, Node
 apps/haunted-inbox/   app 2, Python
+packs/                scenario packs (ticketing, streaming), data only
 contract/             events schema, fixtures, protocol
-kiro-power/           Kiro Power package
-kiro-crew-app/        Kiro Crew app package
+tools/                demo, e2e, validate-live, hosted build, trace
+kiro-power/, kiro-crew-app/   the MCP server packaged for Kiro
 .kiro/                specs, steering, hooks, agents
 ```
 
-More docs: [DEV-SETUP](docs/DEV-SETUP.md), [JUDGES](docs/JUDGES.md), [SPEC-MAP](docs/SPEC-MAP.md), [OPEN-ITEMS](docs/OPEN-ITEMS.md), [SUBMISSION-CHECKLIST](docs/SUBMISSION-CHECKLIST.md).
+More docs: [DEV-SETUP](docs/DEV-SETUP.md), [JUDGES](docs/JUDGES.md), [SPEC-MAP](docs/SPEC-MAP.md), [OPEN-ITEMS](docs/OPEN-ITEMS.md), [SUBMISSION-CHECKLIST](docs/SUBMISSION-CHECKLIST.md), [HOW-KIRO-BUILT-THIS](docs/HOW-KIRO-BUILT-THIS.md).
+## Known limits
+
+- **Sweep is slow.** About 5 minutes with `--orders 1 --speed 16`, longer with defaults. For a quick look use `ramp`, `demo -- --check` or `validate:live`.
+- **Sim vs live.** The improve projection, the Workflow Lab, the hosted tournament and the packs are model-based or recorded. Only `npm run demo` runs real child processes against the real provider and ledger.
+- **Mobile.** The arena draws a fixed 1280x720 canvas, so a 390x844 phone shows it at about 30%. Use a desktop browser.
+- **Ticket Desk.** The inbox app runs 6 stages today. The 11-stage ticketing pack is specified, not a runnable app.
+- **Kiro Power and Crew app.** Their manifests start the same MCP server (handshake proof in [`docs/proof/installed/`](docs/proof/installed/)). They are not yet installed into a Kiro window.
+- **Tests run locally.** CI does not run them. A worker timeout under load is a known flake: rerun that file alone.
+
+## Skeleton Crew fit
+
+The skeleton is the harness. An app is a process definition (`haunt.yaml`: stages, effects, start command, truth endpoint, targets) plus a bot. Orders is Node, Inbox is Python with a small SDK (`apps/haunted-inbox/bot/haunt_py.py`) writing the same journal format. Neither needed an engine change. Honest check: [`docs/FIT-CHECK.md`](docs/FIT-CHECK.md).
+
+## How Kiro built this
+
+Specs ([`.kiro/specs/`](.kiro/specs/)), steering ([`.kiro/steering/`](.kiro/steering/)), hooks ([`.kiro/hooks/`](.kiro/hooks/)), two path-limited agents ([`.kiro/agents/`](.kiro/agents/)), an MCP server, and fast-check property tests that kill the bot at every hook call. Candid account: [`docs/KIRO-WRITEUP.md`](docs/KIRO-WRITEUP.md).
+
+More docs: [DEV-SETUP](docs/DEV-SETUP.md), [JUDGES](docs/JUDGES.md), [DEMO-SCRIPT](docs/DEMO-SCRIPT.md), [SPEC-MAP](docs/SPEC-MAP.md), [OPEN-ITEMS](docs/OPEN-ITEMS.md).
 
 ## License
 

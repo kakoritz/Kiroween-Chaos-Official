@@ -6,7 +6,15 @@ import { faultById } from '../chaos/catalog';
 export type CellStatus = 'pass' | 'repeat' | 'recovered_late' | 'fail' | 'halt' | 'n/a' | 'pending';
 export type CellOutcome = Exclude<CellStatus, 'n/a' | 'pending'>;
 
-export interface SweepCell { stage: string; creature: string; fault: string }
+export interface SweepCell {
+  stage: string;
+  creature: string;
+  fault: string;
+  /** Matrix column when it is not the creature id: `creature:fault` for a creature's second and later faults (PT-C11). */
+  column?: string;
+}
+
+export const cellColumn = (c: { creature: string; column?: string }): string => c.column ?? c.creature;
 
 export interface SweepPlan {
   stages: string[];
@@ -15,7 +23,7 @@ export interface SweepPlan {
   cells: SweepCell[];
 }
 
-export function appliesToStage(c: CreaturePlugin, s: StageDef, catalogStages = false): boolean {
+export function appliesToStage(c: CreaturePlugin, s: StageDef, catalogStages = false, fault: string = c.faults[0]): boolean {
   const a = c.appliesTo;
   if (a) {
     if (a.roles && !a.roles.includes(s.role)) return false;
@@ -23,7 +31,7 @@ export function appliesToStage(c: CreaturePlugin, s: StageDef, catalogStages = f
   }
   // Opt-in for the reference app: a catalog fault only lands on the stages the catalog lists (design.md section 5).
   if (catalogStages) {
-    const def = faultById(c.faults[0]);
+    const def = faultById(fault);
     if (def && !def.stages.includes(s.id)) return false;
   }
   return true;
@@ -37,12 +45,22 @@ export interface PlanOptions {
 export function planSweep(config: HauntConfig, creatures: CreaturePlugin[], opts: PlanOptions = {}): SweepPlan {
   const sorted = [...creatures].sort((a, b) => a.id.localeCompare(b.id));
   const cells: SweepCell[] = [];
+  const columns = new Set(sorted.map((c) => c.id));
   for (const s of config.stages) {
     for (const c of sorted) {
       if (appliesToStage(c, s, opts.catalogStages)) cells.push({ stage: s.id, creature: c.id, fault: c.faults[0] });
+      // Second and later faults of one creature (sms_down, no_answer, wrong_address ...) get their own column, catalog stages only.
+      if (opts.catalogStages) {
+        for (const f of c.faults.slice(1)) {
+          if (!faultById(f) || !appliesToStage(c, s, true, f)) continue;
+          const column = `${c.id}:${f}`;
+          columns.add(column);
+          cells.push({ stage: s.id, creature: c.id, fault: f, column });
+        }
+      }
     }
   }
-  return { stages: config.stages.map((s) => s.id), creatures: sorted.map((c) => c.id), cells };
+  return { stages: config.stages.map((s) => s.id), creatures: [...columns].sort((a, b) => a.localeCompare(b)), cells };
 }
 
 export interface CoverageMatrix {
@@ -54,7 +72,7 @@ export interface CoverageMatrix {
 
 export function buildMatrix(plan: SweepPlan, outcomes: Record<string, CellOutcome> = {}): CoverageMatrix {
   const totals: Record<CellStatus, number> = { pass: 0, repeat: 0, recovered_late: 0, fail: 0, halt: 0, 'n/a': 0, pending: 0 };
-  const applicable = new Set(plan.cells.map((c) => `${c.stage}/${c.creature}`));
+  const applicable = new Set(plan.cells.map((c) => `${c.stage}/${cellColumn(c)}`));
   const rows: CoverageMatrix['rows'] = {};
   for (const s of plan.stages) {
     rows[s] = {};

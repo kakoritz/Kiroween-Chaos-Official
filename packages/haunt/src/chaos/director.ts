@@ -1,6 +1,6 @@
 // Chaos director: per-lane fault stack, nesting, deferral, depth limit, bosses, restart delays.
 // Spec: design.md section 5 (Nesting, Crash points); runtime.md sections 3, 19, 29.
-import type { HookPoint, Part } from '../sdk';
+import type { HookPoint, Part } from '../sdk/sdk';
 import {
   BOSSES, JOURNALED_EFFECT_STAGES, MAX_DEPTH, faultById, injectedAtFor, nextApplicableStage, restartDelay,
   type BossId, type FaultDef, type InjectedAt,
@@ -23,7 +23,7 @@ export interface ArmRequest {
   /** Overrides the catalog window (the Banshee Queen's 12000 ms). */
   forMs?: number;
   /** order_typo: where the wrong order is found, `confirmation` (default) or `handoff`. */
-  detect?: 'confirmation' | 'handoff';
+  detect?: 'confirmation' | 'process' | 'transit' | 'handoff';
   /** Fuzz faults (TV3-C4): an odd HTTP status, a truncated body, a clock jump, a call count that replace the catalog defaults. */
   status?: number;
   truncated?: boolean;
@@ -57,7 +57,7 @@ export interface ProviderArm {
   nextCaller?: 'recovery';
   /** order_typo: the order whose file was swapped, and the stage that finds it (default confirmation). */
   order?: string;
-  detect?: 'confirmation' | 'handoff';
+  detect?: 'confirmation' | 'process' | 'transit' | 'handoff';
   status?: number;
   truncated?: boolean;
   clockJumpMs?: number;
@@ -71,7 +71,7 @@ interface Entry {
   fired: boolean;
   forMs: number | null;
   /** order_typo: where the wrong order is found. */
-  detect: 'confirmation' | 'handoff' | null;
+  detect: 'confirmation' | 'process' | 'transit' | 'handoff' | null;
   /** Waiting for this stage (deferral). Null when ready. */
   waitStage: string | null;
   fuzz: Pick<ArmRequest, 'status' | 'truncated' | 'clockJumpMs' | 'count'>;

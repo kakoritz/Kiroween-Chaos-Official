@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { existsSync, mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { PatternStore, improve, lintSpecDir, runGrade, runReliability, type RunResult } from '../src/miner';
-import { LessonsStore } from '../src/tournament/lessons';
+import { FilePatternStore, improve, lintSpecDir, runGrade, runReliability, type RunResult } from '../src/miner';
+import { LessonsStore } from '../src/tournament/lessons-store';
 import { parsePolicy } from '../src/sdk';
 import type { Ev } from '../src/tournament/rp';
 
@@ -20,7 +20,7 @@ const order = (lane: number, n: number, fault: string, end: 'done' | 'failed', o
 
 function setup() {
   const root = mkdtempSync(join(tmpdir(), 'haunt-improve-'));
-  const store = new PatternStore(join(root, 'patterns.json'));
+  const store = new FilePatternStore(join(root, 'patterns.json'));
   const lessons = new LessonsStore(join(root, 'lessons'));
   return { root, store, lessons, specsDir: join(root, 'specs') };
 }

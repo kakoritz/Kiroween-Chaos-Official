@@ -1,6 +1,5 @@
 // Journal: bot-owned append-only JSONL. Semantics from .kiro/specs/engine/design.md section 3
-// and runtime.md section 6. Every record is written with writeSync then fsyncSync.
-import { closeSync, existsSync, fsyncSync, openSync, readFileSync, writeSync } from 'node:fs';
+// and runtime.md section 6. Pure: the record types and the fold. The node file journal is ./journal-node.
 
 export type JournalRecord =
   | { t: 'stage_start'; order: string; stage: string; attempt: number; ts: number }
@@ -54,10 +53,6 @@ export function parseJournal(text: string): JournalRecord[] {
     }
   }
   return out;
-}
-
-export function readJournal(path: string): JournalRecord[] {
-  return existsSync(path) ? parseJournal(readFileSync(path, 'utf8')) : [];
 }
 
 /** Fold one record into state, in place. */
@@ -124,33 +119,5 @@ export function replay(records: readonly JournalRecord[]): JournalState {
 export class JournalWriteError extends Error {
   constructor(readonly code: string) {
     super(`journal write failed: ${code}`);
-  }
-}
-
-export class Journal {
-  private fd: number;
-  private failures = 0;
-
-  constructor(readonly path: string) {
-    this.fd = openSync(path, 'a');
-  }
-
-  /** `disk_full`: the next write throws ENOSPC once. */
-  failNextWrite(): void {
-    this.failures++;
-  }
-
-  /** Throws JournalWriteError on an injected failure. A real fs error propagates unchanged. */
-  append(rec: JournalRecord): void {
-    if (this.failures > 0) {
-      this.failures--;
-      throw new JournalWriteError('ENOSPC');
-    }
-    writeSync(this.fd, JSON.stringify(rec) + '\n');
-    fsyncSync(this.fd);
-  }
-
-  close(): void {
-    closeSync(this.fd);
   }
 }

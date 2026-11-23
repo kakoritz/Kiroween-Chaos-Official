@@ -1,6 +1,6 @@
 // Sweep executor: runs each planned cell through an injected runner and builds a deterministic graded report.
 import { gradeOf, type Grade } from '../score/grade';
-import { buildMatrix, type CellOutcome, type CoverageMatrix, type SweepCell, type SweepPlan } from './matrix';
+import { buildMatrix, cellColumn, type CellOutcome, type CoverageMatrix, type SweepCell, type SweepPlan } from './matrix';
 
 /** Runs one cell (one creature on one stage) and says what the app did. Supplied by the runner adapter. */
 /** A runner may return the bare outcome or detail the grader needs for caps. */
@@ -70,7 +70,7 @@ export async function runSweep(plan: SweepPlan, runCell: RunCell, seed = 1): Pro
       outcome = 'fail';
       error = e instanceof Error ? e.message : String(e);
     }
-    outcomes[`${cell.stage}/${cell.creature}`] = outcome;
+    outcomes[`${cell.stage}/${cellColumn(cell)}`] = outcome;
     cells.push({
       ...cell,
       outcome,

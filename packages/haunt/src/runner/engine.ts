@@ -10,6 +10,7 @@ import { postProviderArm, type PostFault } from './provider';
 import { IssueFloor, gremlinVariant } from './floor';
 import { CURSE_KINDS, classifyHit, drawCurse, stageOfCall, type CurseKind, type CurseRec, type OrderTrace } from '../tournament/curses';
 import { unit } from '../shared/rng';
+import { APPS, type AppId } from '../shared/catalog';
 
 /** What the provider tells the engine when a curse lied (see `CurseHit` in the provider). */
 export interface ProviderCurseHit { lane: string; service: string; order: string; index?: number; curse: CurseKind; id: string; status: number }
@@ -18,7 +19,10 @@ import { tierOfLane } from '../tournament/rounds';
 import { tierById } from '../pipeline/pipeline';
 import { OUTAGE_FAULTS, drawOutageMs, initialDial, intensityRow, isLevel, type DialState, type FuzzFault } from './intensity';
 
-export interface EngineChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string; forMs?: number; detect?: 'confirmation' | 'handoff'; source?: 'manual' | 'random' | 'boss' | 'fuzz' | 'gremlin' | 'demo'; fuzz?: FuzzFault; count?: number; outageMs?: number }
+/** Transit stalls that carry an outage window and a countdown ring. */
+const TRANSIT_WINDOW: ReadonlySet<string> = new Set(['weather', 'road_hazard', 'delay', 'out_of_gas', 'not_on_truck', 'wrong_address']);
+
+export interface EngineChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string; forMs?: number; detect?: 'confirmation' | 'process' | 'transit' | 'handoff'; source?: 'manual' | 'random' | 'boss' | 'fuzz' | 'gremlin' | 'demo'; fuzz?: FuzzFault; count?: number; outageMs?: number }
 export interface EngineChaosResult { chaosId: string; creature: string; fault: string; depth: number; deferred: boolean }
 /** A tournament round (TV3-C7): the live lanes are the survivors, lane n runs tier n, and `script` is the one storm every lane meets. */
 export interface EngineTournament { round: number; lanes: number[]; level: number; script: unknown }
@@ -62,9 +66,14 @@ export class RunnerEngine {
     this.director = opts.director ?? new ChaosDirector();
   }
 
+  private appStages = new Set<string>();
+  private appId: AppId = 'orders';
+
   startWave = (wave: number, settings: EngineWaveSettings, record: (ev: HauntEvent) => void): void => {
     this.wave = wave;
     this.seed = settings.seed;
+    this.appId = settings.app in APPS ? (settings.app as AppId) : 'orders';
+    this.appStages = new Set((APPS[settings.app as keyof typeof APPS] ?? APPS.orders).stages.map((d) => d.id));
     this.record = record;
     this.speed = settings.speed;
     this.seq = 0;
@@ -232,11 +241,11 @@ export class RunnerEngine {
     this.hits.set(lane, (this.hits.get(lane) ?? []).filter((h) => !mine.includes(h)));
     const seen = new Set<string>();
     for (const h of mine) {
-      const stage = stageOfCall(h.service, h.index);
+      const stage = stageOfCall(h.service, h.index, this.appId);
       const key = `${stage}|${h.id}`;
       if (seen.has(key)) continue;
       seen.add(key);
-      const cls = classifyHit(ev.type as never, t, h.service, h.index);
+      const cls = classifyHit(ev.type as never, t, h.service, h.index, this.appId);
       this.record?.({ type: 'curse_response', lane, order: t.order, stage, detail: { order: t.order, stage, curse: h.curse, class: cls, id: h.id, endpoint: h.service, status: h.status } } as HauntEvent);
     }
   }
@@ -249,7 +258,9 @@ export class RunnerEngine {
     // Outage timer (spec 5.4): unless the press fixes its window, draw it from the dial level. The window is 1x ms; real ms is divided by speed.
     const fz = req.fuzz;
     const fixedMs = fz?.forMs !== undefined ? Math.max(50, Math.round(fz.forMs / (this.speed || 1))) : req.forMs;
-    const outageMs = req.outageMs !== undefined ? req.outageMs : fixedMs === undefined && OUTAGE_FAULTS.has(req.fault) ? drawOutageMs(this.seed, lane, nextId, this.level) : undefined;
+    // Transit faults (V1_2 section 4) keep their tuned window (the bot's poll and backoff are timed against it) but show the same countdown ring.
+    const transitMs = fixedMs === undefined && TRANSIT_WINDOW.has(req.fault) ? FAULTS.find((f) => f.id === req.fault)?.forMs : undefined;
+    const outageMs = req.outageMs !== undefined ? req.outageMs : transitMs !== undefined ? transitMs : fixedMs === undefined && OUTAGE_FAULTS.has(req.fault) ? drawOutageMs(this.seed, lane, nextId, this.level) : undefined;
     const forMs = outageMs !== undefined ? Math.max(50, Math.round(outageMs / (this.speed || 1))) : fixedMs;
     const r = this.director.arm(lane, {
       fault: req.fault, scope: req.scope, point: req.point as never, forMs, detect: req.detect,
@@ -261,10 +272,12 @@ export class RunnerEngine {
     this.seq++;
     const creature = req.creature ?? FAULTS.find((f) => f.id === req.fault)?.creature ?? req.fault;
     const gremlin = req.source === 'gremlin';
-    this.record?.({ type: 'chaos', lane, detail: { id: chaosId, creature, ...(req.source ? { source: req.source } : {}), ...r.detail, ...(gremlin ? { fault: 'gremlin', variant: req.fault } : {}),
+    this.record?.({ type: 'chaos', lane, detail: { id: chaosId, creature, source: req.source === undefined || req.source === 'manual' ? 'user' : req.source, ...r.detail, ...(gremlin ? { fault: 'gremlin', variant: req.fault } : {}),
       ...(fz ? { unknown: true, fingerprint: fz.fingerprint, fuzz: { fault: fz.fault, ...(fz.status !== undefined ? { status: fz.status } : {}), ...(fz.forMs !== undefined ? { forMs: fz.forMs } : {}), ...(fz.count !== undefined ? { count: fz.count } : {}), ...(fz.truncated ? { truncated: true } : {}), ...(fz.clockJumpMs !== undefined ? { clockJumpMs: fz.clockJumpMs } : {}) } } : {}) } });
     if (outageMs !== undefined) {
-      const stage = r.detail.deferredTo ?? info.stage;
+      // A transit or updates stall deferred to a stage the running app does not have (the inbox) names no stage: the outage window still shows.
+      const wanted = r.detail.deferredTo ?? info.stage;
+      const stage = wanted && this.appStages.has(wanted) ? wanted : undefined;
       this.record?.({ type: 'outage', lane, ...(stage ? { stage } : {}), detail: { outageMs, seed: this.seed, fault: req.fault, level: this.level } });
     }
     if (r.arm) this.opts.sendArm?.(lane, { k: 'arm', id: String(r.id), ...r.arm });

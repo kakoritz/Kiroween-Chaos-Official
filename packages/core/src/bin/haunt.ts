@@ -81,7 +81,7 @@ async function sweep(): Promise<number> {
     });
     const runCell: RunCell = async (cell, s) => {
       const r = await live(cell, s);
-      console.error(`${cell.stage}/${cell.creature}: ${typeof r === 'string' ? r : r.outcome}`);
+      console.error(`${cell.stage}/${cell.column ?? cell.creature}: ${typeof r === 'string' ? r : r.outcome}`);
       return r;
     };
     const report = await runSweep(plan, runCell, seed);

@@ -4,6 +4,7 @@
 import type { ArenaEvent } from '../api/types';
 import { isIssue } from './chips';
 import { chaosPhrase } from './creatures';
+import { displayId, vocabOf, type AppVocab } from './vocab';
 
 export type MsgTone = 'info' | 'good' | 'warn' | 'error';
 export interface LaneMsg { tone: MsgTone; icon: string; text: string }
@@ -18,12 +19,13 @@ const str = (v: unknown): string => (typeof v === 'string' ? v : '');
 const stars = (n: number): string => (Number.isInteger(n) ? String(n) : n.toFixed(1));
 
 /** Message for one event, or null for events that stay quiet. Lane-less events are handled by the model. */
-export function laneMessage(ev: ArenaEvent, stageLabel: (id: string) => string): LaneMsg | null {
+export function laneMessage(ev: ArenaEvent, stageLabel: (id: string) => string, app = 'orders'): LaneMsg | null {
+  const v: AppVocab = vocabOf(app);
   const d = (ev.detail ?? {}) as Record<string, unknown>;
   const stage = ev.stage ? stageLabel(ev.stage) : '';
-  const order = str(ev.order);
+  const order = displayId(app, str(ev.order));
   switch (ev.type) {
-    case 'order_start': return { tone: 'info', icon: '\u25B7', text: `grabbed order ${order}`.trim() };
+    case 'order_start': return { tone: 'info', icon: '\u25B7', text: `${v.start} ${v.unit} ${order}`.trim() };
     case 'stage_done': {
       if (d.skipped === true) return null;
       const tries = num(d.attempts, num(d.attempt, 1));
@@ -31,10 +33,10 @@ export function laneMessage(ev: ArenaEvent, stageLabel: (id: string) => string):
       if (retries <= 0 || !stage) return null;
       return { tone: 'good', icon: '\u2713', text: `passed ${stage} after ${retries} ${retries === 1 ? 'retry' : 'retries'}` };
     }
-    case 'order_done': return { tone: 'good', icon: '\u2713', text: `order ${order} delivered`.replace('  ', ' ') };
-    case 'order_failed': return { tone: 'error', icon: '\u2717', text: 'ORDER CANCELLED' };
-    case 'order_parked': return { tone: 'warn', icon: '\u29D6', text: 'order parked' };
-    case 'order_quarantined': return { tone: 'error', icon: '\u2620', text: 'order quarantined' };
+    case 'order_done': return { tone: 'good', icon: '\u2713', text: `${v.unit} ${order} ${v.done}`.replace('  ', ' ') };
+    case 'order_failed': return { tone: 'error', icon: '\u2717', text: v.cancelled };
+    case 'order_parked': return { tone: 'warn', icon: '\u29D6', text: `${v.unit} parked` };
+    case 'order_quarantined': return { tone: 'error', icon: '\u2620', text: `${v.unit} quarantined` };
     case 'stage_fail': return { tone: 'error', icon: '\u2717', text: `${stage || 'stage'} failed${str(d.error) ? ` (${str(d.error)})` : ''}` };
     case 'chaos': return { tone: d.source === 'gremlin' ? 'warn' : 'error', icon: d.unknown === true ? '?' : d.source === 'gremlin' ? '\u26A0' : '\u2620', text: chaosPhrase(d, stage) };
     case 'outage': return { tone: 'warn', icon: '\u23F3', text: `outage ${Math.round(num(d.outageMs) / 100) / 10} s${stage ? ` at ${stage}` : ''}` };
@@ -52,7 +54,7 @@ export function laneMessage(ev: ArenaEvent, stageLabel: (id: string) => string):
     }
     case 'decision_needed': {
       const at = str(d.detectedAt);
-      return { tone: 'warn', icon: '\u26A0', text: `WRONG ORDER${at ? ` at ${at.charAt(0).toUpperCase()}${at.slice(1)}` : ''}: choose` };
+      return { tone: 'warn', icon: '\u26A0', text: `WRONG ${v.unit.toUpperCase()}${at ? ` at ${at.charAt(0).toUpperCase()}${at.slice(1)}` : ''}: choose` };
     }
     case 'score': {
       if (str(d.reason) !== 'downtime') return null;
@@ -86,7 +88,7 @@ const newRow = (): LaneRowState => ({ cur: null, shownAt: 0, queue: [], gen: 0, 
 
 export class LaneTickerModel {
   readonly rows = new Map<number, LaneRowState>();
-  constructor(private readonly stageLabel: (id: string) => string) {}
+  constructor(private readonly stageLabel: (id: string) => string, private readonly app: () => string = () => 'orders') {}
 
   row(lane: number): LaneRowState {
     let r = this.rows.get(lane);
@@ -105,7 +107,7 @@ export class LaneTickerModel {
     const r = this.row(ev.lane);
     if (ev.type === 'order_start') r.issues = 0;
     if (isIssue(ev)) r.issues++;
-    const m = laneMessage(ev, this.stageLabel);
+    const m = laneMessage(ev, this.stageLabel, this.app());
     if (m) this.enqueue(ev.lane, m, now);
   }
 

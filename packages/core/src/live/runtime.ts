@@ -18,7 +18,7 @@ import { DetailNormalizer, SettleGate } from './normalize';
 import { APPS } from '../../../haunt/src/shared/catalog';
 import { LaneTravel, travelAt } from '../../../haunt/src/runner/travel';
 import { crewPartsEnv } from '../../../haunt/src/campaign/crew';
-import { loadCampaign } from '../../../haunt/src/campaign/nights';
+import { loadCampaign } from '../../../haunt/src/campaign/load';
 import { planScripts } from '../../../haunt/src/campaign/wave-config';
 import { loadDemo, type DemoScript } from './demo';
 import { inboxBotCommand, inboxTarget, writeInboxMail } from './inbox-command';
@@ -360,7 +360,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
   const norm = new DetailNormalizer();
   let gate: SettleGate | undefined;
   // Wrong order (design.md section 8): the broker owns each decision from `decision_needed` to `decision_made`.
-  let botEvent: (lane: string, ev: Record<string, unknown>) => void = () => {};
+  let botEvent: (lane: string, ev: Record<string, unknown>) => void | Promise<void> = () => {};
   const laneEnv = new Map<string, Record<string, string>>();
   const decisions = new DecisionBroker({
     emit: (lane, ev) => botEvent(lane, ev as unknown as Record<string, unknown>),
@@ -373,7 +373,14 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
   });
   // Ledger rows become `repeat` events for the running wave (design.md section 8: repeats feed the wave grade).
   const repeats = new RepeatDetector();
+  // Set once the bot spawner exists: runs `fn` after the lane's queued bot events, so a provider effect cannot overtake the lane's `process_up` (rule 6).
+  let onLaneQueue: ((lane: string, fn: () => void) => boolean) | undefined;
   const ledgerRow = (row: LedgerRow, replayed = false): void => {
+    if (!record) return;
+    if (onLaneQueue?.(String(row.lane), () => ledgerRowNow(row, replayed))) return;
+    ledgerRowNow(row, replayed);
+  };
+  const ledgerRowNow = (row: LedgerRow, replayed: boolean): void => {
     if (!record) return;
     const kind = EFFECT_KIND[row.kind] ?? row.kind;
     const key = row.key ?? (row.index === null || row.index === undefined ? `${row.order}:${row.kind}` : `${row.order}:${row.kind}:${row.index}`);
@@ -444,23 +451,37 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
         return decisions.ask(lane, ask, alive);
       },
       onEvent: botEvent = (lane, ev) => {
+        // A fault pressed by hand that waits for a later stage (director deferred) reaches the provider when the bot itself gets there:
+        // the bot runs ahead of what the arena shows, so waiting for the shown stage_start would be too late.
+        if (opts.post && ev.type === 'stage_start' && typeof ev.stage === 'string') for (const arm of engine.director.onStageStart(lane, ev.stage)) void postProviderArm(opts.post, lane, ev.stage, arm);
         if (opts.travel === false) { for (const e of norm.shape(lane, { detail: {}, ...ev, lane })) record?.({ ...e, lane } as unknown as HauntEvent); return; }
         const my = epoch;
         const lt = travelOf(lane);
         const next = (chains.get(lane) ?? Promise.resolve()).then(async () => {
           if (my !== epoch) return;
-          await lt.wait(ev);
-          if (my !== epoch) return;
-          for (const e of norm.shape(lane, { detail: {}, ...ev, lane })) record?.(lt.annotate({ ...e, lane }) as unknown as HauntEvent);
+          // Wait per shaped event: a replayed `stage_done{skipped}` becomes a `stage_start` + `stage_done` pair, and that `stage_start` owes its gap too.
+          for (const e of norm.shape(lane, { detail: {}, ...ev, lane })) {
+            await lt.wait(e);
+            if (my !== epoch) return;
+            record?.(lt.annotate({ ...e, lane }) as unknown as HauntEvent);
+          }
         });
         chains.set(lane, next);
+        return next;
       },
       onWaveDone: () => {
+        // The drain can outlive a stop + start: only the wave that began it may end the current one.
         const my = epoch;
         void idle().then(() => { if (my !== epoch) return; clock?.stop(); clock = undefined; demo?.stop(); demo = undefined; stopNight(); gate?.finish(); endWave?.(); });
       },
     });
     resetTravel = () => { epoch++; chains.clear(); travels.clear(); };
+    onLaneQueue = (lane, fn) => {
+      if (opts.travel === false || !chains.has(lane)) return false;
+      const my = epoch;
+      chains.set(lane, chains.get(lane)!.then(() => { if (my === epoch) fn(); }));
+      return true;
+    };
   }
 
   const live: LiveEngine = {

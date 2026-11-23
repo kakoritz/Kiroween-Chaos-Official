@@ -1,8 +1,6 @@
 // Pattern miner (spec 8.1, TV3-C11): turns what a run left behind (events, ledger rows, laps, the Casebook's cases, outages, curse answers,
 // journals) into patterns keyed by signature `stage + fault + consequence`, and keeps them in `.haunt/patterns.json` across runs and rounds.
 // Rule-based and deterministic: the same events always mine the same patterns.
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, relative, isAbsolute } from 'node:path';
 import { fnv1a32 } from '../shared/rng';
 import { laneCases, normaliseFault, signatureOf, type Case } from '../tournament/signature';
 import type { Ev } from '../tournament/rp';
@@ -87,6 +85,8 @@ export interface MineInput {
   events: readonly Ev[];
   /** Journals of the lanes, for `path:line` evidence. */
   journals?: { lane: number; path: string }[];
+  /** Reads `path:line` evidence from a journal file. `journalRefs` of ./pattern-store (node only); without it journals give no evidence. */
+  readRefs?: (path: string, order: string, stage: string) => string[];
   /** e.g. `/api/waves/3/report` */
   reportLink?: string;
   /** Cases already computed (the Casebook feed). Computed from the events when omitted. */
@@ -101,26 +101,11 @@ function percentile(xs: number[], p: number): number {
   return s.length ? s[Math.min(s.length - 1, Math.ceil(p * s.length) - 1)]! : 0;
 }
 
-/** Lines of a lane journal that mention the order and stage: `path:line`. */
-export function journalRefs(path: string, order: string, stage: string, max = 3): string[] {
-  if (!existsSync(path)) return [];
-  const out: string[] = [];
-  const lines = readFileSync(path, 'utf8').split('\n');
-  for (let i = 0; i < lines.length && out.length < max; i++) {
-    const l = lines[i]!;
-    if (!l.includes(order) || !l.includes(stage)) continue;
-    // Relative to the working folder when it lives under it, so a spec does not carry one machine's paths.
-    const rel = isAbsolute(path) ? relative(process.cwd(), path) : path;
-    out.push(`${(rel.startsWith('..') || isAbsolute(rel) ? path : rel).split('\\').join('/')}:${i + 1}`);
-  }
-  return out;
-}
-
 export function minePatterns(input: MineInput): MinedPattern[] {
   const { run, round, events } = input;
   const out = new Map<string, MinedPattern>();
   const lanesIn = [...new Set(events.map((e) => e.lane).filter((l) => l !== undefined).map((l) => Number(l)))].filter((n) => Number.isInteger(n)).sort((a, b) => a - b);
-  const journalFor = (lane: number, order: string, stage: string): string[] => (input.journals ?? []).filter((j) => j.lane === lane).flatMap((j) => journalRefs(j.path, order, stage));
+  const journalFor = (lane: number, order: string, stage: string): string[] => (input.journals ?? []).filter((j) => j.lane === lane).flatMap((j) => input.readRefs?.(j.path, order, stage) ?? []);
   const add = (m: Omit<MinedPattern, 'signature' | 'evidence' | 'firstSeen' | 'solvedBy'> & { seq: number[]; first: Ref; journal?: string[] }): void => {
     const signature = signatureOf(m.stage, m.fault, m.consequence);
     const cur = out.get(signature);
@@ -241,24 +226,14 @@ export function minePatterns(input: MineInput): MinedPattern[] {
 
 export interface PatternChange { pattern: Pattern; kind: 'new' | 'updated' | 'status' | 'regressed' }
 
-/** `file` is a path, or an empty string for a store that lives in memory (the mock fixtures). */
+/** A store that lives in memory (the mock fixtures, the browser). `FilePatternStore` (./pattern-store, node only) keeps the same list in a file. */
 export class PatternStore {
   private mem: Pattern[] = [];
-  constructor(readonly file: string) {}
+  constructor(readonly file: string = '') {}
 
-  list(): Pattern[] {
-    if (this.file === '') return this.mem;
-    try {
-      const raw = JSON.parse(readFileSync(this.file, 'utf8')) as { patterns?: Pattern[] };
-      return Array.isArray(raw.patterns) ? raw.patterns : [];
-    } catch { return []; }
-  }
+  list(): Pattern[] { return this.mem; }
 
-  private save(ps: Pattern[]): void {
-    if (this.file === '') { this.mem = ps; return; }
-    mkdirSync(dirname(this.file), { recursive: true });
-    writeFileSync(this.file, JSON.stringify({ version: 1, patterns: ps }, null, 2) + '\n');
-  }
+  protected save(ps: Pattern[]): void { this.mem = ps; }
 
   get(id: string): Pattern | undefined { return this.list().find((p) => p.id === id); }
 

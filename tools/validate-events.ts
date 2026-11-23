@@ -5,7 +5,8 @@ import { resolve, basename } from 'node:path';
 import { findRepoRoot, formatViolations, parseJsonl, validateEvents } from '../packages/haunt/src/contract/validate';
 
 const root = findRepoRoot();
-let files = process.argv.slice(2).map((f) => resolve(f));
+const json = process.argv.includes('--json');
+let files = process.argv.slice(2).filter((a) => a !== '--json').map((f) => resolve(f));
 if (files.length === 0) {
   const dir = resolve(root, 'contract', 'fixtures');
   files = existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith('.jsonl')).sort().map((f) => resolve(dir, f)) : [];
@@ -21,6 +22,7 @@ let failed = 0;
 for (const f of files) {
   const events = parseJsonl(readFileSync(f, 'utf8'));
   const violations = validateEvents(events);
+  if (json) { console.log(JSON.stringify({ violations })); if (violations.length) failed++; continue; }
   if (violations.length === 0) {
     console.log(`ok   ${basename(f)} (${events.length} events)`);
   } else {

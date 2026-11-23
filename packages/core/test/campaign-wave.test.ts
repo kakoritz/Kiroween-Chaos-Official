@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { LiveServer, makeBotCommand, validateDemo, createLiveRuntime, type LiveEngine, type WaveSettings } from '../src/live';
-import { loadCampaign } from '../../haunt/src/campaign/nights';
+import { loadCampaign } from '../../haunt/src/campaign/load';
 import { campaignWaveConfig, planScripts, parseCampaignRequest } from '../../haunt/src/campaign/wave-config';
 import { tiersForLanes } from '../../haunt/src/runner/lanes';
 

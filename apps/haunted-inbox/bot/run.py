@@ -303,6 +303,7 @@ def main() -> None:
             parked.pop(oid, None)
             send({"type": "order_resumed", "order": oid})
             resumed = True
+            break  # one at a time: its order_start must follow at once (PROTOCOL.md rule 23)
         return resumed
 
     halted = False

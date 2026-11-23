@@ -1,6 +1,7 @@
 // Arena view model (UI-A3). A pure reducer of contract events: no DOM, no clock of its own.
 // `now` is passed in by the caller and only stamps cosmetic timers (pose changes, cheer length).
 // Order, counts, scores and outcomes come from events alone (ui-spec section 5).
+import { appIdOf } from './vocab';
 import type { ArenaEvent, ArenaState, StageInfo } from '../api/types';
 import { applyBossEvent, emptyBoss, loadBoss, type BossVM } from './boss';
 import { EQUIP_LIFE_MS, type EquipVM } from './equip';
@@ -10,7 +11,7 @@ import { foldHeat, newHeat, chipState, type ChipInfo, type Heat } from './chips'
 import { applyIntensity, defaultDial, readDial, type DialState } from './dial';
 import { applyTournamentEvent, emptyTournament, loadTournament, type Fallen, type TournamentVM } from './tournament';
 import { applyCurseEvent, type CursePop, type CurseVM } from './curses';
-import { endOutage, openOutage, pruneOutages, type OutageVM } from './outage';
+import { endOutage, openOutage, pruneOutages, startOutage, type OutageVM } from './outage';
 import { absorb, actAll, addCreature, exitAll, exitDepth, exitStage, prune, PUFF_MS, type CreatureVM } from './creatures';
 
 export type ChipState = 'pending' | 'active' | 'done' | 'replayed' | 'retrying' | 'failed' | 'dead' | 'parked' | 'quarantined';
@@ -79,6 +80,8 @@ export interface LaneVM {
 export interface LedgerCell { rows: number; repeats: number }
 
 export interface ArenaVM {
+  /** Id of the running app (`orders` or `inbox`): picks the wording. */
+  app: string;
   stages: StageInfo[];
   lanes: LaneVM[];
   wave: number;
@@ -92,7 +95,7 @@ export interface ArenaVM {
   tournament: TournamentVM;
 }
 
-export const emptyVM = (): ArenaVM => ({ stages: [], lanes: [], wave: 0, running: false, speed: 1, boss: emptyBoss(), intensity: defaultDial(), tournament: emptyTournament() });
+export const emptyVM = (): ArenaVM => ({ app: 'orders', stages: [], lanes: [], wave: 0, running: false, speed: 1, boss: emptyBoss(), intensity: defaultDial(), tournament: emptyTournament() });
 
 export function newLane(n: number, stageCount: number, now: number): LaneVM {
   return {
@@ -135,6 +138,7 @@ export function stagesOf(s: Pick<ArenaState, 'app' | 'stages'>): StageInfo[] {
 /** Build from GET /api/state on load and reconnect. Stage names come from here (W3). */
 export function loadSnapshot(vm: ArenaVM, s: ArenaState, now: number): void {
   vm.stages = stagesOf(s);
+  vm.app = appIdOf(s.app);
   vm.wave = s.wave?.n ?? 0;
   vm.running = !!s.wave?.running;
   vm.speed = s.wave?.speed ?? 1;
@@ -227,6 +231,7 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
   }
   if (ev.type === 'intensity') { applyIntensity(vm.intensity, d); return; }
   if (ev.type === 'wave_start') {
+    if (typeof d.app === 'string') vm.app = appIdOf(d.app);
     vm.wave = num(ev.wave, vm.wave + 1);
     vm.running = true;
     vm.speed = num(d.speed, 1);
@@ -285,6 +290,7 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
         l.workAnim = vm.stages[si]!.workAnimation;
       }
       l.progress = 0; l.progressLabel = ''; l.action = '';
+      if (ev.stage) startOutage(l, now, ev.stage);
       setMode(l, 'working', now);
       break;
     }
@@ -304,8 +310,13 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
       setMode(l, 'fail', now);
       break;
     case 'curse_start': case 'curse_end': case 'curse_response': applyCurseEvent(l, ev, now, vm.stages.map((s) => s.id), vm.speed); break;
-    case 'outage': openOutage(l, now, vm.speed, ev.stage, d); break;
-    case 'chaos': l.depth = num(d.depth, l.depth + 1); addCreature(l, now, d, ev.stage ?? vm.stages[l.stageIndex]?.id ?? ''); break;
+    case 'outage': {
+      // A fault pressed for a stage the lane has not reached yet waits there: the ring counts from the moment the stage starts.
+      const oi = ev.stage ? vm.stages.findIndex((s) => s.id === ev.stage) : -1;
+      openOutage(l, now, vm.speed, ev.stage, d, !!l.order && oi > l.stageIndex && l.chips[oi] === 'pending');
+      break;
+    }
+    case 'chaos': l.depth = num(d.depth, l.depth + 1); addCreature(l, now, d, str(d.deferredTo) || ev.stage || (vm.stages[l.stageIndex]?.id ?? '')); break;
     case 'chaos_absorbed': l.depth = Math.max(0, l.depth - 1); absorb(l, now, typeof d.creature === 'string' ? d.creature : undefined); break;
     case 'process_dead': {
       actAll(l, now, true); exitAll(l, now, { dur: PUFF_MS, keepKillers: true });
@@ -376,6 +387,9 @@ export function applyEvent(vm: ArenaVM, ev: ArenaEvent, now: number): void {
   }
 }
 
+/** Provider ledger kinds under the contract's effect kind names, the ones `effect` events carry (else one column shows twice). */
+const LEDGER_KIND: Record<string, string> = { account: 'account_create', reply: 'email' };
+
 /** Reconcile ledger cells with GET /api/ledger (wave_end and page load). The server is the truth. */
 export function reconcileLedger(vm: ArenaVM, data: unknown): void {
   const lanes = (data as { lanes?: Array<{ lane: number; byKind?: Record<string, { rows?: number; repeats?: number }> }> } | null)?.lanes;
@@ -383,7 +397,12 @@ export function reconcileLedger(vm: ArenaVM, data: unknown): void {
   for (const e of lanes) {
     const l = vm.lanes.find((x) => x.lane === e.lane);
     if (!l || !e.byKind) continue;
-    for (const [kind, c] of Object.entries(e.byKind)) l.ledger[kind] = { rows: num(c.rows), repeats: num(c.repeats) };
+    const next: LaneVM['ledger'] = {};
+    for (const [raw, c] of Object.entries(e.byKind)) {
+      const cell = (next[LEDGER_KIND[raw] ?? raw] ??= { rows: 0, repeats: 0 });
+      cell.rows += num(c.rows); cell.repeats += num(c.repeats);
+    }
+    l.ledger = next;
   }
 }
 

@@ -10,6 +10,21 @@ describe('travel constants', () => {
   });
 });
 
+describe('LaneTravel process_up (rule 6)', () => {
+  it('holds process_up until restartInMs after the recorded process_dead', async () => {
+    let clock = 0;
+    const t = new LaneTravel(() => travelAt('normal', 4), 'handoff', () => clock, async (ms) => { clock += ms; });
+    const go = async (ev: Record<string, any>) => { await t.wait(ev); const e = t.annotate(ev); return { e, at: clock }; };
+    const dead = await go({ type: 'process_dead', detail: { reason: 'crash', restartInMs: 1000 } });
+    clock += 3; // the bot's own sleep already ran while the queue was backed up
+    const up = await go({ type: 'process_up', detail: { attempt: 2 } });
+    expect(up.at - dead.at).toBeGreaterThanOrEqual(1000);
+    clock += 50;
+    const again = await go({ type: 'process_up', detail: { attempt: 3 } });
+    expect(again.at - up.at).toBe(50);
+  });
+});
+
 describe('LaneTravel (P13)', () => {
   const run = (pace: string, speed: number) => {
     let clock = 0;
@@ -87,5 +102,24 @@ describe('live runtime enforces travel', () => {
     expect(done.detail.walkMs).toBe(400);
     const starts = got.filter((g) => g.type === 'stage_start');
     expect(starts[1]!.at - done.at).toBeGreaterThanOrEqual(400);
+  });
+});
+
+describe('live runtime enforces travel on replayed stages', () => {
+  it('the stage_start made from a skipped stage_done still waits for the grab gap', async () => {
+    let clock = 0;
+    const rt = createLiveRuntime({ clock: false, botCommand: () => ({ command: 'x', args: [] }), now: () => clock, sleep: async (ms) => { clock += ms; },
+      run: async (o) => {
+        for (const ev of [
+          { type: 'order_start', order: 'ord-0001' }, { type: 'stage_done', order: 'ord-0001', stage: 'account', detail: { skipped: true } },
+        ]) o.onEvent?.(ev);
+        return { restarts: 0 } as never;
+      } });
+    const got: { type: string; at: number; detail: any }[] = [];
+    rt.live.startWave!(1, { orders: 1, seed: 1, tiers: 'allPhoenix', lanes: 1, speed: 1, pace: 'slow', app: 'orders' }, (e) => got.push({ type: e.type, at: clock, detail: (e as any).detail }), () => {});
+    await new Promise((r) => setTimeout(r, 50));
+    const start = got.find((g) => g.type === 'order_start')!;
+    const stage = got.find((g) => g.type === 'stage_start')!;
+    expect(stage.at - start.at).toBeGreaterThanOrEqual(1500);
   });
 });

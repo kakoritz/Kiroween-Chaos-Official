@@ -1,5 +1,7 @@
 // Reviews and stars (playtest-v2 design section 6, contract/V1_1.md section 4). Pure and deterministic.
 
+import { vocabOf } from '../shared/catalog';
+
 export const RATINGS = ['Five-Star Crypt', 'Respectable', 'Spooky Service', 'Cursed'] as const;
 export type Rating = (typeof RATINGS)[number];
 
@@ -27,6 +29,8 @@ export interface ReviewInput {
   baselineMs: number;
   /** Speed times pace, so pace and speed never change a score. Default 1. */
   paceFactor?: number;
+  /** App whose wording and double-effect kind apply. Default orders. */
+  app?: string;
 }
 
 export interface ReviewSub {
@@ -44,25 +48,13 @@ export interface ReviewResult {
   text: string;
 }
 
-const LOW: Record<keyof ReviewSub, string> = {
-  timeliness: 'Took forever to arrive',
-  delays: 'Kept me waiting',
-  issues: 'So many hiccups',
-  delivery: 'Wrong order',
-  ease: 'Hard to order',
-};
-const HIGH: Record<keyof ReviewSub, string> = {
-  timeliness: 'Lightning fast',
-  delays: 'No waiting around',
-  issues: 'Smooth as a ghost',
-  delivery: 'Everything arrived right',
-  ease: 'Easy to order',
-};
 const SUBS = ['timeliness', 'delays', 'issues', 'delivery', 'ease'] as const;
 
 export function review(inp: ReviewInput): ReviewResult {
+  const v = vocabOf(inp.app);
+  const dup = inp.extra[v.dupKind] ?? 0;
   if (inp.cancelled) {
-    return { stars: 1, sub: { timeliness: 1, delays: 1, issues: 1, delivery: 1, ease: 1 }, reasons: ['Never arrived'], text: 'Never arrived' };
+    return { stars: 1, sub: { timeliness: 1, delays: 1, issues: 1, delivery: 1, ease: 1 }, reasons: [v.never], text: v.never };
   }
   const pace = inp.paceFactor && inp.paceFactor > 0 ? inp.paceFactor : 1;
   const r = inp.lap.ms / inp.baselineMs;
@@ -85,7 +77,7 @@ export function review(inp: ReviewInput): ReviewResult {
   if (choice === 'refund') ease = Math.min(ease, 1);
   const sub: ReviewSub = { timeliness, delays, issues, delivery, ease };
   let stars = Math.round(((timeliness + delays + issues + delivery + ease) / 5) * 2) / 2;
-  if ((inp.extra.charge ?? 0) > 0) stars = Math.min(stars, 2);
+  if (dup > 0) stars = Math.min(stars, 2);
   if (choice === 'refund') stars = Math.min(stars, 2);
   if (choice === 'discount') stars = Math.min(stars, 3);
   if (choice === 'redo') stars = Math.min(stars, 4);
@@ -94,14 +86,14 @@ export function review(inp: ReviewInput): ReviewResult {
   // Swallowed errors (spec 5.2): the customer never got a step and nobody was told. At most two stars, whatever else was good.
   if (inp.swallowed) stars = Math.min(stars, 2);
   stars = Math.max(1, stars);
-  const lowDelivery = (inp.extra.charge ?? 0) > 0 ? 'Charged twice!' : choice === 'discount' ? 'Wrong order' : inp.degraded ? 'Missing updates' : LOW.delivery;
-  let reasons = SUBS.filter((k) => sub[k] <= 3).map((k) => (k === 'delivery' ? lowDelivery : LOW[k])).slice(0, 2);
+  const lowDelivery = dup > 0 ? v.dupReason : choice === 'discount' ? v.wrong : inp.degraded ? 'Missing updates' : v.low.delivery;
+  let reasons = SUBS.filter((k) => sub[k] <= 3).map((k) => (k === 'delivery' ? lowDelivery : v.low[k])).slice(0, 2);
   if (reasons.length === 0) {
     reasons = SUBS.map((k, i) => ({ k, i, v: sub[k] }))
       .sort((a, b) => b.v - a.v || a.i - b.i)
       .slice(0, 2)
       .sort((a, b) => a.i - b.i)
-      .map((x) => HIGH[x.k]);
+      .map((x) => v.high[x.k]);
   }
   return { stars, sub, reasons, text: reasons.join(' \u00b7 ') };
 }

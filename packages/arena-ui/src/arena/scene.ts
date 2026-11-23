@@ -15,10 +15,11 @@ import { CLASS_ICON, CLASS_WORD, POP_MS, curseShort, curseWord, type CurseClass,
 import { captionOf, creatureFrame, creatureTip, shown, spriteOf, MAX_SHOWN, type CreatureVM } from './creatures';
 import { drawCreature } from '../creatures/draw';
 import { bugTint, puff, seedOf, swarmBugs, swarmStale } from './swarm';
-import { drawWorldCreature, drawWorldProp, isWorld, worldPhase, worldProp } from './world-events';
+import { drawWorldCreature, drawWorldProp, isWorld, tintOf, worldPhase, worldProp } from './world-events';
 import { archWall, drawProp, pillar } from '../props/draw';
 import { survivedAge } from './boss';
 import { equipPhase, flightPoint, PART_LABEL, wornParts } from './equip';
+import { displayId, vocabOf } from './vocab';
 import { dropPoint, dropProgress, queueLeft, queueShape } from './order';
 import { grabPoint, grabProgress, lapMotion, START_X, STACK_STEP, STACK_X } from './lap';
 import { drawHandoff, drawRunDust } from './handoff';
@@ -272,6 +273,25 @@ function outageRing(ctx: Ctx, x: number, y: number, o: OutageVM, now: number, re
   ctx.restore();
 }
 
+/** Tint on a stage chip while a transit stall lasts (weather, road hazard, delay, out of gas, not on truck): a coloured wash and border, and the fault word. */
+function chipTint(ctx: Ctx, x: number, y: number, cw: number, color: string, now: number, reduced: boolean): void {
+  const pulse = reduced ? 1 : 0.7 + 0.3 * Math.sin(now / 260);
+  ctx.save();
+  ctx.globalAlpha = 0.2; ctx.fillStyle = color; rr(ctx, x - cw / 2, y, cw, 40, 10); ctx.fill();
+  ctx.globalAlpha = pulse; ctx.lineWidth = 3; ctx.strokeStyle = color; rr(ctx, x - cw / 2 - 2, y - 2, cw + 4, 44, 11); ctx.stroke();
+  ctx.restore();
+}
+
+/** The fault word beside the countdown ring, on a dark pill so it reads over a creature. */
+function chipWord(ctx: Ctx, x: number, y: number, color: string, word: string): void {
+  ctx.save();
+  ctx.font = `800 11px ${MONO}`;
+  const w = Math.ceil(ctx.measureText(word).width) + 10;
+  rr(ctx, x + 22, y + 53, w, 17, 6); ctx.fillStyle = 'rgba(10,8,18,0.86)'; ctx.fill();
+  txt(ctx, word, x + 27, y + 62, 11, color, 'left', MONO, '800');
+  ctx.restore();
+}
+
 /** Purple curse chip under a stage chip, left side (TV3-U11): the short kind, for as long as the curse lasts. */
 function curseChip(ctx: Ctx, x: number, y: number, c: CurseVM, more: number): void {
   const label = more > 0 ? `${curseShort(c.kind)}+${more}` : curseShort(c.kind);
@@ -440,9 +460,9 @@ function fallenTag(ctx: Ctx, b: LaneBox, round: number): void {
   ctx.restore();
 }
 
-function stats(ctx: Ctx, b: LaneBox, l: LaneVM): void {
+function stats(ctx: Ctx, b: LaneBox, l: LaneVM, app: string): void {
   const x = 1616; const y = b.top + 8;
-  txt(ctx, `ORDER ${l.orderIndex}/${l.ordersTotal || '-'}`, x, y + 12, 16, C.text, 'left', MONO, '700');
+  txt(ctx, `${vocabOf(app).unit.toUpperCase()} ${l.orderIndex}/${l.ordersTotal || '-'}`, x, y + 12, 16, C.text, 'left', MONO, '700');
   const rows: [string, number, string][] = [
     ['✓', l.counts.completed, C.ok], ['✕', l.counts.failed, C.fail], ['⚗', l.counts.quarantined, C.hex],
   ];
@@ -669,11 +689,13 @@ export class ArenaScene {
         ctx.restore();
       }
     }
-    stats(ctx, b, l);
+    stats(ctx, b, l, vm.app);
     if (l.mode !== 'sleep' && !fell) startStack(ctx, b, l);
     // stage chips and station props
     const chipY = b.top + 4;
     const cw = chipWidth(n);
+    // Countdown rings and fault words are drawn last, over the skeleton and the creatures, so they stay readable.
+    const rings: (() => void)[] = [];
     vm.stages.forEach((s, i) => {
       const x = stationX(i, n);
       ctx.fillStyle = 'rgba(10,8,18,0.5)'; ctx.beginPath(); ctx.ellipse(x, b.top + b.h * 0.8 + 2, 22, 6, 0, 0, Math.PI * 2); ctx.fill();
@@ -690,7 +712,14 @@ export class ArenaScene {
       }
       for (const pop of l.cursepops ?? []) if (pop.stage === s.id) curseAnswer(ctx, x, chipY + 76, pop.cls, ((now - pop.at) * this.speed) / POP_MS, this.reducedMotion);
       const og = outageAt(l, s.id);
-      if (og && (og.endedAt === null || now - og.endedAt < 700)) outageRing(ctx, x, chipY + 41 + 20, og, now, this.reducedMotion);
+      if (og && (og.endedAt === null || now - og.endedAt < 700)) {
+        const tint = tintOf(og.fault);
+        if (tint && og.endedAt === null) chipTint(ctx, x, chipY, cw, tint, now, this.reducedMotion);
+        rings.push(() => {
+          if (tint && og.endedAt === null) chipWord(ctx, x, chipY, tint, captionOf(og.fault));
+          outageRing(ctx, x, chipY + 41 + 20, og, now, this.reducedMotion);
+        });
+      }
     });
     ctx.globalAlpha = 1;
     // progress bar under the active chip
@@ -709,6 +738,9 @@ export class ArenaScene {
     if (fell) this.drawFallen(ctx, vm, l, b, now, deathIdx);
     else this.drawSkeleton(ctx, vm, l, b, now);
     this.drawCreatures(ctx, l, b, now);
+    ctx.globalAlpha = fell ? 0.4 : 1;
+    for (const draw of rings) draw();
+    ctx.globalAlpha = 1;
     this.drawSurvived(ctx, l, b, now);
     ctx.restore();
   }
@@ -874,8 +906,9 @@ export class ArenaScene {
   private creatureTags(ctx: Ctx, c: CreatureVM, x: number, y: number, size: number, now: number, exit: number): void {
     ctx.save();
     ctx.globalAlpha = Math.max(0, 1 - exit);
-    const cap = captionOf(c.fault || c.id);
     ctx.font = '700 11px ' + MONO;
+    // Creatures stand 56 px apart: a long word (NOT ON TRUCK, RUNNING LATE) is cut so it never runs into the next tag; the chip's ring carries the full word.
+    const cap = fit(ctx, captionOf(c.fault || c.id), 64);
     const w = Math.ceil(ctx.measureText(cap).width) + 10;
     rr(ctx, x - w / 2, y + size / 2 + 6, w, 15, 4); ctx.fillStyle = 'rgba(10,8,18,0.82)'; ctx.fill();
     ctx.lineWidth = 1.5; ctx.strokeStyle = C.out; ctx.stroke();
@@ -1014,15 +1047,15 @@ export class ArenaScene {
       if (gp >= 0 || dp >= 0) {
         const pt = gp >= 0 ? grabPoint(gp, from, { x: hx, y: hy }) : dropPoint(dp, from, { x: hx, y: hy });
         ctx.save(); ctx.translate(pt.x, pt.y); ctx.rotate(pt.rot); ctx.translate(-pt.x, -pt.y);
-        scroll(ctx, pt.x, pt.y, hs * pt.scale, l.order ?? '', false);
+        scroll(ctx, pt.x, pt.y, hs * pt.scale, displayId(vm.app, l.order ?? ''), false);
         ctx.restore();
-      } else scroll(ctx, hx, hy, hs, l.order ?? '', l.mode === 'fail' && l.chips.includes('failed'));
+      } else scroll(ctx, hx, hy, hs, displayId(vm.app, l.order ?? ''), l.mode === 'fail' && l.chips.includes('failed'));
     }
     if (l.lap?.ceremony) {
       const hs = size / 150;
       drawHandoff(ctx, l.lap.ceremony, {
         doorX: 1548, floorY: b.top + b.h - 8, doorH: Math.min(100, b.h * 0.7), handX: x + size * 0.34, handY: feetY - size * 0.62, scrollScale: hs,
-        size, skelX: x, feetY, drawScroll: (sx, sy, s, rot) => { ctx.save(); ctx.translate(sx, sy); ctx.rotate(rot); ctx.translate(-sx, -sy); scroll(ctx, sx, sy, s, l.order ?? '', false); ctx.restore(); },
+        size, skelX: x, feetY, drawScroll: (sx, sy, s, rot) => { ctx.save(); ctx.translate(sx, sy); ctx.rotate(rot); ctx.translate(-sx, -sy); scroll(ctx, sx, sy, s, displayId(vm.app, l.order ?? ''), false); ctx.restore(); },
         font: SANS, reduced: this.reducedMotion, lite: this.lite,
       }, now);
     }

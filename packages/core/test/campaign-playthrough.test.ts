@@ -3,7 +3,7 @@
 // same result: every run below is a pure function of the night's seed. The live engine (real bots, real provider) is covered by
 // `npm run e2e` (night 1) and by the CP-NIGHT tests in this folder; this file is the fast, deterministic one.
 import { describe, expect, it } from 'vitest';
-import { loadCampaign } from '../../haunt/src/campaign/nights';
+import { loadCampaign } from '../../haunt/src/campaign/load';
 import { computeMedal, scoreNight, type Medal } from '../../haunt/src/campaign/medals';
 import { simulateNight } from '../src/campaign/night-sim';
 import type { Part } from '../../haunt/src/sdk';
