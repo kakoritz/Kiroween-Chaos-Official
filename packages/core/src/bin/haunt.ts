@@ -321,10 +321,27 @@ function specLint(): number {
 /**
  * `haunt improve [--url http://127.0.0.1:7070] [--seed N] [--rounds '[{"lanes":5,"orders":4,"intensity":3}]'] [--speed N] [--pace slow]`:
  * asks a running live server (`npm run live`) to run, mine, apply the cheap patterns as policy overlay, write a spec for the rest, rerun the same plan
- * and seed, and compare. Prints the report ("closed n of m patterns"). Nothing is applied to code.
+ * and seed, and compare. `--deterministic` runs it in process in virtual time instead (same seed, same grades). `--json` prints the report as JSON. Prints the report ("closed n of m patterns"). Nothing is applied to code.
  */
 async function improveCmd(): Promise<number> {
-  const base = (opt('url', 'http://127.0.0.1:7070') as string).replace(/[/]$/, '');
+  let sim: { close(): Promise<void>; url: string } | undefined;
+  if (argv.includes('--deterministic')) {
+    // Virtual time, in process, a scratch lessons folder: the same seed always gives the same before and after (see sim/engine.ts).
+    const { mkdtempSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const { LiveServer } = await import('../live/server');
+    const { createSimEngine } = await import('../sim/engine');
+    const dir = mkdtempSync(join(tmpdir(), 'haunt-improve-'));
+    const lessonsDir = join(dir, 'lessons');
+    const srv = new LiveServer({ engine: createSimEngine({ policyDir: lessonsDir }), staticDir: '/nonexistent', lessonsDir, patternsFile: join(dir, 'patterns.json'), runDir: dir, specsDir: join(dir, 'specs') });
+    const { url } = await srv.listen(0);
+    sim = { url, close: () => srv.close() };
+    console.log(`deterministic run, scratch folder ${dir}`);
+  }
+  try { return await improveRun(sim?.url ?? (opt('url', 'http://127.0.0.1:7070') as string).replace(/[/]$/, ''), argv.includes('--json')); } finally { await sim?.close(); }
+}
+async function improveRun(base: string, asJson: boolean): Promise<number> {
   const body: Record<string, unknown> = {};
   if (opt('seed')) body.seed = Number(opt('seed'));
   if (opt('speed')) body.speed = Number(opt('speed'));
@@ -342,7 +359,7 @@ async function improveCmd(): Promise<number> {
     const j = await (await fetch(`${base}/api/improve`)).json() as { phase: string; error?: string; report?: { text: string; closed: number; of: number } };
     if (j.phase !== last) { last = j.phase; console.log(`phase: ${j.phase}`); }
     if (j.phase === 'error') { console.error(j.error ?? 'improve failed'); return 1; }
-    if (j.phase === 'done' && j.report) { console.log(j.report.text); return 0; }
+    if (j.phase === 'done' && j.report) { console.log(asJson ? JSON.stringify(j.report) : j.report.text); return 0; }
   }
   console.error('timed out');
   return 1;

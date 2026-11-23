@@ -11,6 +11,10 @@ import {
   faultApplies, TIER_DECISION_DEFAULT, DECISION_TIMEOUT_MS, gradeFor, capGrade, orderId, unit,
   type AppId, type TierId, type StageDef, type EffectDef, type Grade, type PartId,
 } from '@haunt/shared';
+import { ruleFor, type Policy } from '../../../haunt/src/sdk/policy';
+
+/** Cool-down before a journal replay (the SDK's `REPLAY_COOLDOWN_MS`). */
+const REPLAY_COOLDOWN_MS = 3000;
 
 export interface LaneCfg {
   lane: number;
@@ -24,6 +28,8 @@ export interface LaneCfg {
   progressMs?: number;
   /** Parts to use instead of the tier's own (the campaign Crew lane). */
   parts?: PartId[];
+  /** The lane's learned policy overlay. `retry_backoff` and `journal_replay` change the plan; the plan already keys and parks by tier, so `idempotency_key` and `breaker_park` add nothing here. */
+  policy?: Policy;
 }
 
 export interface ArmSpec {
@@ -546,7 +552,8 @@ class Planner {
     const degradable = def.id === 'updates';
     const hasRetry = this.parts.has('retry');
     const hasBreaker = this.parts.has('breaker');
-    const maxAttempts = hasBreaker ? TIMING.breakerAttempts : TIMING.retryAttempts;
+    const learned = !hasBreaker && hasRetry ? ruleFor(this.cfg.policy, 'retry_backoff', def.id) : undefined;
+    const maxAttempts = hasBreaker ? TIMING.breakerAttempts : learned ? Math.max(TIMING.retryAttempts, learned.maxAttempts ?? 5) : TIMING.retryAttempts;
     let terminal: 'fail' | 'park' | null = null;
     let opened = false;
     if (blocked) terminal = 'park';
@@ -567,8 +574,8 @@ class Planner {
       return { k: 'fail', error, stage: def.id };
     }
     this.emit('stage_fail', order, def.id, { error, retryable: true, attempt: attemptNo });
-    const wait = hasBreaker ? Math.max(TIMING.backoffBaseMs * 2 ** (attemptNo - 1), retryAfter) : TIMING.retryDelayMs;
-    const action = hasBreaker ? 'backoff' : 'retry';
+    const wait = hasBreaker || learned ? Math.max(TIMING.backoffBaseMs * 2 ** (attemptNo - 1), retryAfter) : TIMING.retryDelayMs;
+    const action = hasBreaker || learned ? 'backoff' : 'retry';
     const t0 = this.t;
     this.emit('recover_start', undefined, undefined, { action, depth: this.depth });
     this.intervals.push([t0, t0 + wait]);
@@ -874,6 +881,8 @@ class Planner {
     return this.stages.reduce((sum, def) => sum + (def.min + unit(this.cfg.seed, this.cfg.lane, order, def.id, 1, 1) * (def.max - def.min)) * this.cfg.pace, 0);
   }
 
+  private readonly replayedOrders = new Set<string>();
+
   private runOrder(i: number, kind: 'fresh' | 'dup' | 'resume', item?: ParkedItem): void {
     const order = orderId(this.cfg.app, i);
     this.curOrder = i;
@@ -916,7 +925,18 @@ class Planner {
         s++;
         if (s >= this.stages.length) { this.completeOrder(i, order, tStart, kind); return; }
         continue;
-      }      switch (res.k) {
+      }
+      // `journal_replay` (a lesson, like sdk.ts `replayAfter`): the order that ran out of retries is replayed once from the journal after a cool-down, not failed.
+      if (res.k === 'fail' && this.parts.has('journal') && !this.replayedOrders.has(order) && ruleFor(this.cfg.policy, 'journal_replay', res.stage)) {
+        this.replayedOrders.add(order);
+        this.emit('recover_start', order, res.stage, { action: 'replay', via: 'journal_replay' });
+        this.t += REPLAY_COOLDOWN_MS;
+        this.emit('recover_done', order, res.stage, { action: 'replay', via: 'journal_replay' });
+        s = this.stages.findIndex((d) => d.id === res.stage);
+        effFrom = 0;
+        continue;
+      }
+      switch (res.k) {
         case 'fail':
           this.emit('order_failed', order, undefined, { stage: res.stage, error: res.error });
           this.scoreEv(-50, 'order failed');
