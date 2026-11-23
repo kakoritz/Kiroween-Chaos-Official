@@ -9,6 +9,7 @@ import { WaveManager } from '../../../haunt/src/score/wave';
 import type { HauntEvent } from '../../../haunt/src/score/score';
 import { tiersForLanes, type CrewSpec, type TierMode } from '../../../haunt/src/runner/lanes';
 import { MAX_DEPTH } from '../../../haunt/src/chaos/catalog';
+import type { PartId } from '../../../haunt/src/shared/catalog';
 import { fnv1a32, mulberry32 } from '../../../haunt/src/shared/rng';
 import { loadCampaign } from '../../../haunt/src/campaign/load';
 import { campaignWaveConfig, parseCampaignRequest, type CampaignRequest } from '../../../haunt/src/campaign/wave-config';
@@ -58,6 +59,8 @@ export interface LiveEngine {
 o_decision when nothing is pending for that order. */
   decide?(lane: number, order: string, choice: string): 'ok' | 'no_decision' | 'bad_choice';
   setChaosMode?(mode: ChaosMode): void;
+  /** The part overlay (improve loop): parts per lane, in addition to the tier's, for the waves that follow. Only a simulated engine has it; `{}` clears. */
+  setPartOverlay?(grants: Readonly<Record<number, readonly PartId[]>>): void;
   /** Intensity dial (TV3-C4). The engine owns the level; the server mirrors it for `state`. */
   /** Curses (TV3-C9): add one to a lane, end one, end all, give the live lanes theirs by level. */
   addCurse?(lane: number, kind: CurseKind, endpoint: string, source?: 'plan' | 'player'): { id: string; lane: number; kind: string; endpoint: string; rate?: number; delayMs?: number };
@@ -498,10 +501,14 @@ export class LiveServer {
 
   private async improveRun(job: NonNullable<LiveServer['improveJob']>, plan: { seed: number; rounds?: unknown; speed: number; pace: string }): Promise<void> {
     const planText = 'the tournament with seed ' + plan.seed + (plan.rounds ? ' and the same rounds' : ' and the default rounds');
-    const runPlan = (label: 'before' | 'after'): Promise<RunResult> => this.runTournamentToEnd({ ...plan, resetLessons: label === 'before', autoSpecs: false }, job.id + '-' + label);
+    const runPlan = (label: 'before' | 'after'): Promise<RunResult> => {
+      if (label === 'before') this.engine.setPartOverlay?.({});
+      return this.runTournamentToEnd({ ...plan, resetLessons: label === 'before', autoSpecs: false }, job.id + '-' + label);
+    };
     try {
       const report = await runImprove({
         runPlan, store: this.patterns, lessons: this.lessons, ...(this.specsDir ? { specsDir: this.specsDir } : {}), plan: planText, specRunId: job.id,
+        ...(this.engine.setPartOverlay ? { partOverlay: { set: (g: Readonly<Record<number, readonly PartId[]>>) => this.engine.setPartOverlay!(g) } } : {}),
         onPhase: (p) => { job.phase = p; },
         onStatus: (p) => this.log.emit({ ...(patternEvent(p, 'updated') as unknown as HauntEvent), wave: this.waves.n }),
         onSpec: (s) => { this.log.emit({ type: 'spec_written', wave: this.waves.n, detail: s } as unknown as HauntEvent); job.spec = s; },
