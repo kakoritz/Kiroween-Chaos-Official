@@ -104,3 +104,22 @@ describe('live runtime enforces travel', () => {
     expect(starts[1]!.at - done.at).toBeGreaterThanOrEqual(400);
   });
 });
+
+describe('live runtime enforces travel on replayed stages', () => {
+  it('the stage_start made from a skipped stage_done still waits for the grab gap', async () => {
+    let clock = 0;
+    const rt = createLiveRuntime({ clock: false, botCommand: () => ({ command: 'x', args: [] }), now: () => clock, sleep: async (ms) => { clock += ms; },
+      run: async (o) => {
+        for (const ev of [
+          { type: 'order_start', order: 'ord-0001' }, { type: 'stage_done', order: 'ord-0001', stage: 'account', detail: { skipped: true } },
+        ]) o.onEvent?.(ev);
+        return { restarts: 0 } as never;
+      } });
+    const got: { type: string; at: number; detail: any }[] = [];
+    rt.live.startWave!(1, { orders: 1, seed: 1, tiers: 'allPhoenix', lanes: 1, speed: 1, pace: 'slow', app: 'orders' }, (e) => got.push({ type: e.type, at: clock, detail: (e as any).detail }), () => {});
+    await new Promise((r) => setTimeout(r, 50));
+    const start = got.find((g) => g.type === 'order_start')!;
+    const stage = got.find((g) => g.type === 'stage_start')!;
+    expect(stage.at - start.at).toBeGreaterThanOrEqual(1500);
+  });
+});

@@ -28,6 +28,24 @@ describe('LapTracker (PT-C3)', () => {
     expect((rv.detail as any).cum).toEqual({ stars: (rv.detail as any).stars, max: 5, count: 1 });
   });
 
+  it('a parked order counts its wait once: downtime runs from the failure to the stage that completes after the resume (matches the score engine)', () => {
+    const t = new LapTracker({ app: 'orders', pace: 1, speed: 1 });
+    const out = run(t, [
+      ev('order_start', T0, 'ord-0003', undefined, { grabMs: 0 }),
+      ev('stage_start', T0, 'ord-0003', 'payment'),
+      ev('stage_fail', T0 + 1000, 'ord-0003', 'payment', { error: 'x' }),
+      ev('stage_fail', T0 + 1500, 'ord-0003', 'payment', { error: 'x' }),
+      ev('order_parked', T0 + 2000, 'ord-0003', undefined, { stage: 'payment', reason: 'breaker_open' }),
+      ev('order_resumed', T0 + 20000, 'ord-0003', undefined, { stage: 'payment' }),
+      ev('order_start', T0 + 20000, 'ord-0003', undefined, { grabMs: 0 }),
+      ev('stage_start', T0 + 20100, 'ord-0003', 'payment'),
+      ev('stage_done', T0 + 20500, 'ord-0003', 'payment'),
+      ev('order_done', T0 + 21000, 'ord-0003'),
+    ]);
+    const lap = (out.find((e) => e.type === 'order_done')!.detail as any).lap;
+    expect(lap.downtimeMs).toBe(19500);
+  });
+
   it('counts issues, retries and the merged downtime interval, and reviews a fault lower', () => {
     const t = new LapTracker({ app: 'orders', pace: 1, speed: 1 });
     const out = run(t, [
