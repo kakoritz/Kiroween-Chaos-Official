@@ -71,3 +71,38 @@ Lane 1 takes `malformed_payload` (Witch) at intake: `chaos`, `stage_fail`, `lane
 ## Extra fixtures (see PROTOCOL "Mock requirements added")
 
 `breaker.jsonl` (breaker open, half-open, closed on a lane), `part-added.jsonl` (three `part_added` events on lane 1 with no wave change), `parked.jsonl` (A13 Phoenix: breaker open, `order_parked`, probe, `order_resumed`, done), `absorbed.jsonl` (`chaos_absorbed` on disk_full for a Rookie and on slow_link), `deferred.jsonl` (`chaos{deferred:true}` then it lands on the next applicable stage), `boss-internet.jsonl` and `boss-storm.jsonl` (Banshee Queen, Headless Horseman), `inbox.jsonl` (2 lanes, 6 stages, `ticket` effects, crash at `reply`), `stress.jsonl` (200 events per second for 30 s).
+
+# v1.1 storyboards (PT-C10)
+
+Same rules as above: beat order and event types are normative, numbers are examples from the `pace: show` fixtures (2 lanes, `grabMs` 1000, `ceremonyMs` 3200, `returnMs` 3600, `cancelMs` 1800). Rules 40 to 47 in `V1_1.md` apply to every one.
+
+## Travel (all fixtures)
+
+`order_start{grabMs}`, then the first `stage_start` no earlier than `grabMs` later. Each `stage_done{walkMs}` is followed by the next `stage_start` no earlier than `walkMs` later (no `walkMs` on the last stage or on skipped replay pairs). After `order_done` the next `order_start` waits `ceremonyMs + returnMs`; after a cancelled `order_failed` it waits `cancelMs + returnMs`. Restarts, replay, retries, parking and resume are exempt.
+
+## Ceremony and reviews (`laps-reviews`)
+
+Orders 1 and 2 on every lane: `order_done{ceremonyMs, returnMs, lap}`, then directly `review{stars, sub, reasons, text, cum}` and `score{reason:"review"}` (5 stars is +80), then the next `order_start` after the gap. Order 2 takes `http_500` on a lane: `chaos`, `stage_fail`, retries, then a small `score{reason:"downtime"}` (negative) when the stage completes; the order ends at 4.5 stars (+60). Tracker: `cum` is 5/5, 9.5/10, then 3 orders. Purpose: door stars, review card, `cum` tracker, lap table.
+
+## Cancelled (`cancelled`)
+
+Lane 1 completes order 1 (5 stars). On order 2 `chaos{sms_down}`, `stage_fail`, then `order_failed{outcome:"cancelled", cancelMs, returnMs, lap}`, `review{stars:1}` with `score{reason:"review", delta:-80}`, and `score{reason:"order cancelled", delta:-300}`. The cancel sequence (scroll burns, slump) runs in `cancelMs`, then the return. Lane 2 sees the same fault but recovers through retries (several `stage_fail`) and finishes. Purpose: cancel slam, 1-star review, big negative score.
+
+## Downtime (`downtime`)
+
+Lane 1 takes `http_500` (three `stage_fail`) and then `timeout` in one order. At the end of each recovery interval one `score{reason:"downtime", delta<0}` (rule 45), so two ticks (-8, -3). The order still finishes with a lower review (3.5 stars). Lane 2 is untouched. Purpose: downtime chip and penalty ticks.
+
+## Boss recovered (`boss-recovered`)
+
+Five lanes finish order 1, then `boss_warning`, `boss_start`, one `chaos{source:"boss"}` per lane. For each lane that recovers, when the hit order completes: `order_done`, `review`, then together `score{reason:"boss recovered", delta:150}` and, where it applies, `score{reason:"boss downtime refund"}` (rule 46). Lanes that fail get neither. Purpose: boss recovered banner.
+
+## Decisions (`typo-refund`, `typo-discount`, `typo-redo`)
+
+Order 2 of lane 1: `chaos{fault:"order_typo", source:"demo"}`, at detection `stage_fail{error:"wrong_order", retryable:false}`, `decision_needed{kind:"wrong_order", options:["refund","discount","redo"], defaultChoice, timeoutMs:12000}`, `decision_made{choice, source}` (rule 44), then:
+
+- `typo-refund`: `effect{kind:"refund"}`, `score{reason:"refund", delta:-150}`, `order_failed{outcome:"cancelled", reason:"refunded"}`, `review{stars:1}`.
+- `typo-discount`: `effect{kind:"discount"}`, `score{reason:"discount"}`, the order continues to `order_done` (with `lap.issues`) and `review`.
+- `typo-redo`: `effect{kind:"refund"}` for the wrong charge, then `order_start{redo:true}` with the same index; the corrected order runs from intake with `:rN` keys (not a repeat).
+
+Also regenerated with travel, laps and reviews: `hero-crash`, `full`, `loop`. `world-events` shows sms_down, app_down, wrong_address, no_answer and car_accident on different lanes.
+

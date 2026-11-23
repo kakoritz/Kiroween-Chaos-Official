@@ -22,7 +22,7 @@ import { OUTAGE_FAULTS, drawOutageMs, initialDial, intensityRow, isLevel, type D
 /** Transit stalls that carry an outage window and a countdown ring. */
 const TRANSIT_WINDOW: ReadonlySet<string> = new Set(['weather', 'road_hazard', 'delay', 'out_of_gas', 'not_on_truck', 'wrong_address']);
 
-export interface EngineChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string; forMs?: number; detect?: 'confirmation' | 'process' | 'transit' | 'handoff'; source?: 'manual' | 'random' | 'boss' | 'fuzz' | 'gremlin' | 'demo'; fuzz?: FuzzFault; count?: number; outageMs?: number }
+export interface EngineChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string; forMs?: number; detect?: 'confirmation' | 'process' | 'transit' | 'handoff'; source?: 'user' | 'random' | 'boss' | 'fuzz' | 'gremlin' | 'demo'; fuzz?: FuzzFault; count?: number; outageMs?: number }
 export interface EngineChaosResult { chaosId: string; creature: string; fault: string; depth: number; deferred: boolean }
 /** A tournament round (TV3-C7): the live lanes are the survivors, lane n runs tier n, and `script` is the one storm every lane meets. */
 export interface EngineTournament { round: number; lanes: number[]; level: number; script: unknown }
