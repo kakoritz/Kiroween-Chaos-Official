@@ -89,7 +89,7 @@ The Power in `kiro-power/` and the Crew app in `kiro-crew-app/` start the same M
 - **Flaky tests under load.** The rookie end-to-end bot test and the haunt adapters test failed under load and needed fixes (PRs #175, #203). The full suite still showed one timeout failure on the last run in this write-up.
 - **Log style.** The per-task log became PR bookkeeping. It is now `docs/KIRO-LOG-ARCHIVE.md`, and `docs/KIRO-LOG.md` holds the notes.
 
-## 12. Five moments for the Devpost text
+## 12. Five moments worth telling
 
 1. A bot crashes right after charging, restarts, and charges again. Rookie 2 charges, Phoenix 1.
 2. The property test finds a crash at `mid_stage` of `updates` that ordinary tests missed.
