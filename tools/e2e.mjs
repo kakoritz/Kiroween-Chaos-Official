@@ -63,6 +63,8 @@ const DOUBLING = new Set(['crash', 'process_crash', 'duplicate_request', 'timeou
 function unexplainedRepeats(evs, tierOfLane, minTier) {
   const injected = new Map();
   const bad = [];
+  // A `slow` curse reports its response only when the delayed answer lands, after the timeouts and retries it caused: count it wherever it falls in the wave.
+  const cursed = new Set(evs.filter((e) => e.type === 'curse_response').map((e) => Number(e.lane) + '|' + e.order));
   for (const e of evs) {
     const lane = Number(e.lane);
     if ((e.type === 'chaos' || e.type === 'process_dead' || e.type === 'curse_response') && Number.isFinite(lane)) {
@@ -71,7 +73,7 @@ function unexplainedRepeats(evs, tierOfLane, minTier) {
       injected.set(lane + '|*', (injected.get(lane + '|*') ?? 0) + 1);
     }
     if (e.type === 'repeat' && tierOfLane(lane) >= minTier) {
-      const hit = (injected.get(lane + '|' + e.order) ?? 0) > 0 || (injected.get(lane + '|*') ?? 0) > 0;
+      const hit = (injected.get(lane + '|' + e.order) ?? 0) > 0 || (injected.get(lane + '|*') ?? 0) > 0 || cursed.has(lane + '|' + e.order);
       if (!hit) bad.push(`lane ${lane} ${e.order} ${e.detail?.kind}`);
     }
   }
