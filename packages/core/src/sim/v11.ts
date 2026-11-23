@@ -374,7 +374,7 @@ export function decorateV11(input: HauntEvent[], o: DecorateOptions): HauntEvent
         downtimeMs: S.downtimeMs,
         issuesByStage: S.issuesByStage,
         stars: { sum: st.sum, max: 5 * st.count, count: st.count, avg },
-        rating: ratingFor(avg),
+        ...(st.count ? { rating: ratingFor(avg) } : {}),
       };
     }
     end.detail = { ...end.detail, summary: sum };
