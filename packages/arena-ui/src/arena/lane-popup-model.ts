@@ -172,7 +172,8 @@ export function normReview(raw: unknown, cancelled = false): Review | null {
   const cum = rec(r.cum);
   return {
     stars: r.stars,
-    sub: SUB_LABELS.map(([key, label]) => ({ key, label, value: num(sub[key]) })),
+    // The inbox app relabels the five slots (first response, resolution time, reassignments, SLA, ease) through `subLabels`.
+    sub: SUB_LABELS.map(([key, label]) => ({ key, label: typeof rec(r.subLabels)[key] === 'string' ? (rec(r.subLabels)[key] as string) : label, value: num(sub[key]) })),
     reasons: Array.isArray(r.reasons) ? r.reasons.filter((x): x is string => typeof x === 'string') : [],
     text: str(r.text),
     cancelled: cancelled || r.stars <= 1 && Object.keys(sub).length === 0,

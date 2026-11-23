@@ -1,5 +1,6 @@
 // Campaign results model (CP-U3). Pure functions; the DOM lives in results.ts. Rules: .kiro/specs/campaign/spec.md section 5.
 import { STORAGE_KEY, parseProgress, type CampaignProgress, type Tier } from './hub-model';
+import { caseRows, caseTitle, emptyCasebook, loadCasebook, mechanismWord } from '../arena/casebook';
 
 export interface LaneSummary {
   score?: number; repeats?: number; downtimeMs?: number;
@@ -161,4 +162,17 @@ export function parseImport(text: string): ImportResult {
 
 export function saveImport(store: Pick<Storage, 'setItem'> | undefined, r: { progress: CampaignProgress; earned: Earned }): void {
   try { store?.setItem(STORAGE_KEY, JSON.stringify(r.progress)); store?.setItem(EARNED_KEY, JSON.stringify(r.earned)); } catch { /* storage unavailable */ }
+}
+
+export interface NightCase { title: string; verdict: string; fix: string }
+
+/** The Casebook of one night in plain words (GET /api/casebook after a campaign wave): what was thrown at the Crew and how each case ended. */
+export function nightCases(raw: unknown, max = 5): NightCase[] {
+  const cb = emptyCasebook();
+  try { loadCasebook(cb, raw); } catch { return []; }
+  return caseRows(cb).slice(0, max).map((r) => ({
+    title: caseTitle(r.signature),
+    verdict: r.absorbed ? 'The fault did no harm.' : r.open ? 'Not solved: it cost the night.' : `Solved by ${mechanismWord(r.solvedBy[0]?.mechanism ?? '') || 'recovery'}.`,
+    fix: r.open ? r.recommended : '',
+  }));
 }
