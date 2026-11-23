@@ -11,7 +11,8 @@ export const LEGACY_ORDERS_STAGE_IDS: readonly string[] = ['intake', 'account', 
 
 /** Stage ids a stream is checked against: the hello's `stages` list when present, the legacy list for an old orders stream, else the app's list. */
 function stageIdsFor(events: readonly HauntEvent[], app: AppId): string[] {
-  const hello = events.find((e) => e.type === 'hello') as (HauntEvent & { stages?: unknown }) | undefined;
+  // Only a hello for this app counts: the live server says hello once per connection, so after an app switch the first hello still lists the other app's stages.
+  const hello = events.find((e) => e.type === 'hello' && ((e as { app?: unknown }).app === undefined || (e as { app?: unknown }).app === app)) as (HauntEvent & { stages?: unknown }) | undefined;
   if (Array.isArray(hello?.stages) && hello!.stages.length > 0) return hello!.stages.map((s: { id?: unknown }) => String(s?.id));
   if (app === 'orders' && events.some((e) => e.stage === 'intake')) return [...LEGACY_ORDERS_STAGE_IDS];
   return APPS[app].stages.map((s) => s.id);

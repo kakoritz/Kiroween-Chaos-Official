@@ -10,6 +10,7 @@ import { postProviderArm, type PostFault } from './provider';
 import { IssueFloor, gremlinVariant } from './floor';
 import { CURSE_KINDS, classifyHit, drawCurse, stageOfCall, type CurseKind, type CurseRec, type OrderTrace } from '../tournament/curses';
 import { unit } from '../shared/rng';
+import { APPS } from '../shared/catalog';
 
 /** What the provider tells the engine when a curse lied (see `CurseHit` in the provider). */
 export interface ProviderCurseHit { lane: string; service: string; order: string; index?: number; curse: CurseKind; id: string; status: number }
@@ -65,9 +66,12 @@ export class RunnerEngine {
     this.director = opts.director ?? new ChaosDirector();
   }
 
+  private appStages = new Set<string>();
+
   startWave = (wave: number, settings: EngineWaveSettings, record: (ev: HauntEvent) => void): void => {
     this.wave = wave;
     this.seed = settings.seed;
+    this.appStages = new Set((APPS[settings.app as keyof typeof APPS] ?? APPS.orders).stages.map((d) => d.id));
     this.record = record;
     this.speed = settings.speed;
     this.seq = 0;
@@ -266,10 +270,12 @@ export class RunnerEngine {
     this.seq++;
     const creature = req.creature ?? FAULTS.find((f) => f.id === req.fault)?.creature ?? req.fault;
     const gremlin = req.source === 'gremlin';
-    this.record?.({ type: 'chaos', lane, detail: { id: chaosId, creature, ...(req.source ? { source: req.source } : {}), ...r.detail, ...(gremlin ? { fault: 'gremlin', variant: req.fault } : {}),
+    this.record?.({ type: 'chaos', lane, detail: { id: chaosId, creature, source: req.source === undefined || req.source === 'manual' ? 'user' : req.source, ...r.detail, ...(gremlin ? { fault: 'gremlin', variant: req.fault } : {}),
       ...(fz ? { unknown: true, fingerprint: fz.fingerprint, fuzz: { fault: fz.fault, ...(fz.status !== undefined ? { status: fz.status } : {}), ...(fz.forMs !== undefined ? { forMs: fz.forMs } : {}), ...(fz.count !== undefined ? { count: fz.count } : {}), ...(fz.truncated ? { truncated: true } : {}), ...(fz.clockJumpMs !== undefined ? { clockJumpMs: fz.clockJumpMs } : {}) } } : {}) } });
     if (outageMs !== undefined) {
-      const stage = r.detail.deferredTo ?? info.stage;
+      // A transit or updates stall deferred to a stage the running app does not have (the inbox) names no stage: the outage window still shows.
+      const wanted = r.detail.deferredTo ?? info.stage;
+      const stage = wanted && this.appStages.has(wanted) ? wanted : undefined;
       this.record?.({ type: 'outage', lane, ...(stage ? { stage } : {}), detail: { outageMs, seed: this.seed, fault: req.fault, level: this.level } });
     }
     if (r.arm) this.opts.sendArm?.(lane, { k: 'arm', id: String(r.id), ...r.arm });
