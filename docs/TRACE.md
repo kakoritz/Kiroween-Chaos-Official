@@ -64,7 +64,7 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | PT-U9 | playtest-v2 | Header, gear menu, legend, pace. Gear menu that closes, Play and Stop demo bu... | done | [#211](https://github.com/kakoritz/Kiroween-Chaos/pull/211) | - |
 | PT-U10 | playtest-v2 | World creature choreographies. Scarecrow, black cat, phantom car, prankster, ... | open | - | - |
 | PT-U11 | playtest-v2 | Decision popup. Modal, countdown, keyboard, outcome animations (ui.md section... | open | - | - |
-| PT-U12 | playtest-v2 | Sound additions and a11y. Ui.md sections 13 and 14. | done | PRURL | - |
+| PT-U12 | playtest-v2 | Sound additions and a11y. Ui.md sections 13 and 14. | done | [#251](https://github.com/kakoritz/Kiroween-Chaos/pull/251) | - |
 | PT-U13 | playtest-v2 | UI tests. Reducers unit tests, one smoke e2e (ui.md section 16). | open | - | - |
 | PT-X1 | playtest-v2 | Regression. (done for the loop proof: docs/proof re-recorded with scoring v2,... | done | [#196](https://github.com/kakoritz/Kiroween-Chaos/pull/196), [#199](https://github.com/kakoritz/Kiroween-Chaos/pull/199) | - |
 | PT-X2 | playtest-v2 | Docs. docs/SPEC-MAP.md row, docs/DEMO-SCRIPT.md timings (3 min video is edite... | done | [#198](https://github.com/kakoritz/Kiroween-Chaos/pull/198) | - |
