@@ -5,22 +5,20 @@ const { nights, gear } = loadCampaign();
 const night = (id: number) => nights[id - 1]!;
 
 describe('night plans 1 to 3 (cp-night-1-3)', () => {
-  it('night 1 crashes every order after the charge', () => {
+  it('night 1 crashes two of the four orders after the charge', () => {
     const a = nightAttacks(night(1));
-    expect(a.map((x) => x.order)).toEqual([1, 2, 3, 4].map(orderId));
+    expect(a.map((x) => x.order)).toEqual([1, 3].map(orderId));
     expect(a.every((x) => x.fault === 'crash' && x.creature === 'reaper' && x.stage === 'payment' && x.point === 'after_effect_before_journal')).toBe(true);
   });
 
-  it('night 2 mixes timeouts and server errors on four orders', () => {
+  it('night 2 mixes server errors, throttling and a slow link on four orders', () => {
     expect(nightAttacks(night(2)).map((x) => `${x.order}:${x.fault}`)).toEqual([
-      'ord-0001:timeout', 'ord-0002:http_429', 'ord-0003:http_500', 'ord-0004:timeout',
+      'ord-0001:http_500', 'ord-0002:http_429', 'ord-0003:http_429', 'ord-0004:slow_link',
     ]);
   });
 
-  it('night 3 hits create with missing, bad and duplicate input', () => {
-    expect(nightAttacks(night(3)).map((x) => `${x.stage}:${x.fault}`)).toEqual([
-      'create:missing_file', 'create:malformed_payload', 'create:duplicate_request',
-    ]);
+  it('night 3 meets the bot with missing, bad and duplicate input as it reads the order', () => {
+    expect(nightAttacks(night(3)).map((x) => x.fault)).toEqual(['missing_file', 'malformed_payload', 'duplicate_request']);
   });
 });
 

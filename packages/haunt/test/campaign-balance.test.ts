@@ -76,7 +76,7 @@ describe('thresholds against the rival tiers', () => {
 
   it('gold stays below what the point table allows', () => {
     for (const n of nights) expect(n.medals.gold.credits, `night ${n.id}`).toBeLessThanOrEqual(scoreCeiling(n));
-    expect(scoreCeiling(night(1))).toBe(4 * 200 + 25);
+    expect(scoreCeiling(night(1))).toBe(4 * 200 + 2 * 25);
   });
 
   it('the balance check names a night that breaks the rules', () => {

@@ -189,7 +189,7 @@ export class LapTracker {
       S.recs.delete(r.order); S.rec = undefined; S.open = undefined; S.stack = [];
       const done: Ev = { ...ev, detail: { ...d, lap, ...(ev.type === 'order_done' && d.ms === undefined ? { ms } : {}) } };
       const rvEv: Ev = {
-        ts: t, type: 'review', wave: ev.wave, lane: ev.lane, order: ev.order,
+        ...(typeof ev.ts === 'number' ? { ts: ev.ts } : {}), type: 'review', wave: ev.wave, lane: ev.lane, order: ev.order,
         detail: { order: ev.order, stars: rv.stars, sub: rv.sub, reasons: rv.reasons, text: rv.text, cum },
       } as Ev;
       return [done, rvEv];

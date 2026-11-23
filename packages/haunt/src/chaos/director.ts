@@ -140,9 +140,10 @@ export class ChaosDirector {
     if (entry.point) detail.point = entry.point;
 
     let provider: ProviderArm | null = null;
-    if (def.id === 'order_typo') {
+    if (def.id === 'order_typo' || def.kind === 'file') {
       // The wrong order needs the file swapped first: it waits for the bot's next `input_read` hook (`onInputRead`),
-      // which also names the order the provider complains about.
+      // which also names the order the provider complains about. The input faults (missing file, duplicate, malformed) act on
+      // the same hook: the runner changes the order file just before the bot reads it.
       entry.waitStage = INPUT_READ;
       if (info.stage !== null && info.stage !== 'create') {
         detail.deferred = true;
@@ -184,7 +185,7 @@ export class ChaosDirector {
    * the runner to swap the file and post to the provider, or null when none is waiting.
    */
   onInputRead(lane: string, order: string): ProviderArm | null {
-    const e = this.lane(lane).entries.find((x) => x.def.id === 'order_typo' && x.waitStage === INPUT_READ && !x.fired);
+    const e = this.lane(lane).entries.find((x) => (x.def.id === 'order_typo' || x.def.kind === 'file') && x.waitStage === INPUT_READ && !x.fired);
     if (!e) return null;
     e.fired = true;
     e.waitStage = null;
@@ -223,8 +224,10 @@ export class ChaosDirector {
   /** The order left the queue. Returns the faults that never fired, for `chaos_absorbed`. */
   orderEnd(lane: string): string[] {
     const L = this.lane(lane);
-    const unused = L.entries.filter((e) => !e.fired).map((e) => e.def.id);
-    L.entries = [];
+    // An input fault (missing file, duplicate, malformed) waits for a later order's `input_read`, so it outlives the order that ended.
+    const keep = (e: Entry): boolean => e.def.kind === 'file' && !e.fired;
+    const unused = L.entries.filter((e) => !e.fired && !keep(e)).map((e) => e.def.id);
+    L.entries = L.entries.filter(keep);
     L.streak = 0;
     return unused;
   }
