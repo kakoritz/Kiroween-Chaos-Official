@@ -32,8 +32,8 @@ export function cuesFor(ev: SoundEv): SoundCue[] {
       else if (s <= 2) cues.push({ name: 'trombone', after: 220, pitch: 1 });
       return cues;
     }
-    case 'order_failed': return [{ name: 'slam', after: 0, pitch: 1 }];
     case 'score':
+      if (d.reason === 'order cancelled') return [{ name: 'slam', after: 0, pitch: 1 }];
       if (d.reason === 'downtime') return [{ name: 'tick', after: 0, pitch: 1 }];
       if (d.reason === 'boss recovered') return [{ name: 'fanfare', after: 0, pitch: 1 }];
       return [];

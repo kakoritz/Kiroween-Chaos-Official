@@ -24,7 +24,7 @@ describe('PT-U12 sound cues', () => {
     expect(names({ type: 'review', detail: {} })).toEqual([]);
   });
   it('maps the rest of section 13', () => {
-    expect(names({ type: 'order_failed' })).toEqual(['slam']);
+    expect(names({ type: 'score', detail: { reason: 'order cancelled' } })).toEqual(['slam']);
     expect(names({ type: 'score', detail: { reason: 'downtime' } })).toEqual(['tick']);
     expect(names({ type: 'score', detail: { reason: 'boss recovered' } })).toEqual(['fanfare']);
     expect(names({ type: 'score', detail: { reason: 'clean' } })).toEqual([]);
