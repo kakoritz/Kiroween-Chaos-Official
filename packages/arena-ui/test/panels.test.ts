@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { applyEvent, emptyVM, newLane, reconcileLedger, type ArenaVM } from '../src/arena/model';
-import { cellView, DEFAULT_KINDS, kindLabel, ledgerKinds, rankLanes, stateIcon } from '../src/arena/panels';
+import { INBOX_KIND_LABEL, isInboxVM, cellView, DEFAULT_KINDS, kindLabel, ledgerKinds, rankLanes, stateIcon } from '../src/arena/panels';
 import type { ArenaEvent } from '../src/api/types';
 
 const ev = (type: string, lane: number | undefined, detail: Record<string, unknown> = {}): ArenaEvent => ({ seq: 1, ts: 0, type, wave: 1, ...(lane ? { lane } : {}), detail });
@@ -97,5 +97,18 @@ describe('ledger warning (BUG b)', () => {
     expect(dup(1, 'account_create')).toBe(false);
     for (const lane of [2, 3, 4, 5]) for (const k of ['charge', 'account_create']) expect(dup(lane, k)).toBe(false);
     expect(vm.lanes.find((l) => l.lane === 5)!.counts.repeats).toBe(0);
+  });
+});
+
+describe('inbox ledger', () => {
+  it('uses desk column labels and order when the app has an assign stage', () => {
+    const vm = vm2();
+    expect(isInboxVM(vm)).toBe(false);
+    vm.stages = [{ id: 'assign' } as never];
+    expect(isInboxVM(vm)).toBe(true);
+    expect(ledgerKinds(vm)).toEqual(['account_create', 'ticket', 'email', 'notify']);
+    expect(kindLabel('ticket', false, true)).toBe('Tickets');
+    expect(kindLabel('email', true, true)).toBe(INBOX_KIND_LABEL.email);
+    expect(kindLabel('email', true)).toBe('Receipts');
   });
 });
