@@ -1,7 +1,7 @@
 // Bot-side chaos: the armed list, hook matching and the kill rendezvous host.
 // Spec: runtime.md section 3 (rendezvous) and section 19 (arming handshake).
-import type { DecisionQuestion, HookPoint, Host, Part, Sdk } from '../sdk';
-import { ProcessKilled } from '../sdk';
+import type { DecisionQuestion, HookPoint, Host, Part, Sdk } from '../sdk/sdk';
+import { ProcessKilled } from '../sdk/sdk';
 import { CRASH_POINTS, RECOVERY_POINTS, faultById } from './catalog';
 
 export interface ArmMsg {

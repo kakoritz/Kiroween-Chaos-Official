@@ -10,7 +10,7 @@ import {
   CAMPAIGN_FIXTURES, campaignFixture, campaignFixtureSpecs, nightFixtureName, parseCampaignFixtureName,
 } from '../mock/campaign-fixtures';
 import { findRepoRoot, formatViolations, parseJsonl, validateEvents } from '../../haunt/src/contract/validate';
-import { loadCampaign } from '../../haunt/src/campaign/nights';
+import { loadCampaign } from '../../haunt/src/campaign/load';
 // @ts-expect-error plain JS module without types
 import { createHaunt } from '../inpage-stub.js';
 

@@ -6,7 +6,8 @@ import { join, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import { loadHauntConfig } from '../config';
 import { writeBadgeFiles, writeImproveFiles } from '../share';
-import { PatternStore, qualifies, costOf } from '../miner/patterns';
+import { qualifies, costOf } from '../miner/patterns';
+import { FilePatternStore } from '../miner/pattern-store';
 import { lintSpecDir, listSpecs, writeFixSpec } from '../miner/specs';
 
 export interface McpOptions { root: string; cliEntry?: string; runTimeoutMs?: number }
@@ -72,7 +73,7 @@ export async function callTool(opts: McpOptions, name: string, a: Json): Promise
   if (name === 'haunt_specs') {
     const action = String(a.action ?? 'list');
     const specsDir = join(opts.root, '.kiro', 'specs');
-    const store = new PatternStore(join(opts.root, '.haunt', 'patterns.json'));
+    const store = new FilePatternStore(join(opts.root, '.haunt', 'patterns.json'));
     if (action === 'list') {
       const patterns = store.list().filter(qualifies).sort((x, y) => costOf(y) - costOf(x)).map((p) => ({ id: p.id, signature: p.signature, status: p.status, count: p.count, downtimeMsTotal: p.downtimeMsTotal, lostOrders: p.lostOrders, repeats: p.repeats }));
       return text(JSON.stringify({ patterns, specs: listSpecs(specsDir) }));

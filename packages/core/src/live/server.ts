@@ -10,7 +10,7 @@ import type { HauntEvent } from '../../../haunt/src/score/score';
 import { tiersForLanes, type CrewSpec, type TierMode } from '../../../haunt/src/runner/lanes';
 import { MAX_DEPTH } from '../../../haunt/src/chaos/catalog';
 import { fnv1a32, mulberry32 } from '../../../haunt/src/shared/rng';
-import { loadCampaign } from '../../../haunt/src/campaign/nights';
+import { loadCampaign } from '../../../haunt/src/campaign/load';
 import { campaignWaveConfig, parseCampaignRequest, type CampaignRequest } from '../../../haunt/src/campaign/wave-config';
 import { APPS, APP_STAGES, CONTRACT_VERSION, CREATURES, DEMO_SCRIPTS, FAULT_IDS, type AppId } from './catalog';
 import { LapTracker } from './lap-tracker';
@@ -26,9 +26,11 @@ import { tierOfLane } from '../../../haunt/src/tournament/rounds';
 import { tierById } from '../../../haunt/src/pipeline/pipeline';
 import { roundScript } from './tournament-script';
 import { CURSE_KINDS, CURSE_ENDPOINTS, curseTable, type CurseKind } from '../../../haunt/src/tournament/curses';
-import { LessonsStore, lessonEvent, policyOf } from '../../../haunt/src/tournament/lessons';
+import { lessonEvent, policyOf } from '../../../haunt/src/tournament/lessons';
+import { LessonsStore } from '../../../haunt/src/tournament/lessons-store';
 import { laneCases } from '../../../haunt/src/tournament/signature';
 import { buildCasebook, caseEvents } from '../../../haunt/src/tournament/casebook';
+import { FilePatternStore, journalRefs } from '../../../haunt/src/miner/pattern-store';
 import { PatternStore, THRESHOLDS, costOf, minePatterns, patternEvent, qualifies } from '../../../haunt/src/miner/patterns';
 import { lintSpecDir, writeFixSpec } from '../../../haunt/src/miner/specs';
 import { improve as runImprove, type ImproveReport, type RunResult } from '../../../haunt/src/miner/improve';
@@ -40,7 +42,7 @@ export const RETAINED_EVENTS = 5000;
 export const PING_MS = 15000;
 const SPEEDS = [0.5, 1, 2, 4];
 
-export interface ChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string; detect?: 'confirmation' | 'handoff' }
+export interface ChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string; detect?: 'confirmation' | 'process' | 'transit' | 'handoff' }
 export interface ChaosResult { chaosId: string; creature: string; fault: string; depth: number; deferred: boolean }
 export interface WaveSettings { orders: number; seed: number; tiers: TierMode; lanes: number; speed: number; pace: 'normal' | 'show' | 'slow'; app: AppId; campaign?: CampaignRequest; tournament?: { round: number; lanes: number[]; level: number; script: unknown } }
 
@@ -150,7 +152,7 @@ export class LiveServer {
     this.ledger = opts.ledger ?? (() => ({ lanes: [] }));
     this.pingMs = opts.pingMs ?? PING_MS;
     this.lessons = new LessonsStore(opts.lessonsDir ?? joinPath(process.cwd(), '.haunt', 'lessons'));
-    this.patterns = new PatternStore(opts.patternsFile ?? joinPath(process.cwd(), '.haunt', 'patterns.json'));
+    this.patterns = new FilePatternStore(opts.patternsFile ?? joinPath(process.cwd(), '.haunt', 'patterns.json'));
     this.runDir = opts.runDir ?? joinPath(process.cwd(), '.haunt');
     this.specsDir = opts.specsDir;
     this.hardening = opts.hardening ?? (() => undefined);
@@ -437,7 +439,7 @@ export class LiveServer {
   /** Mine the round's events into the pattern store and publish a `pattern` event for each qualifying pattern that changed (TV3-C11). */
   protected minePatterns(runId: string, round: number, wave: number, evs: HauntEvent[], lanes: number[]): void {
     const journals = [...new Set(lanes)].map((lane) => ({ lane, path: joinPath(this.runDir, 'wave-' + wave, 'lane-' + lane, 'journal.jsonl') }));
-    const mined = minePatterns({ run: runId, round, events: evs as never, journals, reportLink: '/api/waves/' + wave + '/report' });
+    const mined = minePatterns({ run: runId, round, events: evs as never, journals, readRefs: journalRefs, reportLink: '/api/waves/' + wave + '/report' });
     for (const c of this.patterns.ingest(mined, runId + '#r' + round)) {
       if (qualifies(c.pattern)) this.log.emit({ ...(patternEvent(c.pattern, c.kind) as unknown as HauntEvent), wave });
     }
@@ -619,7 +621,7 @@ export class LiveServer {
     const f = fault!;
     const req: ChaosRequest = { fault: f, creature: creature!.id, scope: body.scope, point: body.point };
     if (body.detect !== undefined) {
-      if (body.detect !== 'confirmation' && body.detect !== 'handoff') fail(400, 'bad_request', 'detect must be confirmation or handoff');
+      if (!['confirmation', 'process', 'transit', 'handoff'].includes(body.detect as string)) fail(400, 'bad_request', 'detect must be confirmation, process, transit or handoff');
       if (f === 'order_typo') req.detect = body.detect;
     }
     if (body.lane === undefined) {

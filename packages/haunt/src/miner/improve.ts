@@ -4,7 +4,8 @@
 import { policyTakes, type PolicyAction, type PolicyRule } from '../sdk/policy';
 import { gradeFor, TIERS, type Grade } from '../shared/catalog';
 import { tierOfLane } from '../tournament/rounds';
-import { LessonsStore, type Lesson } from '../tournament/lessons';
+import type { Lesson } from '../tournament/lessons';
+import type { LessonsStore } from '../tournament/lessons-store';
 import type { Ev } from '../tournament/rp';
 import { PatternStore, minePatterns, qualifies, patternId, type MinedPattern, type Pattern } from './patterns';
 import { lintSpecDir, patchFor, writeFixSpec, type LintResult } from './specs';

@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { DIFF_BUDGET_MAX, PatternStore, lintSpecDir, patchFor, renderFixSpec, writeFixSpec, qualifies, type Pattern } from '../src/miner';
+import { DIFF_BUDGET_MAX, FilePatternStore, lintSpecDir, patchFor, renderFixSpec, writeFixSpec, qualifies, type Pattern } from '../src/miner';
 import { runReviewer, writeReview } from '../src/reviewer';
 import { callTool } from '../src/mcp/server';
 
@@ -179,7 +179,7 @@ describe('haunt spec-lint (CLI) and haunt_specs (MCP)', () => {
 
   it('lists qualifying patterns, writes a spec for the new ones and lints a folder', async () => {
     const work = mkdtempSync(join(tmpdir(), 'haunt-mcp-'));
-    const store = new PatternStore(join(work, '.haunt', 'patterns.json'));
+    const store = new FilePatternStore(join(work, '.haunt', 'patterns.json'));
     store.ingest([{ signature: DUP.signature, stage: 'payment', fault: 'timeout', consequence: 'duplicate_effect', shape: 'case', count: 5, lanes: [2], downtimeMs: 0, lostOrders: 0, repeats: 5, points: 0, firstSeen: { run: 'r' }, evidence: { run: 'r', seq: [1], journal: [] }, solvedBy: [] }], 'r#1');
     const list = JSON.parse(((await callTool({ root: work }, 'haunt_specs', {})).content as { text: string }[])[0]!.text);
     expect(list.patterns).toHaveLength(1);

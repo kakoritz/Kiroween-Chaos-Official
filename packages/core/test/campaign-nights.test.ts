@@ -1,6 +1,6 @@
 // CP-C2: campaign acceptance 1 to 4 in in-process mode (virtual clock, no child processes).
 import { describe, expect, it } from 'vitest';
-import { loadCampaign } from '../../haunt/src/campaign/nights';
+import { loadCampaign } from '../../haunt/src/campaign/load';
 import { computeMedal } from '../../haunt/src/campaign/medals';
 import { simulateNight } from '../src/campaign/night-sim';
 import { scanRepeats } from '../../haunt/src/runner/provider';

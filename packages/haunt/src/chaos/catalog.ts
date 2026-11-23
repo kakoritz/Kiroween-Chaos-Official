@@ -1,6 +1,6 @@
 // Fault catalog: which faults exist, where they apply, how they act.
 // Spec: .kiro/specs/engine/design.md section 5; runtime.md sections 3, 19, 29.
-import type { HookPoint } from '../sdk';
+import type { HookPoint } from '../sdk/sdk';
 
 export type FaultKind = 'process' | 'provider' | 'file' | 'disk';
 export type Family = 'process' | 'network' | 'http' | 'data' | 'world';
@@ -59,6 +59,11 @@ export const FAULTS: readonly FaultDef[] = [
   def({ id: 'gated_house', creature: 'black_cat', family: 'world', kind: 'provider', stages: ['handoff'], forMs: 3000 }),
   def({ id: 'order_typo', creature: 'prankster', family: 'world', kind: 'provider', stages: ['create'], forMs: 0 }),
   def({ id: 'car_accident', creature: 'phantom_car', family: 'world', kind: 'provider', stages: ['handoff'], forMs: 7000 }),
+  def({ id: 'weather', creature: 'storm_crow', family: 'world', kind: 'provider', stages: ['transit'], forMs: 1800 }),
+  def({ id: 'road_hazard', creature: 'pothole_imp', family: 'world', kind: 'provider', stages: ['transit'], forMs: 4000 }),
+  def({ id: 'delay', creature: 'scarecrow', family: 'world', kind: 'provider', stages: ['transit'], forMs: 600 }),
+  def({ id: 'out_of_gas', creature: 'fuel_wraith', family: 'world', kind: 'provider', stages: ['transit'], forMs: 7000 }),
+  def({ id: 'not_on_truck', creature: 'lost_parcel_ghoul', family: 'world', kind: 'provider', stages: ['transit'], forMs: 4000 }),
   def({ id: 'driver_unreachable', creature: 'will_o_wisp', family: 'world', kind: 'provider', stages: ['transit'], forMs: 3000 }),
 ];
 

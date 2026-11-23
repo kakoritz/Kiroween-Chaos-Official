@@ -9,6 +9,8 @@ import { POST_ROUTES, Provider, type FaultSpec, type ProviderClock } from '../..
 import { ProcessKilled, Sdk, type HookPoint, type Host, type Transport } from '../src/sdk';
 import { InputError, LaneHalted, Pipeline, TIERS, generateOrders, tierById, type OrderData, type PipelineResult } from '../src/pipeline';
 
+/** Lets the worker's timers and RPC run: a fake sleep that only resolves microtasks starves the event loop for the whole file. */
+const yieldTurn = (): Promise<void> => new Promise((r) => setImmediate(r));
 const LANE = 'L1';
 const SEED = 'seed-1';
 const ID = 'ord-0001';
@@ -29,14 +31,14 @@ class World {
   sdkOf: Sdk | null = null;
 
   constructor() {
-    const clock: ProviderClock = { now: () => this.now, sleep: async (ms) => { this.now += ms; } };
+    const clock: ProviderClock = { now: () => this.now, sleep: async (ms) => { this.now += ms; await yieldTurn(); } };
     this.provider = new Provider({ clock });
     this.readInput = async (id) => this.orders.find((o) => o.id === id)!;
   }
 
   host: Host = {
     now: () => this.now,
-    sleep: async (ms) => { this.now += ms; },
+    sleep: async (ms) => { this.now += ms; await yieldTurn(); },
     hook: async (point, ctx) => {
       const k = this.kills[0];
       if (k && k.point === point && (k.stage === undefined || k.stage === ctx.stage)) {

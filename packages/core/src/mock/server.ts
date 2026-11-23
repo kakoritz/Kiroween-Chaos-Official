@@ -13,7 +13,7 @@ import { CAPTION_SCRIPTS, loadCaptions } from '../live/captions';
 import { OutcomeTable } from './outcomes';
 import { ChaosSim, DEMO_SCRIPTS, MockError, Player, fixtureFor, scaledWave } from './play';
 import { hardening, laneLaps, laneLog, laneOrderRecord, laneOrders, ledger, pendingDecision, postmortem, stageDetail, waveCompare, waveLaps, waveReport, waveStars, wavesList } from './queries';
-import { loadCampaign } from '../../../haunt/src/campaign/nights';
+import { loadCampaign } from '../../../haunt/src/campaign/load';
 import { parseCampaignRequest } from '../../../haunt/src/campaign/wave-config';
 import { campaignFixture, parseCampaignFixtureName } from '../../mock/campaign-fixtures';
 

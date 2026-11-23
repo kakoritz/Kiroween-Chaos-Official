@@ -6,7 +6,7 @@ export type Consequence = 'handled' | 'reported' | 'swallowed' | 'crashed' | 'ab
 export type Outcome = 'solved' | 'partly' | 'lost';
 
 /** How a lane got through: what its recovery actually used. */
-export type Mechanism = 'retry' | 'retry_backoff' | 'journal_replay' | 'idempotency_key' | 'reconcile' | 'breaker' | 'queue' | 'restart' | 'compensate' | 'absorbed' | 'none';
+export type Mechanism = 'retry' | 'retry_backoff' | 'journal_replay' | 'idempotency_key' | 'reconcile' | 'breaker' | 'queue' | 'restart' | 'compensate' | 'decision' | 'absorbed' | 'none';
 
 export interface Case {
   /** `payment + timeout + duplicate_effect` */
@@ -24,6 +24,8 @@ export interface Case {
   costMs: number;
   costPoints: number;
   stars?: number;
+  /** The wrong-order decision the lane made for this order (order_typo cases). */
+  decision?: { choice: string; source: string };
   unknown?: boolean;
   fingerprint?: string;
 }
@@ -50,7 +52,11 @@ interface Ctx {
   recoverMs: number;
   scoreDelta: number;
   stars?: number;
+  decision?: { choice: string; source: string };
   restarts: number;
+  /** Where the order's last failed call was, and what it answered (null: no answer): the real cause of a lost order. */
+  failStage?: string;
+  failStatus?: number | null;
   /** Curse answers of the order and how the bot reacted (TV3-C9). */
   curses: { curse: string; stage: string; cls: 'handled' | 'reported' | 'swallowed' | 'crashed' }[];
 }
@@ -67,6 +73,20 @@ function mechanismOf(c: Ctx): Mechanism {
   if (c.actions.has('retry')) return 'retry';
   if (c.actions.has('restart')) return 'restart';
   return c.faults.length ? 'absorbed' : 'none';
+}
+
+/**
+ * The fault a failed call stands for, from what the bot saw: a 503 is an endpoint that is down, a 429 a rate limit, a 404 a missing endpoint, any other 5xx a server
+ * error, no answer a timeout. Anything else is not named (the pressed fault is blamed as before).
+ */
+export function faultOfFailure(status: number | null | undefined): string | undefined {
+  if (status === null) return 'timeout';
+  if (status === undefined) return undefined;
+  if (status === 503 || status === 502) return 'endpoint_down';
+  if (status === 429) return 'http_429';
+  if (status === 404) return 'http_404';
+  if (status >= 500) return 'http_500';
+  return undefined;
 }
 
 /** The cases one lane met in a round, from the wave's events. One case per fault pressed, judged by what the order did next. */
@@ -91,8 +111,13 @@ export function laneCases(events: readonly Ev[], lane: number, round: number): C
     const faults = c.faults.length === 0 && lastChaos && (end === 'order_failed' || end === 'halted' || end === 'order_quarantined')
       ? [{ fault: lastChaos.fault, stage: curStage || 'payment', ...(lastChaos.unknown ? { unknown: true, fingerprint: lastChaos.fingerprint } : {}) }]
       : c.faults;
-    for (const f of faults) {
-      const lost = end === 'order_failed' || end === 'halted' || end === 'open';
+    // A lost order is blamed on what happened at the stage where its last call failed. A fault pressed at another stage was survived (or was the lesser cause);
+    // without it every lost order is blamed on whatever was pressed first, and the loop treats the wrong stage.
+    const failFault = end === 'order_failed' && c.failStage !== undefined ? faultOfFailure(c.failStatus) : undefined;
+    const judged: { f: (typeof faults)[number]; lost: boolean }[] = faults.map((x) => ({ f: x, lost: failFault === undefined ? end === 'order_failed' : x.stage === c.failStage }));
+    if (failFault !== undefined && !judged.some((x) => x.lost)) judged.push({ f: { fault: failFault, stage: c.failStage! }, lost: true });
+    for (const { f, lost: failed } of judged) {
+      const lost = failed || end === 'halted' || end === 'open';
       const consequence: Consequence = end === 'halted' ? 'lane_halted'
         : end === 'order_quarantined' ? 'order_quarantined'
         : lost ? 'order_lost'
@@ -101,11 +126,12 @@ export function laneCases(events: readonly Ev[], lane: number, round: number): C
         : c.degraded ? 'order_degraded'
         : c.actions.size > 0 || c.restarts > 0 ? 'recovered' : 'absorbed';
       const outcome: Outcome = lost || end === 'order_quarantined' ? 'lost' : c.repeatKinds.size > 0 || c.parked || c.degraded ? 'partly' : 'solved';
-      const mechanism = lost ? 'none' : mechanismOf(c);
+      const decided = f.fault === 'order_typo' && c.decision !== undefined;
+      const mechanism = lost ? 'none' : decided ? 'decision' : mechanismOf(c);
       out.push({
         signature: signatureOf(f.stage, f.fault, consequence), stage: f.stage, fault: f.fault, consequence, lane, round, order: c.order, outcome, mechanism,
         ...(c.repeatKinds.size ? { kinds: [...c.repeatKinds].sort() } : {}), costMs: Math.round(c.recoverMs), costPoints: Math.round(c.scoreDelta < 0 ? -c.scoreDelta : 0),
-        ...(c.stars !== undefined ? { stars: c.stars } : {}), ...(f.unknown ? { unknown: true, fingerprint: f.fingerprint } : {}),
+        ...(c.stars !== undefined ? { stars: c.stars } : {}), ...(decided ? { decision: c.decision } : {}), ...(f.unknown ? { unknown: true, fingerprint: f.fingerprint } : {}),
       });
     }
   };
@@ -131,7 +157,11 @@ export function laneCases(events: readonly Ev[], lane: number, round: number): C
       case 'repeat': if (ctx) ctx.repeatKinds.add(String(d.kind)); break;
       case 'breaker': if (ctx && d.state === 'open') ctx.breakerOpened = true; break;
       case 'order_parked': if (ctx) ctx.parked = true; break;
-      case 'stage_fail': if (ctx && d.degraded) ctx.degraded = true; break;
+      case 'decision_made': if (ctx) ctx.decision = { choice: String(d.choice), source: String(d.source ?? 'default') }; break;
+      case 'stage_fail':
+        if (ctx && d.degraded) ctx.degraded = true;
+        else if (ctx) { ctx.failStage = String(e.stage ?? curStage); ctx.failStatus = typeof d.status === 'number' ? d.status : d.status === null ? null : undefined; }
+        break;
       case 'score': if (ctx) ctx.scoreDelta += typeof d.delta === 'number' ? d.delta : 0; break;
       case 'review':
         // The review follows order_done, so it is attached to the cases the order just closed.

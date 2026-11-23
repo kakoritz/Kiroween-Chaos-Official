@@ -8,7 +8,7 @@ export interface CampaignWhen { lane: number; event: string; stage?: string; ord
 
 export interface CampaignPress {
   when?: CampaignWhen; atMs?: number; afterPrevMs?: number; delayMs?: number; forEachOrder?: boolean;
-  lane: number; fault: string; creature: string; point?: string; scope?: 'inner' | 'outer'; detect?: 'confirmation' | 'handoff';
+  lane: number; fault: string; creature: string; point?: string; scope?: 'inner' | 'outer'; detect?: 'confirmation' | 'process' | 'transit' | 'handoff';
 }
 export interface CampaignBossEntry { boss: string; warnAtMs: number; startAtMs: number }
 export type CampaignPlanEntry = CampaignPress | CampaignBossEntry;

@@ -3,7 +3,7 @@
 // Orders are generated in memory from the seed. No node imports (must bundle for the browser).
 import { ChaosHost } from '../chaos/hooks';
 import { LaneHalted, Pipeline, STAGES, generateOrders, tierById, type OrderData, type TierDef } from '../pipeline';
-import { PARTS, Sdk, type Part } from '../sdk';
+import { PARTS, Sdk, type Part } from '../sdk/sdk';
 import type { PageToWorker } from './worker-host';
 import { BrowserClock, PageChannel, PageJournalStore, PageTransport, type WorkerScopeLike } from './worker-sdk';
 

@@ -1,7 +1,7 @@
 // The eleven-stage order pipeline (tournament-v3 spec section 2) and the five policy tiers.
 // Spec: .kiro/specs/engine/design.md sections 1 and 4; runtime.md sections 5, 7, 21 and 28.
 import { fnv1a32, mulberry32, unit } from '../shared';
-import { ParkSignal, ProcessKilled, QuarantineError, WrongOrder, type Part, type Sdk } from '../sdk';
+import { ParkSignal, ProcessKilled, QuarantineError, WrongOrder, type Part, type Sdk } from '../sdk/sdk';
 
 export interface StageDef {
   id: string;
@@ -261,7 +261,12 @@ export class Pipeline {
       await s.work(this.work(def('transit'), id));
       const polls = Math.max(1, Math.ceil(def('transit').min / POLL_EVERY_MS));
       for (let i = 1; i <= polls; i++) {
-        const delivered = await this.d.pollTracking(shipment);
+        let delivered: boolean;
+        try { delivered = await this.d.pollTracking(shipment); } catch (e) {
+          if (!(e instanceof WrongOrder)) throw e;
+          await s.wrongOrder(e.detectedAt);
+          delivered = await this.d.pollTracking(shipment);
+        }
         this.d.emit({ type: 'progress', order: id, stage: 'transit', detail: { poll: i } });
         if (delivered) return;
       }

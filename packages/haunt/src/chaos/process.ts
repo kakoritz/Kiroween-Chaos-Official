@@ -2,7 +2,7 @@
 // Spec: runtime.md section 1 (spawn process.execPath directly, no shell) and section 3.
 import { spawn, type ChildProcess } from 'node:child_process';
 import { createInterface } from 'node:readline';
-import type { HookPoint } from '../sdk';
+import type { HookPoint } from '../sdk/sdk';
 import type { ChaosDirector, Fired } from './director';
 
 export interface Exit {
