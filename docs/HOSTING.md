@@ -1,6 +1,6 @@
 # Hosting the demo (GitHub Pages)
 
-The hosted demo is a static site: no server, no login, no install. It is the "public URL" Devpost asks for.
+The hosted demo is a static site: no server, no login, no install. It is the public URL for the project.
 
 ## What it is (and is not)
 
@@ -28,10 +28,10 @@ To refresh the recordings (needs `npm run build:bots`; takes about 6 minutes): `
 GitHub Actions currently cannot start jobs because of the account billing limit, and the repo is private. Pages on a private repo needs a paid plan. Do these in order:
 
 1. **Fix billing** (Settings > Billing and plans: raise the spending limit or add a payment method) so Actions can start jobs.
-2. **Make the repo public** (Settings > General > Danger zone > Change visibility). Devpost judges need to open the URL, and free Pages needs a public repo. Check first that no secret is in the history.
+2. **Make the repo public** (Settings > General > Danger zone > Change visibility). Judges need to open the URL, and free Pages needs a public repo. Check first that no secret is in the history.
 3. **Enable Pages**: Settings > Pages > Build and deployment > Source = **GitHub Actions**.
 4. **Run the workflow**: Actions > `pages` > Run workflow (it also runs on every push to `main`). The `deploy` job prints the URL.
-5. Open the URL and check the banner, the arena and Start tournament. Put the URL in the Devpost "Try it out" field.
+5. Open the URL and check the banner, the arena and Start tournament. Share this URL as the live demo.
 
 Final URL form: `https://<github-user-or-org>.github.io/Kiroween-Chaos/` (for the repo `kakoritz/Kiroween-Chaos`: `https://kakoritz.github.io/Kiroween-Chaos/`).
 

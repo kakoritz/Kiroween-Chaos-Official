@@ -20,7 +20,7 @@ Goal: make Haunt something a developer **adopts** (badge, CI gate, try-your-own-
 - `haunt badge <run-id> [--out dir]` writes `haunt-badge.svg` (shields style, 20 px tall: label "Haunt", value "A 94", colour by grade: A green, B lime, C amber, D orange, F red) and `haunt-scorecard.svg` plus `haunt-scorecard.html`.
 - **Scorecard content** (1200x630): title "Haunt resilience scorecard", app name, big grade ring and score, reliability %, repeats, lost orders, recovery p50 and p95, a mini **coverage heat-map** (stage by fault, six colours), the tier comparison bars if present, three worst findings in one line each, footer "tested with Haunt · kakoritz/Kiroween-Chaos". Pure code, no external fonts or images, deterministic.
 - MCP tool `haunt_badge`, and an arena **"Share" button** in the report viewer that downloads the SVG and copies the README snippet `![Haunt grade](./haunt-badge.svg)`.
-- The scorecard is the asset for the Social Blitz post and the Devpost gallery.
+- The scorecard is the asset for the Social Blitz post and the gallery.
 
 ## 3. GitHub Action (SH-C2)
 
@@ -51,7 +51,7 @@ The judge panel flagged: the video promises "F to A" but the proof was F to C wi
 ## 6. Traceability (SH-K1) and write-up (SH-K2)
 
 - `tools/trace.ts` scans `.kiro/specs/**` for requirement and task IDs (for example `R4.1`, `PT-C4`, `H1.2`, `P9`), `git log` for PR numbers in commit subjects (`(#123)`), and test files for `// covers: <ID>` comments. It writes `docs/TRACE.md`: ID, text (first 80 chars), task status, PR links, test files. A **hook** `.kiro/hooks/trace-on-merge` regenerates it when specs or tests change. Tests add `// covers:` lines as they are touched.
-- `docs/KIRO-WRITEUP.md` follows the rubric order: IDE, CLI, Web and Crew (what each was best at), custom agents (`chaos-director`, `reviewer`), hooks (each with a measured benefit), spec-driven development (a real comparison to vibe coding on one feature, with numbers: tasks, tests, defects), steering (which file changed Kiro's behaviour and how), MCP (`haunt-mcp` and what it made possible), property-based testing (the bug it found, with the shrunk counterexample), Powers, and a **"what Kiro got wrong"** section. KIRO-LOG gets candid entries ("Kiro did X, I corrected Y") rather than PR bookkeeping. Five short quotes or moments become the Devpost text.
+- `docs/KIRO-WRITEUP.md` follows the rubric order: IDE, CLI, Web and Crew (what each was best at), custom agents (`chaos-director`, `reviewer`), hooks (each with a measured benefit), spec-driven development (a real comparison to vibe coding on one feature, with numbers: tasks, tests, defects), steering (which file changed Kiro's behaviour and how), MCP (`haunt-mcp` and what it made possible), property-based testing (the bug it found, with the shrunk counterexample), Powers, and a **"what Kiro got wrong"** section. KIRO-LOG gets candid entries ("Kiro did X, I corrected Y") rather than PR bookkeeping. Five short quotes or moments become the submission text.
 - Steering files to add: `tech.md` (stack and test rules), `contract.md` (the contract and PR rules), `art.md` (style guide pointers) so the steering surface is visible and used.
 
 ## 7. Power, Crew app, MCP scene, LLM reviewer (SH-K3, SH-K4, SH-C5)
@@ -62,7 +62,7 @@ The judge panel flagged: the video promises "F to A" but the proof was F to C wi
 
 ## 8. Architecture diagram (SH-D1)
 
-One diagram: browser UI, SSE and REST contract, runner, bot processes, provider and ledger, journal, adapters (SDK, Proxy, Process), reviewer, Kiro loop. Authored as mermaid in the README and exported as SVG in `docs/img/architecture.svg` (a Lucid board is optional). Shown in the video end card and the Devpost gallery.
+One diagram: browser UI, SSE and REST contract, runner, bot processes, provider and ledger, journal, adapters (SDK, Proxy, Process), reviewer, Kiro loop. Authored as mermaid in the README and exported as SVG in `docs/img/architecture.svg` (a Lucid board is optional). Shown in the video end card and the gallery.
 
 ## 9. Acceptance
 

@@ -35,7 +35,7 @@ Order matters. The hero demo comes first, the rest widens it.
 - [ ] 18. Determinism test and CI. (Acceptance 3)
 - [ ] 19. README with GIF of the hero demo, and "How Kiro built this". (R8)
 - [ ] 20. Record the 3-minute demo video from demo mode.
-- [ ] 21. Devpost text: problem, solution, Kiro usage, category.
+- [ ] 21. submission text: problem, solution, Kiro usage, category.
 
 ## Kiro usage plan
 

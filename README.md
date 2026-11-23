@@ -105,7 +105,7 @@ kiro-power/, kiro-crew-app/   the MCP server packaged for Kiro
 .kiro/                specs, steering, hooks, agents
 ```
 
-More docs: [DEV-SETUP](docs/DEV-SETUP.md), [JUDGES](docs/JUDGES.md), [SPEC-MAP](docs/SPEC-MAP.md), [OPEN-ITEMS](docs/OPEN-ITEMS.md), [SUBMISSION-CHECKLIST](docs/SUBMISSION-CHECKLIST.md), [HOW-KIRO-BUILT-THIS](docs/HOW-KIRO-BUILT-THIS.md).
+More docs: [DEV-SETUP](docs/DEV-SETUP.md), [JUDGES](docs/JUDGES.md), [SPEC-MAP](docs/SPEC-MAP.md), [HOW-KIRO-BUILT-THIS](docs/HOW-KIRO-BUILT-THIS.md).
 ## Known limits
 
 - **Sweep is slow.** About 5 minutes with `--orders 1 --speed 16`, longer with defaults. For a quick look use `ramp`, `demo -- --check` or `validate:live`.
@@ -123,7 +123,7 @@ The skeleton is the harness. An app is a process definition (`haunt.yaml`: stage
 
 Specs ([`.kiro/specs/`](.kiro/specs/)), steering ([`.kiro/steering/`](.kiro/steering/)), hooks ([`.kiro/hooks/`](.kiro/hooks/)), two path-limited agents ([`.kiro/agents/`](.kiro/agents/)), an MCP server, and fast-check property tests that kill the bot at every hook call. Candid account: [`docs/KIRO-WRITEUP.md`](docs/KIRO-WRITEUP.md).
 
-More docs: [DEV-SETUP](docs/DEV-SETUP.md), [JUDGES](docs/JUDGES.md), [DEMO-SCRIPT](docs/DEMO-SCRIPT.md), [SPEC-MAP](docs/SPEC-MAP.md), [OPEN-ITEMS](docs/OPEN-ITEMS.md).
+More docs: [DEV-SETUP](docs/DEV-SETUP.md), [JUDGES](docs/JUDGES.md), [DEMO-SCRIPT](docs/DEMO-SCRIPT.md), [SPEC-MAP](docs/SPEC-MAP.md).
 
 ## License
 

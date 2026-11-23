@@ -57,4 +57,4 @@ Do not run a default `npm run haunt -- sweep`: it takes more than 5 minutes (abo
 - Model-based or recorded: Workflow Lab and packs, the improve loop projection, the hosted tournament.
 - Not built: a runnable streaming app, the 11-stage Ticket Desk, a live Kiro-applied fix on record, Power and Crew app installed in a Kiro window.
 - Mobile: the arena is a fixed 1280x720 canvas (about 30% on a phone). Use a desktop browser.
-- Tests run locally only; CI does not run them. `docs/OPEN-ITEMS.md` lists decisions that need a human.
+- Tests run locally only; CI does not run them.

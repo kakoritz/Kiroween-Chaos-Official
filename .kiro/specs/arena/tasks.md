@@ -26,10 +26,10 @@ Do after Phase 1 of [haunted-house tasks](../haunted-house/tasks.md) (hero crash
 - [x] UI-D1. Demo mode 3-minute script. (A10)
 - [x] UI-D2. Sound effects. (A1)
 - [x] UI-D3. Perf check at 5 lanes, 60 fps. (Acceptance 1)
-- [ ] UI-D4. Record the video, write the Devpost text.
+- [ ] UI-D4. Record the video, write the submission text.
 
 ## Open list (Lane B)
-Only two rows remain open: UI-D4 (video and Devpost text) and UI-ART5 (keep docs/ASSETS.md current). Cut rule from docs/WINNING.md: anything not working at the end of Nov 29 is cut, except the hero crash, the arena, the report, the loop proof and the video.
+Only two rows remain open: UI-D4 (video and submission text) and UI-ART5 (keep docs/ASSETS.md current). Cut rule from docs/WINNING.md: anything not working at the end of Nov 29 is cut, except the hero crash, the arena, the report, the loop proof and the video.
 
 ## Cut line
 If time is short, ship A, B1 to B5, C1, C2, D1. Everything else is polish.

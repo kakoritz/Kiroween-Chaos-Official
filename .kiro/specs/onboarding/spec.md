@@ -1,6 +1,6 @@
 # Onboarding and presentation (requirements and design)
 
-Goal: a judge or a stranger understands the problem, the stake and how to play **in the first 10 seconds**, can try everything **without installing anything**, and the video, README and Devpost page all tell the same sharp story. This targets the weakest scores (Presentation, first impression, Design clarity). Judges may only watch the video and open one URL, so these pieces carry the score.
+Goal: a judge or a stranger understands the problem, the stake and how to play **in the first 10 seconds**, can try everything **without installing anything**, and the video, README and submission page all tell the same sharp story. This targets the weakest scores (Presentation, first impression, Design clarity). Judges may only watch the video and open one URL, so these pieces carry the score.
 
 ## 1. Requirements (EARS)
 
@@ -10,7 +10,7 @@ Goal: a judge or a stranger understands the problem, the stake and how to play *
 4. THE UI SHALL show a **score explainer** and **legend** (see `playtest-v2/ui.md`) so no number is unexplained. (PT-U8, PT-U9)
 5. THE hosted demo SHALL load with no login and no install and start the title splash within 5 seconds. (ON-C1, `harness H6.3`)
 6. THE README front page SHALL give the pitch, the live URL, a 30-second quick start, the two-apps table, the Kiro features table and an architecture diagram in the first screen of scrolling. (ON-D1)
-7. THE demo video, Devpost text, blog and social drafts SHALL use one story, one hook, one number. (ON-D2)
+7. THE demo video, submission text, blog and social drafts SHALL use one story, one hook, one number. (ON-D2)
 
 ## 2. The story (use everywhere)
 

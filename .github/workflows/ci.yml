@@ -1,7 +1,6 @@
 name: CI
 
-# Manual only until GitHub billing on the kakoritz account is fixed (owner decision 2026-11-21).
-# Jobs on push/pull_request were never starting ("recent account payments have failed"), so every PR showed red.
+# Manual only for now (workflow_dispatch).
 # To restore, put back:
 #   push:
 #     branches: [development]

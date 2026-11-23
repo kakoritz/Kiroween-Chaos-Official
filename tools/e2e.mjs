@@ -219,7 +219,7 @@ try {
     let out = ''; p.stdout.on('data', (d) => { out += d; }); p.stderr.on('data', (d) => { out += d; });
     p.on('exit', (code) => done({ code, out }));
   });
-  // Informational on purpose: the live emitters still break many contract rules (OPEN-ITEMS, "Lane A: fix after H0 merges"), so a failing validator would fail every run for a known, separate task.
+  // Informational on purpose: the live emitters still break many contract rules (see docs/DECISIONS.md), so a failing validator would fail every run for a known, separate task.
   check('ordering', `contract validator over ${events.length} events (informational, known gap)`, true, v.code === 0 ? 'no violations' : `violations found, not counted as a failure; run \`npm run validate:events .tmp/e2e/events.jsonl\` (first: ${v.out.split('\n').slice(1, 2).join('').trim().slice(0, 100)})`);
   // seq strictly increasing
   let mono = true;
