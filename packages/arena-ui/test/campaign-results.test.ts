@@ -131,6 +131,11 @@ describe('night casebook', () => {
     expect(nightCases(null)).toEqual([]);
     expect(nightCases('x')).toEqual([]);
   });
+  it('ignores a casebook stamped for another night or none', () => {
+    expect(nightCases({ ...raw, night: 2 }, 5, 2).length).toBe(2);
+    expect(nightCases({ ...raw, night: 1 }, 5, 2)).toEqual([]);
+    expect(nightCases(raw, 5, 2)).toEqual([]);
+  });
   it('renders the section only when there are cases', () => {
     const o = applyResult(n1, { score: 0 }, emptyProgress(), {});
     expect(renderResults(n1, o, {}, [], gear, nights, nightCases(raw))).toContain('Casebook for this night');

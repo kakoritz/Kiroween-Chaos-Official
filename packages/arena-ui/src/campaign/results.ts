@@ -48,7 +48,7 @@ export function mountCampaignResults(stage: HTMLElement, api: ResultsApi, handle
     const nights = c.nights ?? [];
     const night = nights.find((n) => n.id === nightId);
     if (!night) return;
-    const cases = await api.getCasebook?.().then((raw) => nightCases(raw), () => [] as NightCase[]) ?? [];
+    const cases = await api.getCasebook?.().then((raw) => nightCases(raw, 5, night.id), () => [] as NightCase[]) ?? [];
     const o = applyResult(night, summary, loadProgress(store), loadEarned(store));
     saveOutcome(store, o);
     close();

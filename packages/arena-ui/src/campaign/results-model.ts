@@ -167,7 +167,9 @@ export function saveImport(store: Pick<Storage, 'setItem'> | undefined, r: { pro
 export interface NightCase { title: string; verdict: string; fix: string }
 
 /** The Casebook of one night in plain words (GET /api/casebook after a campaign wave): what was thrown at the Crew and how each case ended. */
-export function nightCases(raw: unknown, max = 5): NightCase[] {
+export function nightCases(raw: unknown, max = 5, night?: number): NightCase[] {
+  // The server stamps the night on a campaign casebook; a tournament's (or a stale night's) is not this night's story.
+  if (night !== undefined && (typeof raw !== 'object' || raw === null || (raw as { night?: unknown }).night !== night)) return [];
   const cb = emptyCasebook();
   try { loadCasebook(cb, raw); } catch { return []; }
   return caseRows(cb).slice(0, max).map((r) => ({
