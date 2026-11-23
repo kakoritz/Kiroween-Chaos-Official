@@ -21,7 +21,7 @@ export const CURSE_RESPONSE: Record<CurseKind, string> = {
 };
 
 /** The provider endpoints a curse can lie on. */
-export const CURSE_ENDPOINTS = ['account', 'order', 'charge', 'email', 'store', 'dispatch', 'notify', 'tracking', 'handoff'] as const;
+export const CURSE_ENDPOINTS = ['account', 'order', 'charge', 'email', 'store', 'dispatch', 'notify', 'tracking', 'handoff', 'ticket', 'reply'] as const;
 
 export interface CurseRec { id: string; lane: number; kind: CurseKind; endpoint: string; rate?: number; delayMs?: number; source: 'plan' | 'player' }
 
@@ -53,6 +53,8 @@ export function stageOfCall(service: string, index?: number, app: AppId = 'order
     case 'dispatch': return 'ship';
     case 'tracking': return 'transit';
     case 'handoff': return 'handoff';
+    case 'ticket': return 'assign';
+    case 'reply': return 'notify';
     default: return 'payment';
   }
 }
