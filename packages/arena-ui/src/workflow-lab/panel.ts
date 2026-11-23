@@ -2,7 +2,7 @@
 // copy goes to the clipboard. Nothing is sent anywhere.
 import { copyText } from '../share/share-panel';
 import {
-  HONEST_LABEL, LAB_PARTS, PART_LABEL, PRESETS, ROLES, blankStage, cloneModel, labFiles, matrixView, modelFromYaml, packLines, presetModel, setAllParts, setRole, worstFindings,
+  HONEST_LABEL, LAB_PARTS, PART_LABEL, PRESETS, ROLES, blankStage, cloneModel, labFiles, matrixView, modelFromYaml, packLines, presetModel, reviewView, scenarioLines, setAllParts, setRole, suggestionViews, worstFindings,
   type LabFile, type LabModel, type LabReport,
 } from './model';
 
@@ -121,9 +121,25 @@ export function mountWorkflowLab(root: HTMLElement, run: RunLab, reduced = false
     out.replaceChildren();
     out.append(el('h2', undefined, 'Report'), el('p', 'wl-honest', r.label));
     for (const line of packLines(r)) out.append(el('p', 'wl-pack', line));
+    const rv = reviewView(r);
+    if (rv) {
+      const box = el('div', 'wl-review'); box.setAttribute('aria-label', rv.label);
+      box.append(el('h3', undefined, `${rv.label}: ${rv.overall}`));
+      const ul = el('ul');
+      for (const s of rv.scores) {
+        const li = el('li', 'wl-score'); li.dataset.score = s.id;
+        const g = el('span', 'wl-stars', s.glyphs); g.setAttribute('aria-label', `${s.stars} of 5 stars`);
+        li.append(el('span', 'wl-score-name', s.label), g);
+        ul.append(li);
+      }
+      box.append(ul);
+      out.append(box);
+    }
+    const scen = scenarioLines(r);
+    if (scen.length) { const sl = el('ul', 'wl-scen'); for (const l of scen) sl.append(el('li', undefined, l)); out.append(el('h3', undefined, 'Boss nights and curses'), sl); }
     const head = el('div', 'wl-head');
     const grade = el('div', `wl-grade wl-grade-${r.grade}`, r.grade); grade.setAttribute('aria-label', `Grade ${r.grade}`);
-    head.append(grade, el('div', undefined, `Reliability ${Math.round(r.reliability * 100)}%. With the suggested parts: grade ${r.gradeWithSuggestions}.`));
+    head.append(grade, el('div', undefined, `Reliability ${Math.round(r.reliability)}%. With the suggested parts: grade ${r.gradeWithSuggestions}.`));
     out.append(head);
 
     const mv = matrixView(r);
@@ -160,9 +176,10 @@ export function mountWorkflowLab(root: HTMLElement, run: RunLab, reduced = false
     out.append(el('h3', undefined, 'Add this part'));
     const sl = el('ul', 'wl-suggest');
     if (!r.suggestions.length) sl.append(el('li', undefined, 'Nothing to add.'));
-    for (const s of r.suggestions) {
-      const li = el('li');
-      li.append(el('strong', undefined, s.part.replace('_', ' ')), document.createTextNode(` (${s.rules.join(', ')}): ${s.why} ${s.how}`));
+    for (const s of suggestionViews(r)) {
+      const li = el('li'); li.dataset.part = s.part;
+      li.append(el('strong', undefined, s.title), document.createTextNode(` (${s.rules.map((x) => `${x.id}: ${x.text}`).join('; ')}): ${s.why} ${s.how}`));
+      if (s.domain) li.append(el('div', 'wl-domain', `In ${r.pack?.title ?? 'this app'}: ${s.domain}`));
       sl.append(li);
     }
     out.append(sl);
@@ -181,7 +198,7 @@ export function mountWorkflowLab(root: HTMLElement, run: RunLab, reduced = false
 
     out.append(el('h3', undefined, 'Run the real thing on real code'));
     const cmds = el('div', 'wl-cmds');
-    for (const c of COMMANDS) {
+    for (const c of r.commands.length ? r.commands : COMMANDS) {
       const line = el('div', 'wl-cmd');
       const cb = el('button', 'wl-btn', 'Copy'); cb.type = 'button';
       const st = el('span', 'wl-ok'); st.setAttribute('role', 'status');

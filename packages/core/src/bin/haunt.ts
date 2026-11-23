@@ -17,7 +17,8 @@ import { parseCommandLine } from '../../../haunt/src/adapters';
 import { writeBadgeFiles, writeImproveFiles } from '../../../haunt/src/share';
 import { startProvider } from '../provider/server';
 import { lintSpecDir, renderLint } from '../../../haunt/src/miner/specs';
-import { monkeyCommand, stopCommand } from '../../../haunt/src/monkey/cli';
+import { monkeyCommand, stopCommand, watchCommand } from '../../../haunt/src/monkey/cli';
+import { initCommand, packCommand } from '../../../haunt/src/packs/cli';
 
 const argv = process.argv.slice(2);
 const cmd = argv[0];
@@ -365,6 +366,18 @@ if (cmd === 'badge') {
   process.exitCode = compare();
 } else if (cmd === 'monkey') {
   process.exitCode = await monkeyCommand(argv.slice(1));
+} else if (cmd === 'validate') {
+  const file = resolve(argv[1] && !argv[1].startsWith('--') ? argv[1] : 'haunt.yaml');
+  const v = loadHauntConfig(file);
+  if (v.ok) console.log(`${file}: valid (${v.config.stages.length} stages)`);
+  else console.error([`${file}: invalid`, ...v.errors.map((e) => `  ${e}`)].join('\n'));
+  process.exitCode = v.ok ? 0 : 1;
+} else if (cmd === 'watch') {
+  process.exitCode = await watchCommand(argv.slice(1));
+} else if (cmd === 'pack') {
+  process.exitCode = await packCommand(argv.slice(1));
+} else if (cmd === 'init') {
+  process.exitCode = initCommand(argv.slice(1));
 } else if (cmd === 'stop') {
   process.exitCode = await stopCommand(argv.slice(1));
 } else if (cmd === 'ramp') {
@@ -375,6 +388,9 @@ if (cmd === 'badge') {
   console.log('       npm run haunt -- badge <run-id|report.json> [--out dir] | --improve <improve-report.json>');
   console.log('       npm run haunt -- spec-lint <.kiro/specs/hardening-run>');
   console.log('       npm run haunt -- monkey --mode observe|staging|prod-guarded [--config file] [--dry-run] | stop  (see docs/PRODUCTION-MODE.md)');
+  console.log('       npm run haunt -- watch --mode observe|staging|prod-guarded [--speed 1..100] [--rounds N] [--config file]  (non-stop chaos; Ctrl+C stops)');
+  console.log('       npm run haunt -- validate [haunt.yaml]');
+  console.log('       npm run haunt -- pack new <id> | list | check <id>;  npm run haunt -- init [--pack id]  (see docs/PACKS.md)');
   console.log('       npm run haunt -- improve [--url http://127.0.0.1:7070] [--seed N] [--rounds JSON] [--speed N] [--pace slow]');
   process.exitCode = cmd ? 2 : 0;
 }

@@ -49,6 +49,23 @@ export interface MonkeyReport {
   audit: AuditEntry[];
 }
 
+/** A live view of a run for the control endpoint and the arena panel. */
+export interface MonkeySnapshot {
+  running: boolean;
+  /** 'idle' before start, 'running' while injecting, else the final status. */
+  status: 'idle' | 'running' | RunStatus;
+  reason: string;
+  injections: number;
+  samples: number;
+  successRate: number;
+  p95Ms: number;
+  /** Latest probe results, oldest first (at most the hypothesis window). */
+  window: Sample[];
+  /** Non-null while the hypothesis is breached. */
+  breach: string | null;
+  audit: AuditEntry[];
+}
+
 export function percentile(values: number[], p: number): number {
   if (!values.length) return 0;
   const s = [...values].sort((a, b) => a - b);
@@ -142,6 +159,7 @@ export class Monkey {
   private done?: Promise<MonkeyReport>;
   private ticking = false;
   private running = false;
+  private final?: { status: RunStatus; reason: string };
 
   constructor(private readonly o: MonkeyOptions) {
     this.c = o.config;
@@ -152,6 +170,16 @@ export class Monkey {
   get active(): boolean { return this.running && !this.ending; }
 
   plan(): DryRunItem[] { return evaluatePlan(this.c); }
+
+  snapshot(auditTail = 20): MonkeySnapshot {
+    const ok = this.window.filter((s) => s.ok).length;
+    return {
+      running: this.active, status: this.final?.status ?? (this.running ? 'running' : 'idle'), reason: this.final?.reason ?? '',
+      injections: this.injected, samples: this.total, successRate: this.window.length ? ok / this.window.length : 1,
+      p95Ms: percentile(this.window.map((s) => s.ms), 95), window: [...this.window],
+      breach: this.final ? null : judge(this.c.hypothesis, this.window), audit: this.entries.slice(-auditTail),
+    };
+  }
 
   private log(event: AuditEntry['event'], extra: Partial<AuditEntry> = {}): void {
     const e: AuditEntry = { ts: new Date(this.now()).toISOString(), who: this.who, mode: this.c.mode, event, ...extra };
@@ -234,6 +262,7 @@ export class Monkey {
   private finish(status: RunStatus, reason: string, last: 'refused' | 'duration' | 'end'): void {
     if (this.ending) return;
     this.ending = true;
+    this.final = { status, reason };
     if (this.ticker) clearInterval(this.ticker);
     if (this.durationTimer) clearTimeout(this.durationTimer);
     if (this.deadMan) clearTimeout(this.deadMan);

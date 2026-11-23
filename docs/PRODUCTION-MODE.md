@@ -54,6 +54,51 @@ only, never a third-party system.
 9. **Dead-man timer.** If no probe round completes and no `/heartbeat` arrives within `deadManMs`, the monkey removes
    every injection by itself. Every proxy rule also expires after `maxDurationMs`.
 
+## Non-stop: `haunt watch`
+
+```
+haunt watch --mode observe|staging|prod-guarded [--speed 1..100] [--rounds N] [--round-ms N] [--config file.yaml]
+            [--upstream URL] [--probe-path /api/items] [--patterns .haunt/patterns.json] [--specs .kiro/specs]
+            [--report .haunt/watch-report.json] [--control-port N]
+```
+
+`watch` runs monkey rounds back to back until you stop it. Each round is one monkey run (the same guard rails apply); its
+probe results become events for the pattern miner.
+
+- **Speed.** `--speed` is 1 to 100 in `observe` and `staging`: a round waits `round-ms / speed`, and probes and the per-round
+  duration cap shrink by the same factor. **`prod-guarded` runs at 1x only**; any other speed is refused before anything
+  starts (exit code 2). A round is capped at 10 s, so the watch keeps cycling.
+- **Pattern store.** Every round is mined into `.haunt/patterns.json` (the same store the tournament and `improve` use), so
+  patterns accumulate across rounds and across restarts. Failed probes show as the "endpoint fails often" shape; a steady-state
+  breach is recorded as an outage window.
+- **Fix specs.** When a pattern qualifies (count 3, any lost order, or over 30 s of downtime) the watch writes
+  `.kiro/specs/hardening-<run>-<n>/` with the same writer as the tournament: evidence, root cause, smallest patch,
+  regression test, acceptance, rollback. It never applies a spec, and it writes one spec per pattern until that pattern is
+  verified and regresses. Run `haunt spec-lint` on a folder to check it.
+- **Rolling report.** `.haunt/watch-report.json` is rewritten after every round: rounds, errors, injections, rolling success
+  rate over the last 50 rounds, pattern counts, specs written, the last rounds.
+- **Stopping.** Ctrl+C (SIGINT or SIGTERM), `haunt stop`, or `POST /stop` on the control port end the watch: the round in
+  flight is aborted (its monkey removes every injection first), the report is written with the stop reason and the ports are
+  released. The dead-man timer still applies inside each round.
+
+## The arena panel and the control endpoints
+
+The arena header has a **Monkey** button. The panel has a mode selector (observe, staging, prod-guarded), the guard-rail
+summary of the mode, a large **KILL SWITCH**, the steady-state meter (the measured SLI against its threshold) and the audit
+log tail. It talks to the live server (`npm run live`), which runs the monkey against the **built-in demo target only**;
+the mock server and the hosted page have no monkey routes and the panel says so.
+
+| Route | What |
+|---|---|
+| `GET /api/monkey[?audit=N]` | State: mode, running, status, reason, injections, guard rails, steady-state meter, audit tail, last stop time |
+| `GET /api/monkey/preview?mode=M` | Guard rails and the dry-run plan of a mode, without running it |
+| `POST /api/monkey/start {mode}` | Start a run on the demo target (400 bad mode, 409 while one is running) |
+| `POST /api/monkey/stop` | The kill switch: every injection removed before it answers; idle is not an error |
+
+A panel run uses a 60 s duration cap, a success-rate hypothesis (80 percent in observe and staging, 95 percent in
+prod-guarded), a UTC all-day window for prod-guarded (it is a demo) and the prod-guarded ceilings and allowlist. The CLI
+control port (`--control-port`) also serves `GET /snapshot`.
+
 ## What it does not guarantee
 
 - **It is not a safety certificate.** The guard rails reduce risk; they do not remove it. Adding latency or errors to
@@ -73,6 +118,7 @@ only, never a third-party system.
 - **It does not corrupt, delete or replay data**, and it does not know whether your service is idempotent. Latency can
   cause client retries; if the service double-writes on retry, that is a finding, but it also happens to real data.
   Use synthetic accounts for write endpoints, or do not allowlist them.
+- **The watch speeds up only the demo and staging.** Speed multiplies how fast rounds run, never how hard they hit; prod-guarded stays at 1x.
 - **Model-based packs are not production mode.** The streaming and ticketing packs and the Workflow Lab preset are
   labelled model-based; they never touch a real system.
 - **No authentication on the control port beyond binding to 127.0.0.1.** Anyone on that machine can stop (or heartbeat)

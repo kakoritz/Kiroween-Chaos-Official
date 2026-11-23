@@ -1,10 +1,10 @@
 // Scenario packs (PK-C1): a pack is data (stages, faults, creature names, reviews, tiers). The engine builds a generic bot
 // from the stages and the five parts (the Workflow Lab model). No node imports: this bundles for the browser.
 // Spec: .kiro/specs/packs/spec.md sections 2 and 3.
-import { LAB_CREATURE_IDS, LAB_PARTS, ROLES, validateLabModel, type LabModel, type LabPart, type LabStage, type LabPackMeta, type PackFault, type PackBoss } from '../lab/model';
+import { LAB_CREATURE_IDS, LAB_FAULT_IDS, LAB_PARTS, ROLES, validateLabModel, type LabModel, type LabPart, type LabStage, type LabPackMeta, type PackFault, type PackBoss, type PackCurse, type PackReviews } from '../lab/model';
 import { parseYaml } from '../config/yaml';
 
-export type { LabPackMeta, PackFault, PackBoss };
+export type { LabPackMeta, PackFault, PackBoss, PackCurse, PackReviews };
 export interface Pack {
   id: string;
   title: string;
@@ -12,8 +12,8 @@ export interface Pack {
   stages: LabStage[];
   ledger: { id: string }[];
   faults: PackFault[];
-  curses: { id: string; endpoint: string }[];
-  reviews: { label: string; subscores: string[] };
+  curses: PackCurse[];
+  reviews: PackReviews;
   bosses: PackBoss[];
   tiers: Partial<Record<LabPart, string>>;
 }
@@ -71,7 +71,24 @@ export function validatePack(raw: unknown): string[] {
     errs.push('reviews: need label and a list of subscores');
   }
   if (raw.ledger !== undefined && !(Array.isArray(raw.ledger) && raw.ledger.every((l) => isObj(l) && isStr(l.id)))) errs.push('ledger: list of {id}');
-  if (raw.curses !== undefined && !(Array.isArray(raw.curses) && raw.curses.every((c) => isObj(c) && isStr(c.id) && isStr(c.endpoint)))) errs.push('curses: list of {id, endpoint}');
+  if (raw.curses !== undefined) {
+    if (!Array.isArray(raw.curses)) errs.push('curses: list of {id, endpoint, stage?, fault?}');
+    else raw.curses.forEach((c, i) => {
+      const p = `curses[${i}]`;
+      if (!isObj(c) || !isStr(c.id) || !isStr(c.endpoint)) { errs.push(`${p}: need id and endpoint`); return; }
+      if (c.stage !== undefined && !(isStr(c.stage) && ids.has(c.stage))) errs.push(`${p}.stage: must be a declared stage id`);
+      if (c.fault !== undefined && !(isStr(c.fault) && LAB_FAULT_IDS.includes(c.fault))) errs.push(`${p}.fault: one of ${LAB_FAULT_IDS.join(', ')}`);
+    });
+  }
+  if (isObj(raw.reviews) && raw.reviews.stages !== undefined) {
+    const rs = raw.reviews.stages;
+    const subs = Array.isArray(raw.reviews.subscores) ? raw.reviews.subscores.map(String) : [];
+    if (!isObj(rs)) errs.push('reviews.stages: map of subscore to stage ids');
+    else for (const [k, v] of Object.entries(rs)) {
+      if (!subs.includes(k)) errs.push(`reviews.stages.${k}: not a declared subscore`);
+      else if (!Array.isArray(v) || v.length === 0 || !v.every((x) => ids.has(String(x)))) errs.push(`reviews.stages.${k}: list of declared stage ids`);
+    }
+  }
   if (raw.bosses !== undefined) {
     if (!Array.isArray(raw.bosses)) errs.push('bosses: expected a list');
     else raw.bosses.forEach((b, i) => {
@@ -110,7 +127,7 @@ export function parsePack(text: string): PackResult {
 export function packMeta(p: Pack): LabPackMeta {
   const creatures: Record<string, string> = {};
   for (const f of p.faults) if (!(f.art in creatures)) creatures[f.art] = f.creature;
-  return { id: p.id, title: p.title, modelBased: p.modelBased, creatures, review: p.reviews, tiers: p.tiers, faults: p.faults, bosses: p.bosses };
+  return { id: p.id, title: p.title, modelBased: p.modelBased, creatures, review: p.reviews, tiers: p.tiers, faults: p.faults, bosses: p.bosses, curses: p.curses };
 }
 
 /** The generic bot model for a pack: stages from the pack, parts from a tier (or none), labels carried along. */

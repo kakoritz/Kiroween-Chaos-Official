@@ -24,6 +24,9 @@ import { countAnswer, emptyCurseLedger, isClass } from '../src/arena/curses';
 import { PatternsPanel } from '../src/arena/patterns-view';
 import '../src/arena/patterns.css';
 import { LegendModal } from '../src/arena/legend-modal';
+import { MonkeyPanel } from '../src/monkey/panel';
+import { monkeyClient } from '../src/monkey/client';
+import '../src/monkey/monkey.css';
 import { ArenaSound } from '../src/sound';
 import { FrameSampler, perfSecondsFromQuery } from '../src/perf';
 import { KEY_HELP, chaosAnnouncement, keyAction, nextMode, renderLegend } from '../src/arena/keys';
@@ -69,6 +72,7 @@ root.innerHTML = `
       <button class="btn btn--ghost" id="tour-open" type="button" title="Guided tour">Tour</button>
       <button class="btn btn--ghost" id="keys-btn" type="button" aria-expanded="false" aria-controls="keys-pop" aria-label="Keys" title="Keyboard shortcuts and state legend">&#9000;</button>
       <button class="btn btn--ghost" id="patterns-btn" type="button" title="Recurring trouble, fix specs and the improve loop">Patterns<span class="pt-badge hidden" id="patterns-badge"></span></button>
+      <button class="btn btn--ghost" id="monkey-btn" type="button" title="Chaos monkey: modes, guard rails and the kill switch">Monkey<span class="mk-badge hidden" id="monkey-badge">ON</span></button>
       <button class="btn btn--ghost" id="legend-btn" type="button" aria-expanded="false" title="What do R J I B Q mean?">?</button>
       <span class="gear-wrap" id="gear-wrap"><button class="btn btn--ghost" id="gear-btn" type="button" title="Settings: chaos, pace, speed, sound, motion" aria-label="Settings">&#9881;</button></span>
       <span class="pace-tag" id="pace-tag" title="Slow pace is on"></span>
@@ -313,6 +317,9 @@ const patternsPanel = new PatternsPanel(stageEl, {
 patternsBtn.addEventListener('click', () => void patternsPanel.open());
 roundCard.muted = () => patternsPanel.running;
 finalScreen.muted = () => patternsPanel.running;
+const monkeyBadge = $('monkey-badge');
+let monkeyPanel: MonkeyPanel | null = null;
+$<HTMLButtonElement>('monkey-btn').addEventListener('click', () => void monkeyPanel?.open());
 const casebook = emptyCasebook();
 const casebookHost = { laneTitle: tournamentHost.laneTitle, stageLabel: tournamentHost.stageLabel };
 scene.lessonInfo = (lane) => {
@@ -425,6 +432,7 @@ async function loadState() {
     }
     await reconcile();
     void patternsPanel.hydrate();
+    void monkeyPanel?.reload(true);
   } catch (e) { showError(e); }
   paintBadge();
   paintDemo();
@@ -460,6 +468,8 @@ async function boot() {
   const inpage = (window as unknown as { __haunt?: HauntInPage }).__haunt ?? null;
   const base = inpage ? '' : await resolveHttpBase(apiBaseFromQuery(search));
   api = createApi({ inpage, baseUrl: base });
+  // PK-U3: the monkey panel needs the live server; the in-page (hosted) build has none and says so.
+  monkeyPanel = new MonkeyPanel(stageEl, { client: monkeyClient(inpage ? null : base), onBadge: (on) => monkeyBadge.classList.toggle('hidden', !on), onError: showError });
   let pace: Pace = DEFAULT_PACE;
   const startWave0 = api.startWave.bind(api);
   api.startWave = (o) => startWave0({ pace, ...o });

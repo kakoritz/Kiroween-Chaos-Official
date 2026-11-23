@@ -14,6 +14,7 @@ export const PRESETS: readonly { id: string; label: string }[] = [
   { id: 'payments', label: 'Payments' },
   { id: 'report', label: 'Report generator' },
   { id: 'streaming', label: 'Streaming service (model-based pack)' },
+  { id: 'ticketing', label: 'Ticket desk (model-based pack)' },
 ];
 
 export const PART_LABEL: Record<LabPart, string> = {
@@ -109,6 +110,55 @@ export function labFiles(report: LabReport): LabFile[] {
     { name: 'haunt.yaml', mime: 'text/yaml', label: 'haunt.yaml', text: report.yaml },
     ...shareFiles(report).map((f) => ({ name: f.name as string, mime: f.mime, label: f.label, text: f.text })),
   ];
+}
+
+/** The reviewer rules the lab's findings come from (rules R1 to R8 of the real reviewer), in plain words. */
+export const RULE_TEXT: Record<string, string> = {
+  R1: 'a side effect ran twice',
+  R2: 'a short error ended an order that a retry would have saved',
+  R3: 'a failing dependency was hammered',
+  R4: 'one unhandled error halted the whole lane',
+  R5: 'a missing input file failed the order',
+  R6: 'recovery took longer than the target',
+  R7: 'the journal and the ledger disagree',
+  R8: 'a failure inside a failure was not handled',
+};
+
+export interface SuggestionView { part: string; title: string; rules: { id: string; text: string }[]; why: string; how: string; domain?: string; alreadyOn: boolean; stages: string[] }
+
+/** "Add this part" with the reviewer rules it answers and, for a pack, what the part means in that domain. */
+export function suggestionViews(report: Pick<LabReport, 'suggestions' | 'pack'>): SuggestionView[] {
+  return report.suggestions.map((s) => {
+    const domain = (report.pack?.tiers as Record<string, string> | undefined)?.[s.part];
+    return {
+      part: s.part, title: s.part.replace(/_/g, ' '), rules: s.rules.map((id) => ({ id, text: RULE_TEXT[id] ?? 'flagged by the reviewer' })),
+      why: s.why, how: s.how, alreadyOn: s.alreadyOn, stages: s.stages, ...(domain ? { domain } : {}),
+    };
+  });
+}
+
+export interface ReviewView { label: string; overall: string; scores: { id: string; label: string; stars: number; glyphs: string; stages: string[] }[] }
+const glyphs = (n: number): string => '★'.repeat(n) + '☆'.repeat(5 - n);
+
+/** The pack's review (for example "Viewer rating") with its sub-scores as stars. Null for plain presets. */
+export function reviewView(report: Pick<LabReport, 'review'>): ReviewView | null {
+  const r = report.review;
+  if (!r) return null;
+  return {
+    label: r.label, overall: `${r.overall.toFixed(1)} of 5`,
+    scores: r.subscores.map((s) => ({ id: s.id, label: s.id.replace(/_/g, ' '), stars: s.stars, glyphs: glyphs(s.stars), stages: s.stages })),
+  };
+}
+
+/** Bosses as sweep scenarios and curses as persistent traits, one line each. */
+export function scenarioLines(report: Pick<LabReport, 'bosses' | 'curses'>): string[] {
+  const out: string[] = [];
+  for (const b of report.bosses) {
+    const bad = b.cells.filter((c) => c.outcome !== 'pass' && c.outcome !== 'recovered_late').map((c) => `${c.stage} (${c.creature})`);
+    out.push(`Boss ${b.label}: ${b.survived ? 'survived' : `fell at ${bad.join(', ') || b.hits.join(', ')}`}${b.story ? `. ${b.story}` : ''}`);
+  }
+  for (const c of report.curses) out.push(`Curse ${c.id.replace(/_/g, ' ')} on ${c.stage} (${c.endpoint}, always ${c.fault.replace(/_/g, ' ')}): ${c.outcome.replace(/_/g, ' ')}`);
+  return out;
 }
 
 /** Pack labels for a report: the pack title, creature names, the review name and sub-scores. Empty for plain presets. */
