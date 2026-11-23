@@ -148,7 +148,7 @@ kiro-crew-app/        Kiro Crew app package
 .kiro/                specs, steering, hooks, agents
 ```
 
-More docs: [DEV-SETUP](docs/DEV-SETUP.md), [JUDGES](docs/JUDGES.md), [SPEC-MAP](docs/SPEC-MAP.md), [OPEN-ITEMS](docs/OPEN-ITEMS.md), [SUBMISSION-CHECKLIST](docs/SUBMISSION-CHECKLIST.md).
+More docs: [DEV-SETUP](docs/DEV-SETUP.md), [JUDGES](docs/JUDGES.md), [SPEC-MAP](docs/SPEC-MAP.md), [OPEN-ITEMS](docs/OPEN-ITEMS.md), [SUBMISSION-CHECKLIST](docs/SUBMISSION-CHECKLIST.md), [HOW-KIRO-BUILT-THIS](docs/HOW-KIRO-BUILT-THIS.md).
 
 ## License
 
