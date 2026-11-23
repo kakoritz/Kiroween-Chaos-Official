@@ -92,7 +92,7 @@ html, body { overflow: hidden; }
 .seg-b:last-child { border-right: 0; }
 .seg-b:hover { color: var(--bone); }
 .seg-b:focus-visible { outline: 3px solid var(--bone); outline-offset: -3px; }
-.seg-b--on { background: var(--hex); color: #fff; }
+.seg-b--on { background: #6d3fd6; color: #fff; }
 .seg-b[disabled] { opacity: 0.5; cursor: default; }
 .cm-pop { position: absolute; left: 0; top: 60px; width: 380px; padding: 14px 16px; background: var(--stone); border: 2px solid var(--hex); border-radius: 12px; z-index: 20; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 .cm-row { display: flex; justify-content: space-between; align-items: baseline; color: var(--muted); font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; margin: 2px 0 6px; }
@@ -115,7 +115,7 @@ html, body { overflow: hidden; }
 .boss.boss--in { transform: translateY(0); opacity: 1; }
 .boss.boss--still { transition: none; }
 .boss-sprite { position: absolute; left: 14px; top: -8px; width: 72px; height: 72px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
-.boss-tag { font-weight: 800; font-size: 14px; letter-spacing: 0.22em; color: #fff; background: var(--hex); padding: 3px 10px; border-radius: 6px; }
+.boss-tag { font-weight: 800; font-size: 14px; letter-spacing: 0.22em; color: #fff; background: #6d3fd6; padding: 3px 10px; border-radius: 6px; }
 .boss-name { font-weight: 800; font-size: 24px; letter-spacing: 0.04em; }
 .boss-line { color: var(--muted); font-size: 18px; text-transform: uppercase; letter-spacing: 0.12em; }
 .boss-status { margin-left: auto; font: 800 24px ui-monospace, 'Cascadia Code', Menlo, monospace; color: var(--warn); font-variant-numeric: tabular-nums; }
@@ -210,3 +210,5 @@ body.present .rb-row, body.present .lg td, body.present .lg th, body.present .tk
 .hdr { gap: 8px; }
 .hdr .as .seg-b { padding: 6px 12px; }
 #mute, #keys-btn { padding: 7px 10px; }
+/* PT-U12: reduced motion also stills the decorative loops in the shell. */
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; } }
