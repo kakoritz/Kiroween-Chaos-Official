@@ -49,7 +49,7 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | PT-C7 | playtest-v2 | World events. (PT-C7a done: smsdown, ppdown, updatesdown faults with outcome... | done | - | - |
 | PT-C8 | playtest-v2 | Wrong order and decisions. (PT-C8a done: ordertypo fault and prankster in the... | open | - | - |
 | PT-C9 | playtest-v2 | Property and unit tests. P9 to P18 plus the worked examples. | done | - | - |
-| PT-C10 | playtest-v2 | Fixtures and storyboards. Update STORYBOARDS.md with travel, ceremony, review... | open | - | - |
+| PT-C10 | playtest-v2 | Fixtures and storyboards. Update STORYBOARDS.md with travel, ceremony, review... | done | - | - |
 | PT-C11 | playtest-v2 | Reports and CLI. Wave report laps and stars, sweep columns for the world faul... | done | - | - |
 | PT-C12 | playtest-v2 | Mock templates. Rows for table L and the decision flow in outcomes.json; TCAN... | done | - | - |
 | PT-C13 | playtest-v2 | Inbox mapping. Decide which new faults apply to the Python inbox (suggest non... | done | - | - |

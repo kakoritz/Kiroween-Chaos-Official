@@ -100,7 +100,7 @@ export class DetailNormalizer {
       case 'stage_progress': set('pct', 50); set('label', ev.stage ?? 'working'); break;
       case 'stage_done': set('ms', Math.max(0, t - (l.stageStart.get(key) ?? t))); set('skipped', false); break;
       case 'stage_fail': set('error', 'failed'); set('retryable', true); set('attempt', 1); break;
-      case 'chaos': set('depth', 1); set('source', 'manual'); set('scope', 'inner'); set('injectedAt', t); break;
+      case 'chaos': set('depth', 1); set('source', 'user'); set('scope', 'inner'); set('injectedAt', t); break;
       case 'process_dead': set('reason', 'killed'); set('restartInMs', 0); break;
       case 'process_up': l.depth = 0; set('attempt', 1); break;
       case 'recover_start': l.depth = Math.min(5, l.depth + 1); l.recoverStart = t; set('depth', l.depth); break;
