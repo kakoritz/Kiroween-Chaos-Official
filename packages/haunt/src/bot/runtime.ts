@@ -97,15 +97,18 @@ export async function runBot(def: BotDef): Promise<void> {
   // ---- stdout channel, with event bookkeeping for the progress heartbeat and park reasons ----
   let cur: { order: string; stage: string; at: number } | null = null;
   let lastParkReason = 'breaker_open';
+  let paused = false;
   const send = (m: Record<string, unknown>) => {
     if (m.type === 'progress') m = { ...m, type: 'stage_progress' };
-    if (m.type === 'stage_start') cur = { order: String(m.order), stage: String(m.stage), at: now() };
+    if (m.type === 'stage_start') { cur = { order: String(m.order), stage: String(m.stage), at: now() }; paused = false; }
+    else if (m.type === 'stage_fail') paused = true; // no progress between a failure and its recovery (PROTOCOL.md rule 3)
+    else if (m.type === 'recover_done') paused = false;
     else if (m.type === 'stage_done' || m.type === 'order_done' || m.type === 'order_failed' || m.type === 'order_parked') cur = null;
     if (m.type === 'order_parked') lastParkReason = String((m.detail as { reason?: string } | undefined)?.reason ?? 'breaker_open');
     process.stdout.write(`${JSON.stringify(m)}\n`);
   };
   const heartbeat = setInterval(() => {
-    if (!cur) return;
+    if (!cur || paused) return;
     const def_ = STAGES.find((s) => s.id === cur!.stage);
     const pct = Math.min(95, Math.floor(((now() - cur.at) / (def_?.max ?? 1000)) * 100));
     send({ type: 'stage_progress', order: cur.order, stage: cur.stage, detail: { pct, label: def_?.label ?? cur.stage } });
@@ -344,6 +347,7 @@ export async function runBot(def: BotDef): Promise<void> {
       parked.delete(id);
       send({ type: 'order_resumed', order: id });
       resumed = true;
+      break; // one at a time: its order_start must follow at once (PROTOCOL.md rule 23)
     }
     return resumed;
   };

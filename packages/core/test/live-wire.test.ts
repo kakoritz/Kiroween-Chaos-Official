@@ -90,3 +90,41 @@ describe('ledger rows on the live stream (PROTOCOL.md rule 8)', () => {
     expect(evs.find((x) => x.type === 'chaos')!.detail.creature).toBe('wraith');
   });
 });
+
+describe('stage on park, fail and resume; skipped only for a bare pair (PROTOCOL.md rules 3, 11, 23, 27)', () => {
+  it('order_parked, order_failed and order_resumed carry the stage the order was in', () => {
+    const out = shapeAll([
+      { type: 'order_start', order: 'ord-0001' },
+      { type: 'stage_start', order: 'ord-0001', stage: 'payment' },
+      { type: 'order_parked', order: 'ord-0001', detail: { reason: 'breaker_open' } },
+      { type: 'order_resumed', order: 'ord-0001' },
+      { type: 'order_start', order: 'ord-0001' },
+      { type: 'stage_start', order: 'ord-0001', stage: 'submit' },
+      { type: 'order_failed', order: 'ord-0001', detail: { reason: 'boom' } },
+    ]);
+    const by = (t: string) => out.find((e) => e.type === t)!;
+    expect(by('order_parked').detail).toMatchObject({ stage: 'payment', reason: 'breaker_open' });
+    expect(by('order_resumed').detail).toMatchObject({ stage: 'payment' });
+    expect(by('order_failed').detail).toMatchObject({ stage: 'submit', error: 'boom' });
+  });
+
+  it('a skipped stage_done after progress does not get a second stage_start and is not a skip', () => {
+    const out = shapeAll([
+      { type: 'order_start', order: 'ord-0001' },
+      { type: 'stage_start', order: 'ord-0001', stage: 'submit' },
+      { type: 'stage_progress', order: 'ord-0001', stage: 'submit', detail: { pct: 10 } },
+      { type: 'stage_done', order: 'ord-0001', stage: 'submit', detail: { skipped: true } },
+    ]);
+    expect(out.filter((e) => e.type === 'stage_start')).toHaveLength(1);
+    expect(out.at(-1)!.detail.skipped).toBe(false);
+  });
+
+  it('a bare replayed pair stays skipped', () => {
+    const out = shapeAll([
+      { type: 'order_start', order: 'ord-0001' },
+      { type: 'stage_done', order: 'ord-0001', stage: 'create', detail: { skipped: true } },
+    ]);
+    expect(out.map((e) => e.type)).toEqual(['order_start', 'stage_start', 'stage_done']);
+    expect(out[2]!.detail.skipped).toBe(true);
+  });
+});

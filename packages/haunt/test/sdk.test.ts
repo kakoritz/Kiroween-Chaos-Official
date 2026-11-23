@@ -262,7 +262,13 @@ describe('retry and breaker', () => {
     expect(w.count('charge')).toBe(0);
     // While open, the next attempt does not call the provider.
     expect(await runOrder(s, PHOENIX)).toBe('parked');
-    expect(w.msgs.filter((m) => m.type === 'stage_fail')).toHaveLength(4);
+    // Parking on an open breaker is still a stage_fail followed by order_parked{stage} (PROTOCOL.md rule 3), with no provider call behind it.
+    const fails = w.msgs.filter((m) => m.type === 'stage_fail');
+    expect(fails).toHaveLength(5);
+    expect(fails[4]).toMatchObject({ stage: 'payment', detail: { error: 'breaker_open' } });
+    const parks = w.msgs.filter((m) => m.type === 'order_parked');
+    expect(parks.map((m) => m.detail)).toEqual([{ stage: 'payment', reason: 'breaker_open' }, { stage: 'payment', reason: 'breaker_open' }]);
+    expect(w.count('charge')).toBe(0);
     w.now += 5000;
     expect(await runOrder(s, PHOENIX)).toBe('done');
     expect([w.count('account'), w.count('charge'), w.count('dispatch')]).toEqual([1, 1, 1]);
