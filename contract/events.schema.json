@@ -209,6 +209,7 @@
         "dedupe",
         "triage",
         "assign",
+        "sla",
         "notify",
         "escalate",
         "resolve",
