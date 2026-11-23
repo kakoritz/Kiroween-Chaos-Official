@@ -52,7 +52,7 @@ git clone https://github.com/kakoritz/Kiroween-Chaos.git C:\dev\Kiroween-Chaos-u
 | `npm run mock` | Mock server on 7070 (fixtures plus simulator) |
 | `npm run live` | Live server on 7070 (real engine) and the fake provider on 7071. `HAUNT_PORT` and `HAUNT_PROVIDER_PORT` move both, so a second server can run beside the first |
 | `npm run ui:dev` | Vite dev server on 5173, API at 7070 |
-| `npm run ui:build` | Builds `packages/arena-ui/dist` |
+| `npm run ui:build` | Builds `packages/arena-ui/dist`. The folder is gitignored and untracked, so building leaves a clean tree |
 | `npm run build:bots` | esbuild bundles `dist/bots/<tier>.js` (Rookie to Phoenix, the campaign Crew, the hero demo bundles). Needed once before the live server or `npm run e2e`: the live lanes spawn these bundles |
 | `npm run e2e` | End-to-end smoke (`tools/e2e.mjs`): starts the live server on private ports (default 7171 and 7172, `HAUNT_PORT` and `HAUNT_PROVIDER_PORT` override), plays the hero demo wave, campaign night 1, a tournament at speed 4 pressing Next between rounds, the improve loop and an app switch to the inbox, then checks invariants on the event stream and prints a pass/fail table. About 6 to 10 minutes. Hardening specs the run writes under `.kiro/specs/` are removed afterwards (never applied). `-- --quick` skips the improve loop. Exit code 1 on any failure; the event stream is kept in `.tmp/e2e/events.jsonl` |
 | `npm run demo` | Builds if needed, starts the server (live if available, else mock) and opens the arena in demo mode. `npm run demo -- --check` starts, verifies and exits (used by fresh-clone) |
