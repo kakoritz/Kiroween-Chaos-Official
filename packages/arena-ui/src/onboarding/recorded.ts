@@ -75,6 +75,8 @@ export function addRecordedRuns(facade: HauntInPage, hub: Hub, load: Loader = fe
   const baseStartDemo = f.startDemo.bind(f);
   f.startDemo = async (script: string, speed?: number) => { token++; player.clear(); return baseStartDemo(script, speed); };
 
+  /** The tournament and improve recordings are orders-app runs: leave the inbox skin first so stages, ledger and ticker agree. */
+  const useOrders = () => { if (hub.app !== 'orders') hub.app = 'orders'; };
   const playRound = () => {
     const t = tour!;
     hub.awaitingNext = false;
@@ -101,6 +103,7 @@ export function addRecordedRuns(facade: HauntInPage, hub: Hub, load: Loader = fe
     if (hub.running && player.active) return reject('wave_running', 'a wave is already running');
     const r = await rec<TournamentRec>('tournament');
     token++; player.clear();
+    useOrders();
     hub.reset();
     tour = { segs: segmentsByRound(compressTs(r.events)), idx: 0, rec: r };
     playRound();
@@ -144,6 +147,7 @@ export function addRecordedRuns(facade: HauntInPage, hub: Hub, load: Loader = fe
     const r = await rec<ImproveRec>('improve');
     const keep = new Map(hub.patterns);
     token++; player.clear();
+    useOrders();
     hub.reset();
     for (const [k, v] of keep) hub.patterns.set(k, v);
     improve = { rec: r, startedAt: Date.now(), segs: segmentsByWave(compressTs(r.events)), token };

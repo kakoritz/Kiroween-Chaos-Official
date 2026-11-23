@@ -312,7 +312,7 @@ const finalScreen = new FinalScreen(stageEl, tournamentHost);
 const patternsBtn = $<HTMLButtonElement>('patterns-btn');
 const patternsBadge = $('patterns-badge');
 const patternsPanel = new PatternsPanel(stageEl, {
-  getPatterns: () => api.getPatterns(), writeSpecs: () => api.writeSpecs(), startImprove: () => api.startImprove({ speed: 4, pace: 'normal' }), getImprove: () => api.getImprove(),
+  getPatterns: () => api.getPatterns(), writeSpecs: () => api.writeSpecs(), startImprove: () => withOrdersApp(() => api.startImprove({ speed: 4, pace: 'normal' }), false), getImprove: () => api.getImprove(),
   stageLabel: tournamentHost.stageLabel, laneTitle: tournamentHost.laneTitle, onError: showError,
   onBadge: (n, running) => { patternsBadge.textContent = running ? '\u21BB' : String(n); patternsBadge.classList.toggle('hidden', !running && n === 0); patternsBadge.classList.toggle('run', running); },
 }, () => reduceMotion.matches || document.body.classList.contains('reduced-motion'));
@@ -405,6 +405,12 @@ function onEvent(ev: ArenaEvent) {
   statsEl.textContent = `${events} events received, last seq ${lastSeq}`;
   paintBadge();
   paintDemo();
+}
+
+/** Tournaments (live and hosted) and the hosted improve recording are orders runs: the server switches to orders itself, so leave the inbox through the switcher first and stages, ledger and ticker agree. */
+async function withOrdersApp<T>(start: () => Promise<T>, always = true): Promise<T> {
+  if ((always || mode === 'browser') && currentApp(await api.getState().catch(() => null)) === 'inbox') await appSwitch?.choose('orders');
+  return start();
 }
 
 async function loadState() {
@@ -533,7 +539,7 @@ async function beginTournament() {
     if (demoRunning) { await api.stopDemo(); demoRunning = false; paintDemo(); }
     if (waveRunning) { try { await api.stopWave(); } catch { /* none running */ } waveRunning = false; }
     waveSummary.suppressNext();
-    await api.startTournament();
+    await withOrdersApp(() => api.startTournament());
     tourActive = true;
   } catch (e) { showError(e); }
 }
