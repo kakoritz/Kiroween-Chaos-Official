@@ -372,7 +372,14 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
   });
   // Ledger rows become `repeat` events for the running wave (design.md section 8: repeats feed the wave grade).
   const repeats = new RepeatDetector();
+  // Set once the bot spawner exists: runs `fn` after the lane's queued bot events, so a provider effect cannot overtake the lane's `process_up` (rule 6).
+  let onLaneQueue: ((lane: string, fn: () => void) => boolean) | undefined;
   const ledgerRow = (row: LedgerRow, replayed = false): void => {
+    if (!record) return;
+    if (onLaneQueue?.(String(row.lane), () => ledgerRowNow(row, replayed))) return;
+    ledgerRowNow(row, replayed);
+  };
+  const ledgerRowNow = (row: LedgerRow, replayed: boolean): void => {
     if (!record) return;
     const kind = EFFECT_KIND[row.kind] ?? row.kind;
     const key = row.key ?? (row.index === null || row.index === undefined ? `${row.order}:${row.kind}` : `${row.order}:${row.kind}:${row.index}`);
@@ -463,6 +470,12 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
       },
     });
     resetTravel = () => { epoch++; chains.clear(); travels.clear(); };
+    onLaneQueue = (lane, fn) => {
+      if (opts.travel === false || !chains.has(lane)) return false;
+      const my = epoch;
+      chains.set(lane, chains.get(lane)!.then(() => { if (my === epoch) fn(); }));
+      return true;
+    };
   }
 
   const live: LiveEngine = {

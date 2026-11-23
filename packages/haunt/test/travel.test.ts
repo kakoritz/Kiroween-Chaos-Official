@@ -10,6 +10,21 @@ describe('travel constants', () => {
   });
 });
 
+describe('LaneTravel process_up (rule 6)', () => {
+  it('holds process_up until restartInMs after the recorded process_dead', async () => {
+    let clock = 0;
+    const t = new LaneTravel(() => travelAt('normal', 4), 'handoff', () => clock, async (ms) => { clock += ms; });
+    const go = async (ev: Record<string, any>) => { await t.wait(ev); const e = t.annotate(ev); return { e, at: clock }; };
+    const dead = await go({ type: 'process_dead', detail: { reason: 'crash', restartInMs: 1000 } });
+    clock += 3; // the bot's own sleep already ran while the queue was backed up
+    const up = await go({ type: 'process_up', detail: { attempt: 2 } });
+    expect(up.at - dead.at).toBeGreaterThanOrEqual(1000);
+    clock += 50;
+    const again = await go({ type: 'process_up', detail: { attempt: 3 } });
+    expect(again.at - up.at).toBe(50);
+  });
+});
+
 describe('LaneTravel (P13)', () => {
   const run = (pace: string, speed: number) => {
     let clock = 0;
