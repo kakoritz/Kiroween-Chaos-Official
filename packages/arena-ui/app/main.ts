@@ -26,7 +26,7 @@ import '../src/arena/patterns.css';
 import { LegendModal } from '../src/arena/legend-modal';
 import { ArenaSound } from '../src/sound';
 import { FrameSampler, perfSecondsFromQuery } from '../src/perf';
-import { KEY_HELP, chaosAnnouncement, keyAction, nextMode, renderLegend } from '../src/arena/keys';
+import { KEY_HELP, chaosAnnouncement, isNextKey, keyAction, nextMode, renderLegend } from '../src/arena/keys';
 import { Splash, splashDecision, splashTarget } from '../src/onboarding/splash';
 import '../src/onboarding/splash.css';
 import { CaptionOverlay, CaptionPlayer, freezeFromQuery } from '../src/onboarding/captions';
@@ -167,7 +167,7 @@ const reviewCards = new ReviewCardView(stageEl, (n) => { const i = vm.lanes.find
 const decisionPopup = new DecisionPopupView(stageEl, (n) => { const i = vm.lanes.findIndex((x) => x.lane === n); const b = i < 0 ? null : laneBoxes(vm.lanes.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET)[i]; return b ? { top: b.top, h: b.h } : null; }, (lane, order, choice) => api.decide(lane, order, choice), (id) => vm.stages.find((s) => s.id === id)?.label ?? id);
 const scoreVisuals = new ScoreVisuals(stageEl, (n) => { const i = vm.lanes.findIndex((x) => x.lane === n); return i < 0 ? null : laneBoxes(vm.lanes.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET)[i] ?? null; });
 const tickerEl = $('ticker');
-const tickerModel = new LaneTickerModel((id) => vm.stages.find((s) => s.id === id)?.label ?? id);
+const tickerModel = new LaneTickerModel((id) => vm.stages.find((s) => s.id === id)?.label ?? id, () => vm.app);
 const ticker = new LaneTickerView($('ticker-body'), tickerModel, {
   tier: (lane) => vm.lanes.find((l) => l.lane === lane)?.tier ?? '',
   open: (lane) => {
@@ -183,6 +183,7 @@ const liveAssertive = $('live-assertive');
 const inspector = new LanePopup($('insp'), {
   stageIds: () => vm.stages.map((s) => s.id),
   stageLabel: (id) => vm.stages.find((s) => s.id === id)?.label ?? id,
+  app: () => vm.app,
   laneInfo: (n) => { const l = vm.lanes.find((x) => x.lane === n); return l ? { tier: l.tier, order: l.order, running: l.mode !== 'sleep' && l.mode !== 'done' && l.order !== null } : null; },
   laneBox: (n) => { const i = vm.lanes.findIndex((x) => x.lane === n); return i < 0 ? null : laneBoxes(vm.lanes.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET)[i] ?? null; },
   chaos: (lane, creature) => api.chaos(creature ? { lane, creature } : { lane }),
@@ -312,7 +313,7 @@ const finalScreen = new FinalScreen(stageEl, tournamentHost);
 const patternsBtn = $<HTMLButtonElement>('patterns-btn');
 const patternsBadge = $('patterns-badge');
 const patternsPanel = new PatternsPanel(stageEl, {
-  getPatterns: () => api.getPatterns(), writeSpecs: () => api.writeSpecs(), startImprove: () => api.startImprove({ speed: 4, pace: 'normal' }), getImprove: () => api.getImprove(),
+  getPatterns: () => api.getPatterns(), writeSpecs: () => api.writeSpecs(), startImprove: () => withOrdersApp(() => api.startImprove({ speed: 4, pace: 'normal' }), false), getImprove: () => api.getImprove(),
   stageLabel: tournamentHost.stageLabel, laneTitle: tournamentHost.laneTitle, onError: showError,
   onBadge: (n, running) => { patternsBadge.textContent = running ? '\u21BB' : String(n); patternsBadge.classList.toggle('hidden', !running && n === 0); patternsBadge.classList.toggle('run', running); },
 }, () => reduceMotion.matches || document.body.classList.contains('reduced-motion'));
@@ -405,6 +406,12 @@ function onEvent(ev: ArenaEvent) {
   statsEl.textContent = `${events} events received, last seq ${lastSeq}`;
   paintBadge();
   paintDemo();
+}
+
+/** Tournaments (live and hosted) and the hosted improve recording are orders runs: the server switches to orders itself, so leave the inbox through the switcher first and stages, ledger and ticker agree. */
+async function withOrdersApp<T>(start: () => Promise<T>, always = true): Promise<T> {
+  if ((always || mode === 'browser') && currentApp(await api.getState().catch(() => null)) === 'inbox') await appSwitch?.choose('orders');
+  return start();
 }
 
 async function loadState() {
@@ -533,7 +540,7 @@ async function beginTournament() {
     if (demoRunning) { await api.stopDemo(); demoRunning = false; paintDemo(); }
     if (waveRunning) { try { await api.stopWave(); } catch { /* none running */ } waveRunning = false; }
     waveSummary.suppressNext();
-    await api.startTournament();
+    await withOrdersApp(() => api.startTournament());
     tourActive = true;
   } catch (e) { showError(e); }
 }
@@ -555,11 +562,9 @@ async function goNext() {
 }
 nextBtn.addEventListener('click', () => void goNext());
 window.addEventListener('keydown', (e) => {
-  if (!awaitingNext || e.ctrlKey || e.metaKey || e.altKey) return;
-  const t = e.target as HTMLElement | null;
-  if (t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA' || t.tagName === 'BUTTON' || t.isContentEditable)) return;
+  if (!awaitingNext || !isNextKey({ key: e.key, ctrlKey: e.ctrlKey, altKey: e.altKey, metaKey: e.metaKey, targetTag: (e.target as HTMLElement | null)?.tagName, editable: (e.target as HTMLElement | null)?.isContentEditable })) return;
   if (document.querySelector('dialog[open], .lp-dlg:not(.hidden)')) return;
-  if (e.key === 'n' || e.key === 'N' || e.key === ' ') { e.preventDefault(); void goNext(); }
+  e.preventDefault(); void goNext();
 });
 
 // ?inspect=<lane>:<stage id> opens the inspector once the lane exists (used for screenshots).

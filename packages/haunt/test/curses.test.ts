@@ -321,3 +321,17 @@ describe('mock fixture curses-404', () => {
     expect(run((l) => { l.push({ seq: 99999, ts: l.at(-1)!.ts + 1, type: 'curse_end', wave: 1, lane: 1, detail: { id: 'nope' } } as never); })).toContain('R66');
   });
 });
+
+describe('inbox curses map to the inbox stages', () => {
+  it('ticket -> assign, reply -> notify, notify -> escalate', () => {
+    expect(['ticket', 'reply', 'notify'].map((s) => stageOfCall(s, undefined, 'inbox'))).toEqual(['assign', 'notify', 'escalate']);
+    expect(stageOfCall('notify', 2)).toBe('updates');
+  });
+  it('effectSeen and classifyHit read the inbox ledger', () => {
+    expect(effectSeen([{ kind: 'ticket', key: 'msg-0001:ticket' }], 'ticket', undefined, 'inbox')).toBe(true);
+    expect(effectSeen([], 'ticket', undefined, 'inbox')).toBe(false);
+    expect(effectSeen([{ kind: 'email', key: 'msg-0001:reply' }], 'reply', undefined, 'inbox')).toBe(true);
+    expect(effectSeen([{ kind: 'notify', key: 'msg-0001:escalate' }], 'notify', undefined, 'inbox')).toBe(true);
+    expect(classifyHit('order_done', { order: 'msg-0001', effects: [], failed: false, died: false }, 'notify', undefined, 'inbox')).toBe('swallowed');
+  });
+});

@@ -1,7 +1,7 @@
 // Curses (spec 5.2, V1_2 section 5, TV3-C9): a persistent, per-lane, per-endpoint trait. The provider lies on that endpoint; this module draws curses,
 // classifies how a bot reacted to each lie and tabulates "what each lane returned when the API lied".
 import { unit } from '../shared/rng';
-import { ORDERS_STAGES, TIERS } from '../shared/catalog';
+import { APPS, TIERS, type AppId } from '../shared/catalog';
 import { tierOfLane } from './rounds';
 import type { Ev } from './rp';
 
@@ -38,7 +38,11 @@ export function drawCurse(seed: string | number, lane: number, n: number, kind?:
 }
 
 /** The stage a call to a provider endpoint belongs to. `index` tells the two store steps and the two notices apart. */
-export function stageOfCall(service: string, index?: number): string {
+export function stageOfCall(service: string, index?: number, app: AppId = 'orders'): string {
+  if (app !== 'orders') {
+    const hit = APPS[app].stages.find((s) => s.effects.some((e) => e.service === service));
+    if (hit) return hit.id;
+  }
   switch (service) {
     case 'account': return 'account';
     case 'order': return 'submit';
@@ -54,11 +58,11 @@ export function stageOfCall(service: string, index?: number): string {
 }
 
 /** Does an `effect` event show that the step the cursed call belonged to really happened? Polls and the handoff leave no ledger row. */
-export function effectSeen(effects: readonly { kind: string; key: string }[], service: string, index?: number): boolean | null {
-  const stage = ORDERS_STAGES.find((s) => s.id === stageOfCall(service, index));
+export function effectSeen(effects: readonly { kind: string; key: string }[], service: string, index?: number, app: AppId = 'orders'): boolean | null {
+  const stage = APPS[app].stages.find((s) => s.id === stageOfCall(service, index, app));
   if (!stage || stage.effects.length === 0) return null;
-  const kind = service === 'account' ? 'account_create' : service;
-  return effects.some((e) => e.kind === kind && (index === undefined || (service !== 'store' && service !== 'notify') || e.key.endsWith(`:${service}:${index}`)));
+  const kinds = app === 'orders' ? [service === 'account' ? 'account_create' : service] : [service, ...stage.effects.map((e) => e.kind)];
+  return effects.some((e) => kinds.includes(e.kind) && (index === undefined || (service !== 'store' && service !== 'notify') || e.key.endsWith(`:${service}:${index}`)));
 }
 
 export interface OrderTrace { order: string; effects: { kind: string; key: string }[]; failed: boolean; died: boolean }
@@ -68,11 +72,11 @@ export interface OrderTrace { order: string; effects: { kind: string; key: strin
  * handled = the step happened after all (retry or fallback), reported = the error surfaced and the order was parked or failed,
  * swallowed = the error vanished and the step was skipped, crashed = the process died.
  */
-export function classifyHit(end: 'order_done' | 'order_failed' | 'order_parked' | 'order_quarantined' | 'lane_halted', trace: OrderTrace, service: string, index?: number): CurseClass {
+export function classifyHit(end: 'order_done' | 'order_failed' | 'order_parked' | 'order_quarantined' | 'lane_halted', trace: OrderTrace, service: string, index?: number, app: AppId = 'orders'): CurseClass {
   if (trace.died) return 'crashed';
   if (end === 'order_parked' || end === 'order_quarantined') return 'reported';
   if (end === 'order_failed' || end === 'lane_halted') return trace.failed ? 'reported' : 'crashed';
-  const seen = effectSeen(trace.effects, service, index);
+  const seen = effectSeen(trace.effects, service, index, app);
   return seen === false ? 'swallowed' : 'handled';
 }
 

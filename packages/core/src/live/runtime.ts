@@ -458,15 +458,20 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
         const lt = travelOf(lane);
         const next = (chains.get(lane) ?? Promise.resolve()).then(async () => {
           if (my !== epoch) return;
-          await lt.wait(ev);
-          if (my !== epoch) return;
-          for (const e of norm.shape(lane, { detail: {}, ...ev, lane })) record?.(lt.annotate({ ...e, lane }) as unknown as HauntEvent);
+          // Wait per shaped event: a replayed `stage_done{skipped}` becomes a `stage_start` + `stage_done` pair, and that `stage_start` owes its gap too.
+          for (const e of norm.shape(lane, { detail: {}, ...ev, lane })) {
+            await lt.wait(e);
+            if (my !== epoch) return;
+            record?.(lt.annotate({ ...e, lane }) as unknown as HauntEvent);
+          }
         });
         chains.set(lane, next);
         return next;
       },
       onWaveDone: () => {
-        void idle().then(() => { clock?.stop(); clock = undefined; demo?.stop(); demo = undefined; stopNight(); gate?.finish(); endWave?.(); });
+        // The drain can outlive a stop + start: only the wave that began it may end the current one.
+        const my = epoch;
+        void idle().then(() => { if (my !== epoch) return; clock?.stop(); clock = undefined; demo?.stop(); demo = undefined; stopNight(); gate?.finish(); endWave?.(); });
       },
     });
     resetTravel = () => { epoch++; chains.clear(); travels.clear(); };

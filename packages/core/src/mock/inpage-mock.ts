@@ -35,7 +35,7 @@ export function createInPageMock(outcomeRows: ConstructorParameters<typeof Outco
   };
 
   const startDemo = (script: string, speed: number): void => {
-    const name = fixtureFor(script);
+    const name = hub.app === 'inbox' && DEMO_SCRIPTS.includes(script) ? 'inbox' : fixtureFor(script);
     if (!name) throw new MockError(400, 'bad_request', `script must be one of ${[...DEMO_SCRIPTS, ...Object.keys(FIXTURES)].join(', ')}`);
     if (hub.running && !player.active) hub.emit({ type: 'wave_end', wave: hub.wave!.n, detail: { summary: {}, stopped: true } });
     const events = FIXTURES[name]();
