@@ -19,6 +19,7 @@ import { drawWorldCreature, drawWorldProp, isWorld, tintOf, worldPhase, worldPro
 import { archWall, drawProp, pillar } from '../props/draw';
 import { survivedAge } from './boss';
 import { equipPhase, flightPoint, PART_LABEL, wornParts } from './equip';
+import { displayId, vocabOf } from './vocab';
 import { dropPoint, dropProgress, queueLeft, queueShape } from './order';
 import { grabPoint, grabProgress, lapMotion, START_X, STACK_STEP, STACK_X } from './lap';
 import { drawHandoff, drawRunDust } from './handoff';
@@ -458,9 +459,9 @@ function fallenTag(ctx: Ctx, b: LaneBox, round: number): void {
   ctx.restore();
 }
 
-function stats(ctx: Ctx, b: LaneBox, l: LaneVM): void {
+function stats(ctx: Ctx, b: LaneBox, l: LaneVM, app: string): void {
   const x = 1616; const y = b.top + 8;
-  txt(ctx, `ORDER ${l.orderIndex}/${l.ordersTotal || '-'}`, x, y + 12, 16, C.text, 'left', MONO, '700');
+  txt(ctx, `${vocabOf(app).unit.toUpperCase()} ${l.orderIndex}/${l.ordersTotal || '-'}`, x, y + 12, 16, C.text, 'left', MONO, '700');
   const rows: [string, number, string][] = [
     ['✓', l.counts.completed, C.ok], ['✕', l.counts.failed, C.fail], ['⚗', l.counts.quarantined, C.hex],
   ];
@@ -682,7 +683,7 @@ export class ArenaScene {
         ctx.restore();
       }
     }
-    stats(ctx, b, l);
+    stats(ctx, b, l, vm.app);
     if (l.mode !== 'sleep' && !fell) startStack(ctx, b, l);
     // stage chips and station props
     const chipY = b.top + 4;
@@ -1040,15 +1041,15 @@ export class ArenaScene {
       if (gp >= 0 || dp >= 0) {
         const pt = gp >= 0 ? grabPoint(gp, from, { x: hx, y: hy }) : dropPoint(dp, from, { x: hx, y: hy });
         ctx.save(); ctx.translate(pt.x, pt.y); ctx.rotate(pt.rot); ctx.translate(-pt.x, -pt.y);
-        scroll(ctx, pt.x, pt.y, hs * pt.scale, l.order ?? '', false);
+        scroll(ctx, pt.x, pt.y, hs * pt.scale, displayId(vm.app, l.order ?? ''), false);
         ctx.restore();
-      } else scroll(ctx, hx, hy, hs, l.order ?? '', l.mode === 'fail' && l.chips.includes('failed'));
+      } else scroll(ctx, hx, hy, hs, displayId(vm.app, l.order ?? ''), l.mode === 'fail' && l.chips.includes('failed'));
     }
     if (l.lap?.ceremony) {
       const hs = size / 150;
       drawHandoff(ctx, l.lap.ceremony, {
         doorX: 1548, floorY: b.top + b.h - 8, doorH: Math.min(100, b.h * 0.7), handX: x + size * 0.34, handY: feetY - size * 0.62, scrollScale: hs,
-        size, skelX: x, feetY, drawScroll: (sx, sy, s, rot) => { ctx.save(); ctx.translate(sx, sy); ctx.rotate(rot); ctx.translate(-sx, -sy); scroll(ctx, sx, sy, s, l.order ?? '', false); ctx.restore(); },
+        size, skelX: x, feetY, drawScroll: (sx, sy, s, rot) => { ctx.save(); ctx.translate(sx, sy); ctx.rotate(rot); ctx.translate(-sx, -sy); scroll(ctx, sx, sy, s, displayId(vm.app, l.order ?? ''), false); ctx.restore(); },
         font: SANS, reduced: this.reducedMotion, lite: this.lite,
       }, now);
     }

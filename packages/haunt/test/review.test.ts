@@ -95,3 +95,20 @@ describe('star tracker, rating and score', () => {
     expect(reviewScore(3)).toBe(0);
   });
 });
+
+describe('review wording follows the app', () => {
+  it('inbox: duplicate ticket, not a double charge', () => {
+    const r = review(mk({ app: 'inbox', extra: { ticket: 1 } }));
+    expect(r.stars).toBeLessThanOrEqual(2);
+    expect(r.text).toContain('Filed a duplicate ticket!');
+    expect(r.text).not.toMatch(/charge|order/i);
+  });
+  it('inbox: a charge row does not cap the stars, orders still do', () => {
+    expect(review(mk({ app: 'inbox', extra: { charge: 1 } })).text).not.toContain('Charged');
+    expect(review(mk({ extra: { charge: 1 } })).text).toContain('Charged twice!');
+  });
+  it('inbox cancelled and clean wording', () => {
+    expect(review(mk({ app: 'inbox', cancelled: true })).text).toBe('Never answered');
+    expect(review({ ...base, app: 'inbox' }).reasons).toEqual(['Answered in a flash', 'No waiting around']);
+  });
+});
