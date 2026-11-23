@@ -8,7 +8,8 @@ import {
 
 export type RunLab = (m: LabModel) => Promise<LabReport>;
 
-const COMMANDS = ['npx haunt init', 'haunt validate', 'haunt sweep'];
+// `haunt` is not on PATH and `npx haunt` would fetch an unrelated npm package, so show the repo's own runner.
+export const COMMANDS = ['npm run haunt -- init', 'npm run haunt -- validate', 'npm run haunt -- sweep'];
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string): HTMLElementTagNameMap[K] {
   const e = document.createElement(tag);
@@ -24,8 +25,9 @@ function saveFile(f: LabFile): void {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export function mountWorkflowLab(root: HTMLElement, run: RunLab, reduced = false): { getModel(): LabModel; setModel(m: LabModel): void; run(): Promise<void> } {
+export function mountWorkflowLab(root: HTMLElement, run: RunLab, reduced = false): { getModel(): LabModel; setModel(m: LabModel, presetId?: string): void; run(): Promise<void> } {
   let model: LabModel = presetModel('orders');
+  let presetId = 'orders';
   const form = el('section', 'wl-card'); form.setAttribute('aria-label', 'Describe your workflow');
   const out = el('section', 'wl-out'); out.setAttribute('aria-live', 'polite');
   root.append(el('p', 'wl-honest', HONEST_LABEL), form, out);
@@ -38,7 +40,8 @@ export function mountWorkflowLab(root: HTMLElement, run: RunLab, reduced = false
     const preset = el('select'); preset.setAttribute('aria-label', 'Preset');
     const ph = el('option', undefined, 'Presets...'); ph.value = ''; preset.append(ph);
     for (const p of PRESETS) { const o = el('option', undefined, p.label); o.value = p.id; preset.append(o); }
-    preset.onchange = () => { if (preset.value) { model = presetModel(preset.value); renderForm(); } };
+    preset.value = presetId;
+    preset.onchange = () => { if (preset.value) { presetId = preset.value; model = presetModel(preset.value); renderForm(); } };
     const name = el('input'); name.value = model.name; name.setAttribute('aria-label', 'Workflow name');
     name.oninput = () => { model.name = name.value; };
     top.append(el('label', undefined, 'Preset'), preset, el('label', undefined, 'Name'), name);
@@ -193,5 +196,5 @@ export function mountWorkflowLab(root: HTMLElement, run: RunLab, reduced = false
   }
 
   renderForm();
-  return { getModel: () => model, setModel: (m) => { model = cloneModel(m); renderForm(); }, run: doRun };
+  return { getModel: () => model, setModel: (m, id) => { model = cloneModel(m); presetId = id ?? ''; renderForm(); }, run: doRun };
 }

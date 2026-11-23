@@ -1,6 +1,6 @@
 // SH-U1: entry for the Workflow Lab page. Uses window.__hauntLab (SH-C3), installed here from the browser-safe lab engine.
 import { installLab, type LabApi } from '../../haunt/src/lab/inpage';
-import { presetModel } from '../src/workflow-lab/model';
+import { PRESETS, presetModel } from '../src/workflow-lab/model';
 import { mountWorkflowLab } from '../src/workflow-lab/panel';
 import './workflow-lab.css';
 
@@ -13,5 +13,5 @@ const lab = mountWorkflowLab(document.getElementById('workflow-lab')!, (m) => w.
 // `?preset=inbox&run=1` loads a preset and runs it (used for screenshots and shareable local links).
 const q = new URLSearchParams(location.search);
 const preset = q.get('preset');
-if (preset) lab.setModel(presetModel(preset));
+if (preset && PRESETS.some((p) => p.id === preset)) lab.setModel(presetModel(preset), preset);
 if (q.get('run') === '1') void lab.run();
