@@ -26,7 +26,7 @@ import '../src/arena/patterns.css';
 import { LegendModal } from '../src/arena/legend-modal';
 import { ArenaSound } from '../src/sound';
 import { FrameSampler, perfSecondsFromQuery } from '../src/perf';
-import { KEY_HELP, chaosAnnouncement, keyAction, nextMode, renderLegend } from '../src/arena/keys';
+import { KEY_HELP, chaosAnnouncement, isNextKey, keyAction, nextMode, renderLegend } from '../src/arena/keys';
 import { Splash, splashDecision, splashTarget } from '../src/onboarding/splash';
 import '../src/onboarding/splash.css';
 import { CaptionOverlay, CaptionPlayer, freezeFromQuery } from '../src/onboarding/captions';
@@ -555,11 +555,9 @@ async function goNext() {
 }
 nextBtn.addEventListener('click', () => void goNext());
 window.addEventListener('keydown', (e) => {
-  if (!awaitingNext || e.ctrlKey || e.metaKey || e.altKey) return;
-  const t = e.target as HTMLElement | null;
-  if (t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA' || t.tagName === 'BUTTON' || t.isContentEditable)) return;
+  if (!awaitingNext || !isNextKey({ key: e.key, ctrlKey: e.ctrlKey, altKey: e.altKey, metaKey: e.metaKey, targetTag: (e.target as HTMLElement | null)?.tagName, editable: (e.target as HTMLElement | null)?.isContentEditable })) return;
   if (document.querySelector('dialog[open], .lp-dlg:not(.hidden)')) return;
-  if (e.key === 'n' || e.key === 'N' || e.key === ' ') { e.preventDefault(); void goNext(); }
+  e.preventDefault(); void goNext();
 });
 
 // ?inspect=<lane>:<stage id> opens the inspector once the lane exists (used for screenshots).

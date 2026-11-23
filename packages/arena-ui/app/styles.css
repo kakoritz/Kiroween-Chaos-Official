@@ -73,10 +73,12 @@ html, body { overflow: hidden; }
 .rb-working .rb-state { color: var(--ghost); }
 .rb-recovering .rb-state, .rb-reassembling .rb-state { color: var(--warn); }
 .lg { width: 100%; border-collapse: collapse; font-size: 16px; }
-.lg th, .lg td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--stone-2); font-variant-numeric: tabular-nums; }
-.lg thead th { color: var(--muted); font-size: 14px; letter-spacing: 0.06em; font-weight: 700; text-transform: uppercase; }
+.lg th, .lg td { padding: 3px 2px; white-space: nowrap; text-align: right; border-bottom: 1px solid var(--stone-2); font-variant-numeric: tabular-nums; }
+.lg thead th { color: var(--muted); font-size: 14px; letter-spacing: 0; font-weight: 700; text-transform: uppercase; }
 .lg tbody th { text-align: left; color: var(--bone); font-weight: 600; }
-.lg th:first-child { text-align: left; }
+.lg th:first-child { text-align: left; width: 112px; }
+.lg { table-layout: fixed; }
+.lg thead th { overflow: hidden; text-overflow: ellipsis; }
 .lg th i { color: var(--muted); font-style: normal; }
 .lg td.dup { color: var(--fail); }
 .lg td.dup em { font-style: normal; font-size: 14px; }
