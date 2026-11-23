@@ -529,8 +529,12 @@ export class LiveServer {
             const lanes = (e: HauntEvent) => (e.detail as { lanes?: number[] } | undefined)?.lanes ?? [];
             const orders = evs.filter((e) => e.type === 'round_start').reduce((n, e) => n + lanes(e).length * Number((e.detail as { orders?: number }).orders ?? 0), 0);
             const score = roundEnds.reduce((n, e) => n + ((e.detail as { standings?: { rp: number }[] }).standings ?? []).reduce((m, s) => m + s.rp, 0), 0);
+            const byLane: Record<number, { orders: number; ok: number; repeats: number }> = {};
+            const slot = (l: number) => (byLane[l] ??= { orders: 0, ok: 0, repeats: 0 });
+            for (const e of evs.filter((x) => x.type === 'round_start')) for (const l of lanes(e)) slot(l).orders += Number((e.detail as { orders?: number }).orders ?? 0);
+            for (const e of evs) { if (e.lane === undefined || e.lane === null) continue; const l = Number(e.lane); if (e.type === 'order_done') slot(l).ok++; else if (e.type === 'repeat') slot(l).repeats++; }
             resolve({
-              run, events: evs as never, orders, ok: evs.filter((e) => e.type === 'order_done').length, lost: evs.filter((e) => e.type === 'order_failed').length,
+              run, byLane, events: evs as never, orders, ok: evs.filter((e) => e.type === 'order_done').length, lost: evs.filter((e) => e.type === 'order_failed').length,
               repeats: evs.filter((e) => e.type === 'repeat').length, score, reports: [...new Set(evs.filter((e) => e.type === 'wave_end').map((e) => '/api/waves/' + e.wave + '/report'))].slice(0, 3),
             });
           }, 0);

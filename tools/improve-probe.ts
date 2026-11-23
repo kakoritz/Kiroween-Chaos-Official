@@ -25,7 +25,7 @@ for (const e of evs) {
   if (e.type === 'order_failed') t.failed++;
   if (e.type === 'repeat') t.repeat++;
 }
-console.log(j.report?.summary, j.report?.grade, j.report?.reliability, j.error, ends);
+console.log(j.report?.summary, j.report?.grade, j.report?.reliability, JSON.stringify(j.report?.policyLanes), j.error, ends);
 console.table(tab);
 console.log(JSON.stringify(j.report?.patterns.slice(0, 12).map((p: any) => [p.signature, p.handling, p.before, p.after, p.lanes])));
 await srv.close();

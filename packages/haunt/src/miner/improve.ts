@@ -18,6 +18,8 @@ export interface RunResult {
   ok: number;
   lost: number;
   repeats: number;
+  /** Orders given, done and repeated per lane (the key is the lane number), when the runner can tell. */
+  byLane?: Record<number, { orders: number; ok: number; repeats: number }>;
   /** Sum of the round points of every lane in every round. */
   score: number;
   reports?: string[];
@@ -26,6 +28,17 @@ export interface RunResult {
 /** A run's reliability: orders done over orders given, each repeated effect costing half an order. */
 export function runReliability(r: Pick<RunResult, 'orders' | 'ok' | 'repeats'>): number {
   return Math.max(0, Math.round((100 * (r.ok - 0.5 * r.repeats)) / Math.max(1, r.orders)));
+}
+/** Reliability over the lanes whose tier can take a policy overlay (the Rookie has no part to tune, so a policy cannot move it). Null when no per-lane numbers. */
+export function policyLaneReliability(r: Pick<RunResult, 'byLane' | 'orders' | 'ok' | 'repeats'>): number | null {
+  if (!r.byLane) return null;
+  const t = { orders: 0, ok: 0, repeats: 0 };
+  for (const [lane, v] of Object.entries(r.byLane)) {
+    const parts = TIERS[tierOfLane(Number(lane))].parts;
+    if (!(['retry_backoff', 'journal_replay', 'idempotency_key', 'breaker_park'] as PolicyAction[]).some((a) => policyTakes(parts, a))) continue;
+    t.orders += v.orders; t.ok += v.ok; t.repeats += v.repeats;
+  }
+  return t.orders ? runReliability(t) : null;
 }
 export const runGrade = (r: Pick<RunResult, 'orders' | 'ok' | 'repeats'>): Grade => gradeFor(runReliability(r));
 
@@ -78,6 +91,8 @@ export interface ImproveReport {
   summary: string;
   grade: { before: Grade; after: Grade };
   reliability: { before: number; after: number };
+  /** The same measure over the lanes that can take a policy only (null when the run has no per-lane numbers). The headline grade above counts every lane. */
+  policyLanes: { reliability: { before: number; after: number }; grade: { before: Grade; after: Grade } } | null;
   score: { before: number; after: number };
   lost: { before: number; after: number };
   repeats: { before: number; after: number };
@@ -190,6 +205,7 @@ export async function improve(deps: ImproveDeps): Promise<ImproveReport> {
   const report: Omit<ImproveReport, 'text'> = {
     closed, closedOnTreated: onTreated, of: outcomes.length, summary: `closed ${closed} of ${outcomes.length} patterns${onTreated ? `, and ${onTreated} more on every lane that took a policy` : ''}`,
     grade: { before: runGrade(before), after: runGrade(after) }, reliability: { before: runReliability(before), after: runReliability(after) },
+    policyLanes: ((b, a) => (b === null || a === null ? null : { reliability: { before: b, after: a }, grade: { before: gradeFor(b), after: gradeFor(a) } }))(policyLaneReliability(before), policyLaneReliability(after)),
     score: { before: before.score, after: after.score }, lost: { before: before.lost, after: after.lost }, repeats: { before: before.repeats, after: after.repeats },
     patterns: outcomes, overlays, spec, newPatterns, runs: { before: before.run, after: after.run },
   };
@@ -201,6 +217,7 @@ export function renderImprove(r: Omit<ImproveReport, 'text'>): string {
     `# Improve: ${r.summary}`, '',
     `| | Before | After |`, '|---|---|---|',
     `| Grade | ${r.grade.before} | ${r.grade.after} |`, `| Reliability | ${r.reliability.before} | ${r.reliability.after} |`,
+    ...(r.policyLanes ? [`| Grade, lanes that can take a policy | ${r.policyLanes.grade.before} | ${r.policyLanes.grade.after} |`, `| Reliability, lanes that can take a policy | ${r.policyLanes.reliability.before} | ${r.policyLanes.reliability.after} |`] : []),
     `| Round points | ${r.score.before} | ${r.score.after} |`, `| Lost orders | ${r.lost.before} | ${r.lost.after} |`, `| Repeated effects | ${r.repeats.before} | ${r.repeats.after} |`, '',
     '## Patterns', '',
     ...(r.patterns.length ? ['| Pattern | Handled by | Before | After | Lanes (before > after) | Status |', '|---|---|---|---|---|---|', ...r.patterns.map((p) => `| \`${p.signature}\` | ${p.handling} | ${p.before} | ${p.after} | ${p.lanes.before.join(',') || '-'} > ${p.lanes.after.join(',') || '-'} | ${p.status}${p.closed ? ' (gone)' : p.closedOnTreated ? ' (gone on the lanes that took the policy)' : ''} |`)] : ['None above the threshold.']), '',
