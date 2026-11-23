@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { STATE_LEGEND, chaosAnnouncement, keyAction, nextMode } from '../src/arena/keys';
+import { STATE_LEGEND, chaosAnnouncement, isNextKey, keyAction, nextMode } from '../src/arena/keys';
 import { presentFromQuery } from '../src/mode';
 
 describe('keyboard chaos', () => {
@@ -52,5 +52,15 @@ describe('color-blind safe legend', () => {
     expect(new Set(STATE_LEGEND.map((s) => s.icon)).size).toBe(STATE_LEGEND.length);
     expect(STATE_LEGEND.every((s) => s.word.length > 2)).toBe(true);
     expect(STATE_LEGEND.length).toBe(9);
+  });
+});
+describe('next wave key', () => {
+  it('N works even with the Next round button focused; Space is left to the button', () => {
+    expect(isNextKey({ key: 'n', targetTag: 'BUTTON' })).toBe(true);
+    expect(isNextKey({ key: 'N' })).toBe(true);
+    expect(isNextKey({ key: ' ', targetTag: 'BUTTON' })).toBe(false);
+    expect(isNextKey({ key: ' ', targetTag: 'BODY' })).toBe(true);
+    expect(isNextKey({ key: 'n', targetTag: 'INPUT' })).toBe(false);
+    expect(isNextKey({ key: 'n', ctrlKey: true })).toBe(false);
   });
 });

@@ -76,3 +76,12 @@ export const STATE_LEGEND: readonly { state: ChipState; icon: string; word: stri
 export function renderLegend(host: HTMLElement): void {
   host.innerHTML = STATE_LEGEND.map((s) => `<li class="lg-i lg-${s.state}"><span aria-hidden="true">${s.icon}</span> ${s.word}</li>`).join('');
 }
+
+/** N and Space start the next wave or round. A focused button keeps Space (it clicks itself) but not N, so the focused "Next round" button does not swallow the N the UI promises. */
+export function isNextKey(e: KeyLike): boolean {
+  if (e.ctrlKey || e.altKey || e.metaKey || e.editable) return false;
+  const tag = (e.targetTag ?? '').toUpperCase();
+  if (TYPING.has(tag)) return false;
+  if (e.key === ' ') return tag !== 'BUTTON';
+  return e.key === 'n' || e.key === 'N';
+}
