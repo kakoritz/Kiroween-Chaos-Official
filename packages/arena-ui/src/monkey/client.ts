@@ -3,6 +3,7 @@ export interface MonkeyClient {
   getState(): Promise<unknown>;
   start(mode: string): Promise<unknown>;
   stop(): Promise<unknown>;
+  preview(mode: string): Promise<unknown>;
 }
 
 export class MonkeyUnavailable extends Error {
@@ -24,5 +25,6 @@ export function monkeyClient(base: string | null, fetchFn: typeof fetch = fetch)
     getState: () => call('GET', '/api/monkey?audit=12'),
     start: (mode) => call('POST', '/api/monkey/start', { mode }),
     stop: () => call('POST', '/api/monkey/stop', {}),
+    preview: (mode) => call('GET', `/api/monkey/preview?mode=${encodeURIComponent(mode)}`),
   };
 }

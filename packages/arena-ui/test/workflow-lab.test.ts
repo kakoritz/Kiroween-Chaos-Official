@@ -92,6 +92,6 @@ describe('pack report views (PK-UI)', () => {
     expect(reviewView(r)).toBeNull();
     expect(scenarioLines(r)).toEqual([]);
     expect(labFiles(r)[0]!.text).toContain('name: payments-lab');
-    expect(r.commands).toEqual(['npx haunt init', 'haunt validate', 'haunt sweep']);
+    expect(r.commands).toEqual(['npm run haunt -- init', 'npm run haunt -- validate', 'npm run haunt -- sweep']);
   });
 });

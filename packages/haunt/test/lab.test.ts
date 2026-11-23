@@ -77,7 +77,7 @@ describe('lab haunt.yaml export', () => {
   it('returns the yaml and the three real commands in the report', async () => {
     const r = await labRun(LAB_PRESETS.report!);
     expect(r.yaml).toContain('stages:');
-    expect(r.commands).toEqual(['npx haunt init', 'haunt validate', 'haunt sweep']);
+    expect(r.commands).toEqual(['npm run haunt -- init', 'npm run haunt -- validate', 'npm run haunt -- sweep']);
   });
 });
 
