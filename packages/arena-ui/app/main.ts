@@ -29,6 +29,7 @@ import { MonkeyPanel } from '../src/monkey/panel';
 import { monkeyClient } from '../src/monkey/client';
 import '../src/monkey/monkey.css';
 import { ArenaSound } from '../src/sound';
+import { Announcer, announcementFor, arenaSummary } from '../src/arena/announce';
 import { FrameSampler, perfSecondsFromQuery } from '../src/perf';
 import { KEY_HELP, chaosAnnouncement, isNextKey, keyAction, nextMode, renderLegend } from '../src/arena/keys';
 import { Splash, splashDecision, splashTarget } from '../src/onboarding/splash';
@@ -60,7 +61,7 @@ import { ApiError, createApi, resolveHttpBase, type ArenaApi, type ArenaEvent, t
 
 const root = document.getElementById('app')!;
 root.innerHTML = `
-  <div class="stage-root" id="stage">
+  <div class="stage-root" id="stage" role="main" aria-label="Haunt arena">
     <canvas id="arena" width="1920" height="1080" aria-label="The haunted arena" role="img"></canvas>
     <header class="hdr">
       <span class="logo">HAUNT</span>
@@ -79,7 +80,7 @@ root.innerHTML = `
       <button class="btn btn--ghost" id="legend-btn" type="button" aria-expanded="false" title="What do R J I B Q mean?">?</button>
       <span class="gear-wrap" id="gear-wrap"><button class="btn btn--ghost" id="gear-btn" type="button" title="Settings: chaos, pace, speed, sound, motion" aria-label="Settings">&#9881;</button></span>
       <span class="pace-tag" id="pace-tag" title="Slow pace is on"></span>
-      <button class="btn btn--ghost" id="mute" type="button" aria-pressed="true" aria-label="Sound off" title="Sound is off. Click to turn it on.">&#128263;</button>
+      <button class="btn btn--ghost" id="mute" type="button" aria-pressed="false" aria-label="Sound" title="Sound is off. Click to turn it on.">&#128263;</button>
       <span class="pill hidden" id="demo-pill">DEMO</span>
       <span class="badge badge--offline" id="badge" role="status"></span>
       <button class="btn btn--ghost hidden" id="demo-stop" type="button">&#9632; Stop demo</button>
@@ -89,7 +90,8 @@ root.innerHTML = `
     <div class="boss" id="boss" aria-hidden="true"></div>
     <div id="insp"></div>
     <div class="keys-pop hidden" id="keys-pop" role="dialog" aria-label="Keyboard and state legend"><h2>Keyboard</h2><ul class="keys-list" id="keys-list"></ul><h2>States</h2><ul class="lg-list" id="legend-list"></ul></div>
-    <div class="sr-only" id="live-assertive" aria-live="assertive"></div>
+    <div class="sr-only" id="live-assertive" aria-live="assertive" role="alert"></div>
+    <div class="sr-only" id="live-polite" aria-live="polite" role="status"></div>
     <div class="present-hint" id="present-hint" aria-hidden="true">Present mode. Press P or Esc to exit.</div>
     <section class="panel panel--rank hidden" id="rank" aria-label="Rank board"><h2>Rank board</h2><div class="rb-body" id="rank-body"></div></section>
     <section class="panel panel--ledger hidden" id="ledger" aria-label="Ledger"><h2>Ledger</h2><div id="ledger-body"></div></section>
@@ -169,7 +171,7 @@ const ledgerEl = $('ledger');
 const reviewCards = new ReviewCardView(stageEl, (n) => { const i = vm.lanes.findIndex((x) => x.lane === n); return i < 0 ? null : laneBoxes(vm.lanes.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET)[i] ?? null; });
 // PT-U11: the wrong-order popup over the lane that asked; POST /api/decision with the chosen card, keys 1 2 3.
 const decisionPopup = new DecisionPopupView(stageEl, (n) => { const i = vm.lanes.findIndex((x) => x.lane === n); const b = i < 0 ? null : laneBoxes(vm.lanes.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET)[i]; return b ? { top: b.top, h: b.h } : null; }, (lane, order, choice) => api.decide(lane, order, choice), (id) => vm.stages.find((s) => s.id === id)?.label ?? id);
-const scoreVisuals = new ScoreVisuals(stageEl, (n) => { const i = vm.lanes.findIndex((x) => x.lane === n); return i < 0 ? null : laneBoxes(vm.lanes.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET)[i] ?? null; });
+const scoreVisuals = new ScoreVisuals(stageEl, (n) => { const i = vm.lanes.findIndex((x) => x.lane === n); return i < 0 ? null : laneBoxes(vm.lanes.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET)[i] ?? null; }, () => reduceMotion.matches || document.body.classList.contains('reduced-motion'), () => performance.now(), (m) => announcer.sayPolite(m));
 const tickerEl = $('ticker');
 const tickerModel = new LaneTickerModel((id) => vm.stages.find((s) => s.id === id)?.label ?? id, () => vm.app);
 const ticker = new LaneTickerView($('ticker-body'), tickerModel, {
@@ -183,6 +185,8 @@ const ticker = new LaneTickerView($('ticker-body'), tickerModel, {
 });
 const bossBar = new BossBar($('boss'));
 const liveAssertive = $('live-assertive');
+const announcer = new Announcer($('live-polite'), liveAssertive);
+setInterval(() => { const t = arenaSummary(vm.lanes); if (canvas.getAttribute('aria-label') !== t) canvas.setAttribute('aria-label', t); }, 2000);
 const inspector = new LanePopup($('insp'), {
   stageIds: () => vm.stages.map((s) => s.id),
   stageLabel: (id) => vm.stages.find((s) => s.id === id)?.label ?? id,
@@ -264,9 +268,8 @@ const sound = new ArenaSound();
 const muteBtn = $<HTMLButtonElement>('mute');
 muteBtn.addEventListener('click', () => {
   const muted = sound.toggle();
-  muteBtn.setAttribute('aria-pressed', String(muted));
+  muteBtn.setAttribute('aria-pressed', String(!muted));
   muteBtn.textContent = muted ? '\u{1F507}' : '\u{1F50A}';
-  muteBtn.setAttribute('aria-label', muted ? 'Sound off' : 'Sound on');
   muteBtn.title = muted ? 'Sound is off. Click to turn it on.' : 'Sound is on. Click to mute.';
 });
 
@@ -375,6 +378,8 @@ function onEvent(ev: ArenaEvent) {
   queue.push(ev);
   captionPlayer.event(ev, performance.now());
   sound.onEvent(ev, performance.now());
+  const said = announcementFor(ev, { tier: (n) => vm.lanes.find((l) => l.lane === n)?.tier ?? '', stageLabel: (id) => vm.stages.find((x) => x.id === id)?.label ?? id });
+  if (said) announcer.say(said);
   inspector.record(ev);
   tickerModel.push(ev, performance.now());
   reviewCards.onEvent(ev);
