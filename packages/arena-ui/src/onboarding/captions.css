@@ -4,3 +4,5 @@
 .cap-callout.hidden { display: none; }
 .cap-cc { position: absolute; right: 16px; bottom: 12px; z-index: 17; font-size: 16px; padding: 4px 12px; }
 body.present .cap-cc { display: none !important; }
+/* The callout sits under the ORDER counter and the tallies, never over them. */
+.cap-callout { left: 1616px; width: 290px; padding: 3px 12px; font-size: 24px; }

@@ -3,7 +3,7 @@
 import './laps.css';
 import type { ArenaEvent } from '../api';
 import { renderHeatRow, renderStarChart } from './laps-view';
-import { laneCards, ordersWord, secText, starNum, starSeriesFromEvents, starSeriesOf, type LaneCard, type StarPoint } from './laps-model';
+import { laneCards, ordersWord, summaryHasOrders, secText, starNum, starSeriesFromEvents, starSeriesOf, type LaneCard, type StarPoint } from './laps-model';
 
 export interface WaveSummaryHost {
   stageIds(): string[];
@@ -45,7 +45,7 @@ export class WaveSummary {
     const d = (ev.detail ?? {}) as Record<string, any>;
     const skip = this.suppressed;
     this.suppressed = false;
-    if (skip || d.stopped || !d.summary || Object.keys(d.summary).length === 0) return;
+    if (skip || d.stopped || !d.summary || Object.keys(d.summary).length === 0 || !summaryHasOrders(d.summary)) return;
     void this.open(typeof ev.wave === 'number' ? ev.wave : 0, d.summary);
   }
 

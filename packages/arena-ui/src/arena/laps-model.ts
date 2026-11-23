@@ -192,6 +192,11 @@ export function heatOf(count: number, max: number): 0 | 1 | 2 | 3 {
 }
 
 /** Build the per lane cards from `wave_end.detail.summary` (keyed by lane) plus star series fetched or derived. */
+/** True when at least one lane finished, cancelled, parked or quarantined an order. An empty wave gets no end card. */
+export function summaryHasOrders(summary: unknown): boolean {
+  return Object.values(rec(summary)).some((v) => { const o = rec(rec(v).orders); return num(o.done) + num(o.cancelled) + num(o.parked) + num(o.quarantined) > 0; });
+}
+
 export function laneCards(
   summary: unknown, stageIds: readonly string[], series: ReadonlyMap<number, StarPoint[]>, titleOf: (lane: number) => string,
 ): LaneCard[] {
@@ -203,7 +208,8 @@ export function laneCards(
     const r = rec(s[key]);
     const st = rec(r.stars);
     const avg = typeof st.avg === 'number' ? st.avg : typeof st.sum === 'number' && num(st.count) > 0 ? st.sum / st.count : null;
-    const rating = typeof r.rating === 'string' && r.rating ? r.rating : avg !== null ? ratingFor(avg) : '';
+    // A lane with no review has no rating: the server's placeholder ("Cursed") would read as a verdict.
+    const rating = !(num(st.max) > 0) && avg === null ? '' : typeof r.rating === 'string' && r.rating ? r.rating : avg !== null ? ratingFor(avg) : '';
     const by = rec(r.issuesByStage);
     const ids = [...stageIds];
     for (const k of Object.keys(by)) if (!ids.includes(k)) ids.push(k);

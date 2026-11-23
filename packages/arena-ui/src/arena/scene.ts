@@ -24,6 +24,7 @@ import { grabPoint, grabProgress, lapMotion, START_X, STACK_STEP, STACK_X } from
 import { drawHandoff, drawRunDust } from './handoff';
 import { cobweb, flagstoneFloor, fogTexture, laneVignette, torchPools } from './crypt';
 import { starTracker } from './laps-model';
+import { GEAR_PARTS, gearTip } from './legend-modal';
 import { laneRatingTitle } from './review-card';
 
 export const STAGE_W = 1920;
@@ -352,11 +353,11 @@ function labelCard(ctx: Ctx, b: LaneBox, l: LaneVM, t: number, worn: string[], s
   ctx.lineWidth = 3; ctx.strokeStyle = C.out; ctx.stroke();
   torch(ctx, 24, b.top + h / 2 - 14, reduced ? 0 : t, l.mode !== 'dead' && l.mode !== 'halted', l.lane);
   const name = l.label || (TIER_IDS.includes(l.tier as Tier) ? TIER_LABEL[l.tier as Tier] : l.tier);
-  txt(ctx, name, 46, b.top + 24, 22, C.bone, 'left', SANS, '700');
-  txt(ctx, `LANE ${l.lane}`, 46, b.top + 46, 14, C.muted, 'left', MONO, '600');
+  txt(ctx, name, 46, b.top + 22, 22, C.bone, 'left', SANS, '700');
+  txt(ctx, `LANE ${l.lane}`, 46, b.top + 41, 14, C.muted, 'left', MONO, '600');
   // five gear slots
   GEAR_SLOTS.forEach((g, i) => {
-    const gx = 56 + i * 34; const gy = b.top + h * 0.5 + 6;
+    const gx = 56 + i * 34; const gy = b.top + 62;
     const on = worn.includes(g.id);
     const eq = l.equips.find((e) => e.part === g.id);
     const ph = eq ? equipPhase(eq, t, speed, reduced) : null;
@@ -369,12 +370,12 @@ function labelCard(ctx: Ctx, b: LaneBox, l: LaneVM, t: number, worn: string[], s
     ctx.lineWidth = 2.5; ctx.strokeStyle = on ? C.out : C.muted; ctx.setLineDash(on ? [] : [3, 3]); ctx.stroke(); ctx.setLineDash([]);
     txt(ctx, g.label, gx, gy + 1, 14, on ? C.out : C.muted, 'center', MONO, '700');
   });
-  txt(ctx, String(l.score), 46, b.top + h - 24, 24, l.score < 0 ? C.fail : C.text, 'left', MONO, '700');
+  txt(ctx, String(l.score), 46, b.top + h - 19, 24, l.score < 0 ? C.fail : C.text, 'left', MONO, '700');
   if (l.stars) {
     const last = l.stars.last > 0 ? ` (${Number.isInteger(l.stars.last) ? l.stars.last : l.stars.last.toFixed(1)})` : '';
-    txt(ctx, `\u2605 ${starTracker({ stars: l.stars.sum, max: l.stars.max })}${last}`, 46, b.top + h - 46, 14, l.stars.sum / Math.max(1, l.stars.max) >= 0.9 ? C.warn : C.muted, 'left', MONO, '700');
+    txt(ctx, `\u2605 ${starTracker({ stars: l.stars.sum, max: l.stars.max })}${last}`, 46, b.top + h - 43, 14, l.stars.sum / Math.max(1, l.stars.max) >= 0.9 ? C.warn : C.muted, 'left', MONO, '700');
     const rt = laneRatingTitle(l.stars);
-    if (rt && !l.fallen) txt(ctx, rt.title, 246, b.top + 46, 13, rt.tone === 'gold' ? C.warn : rt.tone === 'red' ? C.fail : C.muted, 'right', MONO, '700');
+    if (rt && !l.fallen) txt(ctx, rt.title, 246, b.top + 44, 13, rt.tone === 'gold' ? C.warn : rt.tone === 'red' ? C.fail : C.muted, 'right', MONO, '700');
   }
   if (l.scorePop) {
     const age = (t - l.scorePop.since) * speed / 1100;
@@ -527,6 +528,8 @@ export class ArenaScene {
   lessonInfo: (lane: number) => { count: number; tip: string; learnedAt: number; mechanism: string } = () => ({ count: 0, tip: '', learnedAt: -1, mechanism: '' });
   /** Hover regions rebuilt every frame (design px): the caption of a gremlin or an UNKNOWN fault carries a tooltip. */
   hot: Array<{ x: number; y: number; w: number; h: number; tip: string }> = [];
+  /** Hover regions of the R J I B Q gear badges on every label card. */
+  gearHot: Array<{ x: number; y: number; w: number; h: number; tip: string }> = [];
   private statics = new Map<number, HTMLCanvasElement>();
   private walkers = new Map<number, Walker>();
   /** Divides animation durations (wave speed). */
@@ -585,6 +588,7 @@ export class ArenaScene {
   draw(vm: ArenaVM, now: number): void {
     const ctx = this.ctx;
     this.hot = [];
+    this.gearHot = [];
     const quiet = vm.lanes.length === 0;
     const lanes: LaneVM[] = quiet ? [] : vm.lanes;
     const n = quiet ? 5 : lanes.length;
@@ -634,7 +638,9 @@ export class ArenaScene {
     const fell = l.fallen ?? null;
     const deathIdx = fell ? Math.max(0, vm.stages.findIndex((s) => s.id === fell.stage)) : -1;
     if (fell) ctx.globalAlpha = 0.5;
-    labelCard(ctx, b, l, now, wornParts(l.parts, l.equips, now, this.speed, this.reducedMotion), this.speed, this.reducedMotion);
+    const wornNow = wornParts(l.parts, l.equips, now, this.speed, this.reducedMotion);
+    labelCard(ctx, b, l, now, wornNow, this.speed, this.reducedMotion);
+    GEAR_PARTS.forEach((gp, gi) => this.gearHot.push({ x: 56 + gi * 34 - 14, y: b.top + 48, w: 28, h: 28, tip: gearTip(gp, wornNow.includes(GEAR_SLOTS[gi]!.id)) }));
     if (fell) { ctx.globalAlpha = 1; fallenTag(ctx, b, fell.round); ctx.globalAlpha = 0.4; }
     if ((l.curses?.length ?? 0) > 0) {
       ctx.globalAlpha = fell ? 0.7 : 1;

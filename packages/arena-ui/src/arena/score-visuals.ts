@@ -169,7 +169,8 @@ export class ScoreVisuals {
       const el = document.createElement('div');
       el.className = 'sv-banner';
       el.setAttribute('role', 'status');
-      el.style.top = `${(box ? box.top + box.h / 2 : 160) - 36}px`;
+      // Compact, in the lower half of the lane: the chips, the door and the order counter stay visible.
+      el.style.top = `${(box ? box.top + box.h - 72 : 160)}px`;
       const head = document.createElement('b');
       head.className = 'sv-banner-head';
       head.textContent = 'RECOVERED';

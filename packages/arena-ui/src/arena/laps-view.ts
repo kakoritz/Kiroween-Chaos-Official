@@ -72,7 +72,7 @@ export function renderHeatRow(issues: readonly { stage: string; count: number; h
   row.setAttribute('role', 'list');
   row.setAttribute('aria-label', 'Issues by step');
   for (const i of issues) {
-    const c = el('span', `hr-chip hr-chip--${i.heat}`, `${labelOf(i.stage).slice(0, 10)} ${i.count}`);
+    const c = el('span', `hr-chip hr-chip--${i.heat}`, `${labelOf(i.stage)} ${i.count}`);
     c.setAttribute('role', 'listitem');
     c.title = `${labelOf(i.stage)}: ${i.count} issue${i.count === 1 ? '' : 's'}`;
     row.append(c);

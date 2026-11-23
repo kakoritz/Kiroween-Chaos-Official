@@ -19,3 +19,5 @@
 .lt-badge { flex: none; padding: 1px 8px; border: 1px solid var(--warn); border-radius: 10px; color: var(--warn); font-size: 14px; }
 .lt-badge.hidden { display: none; }
 body.present .lt-row { font-size: 20px; }
+.lt-view:empty { display: flex; align-items: center; color: var(--muted); font-style: italic; font-weight: 500; }
+.lt-view:empty::before { content: 'waiting for the next order'; }

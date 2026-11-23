@@ -165,7 +165,7 @@ export class CaptionOverlay {
       else {
         const box = laneBoxes(5)[callout.lane - 1];
         this.arrow.textContent = `\u25C0 ${callout.text}`;
-        this.arrow.style.top = `${(box ? box.top + box.h / 2 : 400) - 28}px`;
+        this.arrow.style.top = `${box ? box.top + 66 : 400}px`;
         this.arrow.classList.remove('hidden');
       }
     }
