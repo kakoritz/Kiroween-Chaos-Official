@@ -6,7 +6,7 @@ import { buildMonkeyConfig, defaultConfig, MONKEY_MODES, parseMonkeyConfig, type
 import { startControlServer, requestStop } from './control';
 import { httpProbe, jsonlAudit, startDemoTarget } from './demo';
 import { evaluatePlan, Monkey, runBlockers, type MonkeyReport } from './monkey';
-import { PatternStore } from '../miner/patterns';
+import { FilePatternStore } from '../miner/pattern-store';
 import { monkeyRoundRunner } from './host';
 import { checkWatch, Watch, WATCH_ROUND_MS } from './watch';
 
@@ -97,7 +97,7 @@ export async function watchCommand(argv: string[], log: (s: string) => void = co
   // A round is short: the config's duration cap is trimmed to 10 s so the watch keeps cycling.
   const base = { ...config, blast: { ...config.blast, maxDurationMs: Math.min(config.blast.maxDurationMs, 10_000) } };
   const watch = new Watch({
-    mode: config.mode, speed, store: new PatternStore(resolve(flag(argv, '--patterns') ?? '.haunt/patterns.json')),
+    mode: config.mode, speed, store: new FilePatternStore(resolve(flag(argv, '--patterns') ?? '.haunt/patterns.json')),
     specsDir: resolve(flag(argv, '--specs') ?? '.kiro/specs'), reportFile: resolve(flag(argv, '--report') ?? '.haunt/watch-report.json'),
     roundMs: Number(flag(argv, '--round-ms') ?? WATCH_ROUND_MS), ...(rounds !== undefined ? { maxRounds: Number(rounds) } : {}), log,
     round: monkeyRoundRunner({ base, target: proxy, probe: httpProbe(`${proxy.url}${probePath}`, config.syntheticHeader), probePath, audit: jsonlAudit(auditFile), who: flag(argv, '--who') ?? process.env.USERNAME ?? process.env.USER ?? 'haunt-watch' }),

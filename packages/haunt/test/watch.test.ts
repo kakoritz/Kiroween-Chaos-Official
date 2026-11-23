@@ -3,6 +3,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { PatternStore } from '../src/miner/patterns';
+import { FilePatternStore } from '../src/miner/pattern-store';
 import { lintSpecDir } from '../src/miner/specs';
 import type { Ev } from '../src/tournament/rp';
 import { checkWatch, Watch, WATCH_ROUND_MS, type RoundContext, type RoundResult } from '../src/monkey/watch';
@@ -28,7 +29,7 @@ function failingRound(index: number): RoundResult {
 const healthy = (): RoundResult => ({ events: [], status: 'completed', injections: 0, samples: 6, successRate: 1 });
 
 function setup(round: (c: RoundContext) => Promise<RoundResult>, over: Partial<ConstructorParameters<typeof Watch>[0]> = {}) {
-  const store = new PatternStore(join(dir, '.haunt', 'patterns.json'));
+  const store = new FilePatternStore(join(dir, '.haunt', 'patterns.json'));
   const watch = new Watch({ mode: 'staging', round, store, specsDir: join(dir, 'specs'), reportFile: join(dir, '.haunt', 'watch-report.json'), runId: 'watch-test', ...over });
   return { store, watch };
 }
@@ -101,7 +102,7 @@ describe('haunt watch loop (fake timers)', () => {
     const db = b.watch.start();
     await vi.advanceTimersByTimeAsync(20);
     await db;
-    const ps = new PatternStore(file).list();
+    const ps = new FilePatternStore(file).list();
     expect(ps).toHaveLength(1);
     expect(ps[0]!.runs).toEqual(['run-a#1', 'run-b#1']);
     expect(ps[0]!.count).toBe(8);
