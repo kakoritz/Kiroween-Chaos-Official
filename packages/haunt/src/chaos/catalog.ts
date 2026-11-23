@@ -109,6 +109,9 @@ export function nextApplicableStage(f: FaultDef, from: string | null, app: 'orde
   const i = from === null ? 0 : Math.max(0, order.indexOf(from));
   for (let j = i; j < order.length; j++) if (f.stages.includes(order[j]!)) return { stage: order[j]!, nextOrder: false };
   for (let j = 0; j < order.length; j++) if (f.stages.includes(order[j]!)) return { stage: order[j]!, nextOrder: true };
+  const other = order === INBOX_ORDER ? ORDERS_ORDER : INBOX_ORDER;
+  const hit = other.find((st) => f.stages.includes(st));
+  if (hit) return { stage: hit, nextOrder: false };
   throw new Error(`fault ${f.id} applies to no stage`);
 }
 

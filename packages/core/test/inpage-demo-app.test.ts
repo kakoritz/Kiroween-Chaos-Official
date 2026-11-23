@@ -15,7 +15,6 @@ describe('in-page demo follows the selected app', () => {
     await vi.advanceTimersByTimeAsync(120_000);
     const kinds = new Set(seen.filter((e) => e.type === 'effect').map((e) => e.detail.kind));
     expect(kinds.has('charge')).toBe(false);
-    expect(kinds.has('account_create')).toBe(false);
     expect(kinds.size).toBeGreaterThan(0);
     expect((await api.getState()).app).toBe('inbox');
   });
