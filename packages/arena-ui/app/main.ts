@@ -1,5 +1,5 @@
 import { apiBaseFromQuery, modeBadge, presentFromQuery } from '../src/mode';
-import { autoplayDecision, pickScript } from '../src/demo';
+import { autoplayDecision, consumeDemoParam, pickScript } from '../src/demo';
 import { ArenaScene, BOSS_INSET, STAGE_H, STAGE_W, laneBoxes } from '../src/arena/scene';
 import { applyEvent, emptyVM, loadSnapshot, reconcileLedger, totalScore } from '../src/arena/model';
 import { LedgerPanel, RankBoard } from '../src/arena/panels';
@@ -505,7 +505,11 @@ async function boot() {
   // Demo mode plays on load (?demo=off keeps it quiet, ?demo=<script> plays one script).
   const plan = autoplayDecision({ search, demoRunning, waveRunning, available: demoScripts });
   chainDemo = plan.chain;
-  if (plan.start) void startDemo(plan.start);
+  if (plan.start) {
+    void startDemo(plan.start);
+    const rest = consumeDemoParam(search);
+    if (rest !== null) window.history.replaceState(null, '', window.location.pathname + rest + window.location.hash);
+  }
   // Chain the playlist: when a script ends, start the next one so the show never goes quiet.
   window.setInterval(async () => {
     if (!chainDemo || awaitingNext || performance.now() - lastDemoStart < 6000) return;
