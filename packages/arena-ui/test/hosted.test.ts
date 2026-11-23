@@ -41,3 +41,15 @@ describe('hosted demo (in-page mock)', () => {
     expect(RECORDED_LABEL).toBe('Recorded run');
   });
 });
+
+describe('hosted badge placement', () => {
+  it('is a footer strip that the page reserves, not a corner overlay', async () => {
+    const { mountRecordedBadge } = await import('../src/onboarding/hosted');
+    const added: string[] = [];
+    const doc: any = { createElement: () => ({ setAttribute(_k: string, v: string) { this.style = v; }, style: '' }), body: { classList: { add: (c: string) => added.push(c) }, appendChild() {} } };
+    const el: any = mountRecordedBadge(doc);
+    expect(added).toContain('hosted');
+    expect(el.style).toContain('left:0;right:0;bottom:0');
+    expect(el.style).not.toContain('left:8px');
+  });
+});
