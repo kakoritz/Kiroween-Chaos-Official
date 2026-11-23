@@ -4,6 +4,7 @@ import { TIERS, TIMING, orderId, type AppId, type PartId, type TierId, type Haun
 import { planLane, type ArmSpec, type LanePlan, type LaneCfg } from './plan';
 import { gremlinVariant, laneIssues } from '../../../haunt/src/runner/floor';
 import { unit } from '../../../haunt/src/shared/rng';
+import type { Policy } from '../../../haunt/src/sdk/policy';
 
 export const LANE_START_MS = 1000;
 export const BASE_TS = 1_760_000_000_000;
@@ -24,6 +25,8 @@ export interface WaveSpec {
   laneParts?: (PartId[] | undefined)[];
   /** Never perfect (spec 5.3, P19): a lane whose plan has no issue gets a gremlin at the middle of the round, and `wave_end` carries `issues` per lane. */
   floor?: boolean;
+  /** Learned policy overlay per lane (see `LaneCfg.policy`). */
+  policies?: (Policy | undefined)[];
 }
 
 export interface BossSpec {
@@ -64,7 +67,7 @@ export function planWave(spec: WaveSpec, armsByLane: Record<number, ArmSpec[]> =
   const resolved: ResolvedBoss[] = bosses.map((b) => ({ ...b, startAt: b.warnAt + TIMING.bossWarnMs, endAt: 0 }));
   const plans = spec.tiers.map((tier, i) => {
     const lane = i + 1;
-    const cfg: LaneCfg = { lane, tier, app: spec.app, seed: spec.seed, orders: spec.orders, pace: spec.pace, progressMs: spec.progressMs, parts: spec.laneParts?.[i] };
+    const cfg: LaneCfg = { lane, tier, app: spec.app, seed: spec.seed, orders: spec.orders, pace: spec.pace, progressMs: spec.progressMs, parts: spec.laneParts?.[i], ...(spec.policies?.[i] ? { policy: spec.policies[i] } : {}) };
     const arms = [...(armsByLane[lane] ?? [])];
     for (const b of resolved) arms.push({ id: `boss-${b.fault}`, fault: b.fault, source: 'boss', at: b.startAt });
     const plan = planLane(cfg, arms);
