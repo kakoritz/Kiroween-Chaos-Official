@@ -24,12 +24,22 @@ faults:
   - { id: rate_limited, stage: assign, creature: Goblin, art: goblin, mode: status, behavior: "Honour Retry-After, queue" }
   - { id: assignee_deleted, stage: assign, creature: Ghost, art: ghost, mode: status, behavior: "Reassign to the queue owner" }
   - { id: sla_breach, stage: sla, creature: Banshee, art: banshee, mode: outage, behavior: "Escalate once, not every minute" }
+  - { id: duplicate_storm, stage: dedupe, creature: Zombie horde, art: zombie, mode: duplicate, behavior: "One master ticket, children linked" }
   - { id: wrong_queue, stage: triage, creature: Poltergeist, art: poltergeist, mode: misroute, behavior: "Reclassify with the audit trail" }
   - { id: sso_expired, stage: login, creature: Reaper, art: reaper, mode: expire, behavior: "Refresh, never create a second account" }
   - { id: notify_down, stage: notify, creature: Banshee Queen, art: wraith, mode: outage, behavior: "Retry later; a missed notice is logged, not lost" }
+curses:
+  - { id: cursed_tracker, endpoint: tracker, stage: assign, fault: http_429 }
+  - { id: cursed_directory, endpoint: directory, stage: login, fault: http_500 }
 reviews:
   label: Requester CSAT
   subscores: [first_response, resolution_time, reassignments, sla, ease]
+  stages:
+    first_response: [create, validate, triage, notify]
+    resolution_time: [escalate, resolve]
+    reassignments: [assign]
+    sla: [sla]
+    ease: [login, dedupe, close]
 bosses:
   - { id: queue_lich, label: Queue Lich, hits: [create, assign, notify], story: "Tracker down while mail floods in" }
 tiers:

@@ -1,6 +1,7 @@
 // Workflow Lab model: a declared workflow (stages and the protections it has) that the browser engine can sweep.
 // No node imports: this must bundle for the browser. Spec: .kiro/specs/share/spec.md section 4 (SH-C3).
 import { STREAMING_PACK_YAML } from '../packs/streaming';
+import { EMBEDDED_PACKS } from '../packs/embedded';
 import { packToLabModel, parsePack } from '../packs/pack';
 import type { HauntConfig, StageDef, StageRole } from '../config/haunt-config';
 
@@ -24,6 +25,11 @@ export const LAB_CREATURE_IDS: readonly string[] = ['reaper', 'wraith', 'banshee
 
 export interface PackFault { id: string; stage: string; creature: string; art: string; mode: string; behavior: string }
 export interface PackBoss { id: string; label?: string; hits: string[]; story?: string }
+/** A cursed endpoint: a persistent trait, so the stage it sits behind always sees the fault (not once per sweep). */
+export interface PackCurse { id: string; endpoint: string; stage?: string; fault?: string }
+export interface PackReviews { label: string; subscores: string[]; /** Subscore to the stage ids it is judged on. */ stages?: Record<string, string[]> }
+/** Catalog fault ids the lab engine can model (kept in step with LAB_CREATURES by the tests). */
+export const LAB_FAULT_IDS: readonly string[] = ['crash', 'power_outage', 'internet_outage', 'timeout', 'http_404', 'http_429', 'http_500', 'missing_file', 'duplicate_request', 'malformed_payload', 'disk_full'];
 /** Pack labels carried on the model and report so the UI changes words, not code (PK-C1). */
 export interface LabPackMeta {
   id: string;
@@ -31,10 +37,11 @@ export interface LabPackMeta {
   modelBased: boolean;
   /** Lab creature id (art) to the pack's creature name. */
   creatures: Record<string, string>;
-  review: { label: string; subscores: string[] };
+  review: PackReviews;
   tiers: Partial<Record<LabPart, string>>;
   faults: PackFault[];
   bosses: PackBoss[];
+  curses?: PackCurse[];
 }
 
 export interface LabModel {
@@ -163,7 +170,7 @@ export const LAB_PRESETS: Record<string, LabModel> = {
     ],
   },
   // Lazy: built from the embedded pack text on first read (the packs module imports this one).
-  get streaming(): LabModel { return streamingPreset(); },
+  get streaming(): LabModel { return packPreset(STREAMING_PACK_YAML); },
   report: {
     name: 'report-lab',
     stages: [
@@ -175,10 +182,16 @@ export const LAB_PRESETS: Record<string, LabModel> = {
   },
 };
 
+// Every other embedded pack (ticketing, and any pack made with `haunt pack new`) is a preset too, with no code change.
+for (const id of Object.keys(EMBEDDED_PACKS)) {
+  if (id in LAB_PRESETS) continue;
+  Object.defineProperty(LAB_PRESETS, id, { enumerable: true, configurable: true, get: () => packPreset(EMBEDDED_PACKS[id]!) });
+}
+
 export const LAB_COMMANDS: readonly string[] = ['npx haunt init', 'haunt validate', 'haunt sweep'];
 
-function streamingPreset(): LabModel {
-  const r = parsePack(STREAMING_PACK_YAML);
-  if (!r.ok) throw new Error(`streaming pack is invalid: ${r.errors.join('; ')}`);
+function packPreset(yaml: string): LabModel {
+  const r = parsePack(yaml);
+  if (!r.ok) throw new Error(`embedded pack is invalid: ${r.errors.join('; ')}`);
   return packToLabModel(r.pack);
 }

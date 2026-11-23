@@ -1,0 +1,37 @@
+/* PK-U3: Chaos Monkey panel */
+.mk-badge { display: inline-block; margin-left: 8px; min-width: 20px; padding: 0 6px; border-radius: 10px; background: var(--fail); color: #fff; font: 800 13px ui-monospace, Menlo, monospace; text-align: center; }
+.mk-badge.hidden { display: none; }
+.mk-card { width: 1100px; max-height: 1000px; }
+.mk-close { margin-left: auto; align-self: center; }
+.mk-body { padding: 8px 28px 24px; overflow: auto; display: flex; flex-direction: column; gap: 14px; }
+.mk-note { margin: 0; color: var(--muted); font-size: 17px; }
+.mk-killbox { display: flex; align-items: center; gap: 20px; }
+.mk-kill { flex: none; min-width: 340px; padding: 22px 36px; border: 4px solid #5a1020; border-radius: 16px; background: #a3172e; color: #fff; font: 900 34px ui-monospace, Menlo, monospace; letter-spacing: 0.08em; cursor: pointer; box-shadow: 0 6px 0 #5a1020; }
+.mk-kill:hover { background: #c01d38; }
+.mk-kill:active { transform: translateY(4px); box-shadow: 0 2px 0 #5a1020; }
+.mk-kill:focus-visible { outline: 4px solid var(--bone); outline-offset: 3px; }
+.mk-kill--live { background: #e0203f; border-color: #fff; }
+.mk-killnote { margin: 0; color: #cfc8ee; font-size: 18px; }
+.mk-status { padding: 10px 14px; border-radius: 10px; background: rgba(255,255,255,0.05); font-size: 19px; }
+.mk-status--running { outline: 2px solid var(--torch); }
+.mk-status--aborted, .mk-status--stopped, .mk-status--dead_man, .mk-status--refused { outline: 2px solid var(--fail); }
+.mk-inj { color: var(--muted); }
+.mk-modes { display: flex; gap: 10px; }
+.mk-mode { font-size: 19px; padding: 10px 22px; }
+.mk-mode--on { outline: 3px solid var(--torch); }
+.mk-go { align-self: flex-start; font-size: 19px; padding: 10px 26px; }
+.mk-rails, .mk-meter, .mk-audit { padding: 12px 18px; border: 2px solid var(--stone-2); border-radius: 12px; background: rgba(255,255,255,0.03); }
+.mk-rails h3, .mk-meter h3, .mk-audit h3 { margin: 0 0 8px; font-size: 18px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--bone); }
+.mk-rails ul { margin: 0; padding-left: 22px; font-size: 17px; line-height: 1.5; }
+.mk-track { position: relative; height: 26px; border-radius: 13px; background: #2a2446; border: 2px solid #14101f; overflow: visible; }
+.mk-fill { display: block; height: 100%; border-radius: 11px; background: var(--muted); transition: width 0.4s ease; }
+.mk-track--ok .mk-fill { background: var(--ok); }
+.mk-track--bad .mk-fill { background: var(--fail); }
+.mk-mark { position: absolute; top: -6px; bottom: -6px; width: 4px; margin-left: -2px; background: var(--bone); border-radius: 2px; }
+.mk-meter-text { margin: 8px 0 0; font-size: 17px; }
+.mk-dots { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.mk-dot { width: 12px; height: 12px; border-radius: 50%; }
+.mk-dot--ok { background: var(--ok); }
+.mk-dot--bad { background: var(--fail); }
+.mk-log { margin: 0; max-height: 220px; overflow: auto; padding: 10px; border-radius: 8px; background: #0d0b14; color: #cfc8ee; font: 14px/1.45 ui-monospace, Menlo, monospace; white-space: pre-wrap; }
+body.reduced-motion .mk-fill { transition: none; }

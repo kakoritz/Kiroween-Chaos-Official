@@ -33,6 +33,8 @@ import { PatternStore, THRESHOLDS, costOf, minePatterns, patternEvent, qualifies
 import { lintSpecDir, writeFixSpec } from '../../../haunt/src/miner/specs';
 import { improve as runImprove, type ImproveReport, type RunResult } from '../../../haunt/src/miner/improve';
 import { join as joinPath } from 'node:path';
+import { MonkeyHost } from '../../../haunt/src/monkey/host';
+import { MONKEY_MODES, type MonkeyMode } from '../../../haunt/src/monkey/config';
 
 export const LIVE_HOST = '127.0.0.1';
 export const LIVE_PORT = 7070;
@@ -116,6 +118,8 @@ export class LiveServer {
   /** Intensity dial (V1_2 section 5): default level 3. Moved by POST /api/intensity and by auto-ramp. */
   intensity = { level: 3, autoRamp: false, everyN: 4, max: 11 };
   demoRunning: string | null = null;
+  /** The chaos monkey panel's backend (PK-U3): one built-in demo target, created on first use, never a third-party system. */
+  private monkeyHost?: MonkeyHost;
   /** The running tournament (TV3-C7), if any. */
   tourney?: { t: Tournament; speed: number; pace: 'normal' | 'show' | 'slow'; wave: number; id: string; firstWave?: number; autoSpecs?: boolean };
   /** The improve loop (TV3-C13): one job at a time. */
@@ -182,6 +186,8 @@ export class LiveServer {
   }
 
   async close(): Promise<void> {
+    await this.monkeyHost?.close();
+    this.monkeyHost = undefined;
     for (const c of this.clients) c.end();
     this.clients.clear();
     this.log.close();
@@ -653,6 +659,16 @@ export class LiveServer {
     return {};
   }
 
+  private monkey(): MonkeyHost { return (this.monkeyHost ??= new MonkeyHost()); }
+
+  /** `POST /api/monkey/start {mode}`: starts the monkey on the built-in demo target. 409 while one is running. */
+  private monkeyStart(body: Record<string, any>): Promise<unknown> {
+    if (!MONKEY_MODES.includes(body.mode)) fail(400, 'bad_request', 'mode: one of ' + MONKEY_MODES.join(' | '));
+    const host = this.monkey();
+    if (host.running) fail(409, 'monkey_running', 'a monkey run is active: pull the kill switch first');
+    return host.start(body.mode);
+  }
+
   private setChaosMode(body: Record<string, any>) {
     if (!['off', 'manual', 'random'].includes(body.mode)) fail(400, 'bad_request', 'bad mode');
     const freq = body.frequency ?? this.chaosMode.frequency;
@@ -693,6 +709,12 @@ export class LiveServer {
         return { json: lintSpecDir(dir) };
       }
       if (p === '/api/curses') return { json: { curses: [...this.curses], table: curseTable(this.log.events as never), kinds: CURSE_KINDS, endpoints: CURSE_ENDPOINTS } };
+      if (p === '/api/monkey') return { json: this.monkey().state(Number(q.get('audit') ?? 20) || 20) };
+      if (p === '/api/monkey/preview') {
+        const mode = q.get('mode') as MonkeyMode;
+        if (!MONKEY_MODES.includes(mode)) fail(400, 'bad_request', 'mode: one of ' + MONKEY_MODES.join(' | '));
+        return { json: this.monkey().preview(mode) };
+      }
       if (p === '/api/improve') {
         const j = this.improveJob;
         return { json: j ? { id: j.id, phase: j.phase, startedAt: j.startedAt, request: j.request, ...(j.report ? { report: j.report } : {}), ...(j.error ? { error: j.error } : {}), ...(j.spec ? { spec: j.spec } : {}) } : { phase: 'idle' } };
@@ -740,6 +762,8 @@ export class LiveServer {
     if (method === 'DELETE' && p === '/api/patterns') { this.patterns.reset(); return { json: {} }; }
     if (method !== 'POST') return undefined;
     switch (p) {
+      case '/api/monkey/start': return { json: this.monkeyStart(body) };
+      case '/api/monkey/stop': return { json: this.monkey().stop('kill switch: arena panel') };
       case '/api/wave/start': return { json: this.startWave(body) };
       case '/api/wave/stop':
         if (!this.waves.active) fail(409, 'no_wave', 'no wave is running');
@@ -858,7 +882,7 @@ export class LiveServer {
       }
       const out = this.route(method, url, body);
       if (out?.text !== undefined) { res.writeHead(200, { 'content-type': 'text/markdown; charset=utf-8' }).end(out.text); return; }
-      if (out) { this.sendJson(res, out.status ?? 200, out.json); return; }
+      if (out) { this.sendJson(res, out.status ?? 200, await out.json); return; }
       if (method === 'GET' && !url.pathname.startsWith('/api/') && this.serveStatic(url, res)) return;
       this.sendJson(res, 404, { error: { code: 'bad_request', message: `no route ${method} ${url.pathname}` } });
     } catch (e) {

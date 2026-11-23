@@ -30,11 +30,17 @@ faults:
   - { id: watch_history_dup, stage: finish, creature: Poltergeist, art: poltergeist, mode: duplicate, behavior: "Idempotency key on the history write" }
   - { id: token_expired, stage: any, creature: Reaper, art: reaper, mode: expire, behavior: "Refresh token, do not duplicate the purchase" }
 curses:
-  - { id: cursed_404, endpoint: catalog }
-  - { id: cursed_manifest, endpoint: manifest }
+  - { id: cursed_404, endpoint: catalog, stage: browse, fault: http_404 }
+  - { id: cursed_manifest, endpoint: manifest, stage: buffering, fault: http_500 }
 reviews:
   label: Viewer rating
   subscores: [startup_time, buffering, render, ads, ease]
+  stages:
+    startup_time: [login, entitlement, license, start_stream]
+    buffering: [buffering]
+    render: [render]
+    ads: [ads]
+    ease: [profile, browse, title_select, finish]
 bosses:
   - { id: cdn_kraken, label: Kraken, hits: [start_stream, buffering, render], story: "CDN plus buffering plus render in one night" }
   - { id: server_lich, label: Server Lich, hits: [login, entitlement, license, start_stream, finish], story: "The whole backend down for 30 s" }
