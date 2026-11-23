@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Haunt: a chaos and resilience harness with a haunted arena.",
   "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/kakoritz/Kiroween-Chaos.git" },
   "engines": { "node": ">=20" },
   "workspaces": ["packages/*", "apps/*"],
   "scripts": {
