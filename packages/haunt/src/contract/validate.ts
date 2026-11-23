@@ -280,7 +280,7 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
     switch (t) {
       case 'hello': minor = num((ev as any).contractMinor) ? (ev as any).contractMinor : 0; return;
       case 'reset':
-        lanes = new Map(); waveOpen = false; boss = null;
+        lanes = new Map(); waveOpen = false; boss = null; fallenLanes.clear();
         return;
       case 'wave_start': {
         if (waveOpen) bad('R1', ev, 'wave_start while the previous wave has not ended');
@@ -589,6 +589,7 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
           L.state = 'continuing';
           // mark so recover_done keeps the same stage open
         } else if (a === 'restart') { L.doneIdx = -1; }
+        else if (a === 'replay' && L.state === 'failed') { L.state = 'running'; L.open = undefined; } // a journal replay after stage_fail restarts the order's stages from the top (rule 3)
         L.stack.push(a);
         break;
       }
@@ -602,7 +603,7 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
         closeChaos();
         if (minor >= 1) { L.walk = undefined; L.grab = undefined; if (L.order && !L.ivals.has(L.order)) L.ivals.set(L.order, L.open ? L.open.idx : 0); }
         L.dead = { ts: ev.ts, restartInMs: d.restartInMs ?? 0 };
-        L.state = 'dead'; L.stack = [];
+        L.state = 'dead'; L.stack = []; for (const k of L.breaker.keys()) L.breaker.set(k, 'lost'); // a restarted process has no breaker memory
         if (L.open) L.open.killed = true;
         break;
       }
@@ -639,7 +640,7 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
       case 'breaker': {
         const from = L.breaker.get(d.service) ?? 'closed';
         const to = d.state as string;
-        const okMoves: Record<string, string[]> = { closed: ['open'], open: ['half_open'], half_open: ['closed', 'open'] };
+        const okMoves: Record<string, string[]> = { closed: ['open'], open: ['half_open'], half_open: ['closed', 'open'], lost: ['open', 'half_open', 'closed'] };
         if (!okMoves[from]?.includes(to)) bad('R-breaker', ev, `breaker ${d.service} goes ${from} to ${to}`);
         L.breaker.set(d.service, to);
         break;

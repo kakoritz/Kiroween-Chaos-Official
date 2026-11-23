@@ -1,7 +1,8 @@
 // Travel scheduler (playtest-v2 design section 1, contract/V1_1.md rule 40). The runner owns one clock per lane and
 // holds the bot's next event (never reorders) until the stated gap has passed: `walkMs` after a non-final stage_done,
 // `grabMs` after order_start, `ceremonyMs + returnMs` after order_done, `cancelMs + returnMs` after order_failed.
-// Replay pairs (skipped stage_done) and process restarts are exempt.
+// Replay pairs (skipped stage_done) are exempt. `process_up` waits until `restartInMs` after the recorded `process_dead` (rule 6),
+// because the queue can stamp the death late while the bot's real restart timer already ran.
 export interface TravelTimes { walkMs: number; grabMs: number; ceremonyMs: number; returnMs: number; cancelMs: number }
 
 export const PACE_FACTOR: Record<string, number> = { normal: 1, show: 2, slow: 3 };
@@ -21,6 +22,7 @@ type Ev = Record<string, any>;
 /** Per-lane gate. `wait` is awaited before a bot event is processed; `annotate` adds the travel fields and starts the next gap. */
 export class LaneTravel {
   private notBefore = 0;
+  private upNotBefore = 0;
 
   constructor(
     private readonly t: () => TravelTimes,
@@ -31,6 +33,7 @@ export class LaneTravel {
 
   /** Milliseconds this raw bot event must still wait. */
   due(ev: Ev): number {
+    if (ev.type === 'process_up') return Math.max(0, this.upNotBefore - this.now());
     if (ev.type !== 'stage_start' && ev.type !== 'order_start') return 0;
     return Math.max(0, this.notBefore - this.now());
   }
@@ -54,7 +57,7 @@ export class LaneTravel {
         break;
       case 'order_done': d.ceremonyMs ??= t.ceremonyMs; d.returnMs ??= t.returnMs; gap(d.ceremonyMs + d.returnMs); break;
       case 'order_failed': d.cancelMs ??= t.cancelMs; d.returnMs ??= t.returnMs; gap(d.cancelMs + d.returnMs); break;
-      case 'process_dead': this.notBefore = 0; break;
+      case 'process_dead': this.notBefore = 0; this.upNotBefore = at + (Number(d.restartInMs) || 0); break;
       default: return ev;
     }
     return { ...ev, detail: d };

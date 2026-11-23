@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Haunt: a chaos and resilience harness with a haunted arena.",
   "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/kakoritz/Kiroween-Chaos.git" },
   "engines": { "node": ">=20" },
   "workspaces": ["packages/*", "apps/*"],
   "scripts": {
@@ -23,6 +24,7 @@
     "test": "vitest run",
     "test:contract": "vitest run --config vitest.contract.config.ts",
     "validate:events": "node tools/run-ts.mjs tools/validate-events.ts",
+    "validate:live": "node tools/validate-live.mjs",
     "trace": "node tools/run-ts.mjs tools/trace.ts",
     "review": "node tools/run-ts.mjs tools/haunt-review.ts",
     "make:fixtures": "node tools/run-ts.mjs tools/make-fixtures.ts",

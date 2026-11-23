@@ -158,6 +158,10 @@ export class Sdk {
   private readonly runs = new Map<string, number>();
   private keyUsed = false;
   private order_: string | null = null;
+  /** The stage the order is in (set at stage_start, cleared at stage_done) and the last event type this order emitted: park and fail events carry the stage and follow a `stage_fail` (PROTOCOL.md rules 3 and 4). */
+  private curStage: string | null = null;
+  private lastType = '';
+  private lastStage: string | null = null;
   private replaying = false;
   /** Redo generation of the order in flight: 0 first, n after the nth redo. Drives the `:rN` key suffix. */
   private gen = 0;
@@ -213,6 +217,7 @@ export class Sdk {
       return 'skipped';
     }
     this.order_ = id;
+    this.curStage = null;
     this.replaying = false;
     this.gen = this.state.get(id)?.redo ?? 0;
     this.ev('order_start', id);
@@ -237,7 +242,8 @@ export class Sdk {
         } else if (e instanceof ParkSignal) {
           outcome = 'parked';
           result = 'parked';
-          this.ev('order_parked', id, undefined, { reason: e.reason });
+          const stage = this.failOpenStage(id, 'breaker_open');
+          this.ev('order_parked', id, undefined, { stage, reason: e.reason });
         } else if (e instanceof QuarantineError) {
           outcome = 'quarantined';
           result = 'quarantined';
@@ -247,13 +253,15 @@ export class Sdk {
         } else {
           outcome = 'failed';
           result = 'failed';
-          this.ev('order_failed', id, undefined, { reason: e instanceof Error ? e.message : String(e) });
+          const stage = (e instanceof CallError ? e.stage : undefined) ?? this.failOpenStage(id, e instanceof Error ? e.message : String(e));
+          this.ev('order_failed', id, undefined, { stage, error: e instanceof Error ? e.message : String(e), reason: e instanceof Error ? e.message : String(e) });
         }
       }
       break;
     }
     this.write({ t: 'order_end', order: id, outcome, ts: this.o.host.now() });
     this.order_ = null;
+    this.curStage = null;
     return result;
   }
 
@@ -297,11 +305,13 @@ export class Sdk {
     const attempt = (this.runs.get(runKey) ?? 0) + 1;
     this.runs.set(runKey, attempt);
     this.write({ t: 'stage_start', order, stage: name, attempt, ts: this.o.host.now() });
+    this.curStage = name;
     this.ev('stage_start', order, name, { attempt });
     const ctx = new StageCtx(this, order, name);
     await fn(ctx);
     this.write({ t: 'stage_done', order, stage: name, ts: this.o.host.now() });
     this.ev('stage_done', order, name, ctx.onlyReplayed() ? { skipped: true } : undefined);
+    this.curStage = null;
   }
 
   // ---- internals used by StageCtx ----
@@ -562,7 +572,16 @@ export class Sdk {
     applyRecord(this.state, rec);
   }
 
+  /** The stage an order ends in; a stage left open without a `stage_fail` (breaker open, a thrown error) gets one first. */
+  private failOpenStage(order: string, error: string): string {
+    const stage = this.curStage ?? this.lastStage ?? 'account';
+    if (this.lastType !== 'stage_fail' && this.curStage !== null) this.ev('stage_fail', order, stage, { error, retryable: false, status: null });
+    return stage;
+  }
+
   private ev(type: string, order: string, stage?: string, detail?: Record<string, unknown>): void {
+    this.lastType = type;
+    if (stage !== undefined) this.lastStage = stage;
     const msg: Record<string, unknown> = { type, order };
     if (stage !== undefined) msg.stage = stage;
     if (detail !== undefined) msg.detail = detail;

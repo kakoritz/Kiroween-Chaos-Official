@@ -4,7 +4,7 @@ import { ALL_TYPES } from '../../../haunt/src/shared/events';
 
 type Ev = Record<string, any>;
 const CONTRACT_TYPES = new Set<string>(ALL_TYPES);
-interface WireState { afterUp: boolean; inFlight?: string; attempts: Map<string, number>; recover: string[]; breakers: Map<string, string>; last?: Ev }
+interface WireState { open?: string; stageOf: Map<string, string>; afterUp: boolean; inFlight?: string; attempts: Map<string, number>; recover: string[]; breakers: Map<string, string>; last?: Ev }
 interface LaneState { index: number; stageStart: Map<string, number>; orderStart: Map<string, number>; depth: number; recoverStart: number; repeats: Map<string, number> }
 
 export class DetailNormalizer {
@@ -33,6 +33,17 @@ export class DetailNormalizer {
     const w = this.wire(lane);
     const out: Ev[] = [];
     const push = (e: Ev): void => {
+      // order_parked, order_failed and order_resumed carry the stage the order was in (PROTOCOL.md: `{stage, ...}`).
+      const o = String(e.order ?? '');
+      if (e.type === 'stage_start' && e.stage) { w.stageOf.set(o, String(e.stage)); w.open = `${o}|${e.stage}`; }
+      else if (e.type === 'stage_done' || e.type === 'order_done' || e.type === 'process_dead') w.open = undefined;
+      else if (e.type === 'order_parked' || e.type === 'order_failed' || e.type === 'order_resumed') {
+        const stage = e.detail?.stage ?? e.stage ?? w.stageOf.get(o) ?? 'account';
+        e = { ...e, detail: { ...(e.detail ?? {}), stage } };
+        w.stageOf.set(o, String(stage));
+        if (e.type !== 'order_resumed') w.open = undefined;
+        if (e.type === 'order_failed' && e.detail.error === undefined) e = { ...e, detail: { ...e.detail, error: e.detail.reason ?? 'failed' } };
+      }
       if (e.type === 'stage_start') {
         const k = `${e.order ?? ''}|${e.stage ?? ''}`;
         const n = (w.attempts.get(k) ?? 0) + 1;
@@ -74,7 +85,9 @@ export class DetailNormalizer {
         }
         break;
       case 'stage_done':
-        if (ev.detail?.skipped === true && !(w.last?.type === 'stage_start' && w.last.order === ev.order && w.last.stage === ev.stage)) {
+        // A stage that sent progress ran for real, even when every effect came from the journal: only a bare stage_start/stage_done pair is a skip (rule 27).
+        if (ev.detail?.skipped === true && w.open === `${ev.order ?? ''}|${ev.stage ?? ''}` && w.last?.type !== 'stage_start') ev = { ...ev, detail: { ...ev.detail, skipped: false } };
+        if (ev.detail?.skipped === true && w.open !== `${ev.order ?? ''}|${ev.stage ?? ''}`) {
           push({ type: 'stage_start', order: ev.order, stage: ev.stage, detail: {} });
         }
         break;
@@ -91,7 +104,7 @@ export class DetailNormalizer {
 
   private wire(lane: string): WireState {
     let s = this.wires.get(lane);
-    if (!s) { s = { afterUp: false, attempts: new Map(), recover: [], breakers: new Map() }; this.wires.set(lane, s); }
+    if (!s) { s = { stageOf: new Map(), afterUp: false, attempts: new Map(), recover: [], breakers: new Map() }; this.wires.set(lane, s); }
     return s;
   }
 

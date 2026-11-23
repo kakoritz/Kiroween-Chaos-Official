@@ -66,6 +66,44 @@ export const APPS: Record<AppId, { id: AppId; label: string; stages: StageDef[];
   inbox: { id: 'inbox', label: 'Haunted Inbox', stages: INBOX_STAGES, orderPrefix: 'msg' },
 };
 
+/** Wording of one app, so UI lines and review text read right (a ticket desk talks about tickets and replies, not orders and charges). */
+export interface AppVocab {
+  /** What one unit of work is called, lower case. */
+  unit: string;
+  /** Id prefix shown for a unit (the bot's file ids keep `ord-`; the UI shows this one). */
+  idPrefix: string;
+  /** Verb for the lane picking a unit up ("grabbed order", "picked up ticket"). */
+  start: string;
+  /** Past tense of finishing one. */
+  done: string;
+  /** The effect kind whose repeat is the app's worst double-effect (a second charge, a second ticket). */
+  dupKind: string;
+  /** Review reason for that double effect. */
+  dupReason: string;
+  /** Review reasons by sub-score, low and high. */
+  low: { timeliness: string; delays: string; issues: string; delivery: string; ease: string };
+  high: { timeliness: string; delays: string; issues: string; delivery: string; ease: string };
+  /** Review reason when a wrong decision was taken. */
+  wrong: string;
+  /** Review reason of a cancelled unit. */
+  never: string;
+  /** Lane-line text of a cancelled unit. */
+  cancelled: string;
+}
+export const APP_VOCAB: Record<AppId, AppVocab> = {
+  orders: {
+    unit: 'order', idPrefix: 'ord', start: 'grabbed', done: 'delivered', dupKind: 'charge', dupReason: 'Charged twice!', wrong: 'Wrong order', never: 'Never arrived', cancelled: 'ORDER CANCELLED',
+    low: { timeliness: 'Took forever to arrive', delays: 'Kept me waiting', issues: 'So many hiccups', delivery: 'Wrong order', ease: 'Hard to order' },
+    high: { timeliness: 'Lightning fast', delays: 'No waiting around', issues: 'Smooth as a ghost', delivery: 'Everything arrived right', ease: 'Easy to order' },
+  },
+  inbox: {
+    unit: 'ticket', idPrefix: 'tkt', start: 'picked up', done: 'resolved', dupKind: 'ticket', dupReason: 'Filed a duplicate ticket!', wrong: 'Wrong answer', never: 'Never answered', cancelled: 'TICKET CANCELLED',
+    low: { timeliness: 'Took forever to answer', delays: 'Kept me waiting', issues: 'So many hiccups', delivery: 'Wrong answer', ease: 'Hard to reach support' },
+    high: { timeliness: 'Answered in a flash', delays: 'No waiting around', issues: 'Smooth as a ghost', delivery: 'Got the right answer', ease: 'Easy to reach support' },
+  },
+};
+export const vocabOf = (app: string | undefined): AppVocab => APP_VOCAB[app === 'inbox' ? 'inbox' : 'orders'];
+
 /** Contract stage list for an app (V1_2.md section 1): `[{id, label, kind}]`. */
 export function stageList(app: AppId): { id: string; label: string; kind: StageKind }[] {
   return APPS[app].stages.map((s) => ({ id: s.id, label: s.label, kind: stageKind(s.role) }));
@@ -278,3 +316,9 @@ export type DecisionChoice = 'refund' | 'discount' | 'redo';
 export const DECISION_CHOICES: DecisionChoice[] = ['refund', 'discount', 'redo'];
 export const TIER_DECISION_DEFAULT: Record<string, DecisionChoice> = { rookie: 'refund', retrier: 'refund', journaler: 'discount', reconciler: 'discount', phoenix: 'redo' };
 export const DECISION_TIMEOUT_MS = 6000;
+
+/** An order or message id as the app names it: `ord-0003` and `msg-0003` read `tkt-0003` in the inbox. */
+export function displayId(app: string | undefined, id: string): string {
+  const m = /^[a-z]+-(\d+.*)$/.exec(id);
+  return m ? `${vocabOf(app).idPrefix}-${m[1]}` : id;
+}
