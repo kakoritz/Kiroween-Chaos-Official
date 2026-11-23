@@ -5,6 +5,7 @@ import { applyEvent, emptyVM, loadSnapshot, reconcileLedger, totalScore } from '
 import { LedgerPanel, RankBoard } from '../src/arena/panels';
 import { LaneTickerModel, LaneTickerView } from '../src/arena/lanes-ticker';
 import { chipAt } from '../src/arena/inspector';
+import { computeFit } from '../src/arena/layout';
 import { LanePopup } from '../src/arena/lane-popup';
 import '../src/arena/lane-popup.css';
 import { WaveSummary } from '../src/arena/wave-summary';
@@ -599,6 +600,7 @@ void boot();
       },
       onDismiss: () => { /* the demo already plays behind the splash */ },
     }, { reduced, autoDismissMs: sd.autoDismissMs });
+    placeOverlays(document.body.classList.contains('narrow'));
   }
 }
 
@@ -631,23 +633,50 @@ mountCampaignHub(stageEl, { getCampaign: () => api.getCampaign() }, { onStart: s
   if (tourRequested(window.location.search)) window.setTimeout(() => void beginTour(), 600);
 }
 
-// Fixed 1920x1080 design stage, scaled uniformly to fit and centred (letterboxed). The canvas
-// backing store follows the scale and DPR so lines stay crisp; all drawing uses design pixels.
-let lastFit = '';
-function fit() {
-  const s = Math.min(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H);
-  const left = (window.innerWidth - STAGE_W * s) / 2;
-  const top = (window.innerHeight - STAGE_H * s) / 2;
-  stageEl.style.transform = `translate(${left}px, ${top}px) scale(${s})`;
-  const dpr = window.devicePixelRatio || 1;
-  const w = Math.round(STAGE_W * s * dpr);
-  const key = ``;
-  if (key !== lastFit) {
-    lastFit = key;
-    canvas.width = w;
-    canvas.height = Math.round(STAGE_H * s * dpr);
-    canvas.getContext('2d')!.setTransform(w / STAGE_W, 0, 0, w / STAGE_W, 0, 0);
+// Fixed 1920x1080 design stage, scaled uniformly to fit and centred (letterboxed). On narrow or portrait viewports the arena
+// band is fitted to the width and the header and panels move out of the scaled stage into a normal scrolling flow below it.
+// The canvas backing store stays at design size; all drawing uses design pixels.
+const NARROW_IDS = ['rank', 'ledger', 'ticker', 'quiet', 'insp', 'keys-pop'];
+const flowEl = document.createElement('div');
+flowEl.id = 'flow';
+const bandEl = document.createElement('div');
+bandEl.id = 'arena-band';
+const moved = new Map<HTMLElement, Comment>();
+// The splash covers the whole screen in design pixels; on a phone it is hoisted out of the scaled stage so it can be real-sized.
+function placeOverlays(on: boolean) {
+  for (const el of Array.from(document.querySelectorAll<HTMLElement>('.splash'))) {
+    const to = on ? root : stageEl;
+    if (el.parentElement !== to) to.appendChild(el);
   }
+}
+function setNarrow(on: boolean) {
+  document.body.classList.toggle('narrow', on);
+  placeOverlays(on);
+  if (on === (moved.size > 0)) return;
+  if (on) {
+    const hdr = stageEl.querySelector<HTMLElement>('.hdr')!;
+    const els = Object.fromEntries(NARROW_IDS.map((id) => [id, $(id)]));
+    for (const el of [hdr, ...Object.values(els)]) { const ph = document.createComment(el.id || 'hdr'); el.replaceWith(ph); moved.set(el, ph); }
+    stageEl.replaceWith(bandEl);
+    bandEl.appendChild(stageEl);
+    root.appendChild(flowEl);
+    flowEl.append(hdr, bandEl, els['quiet']!, els['rank']!, els['ledger']!, els['ticker']!, els['insp']!, els['keys-pop']!);
+  } else {
+    for (const [el, ph] of moved) ph.replaceWith(el);
+    moved.clear();
+    flowEl.remove();
+    root.appendChild(stageEl);
+    bandEl.remove();
+  }
+}
+function fit() {
+  const footEl = document.getElementById('hosted-badge');
+  document.body.style.setProperty('--foot', `${footEl ? footEl.offsetHeight : 0}px`);
+  const w = root.clientWidth, h = root.clientHeight;
+  const f = computeFit(w, h);
+  setNarrow(f.narrow);
+  if (f.narrow) bandEl.style.height = `${f.bandH}px`;
+  stageEl.style.transform = `translate(${f.left}px, ${f.top}px) scale(${f.scale})`;
 }
 window.addEventListener('resize', fit);
 fit();
