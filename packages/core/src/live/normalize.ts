@@ -1,7 +1,10 @@
 // Fills the detail fields the contract requires on bot-forwarded events (PROTOCOL.md rule on detail). Bots emit the
 // minimum; the live runtime owns the wire shape. Only missing keys are added, never overwritten.
+import { ALL_TYPES } from '../../../haunt/src/shared/events';
+
 type Ev = Record<string, any>;
-interface WireState { afterUp: boolean; inFlight?: string; attempts: Map<string, number>; recover: string[]; last?: Ev }
+const CONTRACT_TYPES = new Set<string>(ALL_TYPES);
+interface WireState { afterUp: boolean; inFlight?: string; attempts: Map<string, number>; recover: string[]; breakers: Map<string, string>; last?: Ev }
 interface LaneState { index: number; stageStart: Map<string, number>; orderStart: Map<string, number>; depth: number; recoverStart: number; repeats: Map<string, number> }
 
 export class DetailNormalizer {
@@ -25,6 +28,8 @@ export class DetailNormalizer {
    * its `stage_start`, `attempt` is counted by the server, and each `recover_done` carries its open pair's action.
    */
   shape(lane: string, ev: Ev): Ev[] {
+    // A bot-private message (the inbox's `desk_fault`) is not a contract event: it never reaches the wire.
+    if (typeof ev.type === 'string' && !CONTRACT_TYPES.has(ev.type)) return [];
     const w = this.wire(lane);
     const out: Ev[] = [];
     const push = (e: Ev): void => {
@@ -47,6 +52,14 @@ export class DetailNormalizer {
         // A wrong-order redo runs every stage again from attempt 1.
         if (ev.detail?.redo === true) for (const k of [...w.attempts.keys()]) if (k.startsWith(`${ev.order}|`)) w.attempts.delete(k);
         break;
+      case 'breaker': {
+        // A restarted bot process starts with closed breakers and reports `open` again for a breaker the wire already shows open (R-breaker): that is no transition.
+        const k = String(ev.detail?.service ?? '');
+        const state = String(ev.detail?.state ?? '');
+        if (w.breakers.get(k) === state) return [];
+        w.breakers.set(k, state);
+        break;
+      }
       case 'recover_start': w.afterUp = false; w.recover.push(String(ev.detail?.action ?? 'replay')); break;
       case 'recover_done': {
         const action = w.recover.pop();
@@ -78,7 +91,7 @@ export class DetailNormalizer {
 
   private wire(lane: string): WireState {
     let s = this.wires.get(lane);
-    if (!s) { s = { afterUp: false, attempts: new Map(), recover: [] }; this.wires.set(lane, s); }
+    if (!s) { s = { afterUp: false, attempts: new Map(), recover: [], breakers: new Map() }; this.wires.set(lane, s); }
     return s;
   }
 
@@ -100,7 +113,7 @@ export class DetailNormalizer {
       case 'stage_progress': set('pct', 50); set('label', ev.stage ?? 'working'); break;
       case 'stage_done': set('ms', Math.max(0, t - (l.stageStart.get(key) ?? t))); set('skipped', false); break;
       case 'stage_fail': set('error', 'failed'); set('retryable', true); set('attempt', 1); break;
-      case 'chaos': set('depth', 1); set('source', 'manual'); set('scope', 'inner'); set('injectedAt', t); break;
+      case 'chaos': set('depth', 1); set('source', 'user'); set('scope', 'inner'); set('injectedAt', t); break;
       case 'process_dead': set('reason', 'killed'); set('restartInMs', 0); break;
       case 'process_up': l.depth = 0; set('attempt', 1); break;
       case 'recover_start': l.depth = Math.min(5, l.depth + 1); l.recoverStart = t; set('depth', l.depth); break;
