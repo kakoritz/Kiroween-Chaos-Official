@@ -3,7 +3,7 @@
 // record: the event itself (with `detail.lap` added on `order_done` and `order_failed`) followed by the lane's `review`.
 // `summary(lane)` gives the v1.1 wave summary fields for `wave_end`.
 import { APPS, type AppId } from '@haunt/shared';
-import { ratingFor, review, StarTracker, type ReviewResult } from '../../../haunt/src/score/review';
+import { INBOX_SUB_LABELS, ratingFor, review, StarTracker, type DeskFacts, type ReviewResult } from '../../../haunt/src/score/review';
 import { baselineMs } from '../sim/v11';
 import type { HauntEvent } from '../../../haunt/src/score/score';
 
@@ -28,6 +28,8 @@ interface Rec {
   swallowed?: boolean;
   decision?: { choice?: string; detectedAt?: string };
   stageCur?: string;
+  /** The Ticket Desk's own facts about the ticket (order_done.detail.desk). */
+  desk?: DeskFacts;
 }
 
 interface LaneAcc {
@@ -58,9 +60,11 @@ export class LapTracker {
   private readonly base: number;
   private readonly normFactor: number;
   private readonly now: () => number;
+  private readonly app: AppId;
   private readonly lanes = new Map<string, LaneAcc>();
 
   constructor(o: LapTrackerOptions) {
+    this.app = o.app;
     this.stageIds = APPS[o.app].stages.map((s) => s.id);
     const speed = o.speed > 0 ? o.speed : 1;
     this.base = baselineMs(o.app, o.pace) / speed;
@@ -177,9 +181,12 @@ export class LapTracker {
       const issues = [...r.issues.entries()].map(([stage, count]) => ({ stage, count })).sort((a, b) => this.stageIds.indexOf(a.stage) - this.stageIds.indexOf(b.stage));
       const lap = { ms, workMs: Math.max(0, ms - r.grab - r.walks), attempts: r.attempts, retries: r.retries, downtimeMs, issues, recoveries: r.recov };
       const cancelled = ev.type === 'order_failed';
+      const df = d.desk as Record<string, unknown> | undefined;
+      if (this.app === 'inbox' && df && typeof df.firstResponseMs === 'number') r.desk = { firstResponseMs: df.firstResponseMs, resolveMs: Number(df.resolveMs ?? df.firstResponseMs), reassignments: Number(df.reassignments ?? 0), slaBreached: df.slaBreached === true, spam: df.spam === true };
       const rv: ReviewResult = review({
         lap, extra: r.extra, degraded: r.degraded, gremlin: r.gremlin, swallowed: r.swallowed, cancelled, baselineMs: this.base, paceFactor: this.normFactor,
         decision: r.decision?.choice ? { choice: r.decision.choice, detectedAt: r.decision.detectedAt } : undefined,
+        ...(this.app === 'inbox' ? { inbox: true, ...(r.desk ? { desk: r.desk } : {}) } : {}),
       });
       const cum = S.stars.add(rv.stars);
       S.allMs.push(ms);
@@ -190,7 +197,7 @@ export class LapTracker {
       const done: Ev = { ...ev, detail: { ...d, lap, ...(ev.type === 'order_done' && d.ms === undefined ? { ms } : {}) } };
       const rvEv: Ev = {
         ts: t, type: 'review', wave: ev.wave, lane: ev.lane, order: ev.order,
-        detail: { order: ev.order, stars: rv.stars, sub: rv.sub, reasons: rv.reasons, text: rv.text, cum },
+        detail: { order: ev.order, stars: rv.stars, sub: rv.sub, reasons: rv.reasons, text: rv.text, cum, ...(this.app === 'inbox' ? { subLabels: INBOX_SUB_LABELS } : {}) },
       } as Ev;
       return [done, rvEv];
     }

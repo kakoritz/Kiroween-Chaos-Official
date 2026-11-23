@@ -294,11 +294,11 @@ describe('storyboards (C3)', () => {
     expect(storm.every((e) => e.detail!.creature === 'headless_horseman')).toBe(true);
   });
 
-  it('inbox: two lanes, ten stages, ticket effects, crash at reply', () => {
+  it('inbox: two lanes, eleven stages, ticket effects, crash at reply', () => {
     const ev = get('inbox');
     expect(ev.find((e) => e.type === 'wave_start')!.detail!.app).toBe('inbox');
     expect(ev.filter((e) => e.type === 'lane_ready')).toHaveLength(2);
-    expect(new Set(ev.filter((e) => e.stage).map((e) => e.stage))).toEqual(new Set(['login', 'ingest', 'validate', 'dedupe', 'triage', 'assign', 'notify', 'escalate', 'resolve', 'close']));
+    expect(new Set(ev.filter((e) => e.stage).map((e) => e.stage))).toEqual(new Set(['login', 'ingest', 'validate', 'dedupe', 'triage', 'assign', 'sla', 'notify', 'escalate', 'resolve', 'close']));
     expect(ev.some((e) => e.type === 'effect' && e.detail!.kind === 'ticket')).toBe(true);
     expect(ev.filter((e) => e.type === 'chaos').every((e) => e.detail!.fault === 'crash')).toBe(true);
     expect(ev.some((e) => e.type === 'order_start' && String(e.order).startsWith('msg-'))).toBe(true);

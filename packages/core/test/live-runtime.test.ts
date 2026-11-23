@@ -131,7 +131,7 @@ describe('ledger and hardening payloads', () => {
     const rows = [row('a', '1', 'charge', 'k1'), row('b', '1', 'charge', 'k1'), row('c', '1', 'account', 'k2')];
     const out = buildLedger(['1', '2'], (l) => rows.filter((r) => r.lane === l)) as { lanes: any[] };
     expect(out.lanes[0].byKind.charge).toEqual({ rows: 2, repeats: 1 });
-    expect(out.lanes[0].byKind.account).toEqual({ rows: 1, repeats: 0 });
+    expect(out.lanes[0].byKind.account_create).toEqual({ rows: 1, repeats: 0 });
     expect(out.lanes[1]).toEqual({ lane: 2, byKind: {}, rows: [] });
   });
 
@@ -294,5 +294,14 @@ describe('makeBotCommand wave reset', () => {
     expect(restart?.env?.HAUNT_ATTEMPT).toBe('2');
     expect(existsSync(stale)).toBe(true);
     expect(cmd('1', 3, s)?.env?.HAUNT_ATTEMPT).toBe('1');
+  });
+});
+
+describe('buildLedger kind names', () => {
+  it('maps the desk ledger kinds to the effect-event names so the inbox columns agree with live counts', () => {
+    const row = (kind: string, order: string, index = 1) => ({ lane: '1', kind, order, index, key: null }) as never;
+    const out = buildLedger(['1'], () => [row('account', 'o1'), row('ticket', 'o1'), row('reply', 'o1'), row('reply', 'o1'), row('notify', 'o1')]) as { lanes: { byKind: Record<string, { rows: number; repeats: number }> }[] };
+    expect(Object.keys(out.lanes[0]!.byKind).sort()).toEqual(['account_create', 'email', 'notify', 'ticket']);
+    expect(out.lanes[0]!.byKind.email).toEqual({ rows: 2, repeats: 1 });
   });
 });

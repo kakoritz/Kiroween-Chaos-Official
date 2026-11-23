@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { startProvider } from '../../../packages/core/src/provider';
 import { ProcessAdapter, startFaultProxy } from '../../../packages/haunt/src/adapters';
 import { loadHauntConfig } from '../../../packages/haunt/src/config';
+import { pyTest } from '../../../packages/core/test/python-skip';
 
 const root = resolve(__dirname, '../../..');
 const app = join(root, 'apps/haunted-inbox');
@@ -21,7 +22,7 @@ function findPython(): string | null {
   return null;
 }
 const py = findPython();
-const pyIt = py ? it : it.skip;
+const pyIt = pyTest(py);
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 async function until(cond: () => boolean, ms: number): Promise<void> {

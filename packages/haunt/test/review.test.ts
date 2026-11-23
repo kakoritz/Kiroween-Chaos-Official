@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { StarTracker, ratingFor, review, reviewScore, type ReviewInput } from '../src/score/review';
+import { INBOX_SUB_LABELS, StarTracker, ratingFor, review, reviewScore, type ReviewInput } from '../src/score/review';
 
 const base: ReviewInput = { lap: { ms: 10000, downtimeMs: 0, issues: [] }, extra: {}, degraded: false, cancelled: false, baselineMs: 10000 };
 const mk = (o: Omit<Partial<ReviewInput>, 'lap'> & { lap?: Partial<ReviewInput['lap']> } = {}): ReviewInput => ({ ...base, ...o, lap: { ...base.lap, ...(o.lap ?? {}) } });
@@ -93,5 +93,57 @@ describe('star tracker, rating and score', () => {
     expect(reviewScore(5)).toBe(80);
     expect(reviewScore(1)).toBe(-80);
     expect(reviewScore(3)).toBe(0);
+  });
+});
+
+describe('Ticket Desk CSAT review', () => {
+  const lap = { ms: 8000, downtimeMs: 0, issues: [] };
+  const desk = { firstResponseMs: 2000, resolveMs: 6000, reassignments: 0, slaBreached: false };
+  const inbox = (d: Partial<typeof desk>, extra: Record<string, number> = {}, cancelled = false) =>
+    review({ ...base, lap, extra, cancelled, inbox: true, desk: { ...desk, ...d } });
+
+  it('a fast, clean ticket is five stars, with the requester praising the first reply and the SLA', () => {
+    const r = inbox({});
+    expect(r.stars).toBe(5);
+    expect(r.sub).toEqual({ timeliness: 5, delays: 5, issues: 5, delivery: 5, ease: 5 });
+    expect(r.text).toMatch(/^“.+”$/);
+    expect(r.reasons.length).toBeGreaterThan(0);
+  });
+
+  it('a breached SLA caps the stars at 3 and the text says so', () => {
+    const r = inbox({ slaBreached: true });
+    expect(r.stars).toBeLessThanOrEqual(3);
+    expect(r.sub.delivery).toBe(2);
+    expect(r.reasons).toContain('Missed the SLA');
+    expect(r.text).toContain('deadline');
+  });
+
+  it('a ticket passed between queues scores the reassignment slot', () => {
+    const r = inbox({ reassignments: 2 });
+    expect(r.sub.issues).toBe(2);
+    expect(r.reasons).toContain('Passed around');
+  });
+
+  it('duplicate notices (extra ledger rows) cap the stars and are named', () => {
+    const r = inbox({}, { notify: 2 });
+    expect(r.stars).toBeLessThanOrEqual(3);
+    expect(r.reasons).toContain('Duplicate notices');
+  });
+
+  it('slow first response and slow resolution lose their slots', () => {
+    const r = inbox({ firstResponseMs: 13000, resolveMs: 25000 });
+    expect(r.sub).toMatchObject({ timeliness: 1, delays: 1 });
+    expect(r.stars).toBeLessThanOrEqual(3);
+  });
+
+  it('a cancelled ticket is one star in the requester voice, and the slot labels are the desk ones', () => {
+    const r = inbox({}, {}, true);
+    expect(r.stars).toBe(1);
+    expect(r.text).toContain('vanished');
+    expect(INBOX_SUB_LABELS).toEqual({ timeliness: 'First response', delays: 'Resolution time', issues: 'Reassignments', delivery: 'SLA', ease: 'Ease' });
+  });
+
+  it('the orders review is unchanged when inbox is off', () => {
+    expect(review({ ...base, lap, extra: {}, cancelled: false, desk }).sub).toEqual(review({ ...base, lap, extra: {}, cancelled: false }).sub);
   });
 });

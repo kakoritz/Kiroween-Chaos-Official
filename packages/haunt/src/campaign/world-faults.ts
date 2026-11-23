@@ -15,6 +15,15 @@ export const WORLD_FAULT_PART: Readonly<Record<string, PartId>> = {
   gated_house: 'offline_queue',
   car_accident: 'offline_queue',
   order_typo: 'offline_queue',
+  // Ticket Desk (inbox) faults
+  sso_expired: 'idempotency',
+  webhook_retry_storm: 'journal',
+  sla_breach: 'journal',
+  wrong_queue: 'journal',
+  duplicate_storm: 'journal',
+  field_mapping_error: 'offline_queue',
+  assignee_deleted: 'retry',
+  rate_limited: 'retry',
 };
 
 /** The main part against each boss (first of BOSS_KEY_PARTS' lesson for the night summary). */

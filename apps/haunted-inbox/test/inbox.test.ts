@@ -10,6 +10,7 @@ import { loadHauntConfig } from '../../../packages/haunt/src/config';
 import { CreatureRegistry } from '../../../packages/haunt/src/creatures/plugin';
 import { planSweep, runSweep } from '../../../packages/haunt/src/sweep';
 import { APP_STAGES } from '../../../packages/core/src/live/catalog';
+import { pyTest } from '../../../packages/core/test/python-skip';
 
 const root = resolve(__dirname, '../../..');
 const bot = (f: string) => join(root, 'apps/haunted-inbox/bot', f);
@@ -24,16 +25,16 @@ function findPython(): string | null {
   return null;
 }
 const py = findPython();
-const pyIt = py ? it : it.skip;
+const pyIt = pyTest(py);
 
 describe('haunt.yaml', () => {
-  it('validates and lists the ten inbox stages', () => {
+  it('validates and lists the eleven inbox stages', () => {
     const r = loadHauntConfig(join(root, 'apps/haunted-inbox/haunt.yaml'));
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    expect(r.config.stages.map((s) => s.id)).toEqual(['login', 'ingest', 'validate', 'dedupe', 'triage', 'assign', 'notify', 'escalate', 'resolve', 'close']);
-    expect(r.config.stages.map((s) => s.role)).toEqual(['work', 'input', 'work', 'work', 'work', 'effect', 'effect', 'effect', 'work', 'final']);
-    expect(r.config.stages.flatMap((s) => s.effects.map((e) => e.kind))).toEqual(['ticket', 'reply', 'notify']);
+    expect(r.config.stages.map((s) => s.id)).toEqual(['login', 'ingest', 'validate', 'dedupe', 'triage', 'assign', 'sla', 'notify', 'escalate', 'resolve', 'close']);
+    expect(r.config.stages.map((s) => s.role)).toEqual(['effect', 'input', 'work', 'work', 'work', 'effect', 'work', 'effect', 'effect', 'work', 'final']);
+    expect(r.config.stages.flatMap((s) => s.effects.map((e) => e.kind))).toEqual(['account', 'ticket', 'reply', 'notify']);
   });
 
   pyIt('matches the durations in run.py', () => {
@@ -79,7 +80,7 @@ async function run(tier: string, mails: number, crashAt: string | null, crashSta
         proc.onMessage((m) => {
           msgs.push(m);
           // a crash point has no stage filter, so a stage-targeted crash is armed once the stage before it starts
-          if (crashStage && attempt === 1 && m.type === 'stage_done' && m.stage === 'assign') proc.send({ k: 'arm', fault: 'crash', point: crashAt });
+          if (crashStage && attempt === 1 && m.type === 'stage_done' && m.stage === (crashStage === 'ticket' ? 'triage' : 'assign')) proc.send({ k: 'arm', fault: 'crash', point: crashAt });
           if (m.k === 'at_point') {
             if (m.fault !== undefined) {
               kills++;
@@ -122,15 +123,24 @@ describe('real python processes against the provider', () => {
   }, 90000);
 
   pyIt('I4: a crash after the ticket effect files 2 tickets for the rookie and 1 for the phoenix', async () => {
-    const rookie = await run('rookie', 1, 'after_effect_before_journal');
+    const rookie = await run('rookie', 1, 'after_effect_before_journal', 'ticket');
     expect(rookie.kills).toBe(1);
     expect(rookie.rows.filter((x) => x.kind === 'ticket').length).toBe(2);
-    const phoenix = await run('phoenix', 1, 'after_effect_before_journal');
+    const phoenix = await run('phoenix', 1, 'after_effect_before_journal', 'ticket');
     expect(phoenix.kills).toBe(1);
     expect(phoenix.rows.filter((x) => x.kind === 'ticket').length).toBe(1);
     expect(phoenix.rows.filter((x) => x.kind === 'reply').length).toBe(1);
     expect(phoenix.done).toEqual(['ord-0001.json']);
     expect(phoenix.msgs.find((m) => m.k === 'reconciled')).toBeTruthy();
+  }, 90000);
+
+  pyIt('a crash after the SSO login makes a second account for the rookie and none for the phoenix', async () => {
+    const rookie = await run('rookie', 1, 'after_effect_before_journal');
+    expect(rookie.kills).toBe(1);
+    expect(rookie.rows.filter((x) => x.kind === 'account').length).toBe(2);
+    const phoenix = await run('phoenix', 1, 'after_effect_before_journal');
+    expect(phoenix.rows.filter((x) => x.kind === 'account').length).toBe(1);
+    expect(phoenix.rows.filter((x) => x.kind === 'ticket').length).toBe(1);
   }, 90000);
 
   pyIt('I3: a crash at the reply stage sends 2 replies for the rookie and 1 for the phoenix', async () => {
@@ -161,8 +171,8 @@ describe('sweep and catalog on the inbox (I2, I5)', () => {
     const orders = await runSweep(plan('haunted-orders'), () => 'pass', 7);
     expect(Object.keys(inbox).sort()).toEqual(Object.keys(orders).sort());
     expect(Object.keys(inbox.matrix).sort()).toEqual(Object.keys(orders.matrix).sort());
-    expect(inbox.matrix.stages).toEqual(['login', 'ingest', 'validate', 'dedupe', 'triage', 'assign', 'notify', 'escalate', 'resolve', 'close']);
-    expect(inbox.cells.length).toBe(13);
+    expect(inbox.matrix.stages).toEqual(['login', 'ingest', 'validate', 'dedupe', 'triage', 'assign', 'sla', 'notify', 'escalate', 'resolve', 'close']);
+    expect(inbox.cells.length).toBe(15);
   });
 
   it('I5: the arena catalog stage ids match the inbox haunt.yaml', () => {

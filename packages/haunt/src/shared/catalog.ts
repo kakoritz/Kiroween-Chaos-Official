@@ -48,14 +48,15 @@ export const ORDERS_STAGES: StageDef[] = [
 ];
 
 // The Ticket Desk (PK-C3, packs spec section 4): the Python inbox as a service desk. Durations are not fixed by the specs
-// (assumption, see docs/DECISIONS.md); apps/haunted-inbox/haunt.yaml and bot/run.py carry the same ten stages.
+// (assumption, see docs/DECISIONS.md); apps/haunted-inbox/haunt.yaml and bot/run.py carry the same eleven stages.
 export const INBOX_STAGES: StageDef[] = [
-  { id: 'login', label: 'SSO login', icon: 'user', workAnimation: 'fill_form', role: 'work', min: 300, max: 600, effects: [], verb: 'Refreshing SSO' },
+  { id: 'login', label: 'SSO login', icon: 'user', workAnimation: 'fill_form', role: 'effect', min: 300, max: 600, effects: [{ kind: 'account_create', key: 'login', service: 'account' }], verb: 'Signing in with SSO' },
   { id: 'ingest', label: 'Ingest request', icon: 'mail', workAnimation: 'read_mail', role: 'input', min: 400, max: 700, effects: [], verb: 'Ingesting request' },
   { id: 'validate', label: 'Validate', icon: 'brain', workAnimation: 'think', role: 'work', min: 300, max: 600, effects: [], verb: 'Validating fields' },
   { id: 'dedupe', label: 'Deduplicate', icon: 'brain', workAnimation: 'think', role: 'work', min: 300, max: 600, effects: [], verb: 'Checking duplicates' },
   { id: 'triage', label: 'Triage', icon: 'brain', workAnimation: 'think', role: 'work', min: 400, max: 800, effects: [], verb: 'Triaging' },
   { id: 'assign', label: 'Assign ticket', icon: 'ticket', workAnimation: 'file_ticket', role: 'effect', min: 500, max: 900, effects: [{ kind: 'ticket', key: 'ticket', service: 'ticket' }], verb: 'Filing ticket' },
+  { id: 'sla', label: 'SLA clock', icon: 'brain', workAnimation: 'think', role: 'work', min: 200, max: 400, effects: [], verb: 'Starting the SLA clock' },
   { id: 'notify', label: 'Notify requester', icon: 'envelope', workAnimation: 'write_letter', role: 'effect', min: 400, max: 800, effects: [{ kind: 'email', key: 'reply', service: 'reply' }], verb: 'Sending reply' },
   { id: 'escalate', label: 'Escalate', icon: 'bubbles', workAnimation: 'send_bubbles', role: 'effect', min: 300, max: 600, effects: [{ kind: 'notify', key: 'escalate', service: 'notify' }], verb: 'Escalating' },
   { id: 'resolve', label: 'Resolve', icon: 'box', workAnimation: 'archive_box', role: 'work', min: 300, max: 600, effects: [], verb: 'Resolving' },
@@ -121,7 +122,8 @@ export type FaultId =
   | 'hazard_event' | 'driver_unreachable'
   | 'sms_down' | 'app_down' | 'updates_down'
   | 'wrong_address' | 'no_answer' | 'gated_house' | 'car_accident'
-  | 'order_typo';
+  | 'order_typo'
+  | 'sla_breach' | 'wrong_queue' | 'duplicate_storm' | 'sso_expired' | 'field_mapping_error' | 'webhook_retry_storm' | 'assignee_deleted' | 'rate_limited';
 export type BossFaultId = 'boss_power_outage' | 'boss_internet_outage' | 'boss_hazard_storm';
 
 export const FAULTS: FaultId[] = [
@@ -130,6 +132,7 @@ export const FAULTS: FaultId[] = [
   'hazard_event', 'driver_unreachable', 'sms_down', 'app_down', 'updates_down',
   'wrong_address', 'no_answer', 'gated_house', 'car_accident',
   'order_typo',
+  'sla_breach', 'wrong_queue', 'duplicate_storm', 'sso_expired', 'field_mapping_error', 'webhook_retry_storm', 'assignee_deleted', 'rate_limited',
 ];
 export const BOSS_FAULTS: BossFaultId[] = ['boss_power_outage', 'boss_internet_outage', 'boss_hazard_storm'];
 
@@ -157,17 +160,17 @@ export interface CreatureDef {
 
 const both: AppId[] = ['orders', 'inbox'];
 export const CREATURES: CreatureDef[] = [
-  { id: 'reaper', label: 'Reaper', family: 'process', sprite: 'reaper', causes: ['crash', 'out_of_memory'], boss: false, apps: both, description: 'Kills the bot process without warning.' },
+  { id: 'reaper', label: 'Reaper', family: 'process', sprite: 'reaper', causes: ['crash', 'out_of_memory', 'sso_expired'], boss: false, apps: both, description: 'Kills the bot process without warning.' },
   { id: 'wraith', label: 'Wraith', family: 'world', sprite: 'wraith', causes: ['power_outage'], boss: false, apps: both, description: 'Cuts the power. The bot stays dead for five seconds.' },
-  { id: 'banshee', label: 'Banshee', family: 'network', sprite: 'banshee', causes: ['internet_outage'], boss: false, apps: both, description: 'Drops every connection to the outside world.' },
-  { id: 'zombie', label: 'Zombie', family: 'network', sprite: 'zombie', causes: ['timeout', 'comm_timeout', 'slow_link'], boss: false, apps: both, description: 'Makes calls crawl, or never answer in time.' },
-  { id: 'ghost', label: 'Ghost', family: 'http', sprite: 'ghost', causes: ['http_404'], boss: false, apps: both, description: 'Makes an endpoint vanish for two calls.' },
-  { id: 'goblin', label: 'Goblin', family: 'http', sprite: 'goblin', causes: ['http_429', 'updates_down'], boss: false, apps: both, description: 'Floods the service until it says slow down.' },
+  { id: 'banshee', label: 'Banshee', family: 'network', sprite: 'banshee', causes: ['internet_outage', 'sla_breach'], boss: false, apps: both, description: 'Drops every connection to the outside world.' },
+  { id: 'zombie', label: 'Zombie', family: 'network', sprite: 'zombie', causes: ['timeout', 'comm_timeout', 'slow_link', 'duplicate_storm'], boss: false, apps: both, description: 'Makes calls crawl, or never answer in time.' },
+  { id: 'ghost', label: 'Ghost', family: 'http', sprite: 'ghost', causes: ['http_404', 'assignee_deleted'], boss: false, apps: both, description: 'Makes an endpoint vanish for two calls.' },
+  { id: 'goblin', label: 'Goblin', family: 'http', sprite: 'goblin', causes: ['http_429', 'updates_down', 'rate_limited'], boss: false, apps: both, description: 'Floods the service until it says slow down.' },
   { id: 'imp', label: 'Imp', family: 'http', sprite: 'imp', causes: ['http_500', 'app_down'], boss: false, apps: both, description: 'Makes the service fail for two calls.' },
   { id: 'gargoyle', label: 'Gargoyle', family: 'http', sprite: 'gargoyle', causes: ['endpoint_down', 'sms_down'], boss: false, apps: both, description: 'Takes one endpoint down for ten seconds.' },
-  { id: 'poltergeist', label: 'Poltergeist', family: 'data', sprite: 'poltergeist', causes: ['missing_file'], boss: false, apps: both, description: 'Hides the input file.' },
-  { id: 'doppelganger', label: 'Doppelganger', family: 'data', sprite: 'doppelganger', causes: ['duplicate_request'], boss: false, apps: both, description: 'Sends the same request twice.' },
-  { id: 'witch', label: 'Witch', family: 'data', sprite: 'witch', causes: ['malformed_payload'], boss: false, apps: both, description: 'Curses the input so it cannot be read.' },
+  { id: 'poltergeist', label: 'Poltergeist', family: 'data', sprite: 'poltergeist', causes: ['missing_file', 'wrong_queue'], boss: false, apps: both, description: 'Hides the input file.' },
+  { id: 'doppelganger', label: 'Doppelganger', family: 'data', sprite: 'doppelganger', causes: ['duplicate_request', 'webhook_retry_storm'], boss: false, apps: both, description: 'Sends the same request twice.' },
+  { id: 'witch', label: 'Witch', family: 'data', sprite: 'witch', causes: ['malformed_payload', 'field_mapping_error'], boss: false, apps: both, description: 'Curses the input so it cannot be read.' },
   { id: 'mummy', label: 'Mummy', family: 'process', sprite: 'mummy', causes: ['disk_full'], boss: false, apps: both, description: 'Fills the disk so one journal write fails.' },
   { id: 'werewolf', label: 'Werewolf', family: 'world', sprite: 'werewolf', causes: ['hazard_event'], boss: false, apps: ['orders'], description: 'Stalls the delivery feed.' },
   { id: 'will_o_wisp', label: "Will-o'-the-Wisp", family: 'world', sprite: 'will_o_wisp', causes: ['driver_unreachable'], boss: false, apps: ['orders'], description: 'Leads the delivery driver astray.' },
@@ -189,7 +192,20 @@ export function creatureForFault(fault: string): CreatureDef | undefined {
 export const WORLD_FAULT_STAGE: Record<string, string> = { sms_down: 'confirmation', app_down: 'ship', updates_down: 'updates', wrong_address: 'transit', no_answer: 'handoff', gated_house: 'handoff', car_accident: 'handoff', order_typo: 'create' };
 const WORLD_STAGE_ROLE: Record<string, StageRole> = { transit: 'poll', handoff: 'final', create: 'input' } as Record<string, StageRole>;
 
+/** Ticket Desk faults (packs spec section 4): each lands on one inbox stage and nowhere else. */
+export const DESK_FAULT_STAGE: Readonly<Record<string, string>> = {
+  sla_breach: 'sla', wrong_queue: 'triage', duplicate_storm: 'dedupe', sso_expired: 'login', field_mapping_error: 'validate',
+  webhook_retry_storm: 'ingest', assignee_deleted: 'assign', rate_limited: 'assign',
+};
+/** Faults the bot handles itself (the arena arms them, the bot applies them at their stage). `sso_expired` is a provider fault. */
+export const DESK_ARMED_FAULTS: readonly string[] = ['sla_breach', 'wrong_queue', 'duplicate_storm', 'field_mapping_error', 'webhook_retry_storm', 'assignee_deleted', 'rate_limited'];
+export const isDeskFault = (f: string): boolean => f in DESK_FAULT_STAGE;
+
 export function faultApplies(fault: string, role: StageRole, stageId?: string): boolean {
+  if (DESK_FAULT_STAGE[fault]) {
+    const st = INBOX_STAGES.find((x) => x.id === DESK_FAULT_STAGE[fault]);
+    return st !== undefined && role === st.role && (stageId === undefined ? true : stageId === st.id);
+  }
   if (WORLD_FAULT_STAGE[fault]) return role === (WORLD_STAGE_ROLE[WORLD_FAULT_STAGE[fault]!] ?? 'effect') && (stageId === undefined || stageId === WORLD_FAULT_STAGE[fault]);
   if (isCrashFault(fault) || fault === 'disk_full') return true;
   switch (fault) {
@@ -246,6 +262,9 @@ export const FAULT_PARAMS: Record<string, { count?: number; forMs?: number; late
   gated_house: { forMs: 3000 },
   car_accident: { forMs: 7000 },
   order_typo: {},
+  sla_breach: {}, wrong_queue: {}, duplicate_storm: {}, field_mapping_error: {}, webhook_retry_storm: {}, assignee_deleted: {},
+  sso_expired: { count: 1, status: 401 },
+  rate_limited: { count: 1, status: 429, retryAfterMs: 1000 },
   hazard_event: { forMs: 5000 },
   driver_unreachable: { forMs: 3000 },
 };

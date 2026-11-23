@@ -30,6 +30,9 @@ def main() -> int:
     os.makedirs(folder, exist_ok=True)
     for i in range(1, count + 1):
         mail = dict(corpus[(i - 1) % len(corpus)])
+        cycle = (i - 1) // len(corpus)
+        if cycle > 0:  # the same text again is a new request with a new external id, not a webhook retry
+            mail["id"] = f"{mail['id']}-c{cycle + 1}"
         with open(os.path.join(folder, f"ord-{i:04d}.json"), "w", encoding="utf-8") as f:
             json.dump(mail, f)
     return 0
