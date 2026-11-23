@@ -15,7 +15,7 @@ export function installHosted(win: Window & { __haunt?: unknown }, load?: Loader
   return facade;
 }
 
-/** A small corner badge, "Recorded run", with the clone hint. Pure DOM, no styles file needed. */
+/** A footer strip under the arena: "Recorded run" and the clone hint. The page reserves its height (body.hosted, --foot), so it never covers a panel. */
 export function mountRecordedBadge(doc: Document): HTMLElement {
   const el = doc.createElement('a');
   el.id = 'hosted-badge';
@@ -23,7 +23,8 @@ export function mountRecordedBadge(doc: Document): HTMLElement {
   el.target = '_blank';
   el.rel = 'noopener';
   el.textContent = `Hosted demo: runs in your browser. Tournament, Casebook and improve loop are a ${RECORDED_LABEL}. The real engine runs locally: npm run demo`;
-  el.setAttribute('style', 'position:fixed;left:8px;bottom:8px;z-index:50;padding:3px 8px;font:12px/1.3 system-ui,sans-serif;color:#cfd3ff;background:rgba(10,8,24,.78);border:1px solid #4a4a7a;border-radius:4px;text-decoration:none');
+  el.setAttribute('style', 'position:fixed;left:0;right:0;bottom:0;z-index:50;box-sizing:border-box;padding:3px 8px;font:12px/1.3 system-ui,sans-serif;color:#cfd3ff;background:#0a0818;border-top:1px solid #4a4a7a;text-align:center;text-decoration:none');
+  doc.body.classList.add('hosted');
   doc.body.appendChild(el);
   return el;
 }
