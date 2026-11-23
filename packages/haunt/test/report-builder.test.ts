@@ -57,3 +57,19 @@ describe('report builder', () => {
     expect(html).not.toMatch(/<script|https?:\/\//);
   });
 });
+
+describe('laps and stars section (PT-C11)', () => {
+  const laps = [
+    { order: 'ord-0002', ms: 0, cancelled: true },
+    { order: 'ord-0001', ms: 41200, stars: 4.5, downtimeMs: 3000 },
+  ];
+  it('sorts laps, labels a cancelled order in Markdown and HTML, and is absent without laps', () => {
+    const r = buildReport({ ...input, laps });
+    expect(r.laps!.map((l) => l.order)).toEqual(['ord-0001', 'ord-0002']);
+    expect(renderMarkdown(r)).toContain('| ord-0001 | 41200 | 4.5 | 3000 |');
+    expect(renderMarkdown(r)).toContain('| ord-0002 | cancelled | cancelled |  |');
+    expect(renderHtml(r)).toContain('<td>cancelled</td>');
+    expect(buildReport(input).laps).toBeUndefined();
+    expect(renderMarkdown(buildReport(input))).not.toContain('Laps and stars');
+  });
+});
