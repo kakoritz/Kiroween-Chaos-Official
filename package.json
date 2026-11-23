@@ -28,6 +28,7 @@
     "make:fixtures": "node tools/run-ts.mjs tools/make-fixtures.ts",
     "make:outcomes": "node tools/run-ts.mjs tools/make-outcomes.ts",
     "typecheck": "tsc --noEmit",
+    "verify": "node tools/verify.mjs",
     "haunt": "node tools/run-ts.mjs packages/core/src/bin/haunt.ts",
     "fresh-clone": "node tools/fresh-clone.mjs"
   },
