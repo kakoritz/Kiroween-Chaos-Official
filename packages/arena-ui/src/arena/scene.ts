@@ -14,6 +14,8 @@ import { epitaphOf } from './tournament';
 import { CLASS_ICON, CLASS_WORD, POP_MS, curseShort, curseWord, type CurseClass, type CurseVM } from './curses';
 import { captionOf, creatureFrame, creatureTip, shown, spriteOf, MAX_SHOWN, type CreatureVM } from './creatures';
 import { drawCreature } from '../creatures/draw';
+import { drawStreaming } from '../creatures/streaming';
+import { streamingId } from '../creatures/streaming-defs';
 import { bugTint, puff, seedOf, swarmBugs, swarmStale } from './swarm';
 import { drawWorldCreature, drawWorldProp, isWorld, tintOf, worldPhase, worldProp } from './world-events';
 import { archWall, drawProp, pillar } from '../props/draw';
@@ -27,7 +29,7 @@ import { cobweb, flagstoneFloor, fogTexture, laneVignette, torchPools } from './
 import { starTracker } from './laps-model';
 import { GEAR_PARTS, gearTip } from './legend-modal';
 import { laneRatingTitle } from './review-card';
-import { RIVAL_VEIL, gearBadge, gearBadgeTip, isCrewLane, isRival } from './crew-lane';
+import { CREW_NAME, RIVAL_VEIL, gearBadgeTip, gearFraction, isCrewLane, isRival } from './crew-lane';
 
 export const STAGE_W = 1920;
 export const STAGE_H = 1080;
@@ -373,14 +375,13 @@ function labelCard(ctx: Ctx, b: LaneBox, l: LaneVM, t: number, worn: string[], s
   ctx.fillStyle = C.stone2; ctx.fill();
   ctx.lineWidth = 3; ctx.strokeStyle = C.out; ctx.stroke();
   torch(ctx, 24, b.top + h / 2 - 14, reduced ? 0 : t, l.mode !== 'dead' && l.mode !== 'halted', l.lane);
-  const name = l.label || (TIER_IDS.includes(l.tier as Tier) ? TIER_LABEL[l.tier as Tier] : l.tier);
+  const name = l.label || (isCrewLane(l) ? CREW_NAME : TIER_IDS.includes(l.tier as Tier) ? TIER_LABEL[l.tier as Tier] : l.tier);
   txt(ctx, name, 46, b.top + 22, 22, C.bone, 'left', SANS, '700');
   txt(ctx, `LANE ${l.lane}`, 46, b.top + 41, 14, C.muted, 'left', MONO, '600');
   if (crewCard) {
-    rr(ctx, 150, b.top + 8, 98, 20, 8); ctx.fillStyle = C.warn; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = C.out; ctx.stroke();
-    txt(ctx, 'YOUR CREW', 199, b.top + 19, 12, C.out, 'center', MONO, '800');
-    rr(ctx, 150, b.top + 32, 98, 18, 8); ctx.fillStyle = 'rgba(10,8,18,0.7)'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = C.warn; ctx.stroke();
-    txt(ctx, gearBadge(l), 199, b.top + 42, 11, C.warn, 'center', MONO, '800');
+    rr(ctx, 5, b.top + 1, 250, h - 2, 14); ctx.lineWidth = 3; ctx.strokeStyle = C.warn; ctx.stroke();
+    rr(ctx, 204, b.top + 54, 46, 22, 8); ctx.fillStyle = 'rgba(10,8,18,0.8)'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = C.warn; ctx.stroke();
+    txt(ctx, gearFraction(l), 227, b.top + 66, 14, C.warn, 'center', MONO, '800');
   }
   // five gear slots
   GEAR_SLOTS.forEach((g, i) => {
@@ -667,7 +668,7 @@ export class ArenaScene {
     if (fell) ctx.globalAlpha = 0.5;
     const wornNow = wornParts(l.parts, l.equips, now, this.speed, this.reducedMotion);
     labelCard(ctx, b, l, now, wornNow, this.speed, this.reducedMotion, isCrewLane(l) && vm.lanes.length > 1);
-    if (isCrewLane(l) && vm.lanes.length > 1) this.hot.push({ x: 150, y: b.top + 32, w: 98, h: 18, tip: gearBadgeTip(l) });
+    if (isCrewLane(l) && vm.lanes.length > 1) this.hot.push({ x: 204, y: b.top + 54, w: 46, h: 22, tip: gearBadgeTip(l) });
     GEAR_PARTS.forEach((gp, gi) => this.gearHot.push({ x: 56 + gi * 34 - 14, y: b.top + 48, w: 28, h: 28, tip: gearTip(gp, wornNow.includes(GEAR_SLOTS[gi]!.id)) }));
     if (fell) { ctx.globalAlpha = 1; fallenTag(ctx, b, fell.round); ctx.globalAlpha = 0.4; }
     if ((l.curses?.length ?? 0) > 0) {
@@ -763,7 +764,7 @@ export class ArenaScene {
     ctx.setLineDash([8, 6]); ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(143,134,168,0.55)';
     ctx.strokeRect(2, b.top + 2, STAGE_W - 4, b.h - 4);
     ctx.setLineDash([]);
-    txt(ctx, 'RIVAL', STAGE_W - 12, b.top + 14, 12, C.muted, 'right', MONO, '800');
+    txt(ctx, 'RIVAL', STAGE_W - 12, b.top + 14, 13, C.muted, 'right', MONO, '800');
     ctx.restore();
   }
 
@@ -868,6 +869,9 @@ export class ArenaScene {
       if (isWorld(c.id)) {
         const wp = worldPhase(c.shrug ? null : c.actAt, now, this.speed);
         drawWorldCreature(ctx, c.id, this.reducedMotion ? 0 : wp.p, wp.acted, size);
+      } else if (streamingId(c.id)) {
+        if (c.shrug && !this.reducedMotion) ctx.rotate(Math.sin(((now - (c.actAt ?? now)) / 500) * Math.PI * 4) * 0.12);
+        drawStreaming(ctx, streamingId(c.id)!, fr.anim, fr.p, { silhouette: false, size });
       } else if (id) {
         if (c.shrug && !this.reducedMotion) ctx.rotate(Math.sin(((now - (c.actAt ?? now)) / 500) * Math.PI * 4) * 0.12);
         drawCreature(ctx, id, fr.anim, fr.p, { silhouette: false, size });

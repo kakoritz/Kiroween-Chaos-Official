@@ -13,6 +13,7 @@ import { chipTipAt } from '../src/arena/chiptip';
 import { BossBar, bossAnnouncement } from '../src/arena/boss';
 import { ChaosModeControl, readChaosState } from '../src/arena/chaosmode';
 import { AppSwitcher, currentApp } from '../src/arena/appswitch';
+import { PackSwitcher } from '../src/arena/packs';
 import { GearMenu, DEFAULT_PACE, badgeTitle, type Pace } from '../src/arena/gearmenu';
 import '../src/arena/gearmenu.css';
 import { IntensityDial, applyIntensity, readDial, defaultDial } from '../src/arena/dial';
@@ -69,6 +70,7 @@ root.innerHTML = `
       <span class="wave" id="wave"></span>
       <span id="round-ind"></span>
       <div id="app-switch"></div>
+      <div id="pack-switch"></div>
       <div id="chaos-mode"></div>
       <div id="dial"></div>
       <span class="spacer"></span>
@@ -524,6 +526,20 @@ async function boot() {
     onError: showError,
   });
 
+  const packSwitch = new PackSwitcher($('pack-switch'), {
+    getPacks: (api as unknown as { getPacks?: () => Promise<unknown> }).getPacks?.bind(api),
+    getApps: () => api.getApps(),
+    setApp: (id) => api.setApp(id),
+    stopRunning: async () => {
+      chainDemo = false;
+      if (demoRunning) { await api.stopDemo(); demoRunning = false; }
+      if (waveRunning) { await api.stopWave(); waveRunning = false; }
+      paintDemo();
+    },
+    reload: loadState,
+    onError: showError,
+  });
+  void packSwitch.load();
   await loadState();
   void appSwitch.load(currentApp(await api.getState().catch(() => null)));
   api.subscribe({

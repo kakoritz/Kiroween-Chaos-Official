@@ -4,6 +4,7 @@ import { createInPageMock } from '../../../core/src/mock/inpage-mock';
 import outcomes from '../../../core/mock/outcomes.json';
 import type { HauntInPage } from '../api';
 import { addRecordedRuns, type Loader } from './recorded';
+import { mountHowItWorks } from './how-it-works';
 
 export const RECORDED_LABEL = 'Recorded run';
 
@@ -31,7 +32,8 @@ export function mountRecordedBadge(doc: Document): HTMLElement {
 
 export function bootHosted(win: Window & { __haunt?: unknown }): void {
   installHosted(win);
-  mountRecordedBadge(win.document);
+  const footer = mountRecordedBadge(win.document);
+  mountHowItWorks(win.document, footer); // SH-U3
   void import('../../app/main');
 }
 

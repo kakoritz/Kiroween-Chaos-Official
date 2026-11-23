@@ -5,13 +5,13 @@
 import { registerSprite, ease, type DrawOpts } from '../lab/registry';
 import { CREATURES, type CreatureId } from './defs';
 
-const OUT = '#14101f';
+export const OUT = '#14101f';
 const BONE = '#efe6d2';
-const TAU = Math.PI * 2;
+export const TAU = Math.PI * 2;
 type Ctx = CanvasRenderingContext2D;
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const clamp01 = (t: number) => Math.max(0, Math.min(1, t));
-const seg = (p: number, a: number, b: number) => clamp01((p - a) / (b - a));
+export const seg = (p: number, a: number, b: number) => clamp01((p - a) / (b - a));
 
 const cache = new Map<string, Path2D>();
 const pathOf = (d: string): Path2D => {
@@ -20,7 +20,7 @@ const pathOf = (d: string): Path2D => {
   return p;
 };
 
-function unit(ctx: Ctx, o: DrawOpts, fn: () => void): void {
+export function unit(ctx: Ctx, o: DrawOpts, fn: () => void): void {
   const s = o.size / 100;
   ctx.save();
   ctx.translate(0, o.size / 2);
@@ -42,7 +42,7 @@ function crescent(ctx: Ctx, path: Path2D, dx: number, dy: number, color: string)
 }
 
 /** Outlined flat shape with one shade and one rim crescent. */
-function blob(ctx: Ctx, o: DrawOpts, d: string | Path2D, fill: string, shade?: string, rim?: string): void {
+export function blob(ctx: Ctx, o: DrawOpts, d: string | Path2D, fill: string, shade?: string, rim?: string): void {
   const path = typeof d === 'string' ? pathOf(d) : d;
   ctx.lineWidth = 4;
   ctx.strokeStyle = OUT;
@@ -55,14 +55,14 @@ function blob(ctx: Ctx, o: DrawOpts, d: string | Path2D, fill: string, shade?: s
   ctx.stroke(path);
 }
 
-function ball(ctx: Ctx, o: DrawOpts, x: number, y: number, rx: number, ry: number, fill: string, shade?: string, rim?: string): void {
+export function ball(ctx: Ctx, o: DrawOpts, x: number, y: number, rx: number, ry: number, fill: string, shade?: string, rim?: string): void {
   const p = new Path2D();
   p.ellipse(x, y, rx, ry, 0, 0, TAU);
   blob(ctx, o, p, fill, shade, rim);
 }
 
 /** Thick outlined limb, pole or chain segment. */
-function limb(ctx: Ctx, o: DrawOpts, x1: number, y1: number, x2: number, y2: number, w: number, fill: string): void {
+export function limb(ctx: Ctx, o: DrawOpts, x1: number, y1: number, x2: number, y2: number, w: number, fill: string): void {
   ctx.beginPath();
   ctx.moveTo(x1, y1);
   ctx.lineTo(x2, y2);
@@ -76,7 +76,7 @@ function limb(ctx: Ctx, o: DrawOpts, x1: number, y1: number, x2: number, y2: num
   }
 }
 
-function glow(ctx: Ctx, o: DrawOpts, x: number, y: number, r: number, color: string, alpha: number): void {
+export function glow(ctx: Ctx, o: DrawOpts, x: number, y: number, r: number, color: string, alpha: number): void {
   if (o.silhouette || alpha <= 0) return;
   const g = ctx.createRadialGradient(x, y, 0, x, y, r);
   g.addColorStop(0, color);
@@ -90,7 +90,7 @@ function glow(ctx: Ctx, o: DrawOpts, x: number, y: number, r: number, color: str
   ctx.restore();
 }
 
-function eyes(ctx: Ctx, o: DrawOpts, pts: Array<[number, number]>, r: number, color: string): void {
+export function eyes(ctx: Ctx, o: DrawOpts, pts: Array<[number, number]>, r: number, color: string): void {
   if (o.silhouette) return;
   ctx.fillStyle = color;
   for (const [x, y] of pts) {

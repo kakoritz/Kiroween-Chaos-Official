@@ -1,6 +1,7 @@
 // Creature stack logic (UI-B3). Pure: no DOM, no clock. `now` is passed in by the caller.
 // Implements ui-spec section 7 (enter, loom, act, exit, stack) and the depth rules of section 8.
 import { CREATURES, type CreatureId } from '../creatures/defs';
+import { streamingId, streamingById } from '../creatures/streaming-defs';
 import { WORLD_CAPTION } from './world-events';
 
 export interface CreatureVM {
@@ -168,6 +169,17 @@ export function creatureFrame(c: CreatureVM, now: number, speed = 1, reduced = f
   const enter = reduced ? 1 : Math.min(1, Math.max(0, ((now - c.born) * sp) / ENTER_MS));
   const exit = c.exitAt !== null && now >= c.exitAt ? Math.min(1, ((now - c.exitAt) * sp) / c.exitDur) : 0;
   const acted = c.actAt !== null && now >= c.actAt && !c.shrug;
+  const sid = streamingId(c.id);
+  if (sid) {
+    const sd = streamingById(sid);
+    const idleDur = sd.anims.find((x) => x.id === 'idle')?.duration ?? 2200;
+    if (acted) {
+      const a = sd.anims.find((x) => x.id === sd.act)!;
+      const t = (now - (c.actAt as number)) / (a.duration / sp);
+      return { anim: a.id, p: a.loop ? t % 1 : Math.min(1, t), enter, exit, acted };
+    }
+    return { anim: 'idle', p: (now % idleDur) / idleDur, enter, exit, acted };
+  }
   const def = CREATURES.find((x) => x.id === c.id);
   if (!def) return { anim: 'idle', p: (now % 2200) / 2200, enter, exit, acted: false };
   if (acted) {

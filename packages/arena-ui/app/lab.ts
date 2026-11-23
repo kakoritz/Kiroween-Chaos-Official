@@ -2,6 +2,8 @@ import { GROUP_LABEL, animProgress, listSprites, type AnimDef, type SpriteDef } 
 import '../src/rig/draw';
 import '../src/rig/tiers';
 import '../src/creatures/draw';
+import '../src/creatures/streaming';
+import '../src/lab/world-sprites';
 import '../src/props/draw';
 
 const root = document.getElementById('lab')!;

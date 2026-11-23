@@ -18,6 +18,9 @@ export const isRival = (l: LaneLike, lanes: readonly LaneLike[]): boolean => cam
 /** Number of distinct gear parts worn, capped at the five slots. */
 export const gearCount = (l: LaneLike): number => Math.min(GEAR_TOTAL, new Set(l.parts ?? []).size);
 
+/** Compact form drawn on the label card, e.g. "2/5". */
+export const gearFraction = (l: LaneLike): string => `${gearCount(l)}/${GEAR_TOTAL}`;
+
 export const gearBadge = (l: LaneLike): string => `GEAR ${gearCount(l)}/${GEAR_TOTAL}`;
 
 export const gearBadgeTip = (l: LaneLike): string => {

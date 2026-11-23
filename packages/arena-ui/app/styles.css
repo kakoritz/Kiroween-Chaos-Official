@@ -148,6 +148,12 @@ html, body { overflow: hidden; }
 .insp-foot { display: flex; gap: 12px; padding: 12px 16px; border-top: 2px solid var(--stone-2); }
 
 .as { display: inline-flex; align-items: center; gap: 8px; }
+.pk { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.pk.hidden { display: none; }
+.pk-info { color: var(--muted); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; }
+.pk-info--model { color: var(--warn); }
+.hdr .pk .seg-b { padding: 6px 10px; }
+@media (max-width: 760px) { .pk-info { display: none; } }
 .as-label { color: var(--muted); font-size: 14px; letter-spacing: 0.14em; text-transform: uppercase; }
 
 /* UI-W7: keyboard help and state legend */

@@ -1,6 +1,6 @@
 // covers: CP-U5
 import { describe, expect, it } from 'vitest';
-import { campaignOn, creditCount, gearBadge, gearBadgeTip, isCrewLane, isRival } from '../src/arena/crew-lane';
+import { campaignOn, creditCount, gearBadge, gearFraction, gearBadgeTip, isCrewLane, isRival } from '../src/arena/crew-lane';
 import { MIN_GAP_MS, canPlay } from '../src/sound';
 
 const lanes = [{ tier: 'crew', parts: ['retry', 'journal', 'journal'] }, { tier: 'rookie' }, { tier: 'veteran' }];
@@ -21,6 +21,7 @@ describe('campaign lane styling (CP-U5)', () => {
     expect(gearBadge(lanes[0]!)).toBe('GEAR 2/5');
     expect(gearBadge({ tier: 'crew' })).toBe('GEAR 0/5');
     expect(gearBadge({ tier: 'crew', parts: ['a', 'b', 'c', 'd', 'e', 'f'] })).toBe('GEAR 5/5');
+    expect(gearFraction(lanes[0]!)).toBe('2/5');
     expect(gearBadgeTip({ tier: 'crew' })).toMatch(/No gear/);
     expect(gearBadgeTip(lanes[0]!)).toMatch(/retry, journal/);
   });
