@@ -357,7 +357,7 @@ finalScreen.sections = [
 ];
 $('round-ind').addEventListener('click', () => { if (vm.tournament.phase === 'ended') finalScreen.reopen(); });
 const TOURNAMENT_EVENTS = new Set(['round_start', 'round_end', 'awaiting_next', 'lane_eliminated', 'corpse', 'tournament_end']);
-const campaignResults = mountCampaignResults(stageEl, { getCampaign: () => api.getCampaign(), getCasebook: () => api.getCasebook() }, { onNight: (n) => shopStart(n), onHub: () => window.dispatchEvent(new CustomEvent('haunt:splash', { detail: { action: 'campaign' } })) }); // CP-U3
+const campaignResults = mountCampaignResults(stageEl, { getCampaign: () => api.getCampaign(), getCasebook: () => api.getCasebook() }, { onSound: (n) => sound.cue(n, performance.now()), onNight: (n) => shopStart(n), onHub: () => window.dispatchEvent(new CustomEvent('haunt:splash', { detail: { action: 'campaign' } })) }); // CP-U3
 
 function onEvent(ev: ArenaEvent) {
   if (TOURNAMENT_EVENTS.has(ev.type)) tourActive = true;

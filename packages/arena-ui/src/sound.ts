@@ -1,7 +1,7 @@
 /** UI-D2/UI-S7: sound effects generated in code with WebAudio. No audio files. */
 export type SoundName =
   | 'rattle' | 'creak' | 'wail' | 'thud' | 'sting' | 'rise'
-  | 'doorOpen' | 'doorClose' | 'star' | 'ding' | 'trombone' | 'slam' | 'tick' | 'fanfare' | 'jingle' | 'rustle' | 'meow' | 'crash';
+  | 'doorOpen' | 'doorClose' | 'star' | 'ding' | 'trombone' | 'slam' | 'tick' | 'fanfare' | 'jingle' | 'rustle' | 'meow' | 'crash' | 'medal' | 'coin';
 
 export interface SoundEv { type?: string; detail?: { level?: unknown; stars?: unknown; reason?: unknown; creature?: unknown; ceremonyMs?: unknown } }
 /** One scheduled sound: `after` ms from the event, `pitch` a multiplier (1 = normal). */
@@ -66,7 +66,7 @@ export function soundFor(ev: SoundEv): SoundName | null {
 
 /** Minimum gap between two plays of the same sound, so a 200 events/s burst stays listenable. */
 export const MIN_GAP_MS: Record<SoundName, number> = { rattle: 120, creak: 250, wail: 900, thud: 150, sting: 1500, rise: 2500,
-  doorOpen: 400, doorClose: 400, star: 200, ding: 400, trombone: 1200, slam: 800, tick: 1500, fanfare: 2000, jingle: 1500, rustle: 600, meow: 800, crash: 1000,
+  doorOpen: 400, doorClose: 400, star: 200, ding: 400, trombone: 1200, slam: 800, tick: 1500, fanfare: 2000, jingle: 1500, rustle: 600, meow: 800, crash: 1000, medal: 1500, coin: 60,
 };
 
 /** At most this many sounds sound at once (ui-spec section 14). */
@@ -258,6 +258,26 @@ const synth: Record<SoundName, (ctx: Ctx, out: AudioNode, t: number, pitch: numb
     const g = ctx.createGain(); env(ctx, g, t, 0.22, 0.05, 0.55);
     o.connect(f).connect(g).connect(out); o.start(t); o.stop(t + 0.6);
   },
+  // Medal: a bright rising triad with a bell on top (CP-U5).
+  medal(ctx, out, t, pitch) {
+    [523, 659, 784].forEach((hz, i) => {
+      const o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = hz * pitch;
+      const g = ctx.createGain(); env(ctx, g, t + i * 0.11, 0.2, 0.01, 0.35);
+      o.connect(g).connect(out); o.start(t + i * 0.11); o.stop(t + i * 0.11 + 0.4);
+    });
+    const b = ctx.createOscillator(); b.type = 'sine'; b.frequency.value = 1568 * pitch;
+    const bg = ctx.createGain(); env(ctx, bg, t + 0.33, 0.16, 0.004, 0.7);
+    b.connect(bg).connect(out); b.start(t + 0.33); b.stop(t + 1.05);
+  },
+  // Coin: one short two-partial blip for each tick of the credit count-up (CP-U5).
+  coin(ctx, out, t, pitch) {
+    [1318, 1976].forEach((hz, i) => {
+      const o = ctx.createOscillator(); o.type = 'square'; o.frequency.value = hz * pitch;
+      const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 3200;
+      const g = ctx.createGain(); env(ctx, g, t + i * 0.05, 0.07, 0.003, 0.09);
+      o.connect(f).connect(g).connect(out); o.start(t + i * 0.05); o.stop(t + i * 0.05 + 0.12);
+    });
+  },
   // Phantom car crash: a noise burst over a falling square screech.
   crash(ctx, out, t) {
     const s = noise(ctx, 0.5);
@@ -295,6 +315,9 @@ export class ArenaSound {
   }
 
   private voices = 0;
+
+  /** Play one named sound now (campaign medal and credit ticks). Obeys mute and the rate limit. */
+  cue(name: SoundName, now: number, pitch = 1): void { this.play({ name, after: 0, pitch }, now); }
 
   onEvent(ev: SoundEv, now: number): void {
     for (const cue of cuesFor(ev)) this.play(cue, now);

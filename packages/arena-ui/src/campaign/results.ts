@@ -2,13 +2,14 @@
 // `mountCampaignResults` returns a handle: call `begin(night)` when a campaign night starts and `onEvent(ev)` for every arena event.
 import { medalSvg } from './art';
 import { loadProgress } from './hub-model';
+import { creditCount } from '../arena/crew-lane';
 import {
   applyResult, exportProgress, explain, loadEarned, nextGoal, parseImport, saveImport, saveOutcome,
   nightCases, type LaneSummary, type NightCase, type Outcome, type ResultGear, type ResultNight, type ScoreHit,
 } from './results-model';
 
 export interface ResultsApi { getCampaign(): Promise<{ nights?: ResultNight[]; gear?: ResultGear[] }>; /** GET /api/casebook: the Crew lane's cases of the night that just ended. */ getCasebook?(): Promise<unknown> }
-export interface ResultsHandlers { onNight?: (night: ResultNight) => void; onHub?: () => void }
+export interface ResultsHandlers { onNight?: (night: ResultNight) => void; onHub?: () => void; /** CP-U5: ask the shared sound module to play a cue. */ onSound?: (name: 'medal' | 'coin') => void }
 export interface ResultsHandle { begin(nightId: number): void; onEvent(ev: { type?: string; lane?: number; detail?: unknown }): void; close(): void }
 
 const esc = (s: string): string => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] as string);
@@ -23,7 +24,7 @@ export function renderResults(night: ResultNight, o: Outcome, summary: LaneSumma
   return `<div class="cpres__card" role="dialog" aria-label="${esc(name)} results">
     <h2 class="cpres__title">${esc(name)}: ${esc(night.title)}</h2>
     <div class="cpres__medal cpres__medal--${o.medal}">${o.medal === 'none' ? '' : medalSvg(o.medal, 120)}<span class="cpres__tier">${esc(title)}</span></div>
-    <p class="cpres__line">Score <b>${Math.floor(summary.score ?? 0)}</b>. Credits earned <b>+${o.credits}</b>. You now have <b>${o.progress.credits}</b>.</p>
+    <p class="cpres__line">Score <b>${Math.floor(summary.score ?? 0)}</b>. Credits earned <b class="cpres__earned" data-total="${o.credits}">+${o.credits}</b>. You now have <b>${o.progress.credits}</b>.</p>
     ${o.unlockedNext && next ? `<p class="cpres__unlock">A new door opens: ${esc(next.title)}.</p>` : ''}
     ${goal ? `<p class="cpres__goal">${esc(goal)}</p>` : ''}
     <h3>What happened</h3>
@@ -63,6 +64,7 @@ export function mountCampaignResults(stage: HTMLElement, api: ResultsApi, handle
     act('credits', () => rollCredits(el!));
     stage.appendChild(el);
     (el.querySelector('.cpres__btns .btn') as HTMLElement | null)?.focus();
+    celebrate(el, o.medal, o.credits, handlers.onSound);
   };
 
   return {
@@ -80,6 +82,27 @@ export function mountCampaignResults(stage: HTMLElement, api: ResultsApi, handle
       }
     },
   };
+}
+
+const COUNT_MS = 1200;
+const reducedMotion = (): boolean => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/** CP-U5: medal sound plus the earned credits counting up with a coin tick. Reduced motion shows the final number and plays the sound once. */
+function celebrate(root: HTMLElement, medal: string, credits: number, sound?: (n: 'medal' | 'coin') => void): void {
+  if (medal !== 'none') sound?.('medal');
+  const out = root.querySelector('.cpres__earned') as HTMLElement | null;
+  if (!out || credits <= 0) return;
+  if (reducedMotion() || typeof requestAnimationFrame !== 'function') return;
+  const t0 = performance.now();
+  let shown = -1;
+  const step = (now: number): void => {
+    if (!out.isConnected) return;
+    const n = creditCount(credits, now - t0, COUNT_MS, false);
+    if (n !== shown) { shown = n; out.textContent = `+${n}`; if (n < credits) sound?.('coin'); }
+    if (n < credits) requestAnimationFrame(step);
+  };
+  out.textContent = '+0';
+  requestAnimationFrame(step);
 }
 
 function rollCredits(host: HTMLElement): void {

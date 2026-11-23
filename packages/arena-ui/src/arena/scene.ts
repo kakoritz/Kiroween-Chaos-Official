@@ -27,6 +27,7 @@ import { cobweb, flagstoneFloor, fogTexture, laneVignette, torchPools } from './
 import { starTracker } from './laps-model';
 import { GEAR_PARTS, gearTip } from './legend-modal';
 import { laneRatingTitle } from './review-card';
+import { RIVAL_VEIL, gearBadge, gearBadgeTip, isCrewLane, isRival } from './crew-lane';
 
 export const STAGE_W = 1920;
 export const STAGE_H = 1080;
@@ -365,7 +366,7 @@ const GEAR_SLOTS: { id: string; label: string }[] = [
   { id: 'breaker', label: 'B' }, { id: 'offline_queue', label: 'Q' },
 ];
 
-function labelCard(ctx: Ctx, b: LaneBox, l: LaneVM, t: number, worn: string[], speed: number, reduced: boolean): void {
+function labelCard(ctx: Ctx, b: LaneBox, l: LaneVM, t: number, worn: string[], speed: number, reduced: boolean, crewCard = false): void {
   const h = b.h;
   ctx.save();
   rr(ctx, 8, b.top + 4, 244, h - 8, 12);
@@ -375,6 +376,12 @@ function labelCard(ctx: Ctx, b: LaneBox, l: LaneVM, t: number, worn: string[], s
   const name = l.label || (TIER_IDS.includes(l.tier as Tier) ? TIER_LABEL[l.tier as Tier] : l.tier);
   txt(ctx, name, 46, b.top + 22, 22, C.bone, 'left', SANS, '700');
   txt(ctx, `LANE ${l.lane}`, 46, b.top + 41, 14, C.muted, 'left', MONO, '600');
+  if (crewCard) {
+    rr(ctx, 150, b.top + 8, 98, 20, 8); ctx.fillStyle = C.warn; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = C.out; ctx.stroke();
+    txt(ctx, 'YOUR CREW', 199, b.top + 19, 12, C.out, 'center', MONO, '800');
+    rr(ctx, 150, b.top + 32, 98, 18, 8); ctx.fillStyle = 'rgba(10,8,18,0.7)'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = C.warn; ctx.stroke();
+    txt(ctx, gearBadge(l), 199, b.top + 42, 11, C.warn, 'center', MONO, '800');
+  }
   // five gear slots
   GEAR_SLOTS.forEach((g, i) => {
     const gx = 56 + i * 34; const gy = b.top + 62;
@@ -659,7 +666,8 @@ export class ArenaScene {
     const deathIdx = fell ? Math.max(0, vm.stages.findIndex((s) => s.id === fell.stage)) : -1;
     if (fell) ctx.globalAlpha = 0.5;
     const wornNow = wornParts(l.parts, l.equips, now, this.speed, this.reducedMotion);
-    labelCard(ctx, b, l, now, wornNow, this.speed, this.reducedMotion);
+    labelCard(ctx, b, l, now, wornNow, this.speed, this.reducedMotion, isCrewLane(l) && vm.lanes.length > 1);
+    if (isCrewLane(l) && vm.lanes.length > 1) this.hot.push({ x: 150, y: b.top + 32, w: 98, h: 18, tip: gearBadgeTip(l) });
     GEAR_PARTS.forEach((gp, gi) => this.gearHot.push({ x: 56 + gi * 34 - 14, y: b.top + 48, w: 28, h: 28, tip: gearTip(gp, wornNow.includes(GEAR_SLOTS[gi]!.id)) }));
     if (fell) { ctx.globalAlpha = 1; fallenTag(ctx, b, fell.round); ctx.globalAlpha = 0.4; }
     if ((l.curses?.length ?? 0) > 0) {
@@ -742,6 +750,20 @@ export class ArenaScene {
     for (const draw of rings) draw();
     ctx.globalAlpha = 1;
     this.drawSurvived(ctx, l, b, now);
+    if (isRival(l, vm.lanes)) this.drawRivalVeil(ctx, b);
+    ctx.restore();
+  }
+
+  /** CP-U5: rivals are ghosted with a static dark veil and a dashed edge. The Crew lane stays at full strength. */
+  private drawRivalVeil(ctx: Ctx, b: LaneBox): void {
+    ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = `rgba(20,16,31,${RIVAL_VEIL})`;
+    ctx.fillRect(0, b.top, STAGE_W, b.h);
+    ctx.setLineDash([8, 6]); ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(143,134,168,0.55)';
+    ctx.strokeRect(2, b.top + 2, STAGE_W - 4, b.h - 4);
+    ctx.setLineDash([]);
+    txt(ctx, 'RIVAL', STAGE_W - 12, b.top + 14, 12, C.muted, 'right', MONO, '800');
     ctx.restore();
   }
 
