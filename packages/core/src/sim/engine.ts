@@ -3,6 +3,7 @@
 // reads the lane's policy overlay (`lane-<n>.policy.json`) like a bot does at start, plans the whole round and records it at once.
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { TIERS, type PartId } from '../../../haunt/src/shared/catalog';
 import { parsePolicy, type Policy } from '../../../haunt/src/sdk/policy';
 import { roundPlan, tierOfLane } from '../../../haunt/src/tournament/rounds';
 import type { LiveEngine, WaveSettings } from '../live/server';
@@ -24,7 +25,10 @@ function readPolicy(dir: string, lane: number): Policy | undefined {
 
 export function createSimEngine(o: SimEngineOptions): LiveEngine {
   let wave0 = 0;
+  // Simulated parts per lane (the Rookie overlay). Lives only in this engine: a lane runs with its tier's parts plus these, `lane_ready` keeps the tier.
+  let grants: Readonly<Record<number, readonly PartId[]>> = {};
   return {
+    setPartOverlay(g) { grants = g; },
     startWave(wave, settings, record, end) {
       const t = settings.tournament;
       if (!t) throw new Error('the simulated engine plays tournament rounds only');
@@ -39,7 +43,15 @@ export function createSimEngine(o: SimEngineOptions): LiveEngine {
           ...(p.fuzz ? { extra: { unknown: true, fingerprint: p.fuzz.fingerprint, fuzz: { fault: p.fuzz.fault, ...(p.fuzz.status !== undefined ? { status: p.fuzz.status } : {}) } } } : {}),
         }));
       });
-      const pw = planWave({ app: settings.app, tiers: live.map(tierOfLane), seed: settings.seed, orders: settings.orders, pace: PACE[settings.pace], waveNo: wave, floor: true, policies: live.map((l) => readPolicy(o.policyDir, l)) }, arms);
+      const tiers = live.map(tierOfLane);
+      const extra = live.map((l) => (grants[l] ?? []).filter((p, i, a) => a.indexOf(p) === i));
+      const spec = { app: settings.app, tiers, seed: settings.seed, orders: settings.orders, pace: PACE[settings.pace], waveNo: wave, floor: true, policies: live.map((l) => readPolicy(o.policyDir, l)) };
+      const granted = extra.some((x) => x.length);
+      const pw = planWave(granted ? {
+        ...spec,
+        laneParts: tiers.map((t, i) => (extra[i]!.length ? [...new Set([...TIERS[t].parts, ...extra[i]!])] : undefined)),
+        laneReady: tiers.map((t, i) => ({ tier: t, label: TIERS[t].label, parts: [...new Set([...TIERS[t].parts, ...extra[i]!])] })),
+      } : spec, arms);
       const ts0 = BASE_TS + wave0;
       wave0 += pw.endAt + 10_000;
       for (const e of assembleWave(pw, ts0, false)) {

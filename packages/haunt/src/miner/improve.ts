@@ -2,7 +2,7 @@
 // same plan and seed -> compare ("closed 7 of 9 patterns"). No full rewrite, and no code is applied: a policy overlay is data a tier's parts allow,
 // a spec is a document Kiro applies with the review step (AGENTS.md).
 import { policyTakes, type PolicyAction, type PolicyRule } from '../sdk/policy';
-import { gradeFor, TIERS, type Grade } from '../shared/catalog';
+import { gradeFor, TIERS, TIER_ORDER, type Grade, type PartId } from '../shared/catalog';
 import { tierOfLane } from '../tournament/rounds';
 import type { Lesson } from '../tournament/lessons';
 import type { LessonsStore } from '../tournament/lessons-store';
@@ -40,6 +40,20 @@ export function policyLaneReliability(r: Pick<RunResult, 'byLane' | 'orders' | '
   }
   return t.orders ? runReliability(t) : null;
 }
+/** The lanes of the tournament field (lane n has the tier `tierOfLane(n)`). */
+const FIELD_LANES = [1, 2, 3, 4, 5] as const;
+/** The parts a spec patch names (`Patch.part`), as SDK parts. `timeout` and `wrapper` are code changes with no part to grant. */
+export function partsOfPatch(part: string | undefined): PartId[] {
+  switch (part) {
+    case 'retry': return ['retry'];
+    case 'journal': return ['journal'];
+    case 'idempotency': return ['idempotency'];
+    case 'breaker': return ['breaker'];
+    case 'offline_queue': return ['breaker', 'offline_queue'];
+    default: return [];
+  }
+}
+/** Policy-lane reliability treats a lane as taking a policy by its real parts, so a simulated part never moves the baseline. */
 export const runGrade = (r: Pick<RunResult, 'orders' | 'ok' | 'repeats'>): Grade => gradeFor(runReliability(r));
 
 export interface ImproveDeps {
@@ -59,7 +73,16 @@ export interface ImproveDeps {
   onSpec?(s: { runId: string; path: string; patterns: string[]; refused: string[]; lint: LintResult }): void;
   /** A name for the spec folder. */
   specRunId?: string;
+  /**
+   * The part overlay (the Rookie overlay): a simulated engine that can run a lane with parts its tier lacks, only inside the rerun, the way wave 2 of the
+   * shipped design runs lane 1 with `retry, journal, idempotency` (`lane_ready` keeps the tier, lists the parts). Omit it for a live engine: nothing is granted.
+   * The grant never touches the repo; the spec the loop writes is still the way the parts become real.
+   */
+  partOverlay?: { set(grants: Readonly<Record<number, readonly PartId[]>>): void };
 }
+
+/** Parts a lane runs with only in the simulated rerun (its tier does not have them). `for` lists the pattern signatures that asked for each part. */
+export interface PartGrant { lane: number; tier: string; added: PartId[]; for: Record<string, string[]> }
 
 /** `existing`: the lane had already learned it (a lesson from a round), so the loop only confirmed it. */
 export interface OverlayApplied { lane: number; tier: string; signature: string; action: PolicyAction; stage: string; fault: string; existing: boolean }
@@ -98,6 +121,8 @@ export interface ImproveReport {
   repeats: { before: number; after: number };
   patterns: PatternOutcome[];
   overlays: OverlayApplied[];
+  /** Simulated parts (the part overlay). Empty on a live engine. Never applied to code. */
+  partGrants: PartGrant[];
   spec: { runId: string; path: string; patterns: string[]; refused: string[]; lint: LintResult } | null;
   /** Patterns the rerun shows that the first run did not. */
   newPatterns: string[];
@@ -133,6 +158,29 @@ export async function improve(deps: ImproveDeps): Promise<ImproveReport> {
   const needsCode: Pattern[] = [];
   const handling = new Map<string, PatternOutcome['handling']>();
   const touched = new Set<number>();
+  // ---- the part overlay: a lane that met a pattern whose patch is a part its tier lacks gets that part, in the simulated rerun only ----
+  const grants = new Map<number, PartGrant>();
+  if (deps.partOverlay) {
+    for (const m of targets) {
+      const patch = patchFor(store.get(patternId(m.signature))!);
+      for (const part of partsOfPatch(patch?.part)) {
+        // The fix belongs to the bot of the tier that met the pattern, and a weaker tier lacking the part would meet the same fault at the same stage: it gets the part too.
+        const lacking = m.lanes.filter((l) => !(TIERS[tierOfLane(l)].parts as readonly string[]).includes(part));
+        if (!lacking.length) continue;
+        const top = Math.max(...lacking.map((l) => TIER_ORDER.indexOf(tierOfLane(l))));
+        for (const lane of FIELD_LANES) {
+          const tier = tierOfLane(lane);
+          if (TIER_ORDER.indexOf(tier) > top || (TIERS[tier].parts as readonly string[]).includes(part)) continue;
+          const g = grants.get(lane) ?? { lane, tier, added: [], for: {} };
+          if (!g.added.includes(part)) g.added.push(part);
+          (g.for[part] ??= []).push(m.signature);
+          grants.set(lane, g);
+        }
+      }
+    }
+    deps.partOverlay.set(Object.fromEntries([...grants.values()].map((g) => [g.lane, g.added])));
+  }
+  const partsOf = (lane: number): string[] => [...TIERS[tierOfLane(lane)].parts, ...(grants.get(lane)?.added ?? [])];
   for (const m of targets) {
     const p = store.get(patternId(m.signature))!;
     const patch = patchFor(p);
@@ -142,7 +190,7 @@ export async function improve(deps: ImproveDeps): Promise<ImproveReport> {
     for (const lane of m.lanes) {
       const tier = tierOfLane(lane);
       // Only an action the SDK enforces is applied as policy; anything else would be a claim with no effect.
-      if (action && policyTakes(TIERS[tier].parts, action)) {
+      if (action && policyTakes(partsOf(lane), action)) {
         const l = lessons.get(lane, tier);
         const existing = l.lessons.some((x) => x.signature === m.signature && x.rule);
         if (!existing) {
@@ -207,7 +255,7 @@ export async function improve(deps: ImproveDeps): Promise<ImproveReport> {
     grade: { before: runGrade(before), after: runGrade(after) }, reliability: { before: runReliability(before), after: runReliability(after) },
     policyLanes: ((b, a) => (b === null || a === null ? null : { reliability: { before: b, after: a }, grade: { before: gradeFor(b), after: gradeFor(a) } }))(policyLaneReliability(before), policyLaneReliability(after)),
     score: { before: before.score, after: after.score }, lost: { before: before.lost, after: after.lost }, repeats: { before: before.repeats, after: after.repeats },
-    patterns: outcomes, overlays, spec, newPatterns, runs: { before: before.run, after: after.run },
+    patterns: outcomes, overlays, partGrants: [...grants.values()].sort((a, b) => a.lane - b.lane), spec, newPatterns, runs: { before: before.run, after: after.run },
   };
   return { ...report, text: renderImprove(report) };
 }
@@ -223,6 +271,7 @@ export function renderImprove(r: Omit<ImproveReport, 'text'>): string {
     ...(r.patterns.length ? ['| Pattern | Handled by | Before | After | Lanes (before > after) | Status |', '|---|---|---|---|---|---|', ...r.patterns.map((p) => `| \`${p.signature}\` | ${p.handling} | ${p.before} | ${p.after} | ${p.lanes.before.join(',') || '-'} > ${p.lanes.after.join(',') || '-'} | ${p.status}${p.closed ? ' (gone)' : p.closedOnTreated ? ' (gone on the lanes that took the policy)' : ''} |`)] : ['None above the threshold.']), '',
     '## Applied as policy (lessons)', '',
     ...(r.overlays.length ? r.overlays.map((o) => `- lane ${o.lane} (${o.tier}): \`${o.action}\` for ${o.stage} + ${o.fault}${o.existing ? ' (already learned in a round)' : ''}`) : ['- Nothing: no tier that met these patterns can take a policy for them.']), '',
+    ...(r.partGrants.length ? ['## Simulated parts (the rerun only, not applied)', '', ...r.partGrants.map((g) => `- lane ${g.lane} (${g.tier}) ran the rerun with ${g.added.map((x) => `\`${x}\``).join(', ')} added; \`lane_ready\` keeps the tier. The spec below is what makes them real.`), ''] : []),
     '## Spec for the rest (not applied)', '',
     r.spec ? `- \`${r.spec.path}\`: ${r.spec.patterns.length} requirement${r.spec.patterns.length === 1 ? '' : 's'}, lint ${r.spec.lint.ok ? 'ok' : 'failed'}${r.spec.refused.length ? `; not proposed: ${r.spec.refused.join(', ')}` : ''}. Kiro applies it with the review step.` : '- None: every pattern was handled as policy or none needed code.', '',
     ...(r.newPatterns.length ? ['## New in the rerun', '', ...r.newPatterns.map((s) => `- \`${s}\``), ''] : []),
