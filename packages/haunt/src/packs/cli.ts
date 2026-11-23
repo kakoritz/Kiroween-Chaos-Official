@@ -1,7 +1,7 @@
 // `haunt pack new|list|check` and `haunt init`. Library functions so the bin stays a thin wrapper. Node only.
 import { resolve } from 'node:path';
 import { labRun } from '../lab/engine';
-import { listPacks, loadPack } from './load';
+import { callerCwd, listPacks, loadPack, resolvePackRef, resolvePacksDir } from './load';
 import { PACK_TIERS, packToLabModel } from './pack';
 import { scaffoldPack, writeInit } from './scaffold';
 
@@ -10,11 +10,11 @@ const flag = (argv: string[], name: string): string | undefined => {
   return i >= 0 && argv[i + 1] && !argv[i + 1]!.startsWith('--') ? argv[i + 1] : undefined;
 };
 
-export const PACK_USAGE = 'usage: haunt pack new <id> [--title "Haunted Thing"] [--dir packs] [--force]\n       haunt pack list [--dir packs]\n       haunt pack check <id> [--dir packs]\n       haunt init [--pack <id>] [--dir .] [--packs packs] [--force]';
+export const PACK_USAGE = 'usage: haunt pack new <id> [--title "Haunted Thing"] [--dir packs] [--force]\n       haunt pack list [--dir packs]\n       haunt pack check <id|path> [--dir packs]\n       haunt init [--pack <id>] [--dir .] [--packs packs] [--force]';
 
 export async function packCommand(argv: string[], log: (s: string) => void = console.log): Promise<number> {
   const sub = argv[0];
-  const dir = resolve(flag(argv, '--dir') ?? 'packs');
+  const dir = resolvePacksDir(flag(argv, '--dir'));
   if (sub === 'list') {
     const ids = listPacks(dir);
     for (const id of ids) { const p = loadPack(dir, id); log(`${id}: ${p.title} (${p.stages.length} stages, ${p.faults.length} faults, ${p.bosses.length} bosses${p.modelBased ? ', model-based' : ''})`); }
@@ -36,7 +36,8 @@ export async function packCommand(argv: string[], log: (s: string) => void = con
     const id = argv[1];
     if (!id || id.startsWith('--')) { log('error: pack id required'); return 2; }
     try {
-      const p = loadPack(dir, id);
+      const ref = resolvePackRef(id, flag(argv, '--dir'));
+      const p = loadPack(ref.dir, ref.id);
       const rookie = await labRun(packToLabModel(p, PACK_TIERS.rookie));
       const phoenix = await labRun(packToLabModel(p, PACK_TIERS.phoenix));
       log(`${id}: valid. ${p.stages.length} stages, ${p.faults.length} faults, ${p.curses.length} curses, ${p.bosses.length} bosses.`);
@@ -50,7 +51,9 @@ export async function packCommand(argv: string[], log: (s: string) => void = con
 
 export function initCommand(argv: string[], log: (s: string) => void = console.log): number {
   try {
-    const r = writeInit(resolve(flag(argv, '--dir') ?? '.'), resolve(flag(argv, '--packs') ?? 'packs'), flag(argv, '--pack'), argv.includes('--force'));
+    const packId = flag(argv, '--pack');
+    const ref = packId ? resolvePackRef(packId, flag(argv, '--packs')) : undefined;
+    const r = writeInit(resolve(callerCwd(), flag(argv, '--dir') ?? '.'), ref?.dir ?? resolvePacksDir(flag(argv, '--packs')), ref?.id, argv.includes('--force'));
     log(r.created ? `wrote ${r.file}. Next: haunt validate, then haunt sweep` : `${r.file} already exists (use --force to overwrite)`);
     return r.created ? 0 : 2;
   } catch (e) { log(`error: ${(e as Error).message}`); return 2; }

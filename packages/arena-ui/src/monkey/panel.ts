@@ -1,7 +1,7 @@
 // PK-U3: the Chaos Monkey panel. A modal opened from the header: mode selector, guard-rail summary, a big KILL SWITCH, the steady-state
 // meter and the audit log tail. It drives the built-in demo target on the live server and nothing else.
 import { Card, el } from '../arena/tournament-view';
-import { MODES, MODE_LABEL, MODE_NOTE, auditLine, killNote, meterView, parseMonkey, statusWord, type MonkeyMode, type MonkeyView } from './model';
+import { MODES, MODE_LABEL, MODE_NOTE, auditLine, killNote, meterView, parseMonkey, parsePreview, railsView, statusLine, type MonkeyMode, type MonkeyView } from './model';
 import { MonkeyUnavailable, type MonkeyClient } from './client';
 
 export interface MonkeyHost {
@@ -17,6 +17,8 @@ export class MonkeyPanel extends Card {
   unavailable: string | null = null;
   /** The mode picked in the selector. */
   picked: MonkeyMode = 'observe';
+  /** Guard rails of the picked mode, fetched when the selector changes (the server only describes the mode it last ran). */
+  preview: { mode: MonkeyMode; lines: string[] } | null = null;
   private timer: number | undefined;
   private body: HTMLElement | null = null;
   private busy = false;
@@ -46,6 +48,17 @@ export class MonkeyPanel extends Card {
       else if (!quiet) this.host.onError?.(e);
       this.host.onBadge?.(false);
     }
+    this.refresh();
+  }
+
+  /** Pick a mode and load its guard rails right away. */
+  async pick(mode: MonkeyMode): Promise<void> {
+    this.picked = mode;
+    this.refresh();
+    try {
+      const p = parsePreview(await this.host.client.preview(mode));
+      if (p && p.mode === mode) this.preview = p;
+    } catch (e) { if (!(e instanceof MonkeyUnavailable)) this.host.onError?.(e); }
     this.refresh();
   }
 
@@ -100,7 +113,7 @@ export class MonkeyPanel extends Card {
 
     const status = el('div', `mk-status mk-status--${v.status}`);
     status.setAttribute('role', 'status');
-    status.append(el('strong', '', statusWord(v)), el('span', '', v.reason ? ` ${v.reason}` : ''), el('span', 'mk-inj', ` Injections: ${v.injections}`));
+    status.append(el('strong', '', statusLine(v)), el('span', 'mk-inj', ` Injections: ${v.injections}`));
     b.append(status);
 
     // Mode selector: radio-style buttons; starting is a separate, deliberate press.
@@ -111,19 +124,23 @@ export class MonkeyPanel extends Card {
       const btn = el('button', on ? 'btn mk-mode mk-mode--on' : 'btn mk-mode', MODE_LABEL[m]); btn.type = 'button';
       btn.setAttribute('role', 'radio'); btn.setAttribute('aria-checked', String(on)); btn.dataset.mode = m;
       btn.disabled = v.running;
-      btn.addEventListener('click', () => { this.picked = m; this.refresh(); });
+      btn.addEventListener('click', () => { void this.pick(m); });
       modes.append(btn);
     }
     const go = el('button', 'btn mk-go', v.running ? 'Running' : `Start ${MODE_LABEL[this.picked]}`); go.type = 'button'; go.id = 'mk-start';
     go.disabled = v.running || this.busy;
     go.addEventListener('click', () => { void this.start(this.picked); });
-    b.append(modes, el('p', 'mk-note', MODE_NOTE[shown]), go);
+    const chosen = el('p', 'mk-chosen'); chosen.setAttribute('aria-live', 'polite');
+    chosen.append(el('span', '', v.running ? 'Running mode: ' : 'Selected mode: '), el('strong', '', MODE_LABEL[shown]));
+    b.append(modes, chosen, el('p', 'mk-note', MODE_NOTE[shown]), go);
 
     // Guard rails (the server describes the mode it is running or last ran).
     const rails = el('section', 'mk-rails'); rails.setAttribute('aria-label', 'Guard rails');
-    rails.append(el('h3', '', `Guard rails (${MODE_LABEL[v.mode]})`));
+    const rv = railsView(v, this.picked, this.preview);
+    rails.append(el('h3', '', rv.title));
     const ul = el('ul');
-    for (const l of v.guardLines) ul.append(el('li', '', l));
+    if (rv.pending) ul.append(el('li', '', 'Loading...'));
+    for (const l of rv.lines) ul.append(el('li', '', l));
     rails.append(ul);
     b.append(rails);
 

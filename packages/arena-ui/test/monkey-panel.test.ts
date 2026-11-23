@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MODES, auditLine, killNote, meterView, parseMonkey, statusWord } from '../src/monkey/model';
+import { MODES, auditLine, killNote, meterView, parseMonkey, parsePreview, railsView, statusLine, statusWord } from '../src/monkey/model';
 import { MonkeyUnavailable, monkeyClient } from '../src/monkey/client';
 
 const raw = (over: Record<string, unknown> = {}): unknown => ({
@@ -51,6 +51,26 @@ describe('monkey panel model (PK-U3)', () => {
   });
 });
 
+describe('monkey panel: status, rails, selected mode', () => {
+  it('does not repeat the kill switch reason in the status line', () => {
+    const v = parseMonkey(raw({ running: false, status: 'stopped', reason: 'kill switch: arena panel' }))!;
+    expect(statusLine(v)).toBe('STOPPED: kill switch (arena panel)');
+    expect(statusLine(parseMonkey(raw({ running: false, status: 'stopped', reason: 'kill switch' }))!)).toBe('STOPPED: kill switch');
+    expect(statusLine(parseMonkey(raw({ running: false, status: 'aborted', reason: 'success_rate 40% below 80%' }))!)).toBe('ABORTED: steady state breached: success_rate 40% below 80%');
+    expect(statusLine(parseMonkey(raw({ running: false, status: 'idle', reason: '' }))!)).toBe('Idle');
+  });
+  it('shows the picked mode rails: server lines when it matches, the preview otherwise, loading before it arrives', () => {
+    const idle = parseMonkey(raw({ running: false, status: 'idle', mode: 'observe', guard: { lines: ['Observe: nothing is injected.'] } }))!;
+    expect(railsView(idle, 'observe', null)).toMatchObject({ title: 'Guard rails (Observe)', lines: ['Observe: nothing is injected.'], pending: false });
+    expect(railsView(idle, 'staging', null)).toMatchObject({ title: 'Guard rails (Staging)', lines: [], pending: true });
+    const pv = parsePreview({ mode: 'staging', lines: ['Allowed faults: latency.'] });
+    expect(railsView(idle, 'staging', pv)).toMatchObject({ title: 'Guard rails (Staging, preview)', lines: ['Allowed faults: latency.'], pending: false });
+    expect(railsView(idle, 'prod-guarded', pv).pending).toBe(true);
+    expect(railsView(parseMonkey(raw())!, 'observe', pv).title).toBe('Guard rails (Staging, running)');
+    expect(parsePreview({ mode: 'x', lines: [] })).toBeNull();
+  });
+});
+
 describe('monkey client', () => {
   const ok = (body: unknown, status = 200): typeof fetch => (async () => new Response(JSON.stringify(body), { status })) as unknown as typeof fetch;
 
@@ -58,11 +78,12 @@ describe('monkey client', () => {
     const calls: string[] = [];
     const f = (async (u: string, i?: RequestInit) => { calls.push(`${i?.method} ${u} ${i?.body ?? ''}`); return new Response('{}', { status: 200 }); }) as unknown as typeof fetch;
     const c = monkeyClient('http://127.0.0.1:7070', f);
-    await c.getState(); await c.start('staging'); await c.stop();
+    await c.getState(); await c.start('staging'); await c.stop(); await c.preview('prod-guarded');
     expect(calls).toEqual([
       'GET http://127.0.0.1:7070/api/monkey?audit=12 ',
       'POST http://127.0.0.1:7070/api/monkey/start {"mode":"staging"}',
       'POST http://127.0.0.1:7070/api/monkey/stop {}',
+      'GET http://127.0.0.1:7070/api/monkey/preview?mode=prod-guarded ',
     ]);
   });
   it('says so when there is no server or no route (mock, hosted)', async () => {

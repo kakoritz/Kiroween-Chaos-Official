@@ -7,7 +7,7 @@ import type { Finding } from '../report/builder';
 import type { HauntEvent } from '../score/score';
 import { runSweep, type CellDetail, type SweepReport } from '../sweep/executor';
 import type { CellOutcome, SweepPlan } from '../sweep/matrix';
-import { LAB_COMMANDS, labToYaml, partSet, validateLabModel, type LabPackMeta, type LabModel, type LabPart, type LabStage, type PartSet, type PackFault } from './model';
+import { labCommands, labToYaml, partSet, validateLabModel, type LabPackMeta, type LabModel, type LabPart, type LabStage, type PartSet, type PackFault } from './model';
 
 export const LAB_LABEL = 'Model-based what-if: results come from rules over the protections you declare, not from running your real code.';
 
@@ -309,7 +309,7 @@ export async function labRun(model: LabModel): Promise<LabReport> {
     creatureLabels: { ...Object.fromEntries(LAB_CREATURES.map((c) => [c.id, c.label])), ...(model.pack?.creatures ?? {}) },
     grade: report.grade, reliability: report.reliability, bosses, curses, ...(review ? { review } : {}), matrix: report.matrix, cells: report.cells,
     findings, suggestions, gradeWithSuggestions: after.grade,
-    yaml: labToYaml(model), commands: LAB_COMMANDS, elapsedMs: Math.max(0, Math.round(nowMs() - t0)),
+    yaml: labToYaml(model), commands: labCommands(model), elapsedMs: Math.max(0, Math.round(nowMs() - t0)),
   };
 }
 

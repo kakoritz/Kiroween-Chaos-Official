@@ -210,3 +210,51 @@ describe('haunt pack new / init (reusable skeleton)', () => {
     expect(initCommand(['--pack', 'nope', '--dir', mk(), '--packs', PACKS], log)).toBe(2);
   });
 });
+
+describe('lab commands follow the pack', () => {
+  it('pack presets show pack commands; plain presets keep the generic ones', async () => {
+    for (const id of ['streaming', 'ticketing']) {
+      const r = await labRun(LAB_PRESETS[id]!);
+      expect(r.commands).toEqual([`npm run haunt -- init --pack ${id}`, `npm run haunt -- pack check ${id}`, 'npm run haunt -- validate', 'npm run haunt -- sweep']);
+    }
+    for (const id of ['orders', 'inbox']) {
+      expect((await labRun(LAB_PRESETS[id]!)).commands).toEqual(['npm run haunt -- init', 'npm run haunt -- validate', 'npm run haunt -- sweep']);
+    }
+  });
+});
+
+describe('pack refs resolve from any cwd', () => {
+  const root = join(__dirname, '..', '..', '..');
+  const lines: string[] = [];
+  const log = (s: string): void => { lines.push(s); };
+  const withCwd = async <T>(cwd: string, init: string | undefined, fn: () => Promise<T> | T): Promise<T> => {
+    const prev = process.cwd(); const prevInit = process.env.INIT_CWD;
+    process.chdir(cwd); if (init === undefined) delete process.env.INIT_CWD; else process.env.INIT_CWD = init;
+    try { return await fn(); } finally { process.chdir(prev); if (prevInit === undefined) delete process.env.INIT_CWD; else process.env.INIT_CWD = prevInit; }
+  };
+
+  it('pack check <id> works from a subfolder and from outside the repo (via the process cwd fallback)', async () => {
+    lines.length = 0;
+    expect(await withCwd(join(root, 'packages'), undefined, () => packCommand(['check', 'ticketing'], log))).toBe(0);
+    expect(lines.join('\n')).toMatch(/ticketing: valid/);
+    lines.length = 0;
+    const out = mkdtempSync(join(tmpdir(), 'haunt-out-'));
+    expect(await withCwd(root, out, () => packCommand(['check', 'ticketing'], log))).toBe(0);
+  });
+  it('pack check <path> takes a folder or pack.yaml path, relative to where the command was typed', async () => {
+    const out = mkdtempSync(join(tmpdir(), 'haunt-path-'));
+    lines.length = 0;
+    expect(await withCwd(root, out, () => packCommand(['check', join(root, 'packs', 'ticketing')], log))).toBe(0);
+    expect(await withCwd(root, join(root, 'packs'), () => packCommand(['check', './ticketing/pack.yaml'], log))).toBe(0);
+    expect(await withCwd(root, join(root, 'packs'), () => packCommand(['check', 'ticketing'], log))).toBe(0);
+    lines.length = 0;
+    expect(await withCwd(root, out, () => packCommand(['check', 'nope-pack'], log))).toBe(2);
+    expect(lines.join('\n')).toMatch(/not found/);
+  });
+  it('init --pack writes haunt.yaml where the user typed the command', async () => {
+    const out = mkdtempSync(join(tmpdir(), 'haunt-init-'));
+    expect(await withCwd(root, out, () => initCommand(['--pack', 'ticketing'], log))).toBe(0);
+    expect(existsSync(join(out, 'haunt.yaml'))).toBe(true);
+    expect(existsSync(join(root, 'haunt.yaml'))).toBe(false);
+  });
+});

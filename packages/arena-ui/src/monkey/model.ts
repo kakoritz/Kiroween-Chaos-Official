@@ -86,6 +86,37 @@ export const STATUS_WORD: Record<string, string> = {
 };
 export const statusWord = (v: MonkeyView): string => STATUS_WORD[v.status] ?? v.status;
 
+/** The status line: the status word plus the reason, unless the reason only repeats what the word already says ("STOPPED: kill switch" + "kill switch: arena panel"). */
+export function statusLine(v: MonkeyView): string {
+  const word = statusWord(v);
+  const norm = (s: string): string => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  let reason = v.reason.trim();
+  if (!reason) return word;
+  const w = norm(word);
+  const r = norm(reason);
+  if (w.includes(r)) return word;
+  const tail = word.includes(':') ? norm(word.slice(word.indexOf(':') + 1)) : '';
+  if (tail && r.startsWith(tail)) {
+    reason = reason.replace(/^[^:]*:?\s*/, '').trim();
+    if (!reason || norm(reason) === tail) return word;
+    return `${word} (${reason})`;
+  }
+  return `${word}: ${reason}`;
+}
+
+/** The guard-rail heading and lines for the mode on screen: the preview of the picked mode when idle, the server's own summary while running. */
+export function railsView(v: MonkeyView, picked: MonkeyMode, preview: { mode: MonkeyMode; lines: string[] } | null): { title: string; lines: string[]; pending: boolean } {
+  if (v.running) return { title: `Guard rails (${MODE_LABEL[v.mode]}, running)`, lines: v.guardLines, pending: false };
+  if (v.mode === picked) return { title: `Guard rails (${MODE_LABEL[picked]})`, lines: v.guardLines, pending: false };
+  if (preview && preview.mode === picked) return { title: `Guard rails (${MODE_LABEL[picked]}, preview)`, lines: preview.lines, pending: false };
+  return { title: `Guard rails (${MODE_LABEL[picked]})`, lines: [], pending: true };
+}
+
+export function parsePreview(raw: unknown): { mode: MonkeyMode; lines: string[] } | null {
+  if (!isObj(raw) || !MODES.includes(raw.mode as MonkeyMode) || !Array.isArray(raw.lines)) return null;
+  return { mode: raw.mode as MonkeyMode, lines: raw.lines.map(String) };
+}
+
 /** What to say about the kill switch: it is always the loudest control, and it says what it did. */
 export function killNote(v: MonkeyView): string {
   if (v.running) return 'Ends every injection at once and restores normal behaviour.';
