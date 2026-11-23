@@ -8,7 +8,7 @@ import {
 
 export type RunLab = (m: LabModel) => Promise<LabReport>;
 
-const COMMANDS = ['npx haunt init', 'haunt validate', 'haunt sweep'];
+const COMMANDS = ['npm run haunt -- init', 'npm run haunt -- validate', 'npm run haunt -- sweep'];
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string): HTMLElementTagNameMap[K] {
   const e = document.createElement(tag);

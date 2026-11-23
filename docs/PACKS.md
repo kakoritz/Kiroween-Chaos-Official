@@ -113,13 +113,13 @@ The proof that the skeleton is reusable: a new app is a new folder, and nothing 
 The Lab report exports `haunt.yaml` and shows the three commands that run the real sweep on real code:
 
 ```
-npx haunt init          # writes haunt.yaml (from a pack: haunt init --pack shop-desk)
-haunt validate          # checks haunt.yaml
-haunt sweep             # runs the real faults against your real bot and grades it
+npm run haunt -- init          # writes haunt.yaml (from a pack: npm run haunt -- init --pack shop-desk)
+npm run haunt -- validate      # checks haunt.yaml
+npm run haunt -- sweep         # runs the real faults against your real bot and grades it
 ```
 
-In this repo they are `npm run haunt -- init --pack shop-desk`, `npm run haunt -- validate haunt.yaml` and
-`npm run haunt -- sweep --config haunt.yaml`. A pack stays labelled model-based until a real app backs it. Two real apps live
+There is no `haunt` binary: always go through `npm run haunt --`. A pack argument is an id (`shop-desk`) or a path to a pack
+folder or its `pack.yaml`; both work from any folder (relative paths are resolved from where you typed the command). Validate and sweep take `haunt.yaml` (`validate haunt.yaml`, `sweep --config haunt.yaml`). A pack stays labelled model-based until a real app backs it. Two real apps live
 in this repo: `apps/haunted-orders` (Node) and `apps/haunted-inbox` (Python). The streaming and ticketing packs are
 model-based demos.
 

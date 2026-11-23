@@ -188,13 +188,13 @@ for (const id of Object.keys(EMBEDDED_PACKS)) {
   Object.defineProperty(LAB_PRESETS, id, { enumerable: true, configurable: true, get: () => packPreset(EMBEDDED_PACKS[id]!) });
 }
 
-export const LAB_COMMANDS: readonly string[] = ['npx haunt init', 'haunt validate', 'haunt sweep'];
+export const LAB_COMMANDS: readonly string[] = ['npm run haunt -- init', 'npm run haunt -- validate', 'npm run haunt -- sweep'];
 
 /** Commands shown with a lab run: the generic trio, or the pack's own scaffold, check and sweep steps. */
 export function labCommands(model: Pick<LabModel, 'pack'>): readonly string[] {
   const id = model.pack?.id;
   if (!id) return LAB_COMMANDS;
-  return [`npx haunt init --pack ${id}`, `npx haunt pack check ${id}`, 'haunt validate', 'haunt sweep'];
+  return [`npm run haunt -- init --pack ${id}`, `npm run haunt -- pack check ${id}`, 'npm run haunt -- validate', 'npm run haunt -- sweep'];
 }
 
 function packPreset(yaml: string): LabModel {
