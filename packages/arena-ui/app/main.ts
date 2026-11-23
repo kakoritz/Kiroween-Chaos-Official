@@ -38,6 +38,8 @@ import '../src/onboarding/tour.css';
 import '../src/arena/lanes-ticker.css';
 import { ReviewCardView } from '../src/arena/review-card';
 import '../src/arena/review-card.css';
+import { DecisionPopupView } from '../src/arena/decision';
+import '../src/arena/decision.css';
 import { ScoreVisuals } from '../src/arena/score-visuals';
 import '../src/arena/score-visuals.css';
 import { mountCampaignHub } from '../src/campaign/hub';
@@ -161,6 +163,8 @@ const ledgerPanel = new LedgerPanel($('ledger-body'));
 const rankEl = $('rank');
 const ledgerEl = $('ledger');
 const reviewCards = new ReviewCardView(stageEl, (n) => { const i = vm.lanes.findIndex((x) => x.lane === n); return i < 0 ? null : laneBoxes(vm.lanes.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET)[i] ?? null; });
+// PT-U11: the wrong-order popup over the lane that asked; POST /api/decision with the chosen card, keys 1 2 3.
+const decisionPopup = new DecisionPopupView(stageEl, (n) => { const i = vm.lanes.findIndex((x) => x.lane === n); const b = i < 0 ? null : laneBoxes(vm.lanes.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET)[i]; return b ? { top: b.top, h: b.h } : null; }, (lane, order, choice) => api.decide(lane, order, choice), (id) => vm.stages.find((s) => s.id === id)?.label ?? id);
 const scoreVisuals = new ScoreVisuals(stageEl, (n) => { const i = vm.lanes.findIndex((x) => x.lane === n); return i < 0 ? null : laneBoxes(vm.lanes.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET)[i] ?? null; });
 const tickerEl = $('ticker');
 const tickerModel = new LaneTickerModel((id) => vm.stages.find((s) => s.id === id)?.label ?? id);
@@ -235,6 +239,8 @@ if (new URLSearchParams(window.location.search).get('keys') === 'open') toggleKe
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') { toggleKeys(false); setPresent(false); return; }
   const t = e.target as HTMLElement | null;
+  // A wrong order waits for an answer: 1, 2 and 3 pick refund, discount or redo before they mean Chaos on a lane.
+  if (!e.ctrlKey && !e.altKey && !e.metaKey && !e.repeat && !['INPUT', 'TEXTAREA', 'SELECT'].includes(t?.tagName ?? '') && decisionPopup.key(e.key)) { e.preventDefault(); return; }
   const act = keyAction({ key: e.key, ctrlKey: e.ctrlKey, altKey: e.altKey, metaKey: e.metaKey, repeat: e.repeat, targetTag: t?.tagName, editable: !!t?.isContentEditable }, vm.lanes.length);
   if (!act || !api) return;
   if (act.type === 'help') { e.preventDefault(); toggleKeys(); return; }
@@ -363,6 +369,7 @@ function onEvent(ev: ArenaEvent) {
   inspector.record(ev);
   tickerModel.push(ev, performance.now());
   reviewCards.onEvent(ev);
+  decisionPopup.onEvent(ev);
   scoreVisuals.onEvent(ev);
   events++;
   if (typeof ev.seq === 'number') lastSeq = ev.seq;

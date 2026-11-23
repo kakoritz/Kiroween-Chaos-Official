@@ -129,10 +129,10 @@ const newLane = (): Lane => ({
 
 /** Contract v1.1 section 8: fault id to creature. */
 const WORLD_FAULTS: Record<string, string> = {
-  sms_down: 'gargoyle', app_down: 'imp', updates_down: 'goblin', wrong_address: 'scarecrow',
+  sms_down: 'gargoyle', app_down: 'imp', updates_down: 'goblin', wrong_address: 'scarecrow', delay: 'scarecrow', weather: 'storm_crow', road_hazard: 'pothole_imp', out_of_gas: 'fuel_wraith', not_on_truck: 'lost_parcel_ghoul',
   no_answer: 'black_cat', gated_house: 'black_cat', car_accident: 'phantom_car', order_typo: 'prankster',
 };
-const WORLD_CREATURES = new Set(['scarecrow', 'black_cat', 'phantom_car', 'prankster']);
+const WORLD_CREATURES = new Set(['scarecrow', 'black_cat', 'phantom_car', 'prankster', 'storm_crow', 'pothole_imp', 'fuel_wraith', 'lost_parcel_ghoul']);
 const num = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x);
 /** Timestamps are whole ms, so gaps may be off by one. */
 const TOL = 1;

@@ -14,6 +14,8 @@ export interface OutageVM {
   startedAt: number;
   /** When the stage recovered (null while it is still down). */
   endedAt: number | null;
+  /** The fault waits for the lane to reach the stage (the bot runs ahead of the arena): the ring is full and does not count yet. */
+  pending?: boolean;
 }
 
 export interface OutageHost { outages?: OutageVM[] }
@@ -24,16 +26,21 @@ export const OUTAGE_FADE_MS = 700;
 const num = (v: unknown, d = 0): number => (typeof v === 'number' && Number.isFinite(v) ? v : d);
 
 /** Open a ring for an `outage` event. A second outage at the same stage replaces the first. Returns null for a malformed event. */
-export function openOutage(l: OutageHost, now: number, speed: number, stage: string | undefined, d: Record<string, unknown>): OutageVM | null {
+export function openOutage(l: OutageHost, now: number, speed: number, stage: string | undefined, d: Record<string, unknown>, pending = false): OutageVM | null {
   const outageMs = num(d.outageMs, NaN);
   if (!stage || !Number.isFinite(outageMs) || outageMs <= 0) return null;
   const o: OutageVM = {
     stage, fault: typeof d.fault === 'string' ? d.fault : '', level: num(d.level), seed: num(d.seed),
-    outageMs, realMs: outageMs / Math.max(0.1, speed), startedAt: now, endedAt: null,
+    outageMs, realMs: outageMs / Math.max(0.1, speed), startedAt: now, endedAt: null, ...(pending ? { pending: true } : {}),
   };
   l.outages = (l.outages ?? []).filter((x) => x.stage !== stage);
   l.outages.push(o);
   return o;
+}
+
+/** The lane reached the stage a waiting ring is about: it starts counting now. */
+export function startOutage(l: OutageHost, now: number, stage: string): void {
+  for (const o of l.outages ?? []) if (o.pending && o.stage === stage) { o.pending = false; o.startedAt = now; }
 }
 
 /** The stage recovered (or the order ended): the ring stops counting and fades. `stage` omitted ends every ring of the lane. */
@@ -62,7 +69,7 @@ export interface OutageFrame {
 
 export function outageFrame(o: OutageVM, now: number): OutageFrame {
   const stop = o.endedAt ?? now;
-  const left = Math.max(0, o.realMs - Math.max(0, stop - o.startedAt));
+  const left = o.pending ? o.realMs : Math.max(0, o.realMs - Math.max(0, stop - o.startedAt));
   const fade = o.endedAt === null ? 0 : Math.min(1, Math.max(0, (now - o.endedAt) / OUTAGE_FADE_MS));
   return { frac: o.realMs > 0 ? left / o.realMs : 0, leftMs: left, seconds: Math.ceil(left / 1000), overrun: o.endedAt === null && left <= 0, fade };
 }

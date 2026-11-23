@@ -193,7 +193,7 @@ describe('P18 a decision is made exactly once', () => {
       async ({ asks, answer, alive }) => {
         const emitted: DecisionEvent[] = [];
         let fire: (() => void) | null = null;
-        const broker = new DecisionBroker({ emit: (_l, e) => emitted.push(e), timeoutMs: () => 10_000, setTimer: (fn) => { fire = fn; return 1; }, clearTimer: () => { fire = null; } });
+        const broker = new DecisionBroker({ emit: (_l, e) => { emitted.push(e); }, timeoutMs: () => 10_000, setTimer: (fn) => { fire = fn; return 1; }, clearTimer: () => { fire = null; } });
         const answers: Promise<unknown>[] = [];
         for (let i = 0; i < asks; i++) {
           answers.push(broker.ask('1', { order: 'o1', detectedAt: 'handoff', defaultChoice: 'redo' }, () => alive[i]!));

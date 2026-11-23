@@ -2103,6 +2103,56 @@
  {
   "app": "orders",
   "tier": "rookie",
+  "fault": "weather",
+  "stage": "transit",
+  "role": "poll",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "road_hazard",
+  "stage": "transit",
+  "role": "poll",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "delay",
+  "stage": "transit",
+  "role": "poll",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "out_of_gas",
+  "stage": "transit",
+  "role": "poll",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
+  "fault": "not_on_truck",
+  "stage": "transit",
+  "role": "poll",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "rookie",
   "fault": "crash",
   "stage": "handoff",
   "role": "final",
@@ -4333,6 +4383,56 @@
  {
   "app": "orders",
   "tier": "retrier",
+  "fault": "weather",
+  "stage": "transit",
+  "role": "poll",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "road_hazard",
+  "stage": "transit",
+  "role": "poll",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "delay",
+  "stage": "transit",
+  "role": "poll",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "out_of_gas",
+  "stage": "transit",
+  "role": "poll",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
+  "fault": "not_on_truck",
+  "stage": "transit",
+  "role": "poll",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "retrier",
   "fault": "crash",
   "stage": "handoff",
   "role": "final",
@@ -6228,6 +6328,56 @@
  {
   "app": "orders",
   "tier": "journaler",
+  "fault": "weather",
+  "stage": "transit",
+  "role": "poll",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "road_hazard",
+  "stage": "transit",
+  "role": "poll",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "delay",
+  "stage": "transit",
+  "role": "poll",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "out_of_gas",
+  "stage": "transit",
+  "role": "poll",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
+  "fault": "not_on_truck",
+  "stage": "transit",
+  "role": "poll",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "journaler",
   "fault": "crash",
   "stage": "handoff",
   "role": "final",
@@ -8010,6 +8160,56 @@
   "app": "orders",
   "tier": "reconciler",
   "fault": "wrong_address",
+  "stage": "transit",
+  "role": "poll",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "weather",
+  "stage": "transit",
+  "role": "poll",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "road_hazard",
+  "stage": "transit",
+  "role": "poll",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "delay",
+  "stage": "transit",
+  "role": "poll",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "out_of_gas",
+  "stage": "transit",
+  "role": "poll",
+  "outcome": "FAILED",
+  "extraRows": {},
+  "template": "T_FAILED"
+ },
+ {
+  "app": "orders",
+  "tier": "reconciler",
+  "fault": "not_on_truck",
   "stage": "transit",
   "role": "poll",
   "outcome": "FAILED",
@@ -9806,6 +10006,56 @@
   "outcome": "OK",
   "extraRows": {},
   "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "weather",
+  "stage": "transit",
+  "role": "poll",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "road_hazard",
+  "stage": "transit",
+  "role": "poll",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "delay",
+  "stage": "transit",
+  "role": "poll",
+  "outcome": "OK",
+  "extraRows": {},
+  "template": "T_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "out_of_gas",
+  "stage": "transit",
+  "role": "poll",
+  "outcome": "PARKED_OK",
+  "extraRows": {},
+  "template": "T_PARKED_OK"
+ },
+ {
+  "app": "orders",
+  "tier": "phoenix",
+  "fault": "not_on_truck",
+  "stage": "transit",
+  "role": "poll",
+  "outcome": "PARKED_OK",
+  "extraRows": {},
+  "template": "T_PARKED_OK"
  },
  {
   "app": "orders",

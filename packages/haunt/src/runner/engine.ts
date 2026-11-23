@@ -18,7 +18,10 @@ import { tierOfLane } from '../tournament/rounds';
 import { tierById } from '../pipeline/pipeline';
 import { OUTAGE_FAULTS, drawOutageMs, initialDial, intensityRow, isLevel, type DialState, type FuzzFault } from './intensity';
 
-export interface EngineChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string; forMs?: number; detect?: 'confirmation' | 'handoff'; source?: 'manual' | 'random' | 'boss' | 'fuzz' | 'gremlin' | 'demo'; fuzz?: FuzzFault; count?: number; outageMs?: number }
+/** Transit stalls that carry an outage window and a countdown ring. */
+const TRANSIT_WINDOW: ReadonlySet<string> = new Set(['weather', 'road_hazard', 'delay', 'out_of_gas', 'not_on_truck', 'wrong_address']);
+
+export interface EngineChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string; forMs?: number; detect?: 'confirmation' | 'process' | 'transit' | 'handoff'; source?: 'manual' | 'random' | 'boss' | 'fuzz' | 'gremlin' | 'demo'; fuzz?: FuzzFault; count?: number; outageMs?: number }
 export interface EngineChaosResult { chaosId: string; creature: string; fault: string; depth: number; deferred: boolean }
 /** A tournament round (TV3-C7): the live lanes are the survivors, lane n runs tier n, and `script` is the one storm every lane meets. */
 export interface EngineTournament { round: number; lanes: number[]; level: number; script: unknown }
@@ -249,7 +252,9 @@ export class RunnerEngine {
     // Outage timer (spec 5.4): unless the press fixes its window, draw it from the dial level. The window is 1x ms; real ms is divided by speed.
     const fz = req.fuzz;
     const fixedMs = fz?.forMs !== undefined ? Math.max(50, Math.round(fz.forMs / (this.speed || 1))) : req.forMs;
-    const outageMs = req.outageMs !== undefined ? req.outageMs : fixedMs === undefined && OUTAGE_FAULTS.has(req.fault) ? drawOutageMs(this.seed, lane, nextId, this.level) : undefined;
+    // Transit faults (V1_2 section 4) keep their tuned window (the bot's poll and backoff are timed against it) but show the same countdown ring.
+    const transitMs = fixedMs === undefined && TRANSIT_WINDOW.has(req.fault) ? FAULTS.find((f) => f.id === req.fault)?.forMs : undefined;
+    const outageMs = req.outageMs !== undefined ? req.outageMs : transitMs !== undefined ? transitMs : fixedMs === undefined && OUTAGE_FAULTS.has(req.fault) ? drawOutageMs(this.seed, lane, nextId, this.level) : undefined;
     const forMs = outageMs !== undefined ? Math.max(50, Math.round(outageMs / (this.speed || 1))) : fixedMs;
     const r = this.director.arm(lane, {
       fault: req.fault, scope: req.scope, point: req.point as never, forMs, detect: req.detect,

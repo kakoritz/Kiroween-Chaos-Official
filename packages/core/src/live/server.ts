@@ -42,7 +42,7 @@ export const RETAINED_EVENTS = 5000;
 export const PING_MS = 15000;
 const SPEEDS = [0.5, 1, 2, 4];
 
-export interface ChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string; detect?: 'confirmation' | 'handoff' }
+export interface ChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string; detect?: 'confirmation' | 'process' | 'transit' | 'handoff' }
 export interface ChaosResult { chaosId: string; creature: string; fault: string; depth: number; deferred: boolean }
 export interface WaveSettings { orders: number; seed: number; tiers: TierMode; lanes: number; speed: number; pace: 'normal' | 'show' | 'slow'; app: AppId; campaign?: CampaignRequest; tournament?: { round: number; lanes: number[]; level: number; script: unknown } }
 
@@ -621,7 +621,7 @@ export class LiveServer {
     const f = fault!;
     const req: ChaosRequest = { fault: f, creature: creature!.id, scope: body.scope, point: body.point };
     if (body.detect !== undefined) {
-      if (body.detect !== 'confirmation' && body.detect !== 'handoff') fail(400, 'bad_request', 'detect must be confirmation or handoff');
+      if (!['confirmation', 'process', 'transit', 'handoff'].includes(body.detect as string)) fail(400, 'bad_request', 'detect must be confirmation, process, transit or handoff');
       if (f === 'order_typo') req.detect = body.detect;
     }
     if (body.lane === undefined) {
