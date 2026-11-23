@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { labRun } from '../../haunt/src/lab/engine';
 import { labToYaml } from '../../haunt/src/lab/model';
+import { COMMANDS } from '../src/workflow-lab/panel';
 import { blankStage, labFiles, matrixView, modelFromYaml, presetModel, setAllParts, setRole, worstFindings, PRESETS } from '../src/workflow-lab/model';
 
 describe('workflow lab model (SH-U1)', () => {
@@ -59,5 +60,9 @@ describe('streaming pack preset (PK-UI)', () => {
     expect(lines[0]).toMatch(/Haunted Stream.*model-based/);
     expect(lines.join('\n')).toMatch(/CDN Kraken/);
     expect(lines.join('\n')).toMatch(/Viewer rating/);
+  });
+  it('shows commands that exist in this repo (no bare haunt, no npx haunt)', () => {
+    expect(COMMANDS.length).toBeGreaterThan(0);
+    for (const c of COMMANDS) expect(c).toMatch(/^npm run haunt -- (init|validate|sweep)$/);
   });
 });
