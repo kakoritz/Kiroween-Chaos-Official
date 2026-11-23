@@ -5,7 +5,7 @@
 import { DECISION_CHOICES, DECISION_TIMEOUT_MS, type DecisionChoice } from '../shared/catalog';
 
 export type DecisionSource = 'user' | 'default' | 'timeout';
-export type DetectedAt = 'confirmation' | 'handoff';
+export type DetectedAt = 'confirmation' | 'process' | 'transit' | 'handoff';
 
 /** What the bot sent. */
 export interface DecisionAsk {
@@ -26,8 +26,11 @@ export interface DecisionEvent {
 }
 
 export interface DecisionBrokerOptions {
-  /** Where `decision_needed` and `decision_made` go: the lane's event stream. */
-  emit(lane: string, ev: DecisionEvent): void;
+  /**
+   * Where `decision_needed` and `decision_made` go: the lane's event stream. May return a promise that settles once the event is shown (the arena
+   * runs behind the bot, so the countdown to the tier default starts then, not when the bot asked).
+   */
+  emit(lane: string, ev: DecisionEvent): void | Promise<void>;
   /** Real ms to wait for a user before the bot's default applies. Zero or less decides at once with source `default`. */
   timeoutMs(): number;
   /** Runs once per decision, after `decision_made` and before the bot hears the answer (a redo restores the order file). */
@@ -83,13 +86,19 @@ export class DecisionBroker {
     const timeoutMs = Math.max(1, Math.round(this.o.timeoutMs() > 0 ? this.o.timeoutMs() : DECISION_TIMEOUT_MS));
     const e: Entry = { ask, timeoutMs, expiresAt: Date.now() + timeoutMs, delivered: false, waiters: [] };
     this.entries.set(key, e);
-    this.o.emit(lane, {
+    const shown = this.o.emit(lane, {
       type: 'decision_needed', order: ask.order,
       detail: { order: ask.order, kind: 'wrong_order', detectedAt: ask.detectedAt, options: [...DECISION_OPTIONS], defaultChoice: ask.defaultChoice, timeoutMs },
     });
     const wait = this.o.timeoutMs();
+    const arm = (): void => {
+      if (e.answer || this.entries.get(key) !== e) return;
+      e.expiresAt = Date.now() + wait;
+      e.timer = (this.o.setTimer ?? setTimeout)(() => this.resolve(lane, e, { choice: ask.defaultChoice, source: 'timeout' }), wait);
+    };
     if (wait <= 0) this.resolve(lane, e, { choice: ask.defaultChoice, source: 'default' });
-    else e.timer = (this.o.setTimer ?? setTimeout)(() => this.resolve(lane, e, { choice: ask.defaultChoice, source: 'timeout' }), wait);
+    else if (shown && typeof (shown as Promise<void>).then === 'function') void (shown as Promise<void>).then(arm, arm);
+    else arm();
     return this.wait(e, alive);
   }
 
@@ -137,5 +146,5 @@ export class DecisionBroker {
 export function parseAsk(msg: Record<string, unknown>): DecisionAsk | null {
   if (typeof msg.order !== 'string' || msg.order === '') return null;
   const defaultChoice = DECISION_CHOICES.find((c) => c === msg.defaultChoice) ?? 'refund';
-  return { order: msg.order, detectedAt: msg.detectedAt === 'handoff' ? 'handoff' : 'confirmation', defaultChoice };
+  return { order: msg.order, detectedAt: (['process', 'transit', 'handoff'] as const).find((d) => d === msg.detectedAt) ?? 'confirmation', defaultChoice };
 }

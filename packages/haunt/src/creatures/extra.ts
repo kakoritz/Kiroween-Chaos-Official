@@ -19,7 +19,7 @@ export const imp = providerCreature('imp', 'Imp', 'http', ['http_500', 'app_down
 export const werewolf = providerCreature('werewolf', 'Werewolf', 'world', ['hazard_event']);
 export const willOWisp = providerCreature('will_o_wisp', "Will-o'-Wisp", 'world', ['driver_unreachable']);
 
-export const scarecrow = providerCreature('scarecrow', 'Scarecrow', 'world', ['wrong_address']);
+export const scarecrow = providerCreature('scarecrow', 'Scarecrow', 'world', ['wrong_address', 'delay']);
 export const blackCat = providerCreature('black_cat', 'Black Cat', 'world', ['no_answer', 'gated_house']);
 export const prankster = providerCreature('prankster', 'Prankster', 'world', ['order_typo']);
 export const phantomCar = providerCreature('phantom_car', 'Phantom Car', 'world', ['car_accident']);
@@ -39,4 +39,9 @@ export const mummy: CreaturePlugin = {
   },
 };
 
-export const EXTRA_CREATURES: readonly CreaturePlugin[] = [banshee, gargoyle, goblin, imp, witch, mummy, werewolf, willOWisp, scarecrow, blackCat, phantomCar, prankster];
+export const stormCrow = providerCreature('storm_crow', 'Storm Crow', 'world', ['weather']);
+export const potholeImp = providerCreature('pothole_imp', 'Pothole Imp', 'world', ['road_hazard']);
+export const fuelWraith = providerCreature('fuel_wraith', 'Fuel Wraith', 'world', ['out_of_gas']);
+export const lostParcelGhoul = providerCreature('lost_parcel_ghoul', 'Lost Parcel Ghoul', 'world', ['not_on_truck']);
+
+export const EXTRA_CREATURES: readonly CreaturePlugin[] = [banshee, gargoyle, goblin, imp, witch, mummy, werewolf, willOWisp, scarecrow, blackCat, phantomCar, prankster, stormCrow, potholeImp, fuelWraith, lostParcelGhoul];

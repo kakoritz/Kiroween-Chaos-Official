@@ -359,7 +359,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
   const norm = new DetailNormalizer();
   let gate: SettleGate | undefined;
   // Wrong order (design.md section 8): the broker owns each decision from `decision_needed` to `decision_made`.
-  let botEvent: (lane: string, ev: Record<string, unknown>) => void = () => {};
+  let botEvent: (lane: string, ev: Record<string, unknown>) => void | Promise<void> = () => {};
   const laneEnv = new Map<string, Record<string, string>>();
   const decisions = new DecisionBroker({
     emit: (lane, ev) => botEvent(lane, ev as unknown as Record<string, unknown>),
@@ -443,6 +443,9 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
         return decisions.ask(lane, ask, alive);
       },
       onEvent: botEvent = (lane, ev) => {
+        // A fault pressed by hand that waits for a later stage (director deferred) reaches the provider when the bot itself gets there:
+        // the bot runs ahead of what the arena shows, so waiting for the shown stage_start would be too late.
+        if (opts.post && ev.type === 'stage_start' && typeof ev.stage === 'string') for (const arm of engine.director.onStageStart(lane, ev.stage)) void postProviderArm(opts.post, lane, ev.stage, arm);
         if (opts.travel === false) { for (const e of norm.shape(lane, { detail: {}, ...ev, lane })) record?.({ ...e, lane } as unknown as HauntEvent); return; }
         const my = epoch;
         const lt = travelOf(lane);
@@ -453,6 +456,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
           for (const e of norm.shape(lane, { detail: {}, ...ev, lane })) record?.(lt.annotate({ ...e, lane }) as unknown as HauntEvent);
         });
         chains.set(lane, next);
+        return next;
       },
       onWaveDone: () => {
         void idle().then(() => { clock?.stop(); clock = undefined; demo?.stop(); demo = undefined; stopNight(); gate?.finish(); endWave?.(); });

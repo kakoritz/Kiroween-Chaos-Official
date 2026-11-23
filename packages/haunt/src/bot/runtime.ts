@@ -241,9 +241,11 @@ export async function runBot(def: BotDef): Promise<void> {
     for (let n = 1; ; n++) {
       let failure: string;
       let status: number | null = null;
+      let wrongOrder = false;
       try {
         const r = await call(`/tracking/${encodeURIComponent(shipment)}?lane=${encodeURIComponent(lane)}`, { method: 'GET' }, 800);
         const b = r.body as { status?: string };
+        wrongOrder = r.status === 200 && b.status === 'wrong_order';
         if (r.status === 200 && b.status === 'delivered') { if (hasPart('breaker')) sdk.noteSuccess('tracking'); return true; }
         if (r.status === 200 && b.status === 'in_transit') { if (hasPart('breaker')) sdk.noteSuccess('tracking'); return false; }
         failure = r.status === 200 ? String(b.status ?? 'unexpected') : `status ${r.status}`;
@@ -251,6 +253,8 @@ export async function runBot(def: BotDef): Promise<void> {
       } catch (e) {
         failure = e instanceof Error ? e.message : String(e);
       }
+      // The customer's order is wrong (detect: transit): the SDK asks for a decision, it is not a transient failure.
+      if (wrongOrder) throw new WrongOrder('transit');
       send({ type: 'stage_fail', order: curOrder, stage: 'transit', detail: { attempt: n, reason: failure } });
       if (hasPart('breaker')) sdk.noteFailure('tracking');
       // A learned lesson for this stage (spec 4): backoff and more attempts, for a bot with retry and no breaker.

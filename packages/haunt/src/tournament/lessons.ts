@@ -1,6 +1,6 @@
 // Lessons ledger (spec 4): what a lane learned, as a policy overlay limited to what its tier's parts allow.
 // `learnRound` is pure; `LessonsStore` keeps `<dir>/<lane>.json` and the overlay file `<dir>/lane-<lane>.policy.json` the bot reads.
-import { TIERS, type TierId } from '../shared/catalog';
+import { TIERS, type DecisionChoice, type TierId } from '../shared/catalog';
 import { ACTION_PARTS, actionsFor, type Policy, type PolicyAction, type PolicyRule } from '../sdk/policy';
 import type { Case, Mechanism } from './signature';
 
@@ -39,14 +39,18 @@ export interface LaneLessons {
   overcame: string[];
 }
 
-export const emptyLessons = (lane: number, tier: TierId): LaneLessons => ({ lane, tier, lessons: [], suggestions: [], overcame: [] });
+/** Wrong-order decisions ranked by what they cost the customer: a refund loses the order, a discount keeps it at 3 stars, a redo at 4. */
+const DECISION_RANK: Readonly<Record<DecisionChoice, number>> = { refund: 0, discount: 1, redo: 2 };
+export const DECISION_SIGNATURE = 'create + order_typo + decision';
+
+export const emptyLessons =(lane: number, tier: TierId): LaneLessons => ({ lane, tier, lessons: [], suggestions: [], overcame: [] });
 
 const MECH_ACTION: Partial<Record<Mechanism, PolicyAction>> = {
   retry: 'retry_backoff', retry_backoff: 'retry_backoff', journal_replay: 'journal_replay', idempotency_key: 'idempotency_key',
   reconcile: 'idempotency_key', breaker: 'breaker_park', queue: 'breaker_park',
 };
 
-const TRANSIENT = new Set(['timeout', 'comm_timeout', 'slow_link', 'http_404', 'http_429', 'http_500', 'endpoint_down', 'internet_outage', 'sms_down', 'app_down', 'updates_down']);
+const TRANSIENT = new Set(['timeout', 'comm_timeout', 'slow_link', 'http_404', 'http_429', 'http_500', 'endpoint_down', 'internet_outage', 'sms_down', 'app_down', 'updates_down', 'weather', 'road_hazard', 'delay']);
 
 /** The reviewer rules of reviewer/rules.ts as the proposals for a lost case: R1 repeated effect -> idempotency, R2 retryable error ended the order -> retry, R3/R4 -> breaker and queue. */
 export function suggestionFor(c: Pick<Case, 'fault' | 'consequence'>): { action: PolicyAction; part: string; rule: string } | null {
@@ -84,6 +88,24 @@ export function learnRound(prev: LaneLessons, cases: readonly Case[], round: num
   const newSuggestions: Suggestion[] = [];
   const firstOvercome: string[] = [];
   for (const c of cases) {
+    if (c.fault === 'order_typo') {
+      // A wrong order is a choice, not a part: the lane keeps the best decision it has made or been taught, and applies it by default next round.
+      const picked = c.decision?.choice as DecisionChoice | undefined;
+      if (!picked || !(picked in DECISION_RANK)) continue;
+      const lost = c.outcome === 'lost';
+      const choice: DecisionChoice = lost ? 'redo' : picked;
+      const at = next.lessons.findIndex((l) => l.signature === DECISION_SIGNATURE);
+      const old = at >= 0 ? next.lessons[at]!.rule?.choice : undefined;
+      if (old && DECISION_RANK[old] >= DECISION_RANK[choice]) continue;
+      const lesson: Lesson = {
+        signature: DECISION_SIGNATURE, stage: c.stage, fault: 'order_typo', mechanism: `decision_${choice}`, action: 'decision',
+        rule: { stage: '*', fault: 'order_typo', action: 'decision', choice }, via: lost ? 'suggested' : 'overcame', learnedRound: round, applied: false,
+      };
+      if (at >= 0) next.lessons[at] = lesson; else next.lessons.push(lesson);
+      newLessons.push(lesson);
+      if (!lost && !overcame.has(DECISION_SIGNATURE)) { overcame.add(DECISION_SIGNATURE); next.overcame.push(DECISION_SIGNATURE); firstOvercome.push(DECISION_SIGNATURE); }
+      continue;
+    }
     if (c.outcome === 'solved' && c.mechanism !== 'absorbed' && c.mechanism !== 'none') {
       if (!overcame.has(c.signature)) { overcame.add(c.signature); next.overcame.push(c.signature); firstOvercome.push(c.signature); }
       if (known.has(c.signature)) continue;

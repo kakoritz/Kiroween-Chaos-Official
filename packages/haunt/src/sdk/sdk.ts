@@ -1,7 +1,7 @@
 // SDK: order(), stage(), effect(), journal replay and reconcile.
 // Semantics: .kiro/specs/engine/runtime.md sections 1, 3, 6, 7, 28 (they win over design.md).
 import { TIER_DECISION_DEFAULT } from '../shared/catalog';
-import { backoffRule, ruleFor, type Policy } from './policy';
+import { backoffRule, decisionChoice, ruleFor, type Policy } from './policy';
 import {
   JournalWriteError, applyRecord, replay,
   type DecisionChoice, type EffectState, type JournalRecord, type JournalState, type OrderOutcome,
@@ -40,7 +40,7 @@ export interface Host {
 }
 
 export type DecisionSource = 'user' | 'default' | 'timeout';
-export type DetectedAt = 'confirmation' | 'handoff';
+export type DetectedAt = 'confirmation' | 'process' | 'transit' | 'handoff';
 
 export interface DecisionQuestion {
   order: string;
@@ -360,6 +360,7 @@ export class Sdk {
     const p = payload as { amount?: unknown; complaint?: unknown } | null | undefined;
     if (kind === 'charge' && typeof p?.amount === 'number') this.charged.set(order, p.amount);
     if (kind === 'email' && p?.complaint === 'wrong_order') await this.wrongOrder(order, stage, 'confirmation');
+    if (kind === 'store' && p?.complaint === 'wrong_order') await this.wrongOrder(order, stage, 'process');
     return payload;
   }
 
@@ -401,7 +402,7 @@ export class Sdk {
     }
     let choice: DecisionChoice | null = st?.decision ?? null;
     if (choice === null) {
-      const defaultChoice = this.o.onWrongOrder ?? TIER_DECISION_DEFAULT[this.o.tier] ?? 'refund';
+      const defaultChoice = decisionChoice(this.o.policy) ?? this.o.onWrongOrder ?? TIER_DECISION_DEFAULT[this.o.tier] ?? 'refund';
       const answer = host.decide ? await host.decide({ order, stage, detectedAt, defaultChoice }) : { choice: defaultChoice };
       choice = answer.choice;
       this.write({ t: 'decision', order, choice, ts: host.now() });

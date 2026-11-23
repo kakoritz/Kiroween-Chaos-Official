@@ -15,7 +15,7 @@ import { CLASS_ICON, CLASS_WORD, POP_MS, curseShort, curseWord, type CurseClass,
 import { captionOf, creatureFrame, creatureTip, shown, spriteOf, MAX_SHOWN, type CreatureVM } from './creatures';
 import { drawCreature } from '../creatures/draw';
 import { bugTint, puff, seedOf, swarmBugs, swarmStale } from './swarm';
-import { drawWorldCreature, drawWorldProp, isWorld, worldPhase, worldProp } from './world-events';
+import { drawWorldCreature, drawWorldProp, isWorld, tintOf, worldPhase, worldProp } from './world-events';
 import { archWall, drawProp, pillar } from '../props/draw';
 import { survivedAge } from './boss';
 import { equipPhase, flightPoint, PART_LABEL, wornParts } from './equip';
@@ -268,6 +268,25 @@ function outageRing(ctx: Ctx, x: number, y: number, o: OutageVM, now: number, re
   ctx.beginPath(); ctx.arc(x, y, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (o.endedAt !== null ? 1 : Math.max(0.02, f.frac))); ctx.stroke();
   ctx.globalAlpha = 1 - f.fade;
   txt(ctx, o.endedAt !== null ? '\u2713' : ringLabel(f), x, y + 1, 13, o.endedAt !== null ? C.ok : C.text, 'center', MONO, '800');
+  ctx.restore();
+}
+
+/** Tint on a stage chip while a transit stall lasts (weather, road hazard, delay, out of gas, not on truck): a coloured wash and border, and the fault word. */
+function chipTint(ctx: Ctx, x: number, y: number, cw: number, color: string, now: number, reduced: boolean): void {
+  const pulse = reduced ? 1 : 0.7 + 0.3 * Math.sin(now / 260);
+  ctx.save();
+  ctx.globalAlpha = 0.2; ctx.fillStyle = color; rr(ctx, x - cw / 2, y, cw, 40, 10); ctx.fill();
+  ctx.globalAlpha = pulse; ctx.lineWidth = 3; ctx.strokeStyle = color; rr(ctx, x - cw / 2 - 2, y - 2, cw + 4, 44, 11); ctx.stroke();
+  ctx.restore();
+}
+
+/** The fault word beside the countdown ring, on a dark pill so it reads over a creature. */
+function chipWord(ctx: Ctx, x: number, y: number, color: string, word: string): void {
+  ctx.save();
+  ctx.font = `800 11px ${MONO}`;
+  const w = Math.ceil(ctx.measureText(word).width) + 10;
+  rr(ctx, x + 22, y + 53, w, 17, 6); ctx.fillStyle = 'rgba(10,8,18,0.86)'; ctx.fill();
+  txt(ctx, word, x + 27, y + 62, 11, color, 'left', MONO, '800');
   ctx.restore();
 }
 
@@ -668,6 +687,8 @@ export class ArenaScene {
     // stage chips and station props
     const chipY = b.top + 4;
     const cw = chipWidth(n);
+    // Countdown rings and fault words are drawn last, over the skeleton and the creatures, so they stay readable.
+    const rings: (() => void)[] = [];
     vm.stages.forEach((s, i) => {
       const x = stationX(i, n);
       ctx.fillStyle = 'rgba(10,8,18,0.5)'; ctx.beginPath(); ctx.ellipse(x, b.top + b.h * 0.8 + 2, 22, 6, 0, 0, Math.PI * 2); ctx.fill();
@@ -684,7 +705,14 @@ export class ArenaScene {
       }
       for (const pop of l.cursepops ?? []) if (pop.stage === s.id) curseAnswer(ctx, x, chipY + 76, pop.cls, ((now - pop.at) * this.speed) / POP_MS, this.reducedMotion);
       const og = outageAt(l, s.id);
-      if (og && (og.endedAt === null || now - og.endedAt < 700)) outageRing(ctx, x, chipY + 41 + 20, og, now, this.reducedMotion);
+      if (og && (og.endedAt === null || now - og.endedAt < 700)) {
+        const tint = tintOf(og.fault);
+        if (tint && og.endedAt === null) chipTint(ctx, x, chipY, cw, tint, now, this.reducedMotion);
+        rings.push(() => {
+          if (tint && og.endedAt === null) chipWord(ctx, x, chipY, tint, captionOf(og.fault));
+          outageRing(ctx, x, chipY + 41 + 20, og, now, this.reducedMotion);
+        });
+      }
     });
     ctx.globalAlpha = 1;
     // progress bar under the active chip
@@ -703,6 +731,9 @@ export class ArenaScene {
     if (fell) this.drawFallen(ctx, vm, l, b, now, deathIdx);
     else this.drawSkeleton(ctx, vm, l, b, now);
     this.drawCreatures(ctx, l, b, now);
+    ctx.globalAlpha = fell ? 0.4 : 1;
+    for (const draw of rings) draw();
+    ctx.globalAlpha = 1;
     this.drawSurvived(ctx, l, b, now);
     ctx.restore();
   }
@@ -868,8 +899,9 @@ export class ArenaScene {
   private creatureTags(ctx: Ctx, c: CreatureVM, x: number, y: number, size: number, now: number, exit: number): void {
     ctx.save();
     ctx.globalAlpha = Math.max(0, 1 - exit);
-    const cap = captionOf(c.fault || c.id);
     ctx.font = '700 11px ' + MONO;
+    // Creatures stand 56 px apart: a long word (NOT ON TRUCK, RUNNING LATE) is cut so it never runs into the next tag; the chip's ring carries the full word.
+    const cap = fit(ctx, captionOf(c.fault || c.id), 64);
     const w = Math.ceil(ctx.measureText(cap).width) + 10;
     rr(ctx, x - w / 2, y + size / 2 + 6, w, 15, 4); ctx.fillStyle = 'rgba(10,8,18,0.82)'; ctx.fill();
     ctx.lineWidth = 1.5; ctx.strokeStyle = C.out; ctx.stroke();

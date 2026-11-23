@@ -261,7 +261,12 @@ export class Pipeline {
       await s.work(this.work(def('transit'), id));
       const polls = Math.max(1, Math.ceil(def('transit').min / POLL_EVERY_MS));
       for (let i = 1; i <= polls; i++) {
-        const delivered = await this.d.pollTracking(shipment);
+        let delivered: boolean;
+        try { delivered = await this.d.pollTracking(shipment); } catch (e) {
+          if (!(e instanceof WrongOrder)) throw e;
+          await s.wrongOrder(e.detectedAt);
+          delivered = await this.d.pollTracking(shipment);
+        }
         this.d.emit({ type: 'progress', order: id, stage: 'transit', detail: { poll: i } });
         if (delivered) return;
       }

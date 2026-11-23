@@ -220,7 +220,7 @@ type Choice = 'refund' | 'discount' | 'redo';
 const DEFAULT_OF: Record<Choice, TierId> = { refund: 'rookie', discount: 'journaler', redo: 'phoenix' };
 
 /** One lane, two orders. Order 2 is keyed wrong (prankster) and the wrong order is found at `detectedAt`. */
-function typo(choice: Choice, detectedAt: 'confirmation' | 'handoff'): HauntEvent[] {
+function typo(choice: Choice, detectedAt: 'confirmation' | 'process' | 'transit' | 'handoff'): HauntEvent[] {
   const tier = DEFAULT_OF[choice];
   const s = new Script(1, tier, 2);
   const o1 = s.start(1);
