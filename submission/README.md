@@ -4,6 +4,7 @@ Everything written or made for the hackathon entry lives here, so it stays with 
 
 - `project-story.md`: the project story text (inspiration, what it does, how it was built).
 - `gallery/`: the 15 images used in the image gallery, in upload order (3:2, PNG, under 5 MB each).
+- `gallery-captions.md`: one caption per image, to paste into the form.
 - `gallery/spares/`: three extra screenshots that did not make the 15.
 
 Later phases add the video script and the voice-over here.
