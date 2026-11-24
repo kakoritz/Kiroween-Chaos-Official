@@ -1,3 +1,4 @@
+// covers: playtest-v2/R3.3 playtest-v2/R5.2
 import { describe, expect, it } from 'vitest';
 import {
   heatOf, laneCards, laneLapsOf, laneStarsOf, lapRowsFromEvents, lapRowsOf, lapTable, mergeLapRows, ratingFor, ratingsOf, starBars,

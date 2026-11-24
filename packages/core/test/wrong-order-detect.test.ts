@@ -1,3 +1,4 @@
+// covers: playtest-v2/R7.1 playtest-v2/R7.2
 import { describe, expect, it } from 'vitest';
 import { assembleWave, BASE_TS, planWave } from '../src/sim/wave';
 import { faultBody } from '../../haunt/src/runner/provider';

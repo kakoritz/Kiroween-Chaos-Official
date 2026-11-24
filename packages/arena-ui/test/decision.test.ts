@@ -1,3 +1,4 @@
+// covers: playtest-v2/R7.3
 ﻿import { describe, expect, it } from 'vitest';
 import { CHOICES, DECISION_CARDS, DecisionTracker, choiceForKey, countdown, decisionTitle, resultCaption, waitLine } from '../src/arena/decision';
 import { isWorld, tintOf, worldProp } from '../src/arena/world-events';

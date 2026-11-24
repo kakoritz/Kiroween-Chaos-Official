@@ -1,3 +1,4 @@
+// covers: CP-C5
 // CP-C5: campaign night 6 runs live on the Python Ticket Desk with the Crew's parts. Python only; skipped when it is not on PATH.
 // 127.0.0.1 only, no network. The Crew is lane 1; lanes 2 to 5 are the rivals.
 import { afterEach, describe, expect, it } from 'vitest';

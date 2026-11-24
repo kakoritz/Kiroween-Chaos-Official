@@ -2,7 +2,7 @@
 
 Source: the owner's second play-test notes (2026-11-21). Depends on `playtest-v2` (laps, reviews, scoring v2, world events). Where this file differs from `playtest-v2`, **this file wins**. Contract changes are in `contract/V1_2.md`.
 
-Goal: the arena becomes a **competition that teaches**. Five bots start, the worst drops each round, the lanes learn from edge cases as they go, and the real prize is the **Casebook**: every edge case found and how it was solved. The tool then turns the recurring ones into **fix specs**. The point of Haunt is to harden code by injecting known and unknown trouble at any point, with a knob to keep turning it up.
+Goal: the arena becomes a **competition that teaches**. Five bots start, the worst drops each round, the lanes learn from edge cases as they go, and the real prize is the **Casebook**: every edge case found and how it was solved. The tool then turns the recurring ones into **fix specs**. The point of Kiroween Chaos is to harden code by injecting known and unknown trouble at any point, with a knob to keep turning it up.
 
 ## 1. Requirements (EARS)
 

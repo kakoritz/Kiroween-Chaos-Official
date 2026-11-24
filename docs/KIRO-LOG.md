@@ -38,6 +38,6 @@ Notes on what Kiro did and how the build went, written from the git history and 
 
 - Kiro applying a generated fix spec live, with transcript and diff saved (SH-C4 is only a recorded fix).
 - Power and Crew app installed in real Kiro windows (only a manifest handshake is proven).
-- Ticket Desk full flow and the streaming pack (`packs` tasks PK-C1 to PK-C3 are open).
+- The streaming pack has no runnable app (model-based only). The 11-stage Ticket Desk is built and runs live.
 - Production mode (`haunt monkey`), the hosted demo URL, the video.
 - The `mid_stage` replay bug above.

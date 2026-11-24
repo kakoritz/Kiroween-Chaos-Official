@@ -1,6 +1,6 @@
 # MCP scene (SH-K4)
 
-A 60 to 90 second screen capture of an agent using the Haunt MCP server: it defines a workflow, sweeps it, reads the report, writes a fix spec and makes a badge. Every step below uses the real tools in `packages/haunt/src/mcp/server.ts`. Nothing here needs a network; the server and the apps it runs bind to 127.0.0.1.
+A 60 to 90 second screen capture of an agent using the Kiroween Chaos MCP server (`haunt-mcp`): it defines a workflow, sweeps it, reads the report, writes a fix spec and makes a badge. Every step below uses the real tools in `packages/haunt/src/mcp/server.ts`. Nothing here needs a network; the server and the apps it runs bind to 127.0.0.1.
 
 Honesty rule for the capture: show the tool calls and the answers as they come. If the capture is made outside Kiro (a plain MCP client or a terminal), say so on screen. Only call it "in Kiro" when the window is Kiro IDE or Kiro Crew with the Power or the Crew app installed (see `docs/proof/installed/README.md`).
 
@@ -16,7 +16,7 @@ Honesty rule for the capture: show the tool calls and the answers as they come. 
 
 | # | Time | On screen | Say (one line) | Tool call |
 |---|---|---|---|---|
-| 1 | 0:00 | Client with the Haunt tool list showing six tools | "Haunt is an MCP server with six tools." | `tools/list`: `haunt_define`, `haunt_sweep`, `haunt_ramp`, `haunt_report`, `haunt_specs`, `haunt_badge` |
+| 1 | 0:00 | Client with the Haunt tool list showing six tools | "Kiroween Chaos is an MCP server with six tools." | `tools/list`: `haunt_define`, `haunt_sweep`, `haunt_ramp`, `haunt_report`, `haunt_specs`, `haunt_badge` |
 | 2 | 0:08 | Prompt: "Check my order workflow definition." | "First it validates my haunt.yaml." | `haunt_define {}` returns `ok: true`, 11 stages, the targets |
 | 3 | 0:18 | Prompt: "Sweep it with the rookie bot." | "One creature fault per stage, run for real." | `haunt_sweep {tier: "rookie", orders: 2, speed: 4}` returns the matrix and grade (expect a low grade: the Rookie has no parts) |
 | 4 | 0:45 | Prompt: "Show me the report." | "The report is saved, and the agent reads it back." | `haunt_report {kind: "sweep"}` returns the saved JSON with grade and findings |
@@ -34,4 +34,4 @@ Run step 3 off camera, then in the capture start at step 4. Say that the sweep w
 
 - The tool names on screen match `docs/proof/installed/mcp-handshake.json`.
 - No path, token or machine name from outside the repo is visible.
-- Nothing on screen says Haunt runs in Kiro unless it does.
+- Nothing on screen says Kiroween Chaos runs in Kiro unless it does.

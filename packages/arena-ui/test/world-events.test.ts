@@ -1,3 +1,4 @@
+// covers: playtest-v2/R6.2
 import { describe, expect, it } from 'vitest';
 import { isWorld, worldPhase, worldProp, WORLD_CAPTION } from '../src/arena/world-events';
 import { captionOf } from '../src/arena/creatures';

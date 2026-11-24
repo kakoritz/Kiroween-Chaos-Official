@@ -287,3 +287,6 @@ body.narrow .lp-foot { height: auto; flex-direction: column; padding: 8px; flex:
 .hdr .pace-tag:empty { display: none; }
 body.narrow .hdr .pk-info { display: none; }
 .hdr .pk-info { flex: 0 1 auto; min-width: 0; }
+
+/* Header tagline: hidden, not ellipsised, when the controls leave it no room (also at 2300 px wide, where the stage stays 1920 design px). */
+.hdr > .tagline.tagline--hidden { visibility: hidden; }

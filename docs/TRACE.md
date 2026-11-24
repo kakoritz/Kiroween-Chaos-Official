@@ -6,20 +6,20 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 73. With a PR: 29 (40%). With a test: 29 (40%).
-- Tasks: 105. Done: 96. With a PR: 48 (46%). With a test: 13 (12%).
-- Test files scanned: 200.
+- Requirements: 73. With a PR: 29 (40%). With a test: 65 (89%).
+- Tasks: 105. Done: 104. With a PR: 48 (46%). With a test: 17 (16%).
+- Test files scanned: 201.
 
 ## Tasks
 
 | ID | Spec | Text | Status | PRs | Tests |
 |---|---|---|---|---|---|
 | CP-ART | campaign | Art. Tombstone-door map, medals, shop background, paper-doll gear icons (reus... | done | [#185](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/185) | - |
-| CP-C1 | campaign | Campaign data and endpoint. packages/core/campaign/nights.json (seven entries... | done | [#155](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/155), [#157](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/157) | - |
+| CP-C1 | campaign | Campaign data and endpoint. packages/core/campaign/nights.json (seven entries... | done | [#155](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/155), [#157](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/157) | `packages/core/test/campaign-nights.test.ts` |
 | CP-C2 | campaign | Crew bot and wave config. bots/crew.ts and bot/crew.py driven by HAUNTPARTS; ... | done | [#165](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/165) | - |
-| CP-C3 | campaign | Mock and fixtures. Scripted fixtures night1 to night6, finale for the mock (w... | done | [#171](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/171), [#193](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/193) | - |
+| CP-C3 | campaign | Mock and fixtures. Scripted fixtures night1 to night6, finale for the mock (w... | done | [#171](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/171), [#193](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/193) | `packages/core/test/campaign-fixtures.test.ts` |
 | CP-C4 | campaign | Determinism and balance tests. Each night is deterministic; medal thresholds ... | done | [#177](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/177) | - |
-| CP-C5 | campaign | Inbox night. Night 6 on the Python app with the Crew parts. packages/core/tes... | done | - | - |
+| CP-C5 | campaign | Inbox night. Night 6 on the Python app with the Crew parts. packages/core/tes... | done | - | `packages/core/test/campaign-night6-live.test.ts` |
 | CP-E2E | campaign | End-to-end fixes. Done (ui/camp-e2e-fixes): "Start night" no longer fails wit... | done | [#209](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/209) | `packages/arena-ui/test/campaign-shop-slots.test.ts` |
 | CP-NIGHT-1-3 | campaign | Plans and hint mapping (nights 1 to 3). Done: packages/haunt/src/campaign/hin... | done | [#178](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/178) | - |
 | CP-NIGHT-4-WORLD | campaign | World faults and bosses (nights 4 to 7). Done: packages/haunt/src/campaign/wo... | done | [#212](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/212) | - |
@@ -28,7 +28,7 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | CP-U2 | campaign | Gear shop. Paper-doll skeleton, drag and drop (and keyboard), prices, tooltip... | done | [#181](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/181) | - |
 | CP-U3 | campaign | Results, medals, persistence. Medal computation, credit awards, "what happene... | done | [#188](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/188) | - |
 | CP-U4 | campaign | Sandbox. Toggle parts on lane 1 before a wave, run, see the grade and the iss... | done | - | - |
-| CP-U5 | campaign | Campaign visuals. Rivals ghosted, "Your Crew" label and gear badge, medal and... | open | - | `packages/arena-ui/test/crew-lane.test.ts` |
+| CP-U5 | campaign | Campaign visuals. Rivals ghosted, "Your Crew" label and gear badge, medal and... | done | - | `packages/arena-ui/test/crew-lane.test.ts` |
 | ON-C1 | onboarding | Hosted demo. Finish harness H6.3 (browser target) and the Pages workflow; fal... | done | [#156](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/156) | - |
 | ON-C2 | onboarding | Captions data. packages/core/demo/hero/full/loop.captions.json and the captio... | done | [#160](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/160) | - |
 | ON-D1 | onboarding | README front page. Per spec section 7; architecture diagram (mermaid and SVG)... | done | [#172](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/172) | - |
@@ -40,15 +40,15 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | ON-U4 | onboarding | First-impression polish. No MOCK or "Wave 4" noise on first load (quiet state... | done | [#169](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/169) | - |
 | PK-C1 | packs | Pack format and loader. packs/<id>/pack.yaml schema, validator, generic bot f... | done | - | `packages/haunt/test/packs-endpoint.test.ts` |
 | PK-C2 | packs | Streaming pack. Stages, faults, tiers, bosses, reviews; fixtures; sweep grade... | done | - | - |
-| PK-C3 | packs | Ticketing mode (Python). Extend apps/haunted-inbox with the 11 stages, fake j... | done | - | - |
+| PK-C3 | packs | Ticketing mode (Python). Extend apps/haunted-inbox with the 11 stages, fake j... | done | - | `apps/haunted-inbox/test/desk.test.ts`, `apps/haunted-inbox/test/inbox.test.ts`, `packages/haunt/test/docs-truth.test.ts` |
 | PK-C4 | packs | Monkey CLI. haunt monkey --mode observe/staging/prod-guarded, allowlist, blas... | done | - | - |
 | PK-C5 | packs | Kill switch and dead-man timer. haunt stop, HTTP stop, restore under 1 s, tests. | done | - | - |
 | PK-C6 | packs | Watch mode. haunt watch (non-stop at chosen speed), rolling report and patter... | done | - | - |
 | PK-C7 | packs | Docs. docs/PRODUCTION-MODE.md with guarantees and limits, written plainly. | done | - | - |
-| PK-U1 | packs | Pack switcher. App switcher lists packs; labels, creatures and review names f... | open | - | `packages/arena-ui/test/pack-switch.test.ts`, `packages/arena-ui/test/packs-client.test.ts`, `packages/haunt/test/packs-endpoint.test.ts` |
-| PK-U2 | packs | Streaming art. Buffer Wraith, CDN Kraken, DRM Gatekeeper, Render Gremlin, Clo... | open | - | `packages/arena-ui/test/streaming-art.test.ts` |
+| PK-U1 | packs | Pack switcher. App switcher lists packs; labels, creatures and review names f... | done | - | `packages/arena-ui/test/pack-switch.test.ts`, `packages/arena-ui/test/packs-client.test.ts`, `packages/haunt/test/packs-endpoint.test.ts` |
+| PK-U2 | packs | Streaming art. Buffer Wraith, CDN Kraken, DRM Gatekeeper, Render Gremlin, Clo... | done | - | `packages/arena-ui/test/streaming-art.test.ts` |
 | PK-U3 | packs | Monkey panel. Mode selector, guard-rail summary, big kill switch, steady-stat... | done | - | - |
-| PT-ART | playtest-v2 | Art for new creatures. Scarecrow, black cat, phantom car, prankster, door spr... | open | - | `packages/arena-ui/test/streaming-art.test.ts` |
+| PT-ART | playtest-v2 | Art for new creatures. Scarecrow, black cat, phantom car, prankster, door spr... | done | - | `packages/arena-ui/test/streaming-art.test.ts` |
 | PT-C0 | playtest-v2 | Contract v1.1 plumbing. (PT-C0e done: window.haunt getLaneOrder, getLaneLaps,... | done | - | - |
 | PT-C1 | playtest-v2 | Pace slow. (done: pace factor 3 existed; demo scripts now pace slow with hero... | done | [#194](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/194) | - |
 | PT-C2 | playtest-v2 | Travel scheduler. (done: packages/haunt/src/runner/travel.ts LaneTravel per-l... | done | [#154](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/154) | - |
@@ -75,7 +75,7 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | PT-U10 | playtest-v2 | World creature choreographies. Scarecrow, black cat, phantom car, prankster, ... | done | [#213](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/213) | - |
 | PT-U11 | playtest-v2 | Decision popup. (Done: arena/decision.ts and decision.css, cards with consequ... | done | - | - |
 | PT-U12 | playtest-v2 | Sound additions and a11y. Ui.md sections 13 and 14. | done | - | - |
-| PT-U13 | playtest-v2 | UI tests. Reducers unit tests, one smoke e2e (ui.md section 16). | open | - | `packages/arena-ui/test/ui-smoke.test.ts` |
+| PT-U13 | playtest-v2 | UI tests. Reducers unit tests, one smoke e2e (ui.md section 16). Done: packag... | done | - | `packages/arena-ui/test/ui-smoke.test.ts` |
 | PT-X1 | playtest-v2 | Regression. (done for the loop proof: docs/proof re-recorded with scoring v2,... | done | [#196](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/196), [#199](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/199) | - |
 | PT-X2 | playtest-v2 | Docs. docs/SPEC-MAP.md row, docs/DEMO-SCRIPT.md timings (3 min video is edite... | done | [#198](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/198) | - |
 | SH-C1 | share | Badge and scorecard. haunt badge, SVG and HTML generators (deterministic), MC... | done | [#183](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/183) | - |
@@ -92,7 +92,7 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | SH-K5 | share | Steering files. tech.md, contract.md, art.md in .kiro/steering/. | done | - | - |
 | SH-U1 | share | Workflow Lab UI. Form, presets, protections toggles, run view, report, export... | done | [#210](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/210) | `packages/arena-ui/test/lab.test.ts`, `packages/haunt/test/trace.test.ts` |
 | SH-U2 | share | Share button. In the report viewer: download badge and scorecard, copy README... | done | [#205](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/205) | - |
-| SH-U3 | share | Architecture diagram page. In the hosted demo footer ("How it works"). | open | - | `packages/arena-ui/test/how-it-works.test.ts` |
+| SH-U3 | share | Architecture diagram page. In the hosted demo footer ("How it works"). Done: ... | done | - | `packages/arena-ui/test/how-it-works.test.ts` |
 | TV3-C0 | tournament-v3 | Contract v1.2. Land contract/V12.md in the mock: stages list in state, round ... | done | - | - |
 | TV3-C1 | tournament-v3 | New order and stage list. Eleven stages, legacy mapping, ledger columns, kill... | done | - | - |
 | TV3-C2 | tournament-v3 | Wave end review state. awaitingnext, POST /api/next, no auto start; optional ... | done | - | - |
@@ -111,13 +111,13 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | TV3-U1 | tournament-v3 | Stage list from server. Draw chips from state.stages; 11 chips fit at 1600 wi... | done | - | - |
 | TV3-U2 | tournament-v3 | Review state. "Review" tint, summary card with Next (Space and N), logs stay ... | done | - | - |
 | TV3-U3 | tournament-v3 | Popup log filters and freeze. Order filter, type filter, pin, "paused" chip, ... | done | - | - |
-| TV3-U4 | tournament-v3 | Review card resize. Half size over the ORDER card; door fully visible. | open | - | `packages/arena-ui/test/ui-smoke.test.ts` |
+| TV3-U4 | tournament-v3 | Review card resize. Half size over the ORDER card; door fully visible. Done: ... | done | - | `packages/arena-ui/test/ui-smoke.test.ts` |
 | TV3-U5 | tournament-v3 | Swarm FX. Arrive, harass (shoo animation), dissipate, defeated circling, safe... | done | - | - |
 | TV3-U6 | tournament-v3 | Intensity dial. Header knob 1 to 11, 11 override styling, auto-ramp toggle, s... | done | - | - |
 | TV3-U7 | tournament-v3 | Curses. Purple chips, lane tags, "Curse a lane" control, outage countdown ring. | done | - | - |
 | TV3-U8 | tournament-v3 | Tournament UI. Round indicator, standings card with the drop, FALLEN row, cor... | done | - | - |
 | TV3-U9 | tournament-v3 | Lessons and Casebook. Scroll icons, learned sparkle, Casebook table, awards, ... | done | - | - |
-| TV3-U10 | tournament-v3 | Transit art. Weather, hazard, out of gas, not on truck creatures or effects (... | open | - | `packages/arena-ui/test/streaming-art.test.ts` |
+| TV3-U10 | tournament-v3 | Transit art. Weather, hazard, out of gas, not on truck creatures or effects (... | done | - | `packages/arena-ui/test/streaming-art.test.ts` |
 | TV3-U11 | tournament-v3 | Pattern and spec view. List of patterns with status, open generated spec, rer... | done | - | - |
 
 ## Requirements
@@ -132,12 +132,12 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R2.1 | haunted-house | THE SYSTEM SHALL inject faults at named crash points: beforecharge, afterchar... | n/a | - | `packages/haunt/test/chaos.test.ts` |
 | R2.2 | haunted-house | THE SYSTEM SHALL make every run reproducible from a seed and a fault plan (JS... | n/a | - | `packages/haunt/test/chaos.test.ts` |
 | R2.3 | haunted-house | WHEN a crash point fires, THE SYSTEM SHALL kill the bot process for real (not... | n/a | - | `packages/haunt/test/chaos.test.ts` |
-| R3 | haunted-house | Survival behavior (Survivor bot) | n/a | - | `packages/haunt/test/sdk.test.ts` |
+| R3 | haunted-house | Survival behavior (Survivor bot) | n/a | - | `packages/haunt/test/pipeline.test.ts`, `packages/haunt/test/sdk.test.ts` |
 | R3.1 | haunted-house | WHEN the bot is about to cause a side effect, IT SHALL first write an intent ... | n/a | - | `packages/haunt/test/sdk.test.ts` |
 | R3.2 | haunted-house | WHEN the bot restarts, IT SHALL read the journal and resume at the first step... | n/a | - | `packages/haunt/test/sdk.test.ts` |
 | R3.3 | haunted-house | IF an intent has no result, THEN IT SHALL ask the provider by idempotency key... | n/a | - | `packages/haunt/test/sdk.test.ts` |
 | R3.4 | haunted-house | WHEN a duplicate request arrives with a known key, IT SHALL return the first ... | n/a | - | `packages/haunt/test/sdk.test.ts` |
-| R3.5 | haunted-house | WHEN an input file is missing, IT SHALL park the order in a quarantine queue,... | n/a | - | - |
+| R3.5 | haunted-house | WHEN an input file is missing, IT SHALL park the order in a quarantine queue,... | n/a | - | `packages/haunt/test/pipeline.test.ts` |
 | R4 | haunted-house | Run report (the core product) | n/a | - | `packages/haunt/test/report-write.test.ts` |
 | R4.1 | haunted-house | EACH run SHALL produce a report with: timeline of steps, the exact step where... | n/a | - | `packages/haunt/test/report-write.test.ts` |
 | R4.2 | haunted-house | THE REPORT SHALL show side-effect counts from the provider's ledger, not from... | n/a | - | `packages/haunt/test/report-write.test.ts` |
@@ -156,44 +156,44 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R7 | haunted-house | Safety | n/a | - | `packages/core/test/provider.test.ts` |
 | R7.1 | haunted-house | THE SYSTEM SHALL use only a simulated payment provider. No real money, no rea... | n/a | - | `packages/core/test/provider.test.ts` |
 | R7.2 | haunted-house | THE SYSTEM SHALL contain no network calls except to localhost. | n/a | - | `packages/core/test/provider.test.ts` |
-| R8 | haunted-house | Kiro showcase | n/a | - | `packages/haunt/test/hooks.test.ts` |
+| R8 | haunted-house | Kiro showcase | n/a | - | `packages/haunt/test/docs-truth.test.ts`, `packages/haunt/test/hooks.test.ts` |
 | R8.1 | haunted-house | THE REPO SHALL include specs, steering files and agent hooks used to build it. | n/a | - | `packages/haunt/test/hooks.test.ts` |
-| R8.2 | haunted-house | THE README SHALL explain how Kiro was used, with links to those files. | n/a | - | - |
-| R1 | playtest-v2 | Motion and pacing | n/a | [#154](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/154), [#159](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/159), [#164](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/164), [#194](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/194), [#211](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/211) | - |
-| R1.1 | playtest-v2 | WHEN an order starts, THE SYSTEM SHALL NOT emit the first stagestart until gr... | n/a | [#154](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/154), [#159](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/159) | - |
-| R1.2 | playtest-v2 | WHEN a stage completes, THE SYSTEM SHALL NOT emit the next stagestart until w... | n/a | [#154](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/154), [#159](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/159) | - |
-| R1.3 | playtest-v2 | WHEN an order is handed off, THE UI SHALL show the door opening, the scroll h... | n/a | [#154](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/154), [#164](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/164) | - |
-| R1.4 | playtest-v2 | THE SYSTEM SHALL offer pace slow (factor 3) and SHALL make it the default for... | n/a | [#194](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/194), [#211](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/211) | - |
-| R2 | playtest-v2 | Lane logs | n/a | [#182](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/182), [#191](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/191) | - |
-| R2.1 | playtest-v2 | THE UI SHALL show one ticker row per lane with only the current message, slid... | n/a | [#182](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/182) | - |
-| R2.2 | playtest-v2 | WHEN a ticker row, lane label, chip, or flag is clicked, THE UI SHALL open a ... | n/a | [#191](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/191) | - |
-| R2.3 | playtest-v2 | THE SYSTEM SHALL provide per-order and per-stage records (attempts, recoverie... | n/a | - | - |
-| R3 | playtest-v2 | Status, issues, laps | n/a | [#170](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/170), [#184](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/184), [#201](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/201), [#207](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/207) | - |
-| R3.1 | playtest-v2 | THE UI SHALL colour stage chips green (passed), red (failed), yellow (in trou... | n/a | [#170](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/170) | - |
-| R3.2 | playtest-v2 | THE SYSTEM SHALL compute a lap object for every finished order and a summary ... | n/a | [#184](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/184), [#207](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/207) | - |
-| R3.3 | playtest-v2 | THE UI SHALL show lap tables, best and slowest laps, and wave totals. (PT-U6) | n/a | [#201](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/201) | - |
-| R4 | playtest-v2 | Scoring | n/a | [#158](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/158), [#208](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/208) | `packages/arena-ui/test/score-visuals.test.ts` |
-| R4.1 | playtest-v2 | Downtime SHALL cost 2 points per 1x-second, capped at 300 per order. (PT-C4) | n/a | [#158](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/158) | - |
-| R4.2 | playtest-v2 | Recovering the order that was in flight at a boss SHALL give +150 and refund ... | n/a | [#158](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/158) | - |
-| R4.3 | playtest-v2 | A cancelled order SHALL cost 300 and a halted lane 400 plus 150 per abandoned... | n/a | [#158](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/158) | - |
+| R8.2 | haunted-house | THE README SHALL explain how Kiro was used, with links to those files. | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R1 | playtest-v2 | Motion and pacing | n/a | [#154](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/154), [#159](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/159), [#164](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/164), [#194](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/194), [#211](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/211) | `packages/arena-ui/test/gearmenu.test.ts`, `packages/arena-ui/test/handoff.test.ts`, `packages/haunt/test/travel.test.ts` |
+| R1.1 | playtest-v2 | WHEN an order starts, THE SYSTEM SHALL NOT emit the first stagestart until gr... | n/a | [#154](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/154), [#159](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/159) | `packages/haunt/test/travel.test.ts` |
+| R1.2 | playtest-v2 | WHEN a stage completes, THE SYSTEM SHALL NOT emit the next stagestart until w... | n/a | [#154](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/154), [#159](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/159) | `packages/haunt/test/travel.test.ts` |
+| R1.3 | playtest-v2 | WHEN an order is handed off, THE UI SHALL show the door opening, the scroll h... | n/a | [#154](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/154), [#164](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/164) | `packages/arena-ui/test/handoff.test.ts` |
+| R1.4 | playtest-v2 | THE SYSTEM SHALL offer pace slow (factor 3) and SHALL make it the default for... | n/a | [#194](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/194), [#211](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/211) | `packages/arena-ui/test/gearmenu.test.ts`, `packages/haunt/test/travel.test.ts` |
+| R2 | playtest-v2 | Lane logs | n/a | [#182](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/182), [#191](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/191) | `packages/arena-ui/test/lane-popup.test.ts`, `packages/arena-ui/test/lanes-ticker.test.ts`, `packages/core/test/lap-tracker.test.ts` |
+| R2.1 | playtest-v2 | THE UI SHALL show one ticker row per lane with only the current message, slid... | n/a | [#182](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/182) | `packages/arena-ui/test/lanes-ticker.test.ts` |
+| R2.2 | playtest-v2 | WHEN a ticker row, lane label, chip, or flag is clicked, THE UI SHALL open a ... | n/a | [#191](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/191) | `packages/arena-ui/test/lane-popup.test.ts` |
+| R2.3 | playtest-v2 | THE SYSTEM SHALL provide per-order and per-stage records (attempts, recoverie... | n/a | - | `packages/arena-ui/test/lane-popup.test.ts`, `packages/core/test/lap-tracker.test.ts` |
+| R3 | playtest-v2 | Status, issues, laps | n/a | [#170](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/170), [#184](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/184), [#201](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/201), [#207](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/207) | `packages/arena-ui/test/chips.test.ts`, `packages/arena-ui/test/laps.test.ts`, `packages/core/test/lap-tracker.test.ts` |
+| R3.1 | playtest-v2 | THE UI SHALL colour stage chips green (passed), red (failed), yellow (in trou... | n/a | [#170](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/170) | `packages/arena-ui/test/chips.test.ts` |
+| R3.2 | playtest-v2 | THE SYSTEM SHALL compute a lap object for every finished order and a summary ... | n/a | [#184](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/184), [#207](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/207) | `packages/core/test/lap-tracker.test.ts` |
+| R3.3 | playtest-v2 | THE UI SHALL show lap tables, best and slowest laps, and wave totals. (PT-U6) | n/a | [#201](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/201) | `packages/arena-ui/test/laps.test.ts` |
+| R4 | playtest-v2 | Scoring | n/a | [#158](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/158), [#208](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/208) | `packages/arena-ui/test/score-visuals.test.ts`, `packages/haunt/test/score.test.ts` |
+| R4.1 | playtest-v2 | Downtime SHALL cost 2 points per 1x-second, capped at 300 per order. (PT-C4) | n/a | [#158](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/158) | `packages/haunt/test/score.test.ts` |
+| R4.2 | playtest-v2 | Recovering the order that was in flight at a boss SHALL give +150 and refund ... | n/a | [#158](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/158) | `packages/haunt/test/score.test.ts` |
+| R4.3 | playtest-v2 | A cancelled order SHALL cost 300 and a halted lane 400 plus 150 per abandoned... | n/a | [#158](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/158) | `packages/haunt/test/score.test.ts` |
 | R4.4 | playtest-v2 | THE UI SHALL explain scores (score popover) and show downtime and cancel anim... | n/a | [#208](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/208) | `packages/arena-ui/test/score-visuals.test.ts` |
-| R5 | playtest-v2 | Reviews and stars | n/a | [#161](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/161), [#201](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/201), [#204](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/204) | - |
-| R5.1 | playtest-v2 | THE SYSTEM SHALL emit a review for every finished order with five sub-scores ... | n/a | [#161](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/161) | - |
-| R5.2 | playtest-v2 | THE UI SHALL show the stars at the door, a review card, a live tracker (8/15)... | n/a | [#201](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/201), [#204](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/204) | - |
-| R5.3 | playtest-v2 | Reviews SHALL feed the score as (stars - 3) x 40. (PT-C6) | n/a | [#161](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/161) | - |
-| R6 | playtest-v2 | World events | n/a | [#213](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/213) | - |
-| R6.1 | playtest-v2 | THE SYSTEM SHALL support smsdown, appdown, updatesdown, wrongaddress, noanswe... | n/a | - | - |
-| R6.2 | playtest-v2 | THE UI SHALL show a creature and caption for each, including four new creatur... | n/a | [#213](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/213) | - |
-| R6.3 | playtest-v2 | Stage 8 SHALL call the provider so handoff can fail. (PT-C7) | n/a | - | - |
-| R7 | playtest-v2 | Wrong order and decisions | n/a | - | - |
-| R7.1 | playtest-v2 | WHEN ordertypo is armed, THE SYSTEM SHALL swap the order items and detect it ... | n/a | - | - |
-| R7.2 | playtest-v2 | WHEN detected, THE SYSTEM SHALL emit decisionneeded, accept POST /api/decisio... | n/a | - | - |
-| R7.3 | playtest-v2 | THE UI SHALL show a decision popup with consequences and play each outcome. (... | n/a | - | - |
-| R8 | playtest-v2 | Header, legend, controls | n/a | [#211](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/211) | - |
-| R8.1 | playtest-v2 | THE UI SHALL provide a gear menu for chaos mode, pace, speed, sound, motion, ... | n/a | [#211](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/211) | - |
-| R8.2 | playtest-v2 | THE UI SHALL explain the gear letters R J I B Q with tooltips and a legend. (... | n/a | [#211](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/211) | - |
+| R5 | playtest-v2 | Reviews and stars | n/a | [#161](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/161), [#201](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/201), [#204](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/204) | `packages/arena-ui/test/handoff.test.ts`, `packages/arena-ui/test/laps.test.ts`, `packages/arena-ui/test/review-card.test.ts`, `packages/haunt/test/review.test.ts` |
+| R5.1 | playtest-v2 | THE SYSTEM SHALL emit a review for every finished order with five sub-scores ... | n/a | [#161](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/161) | `packages/haunt/test/review.test.ts` |
+| R5.2 | playtest-v2 | THE UI SHALL show the stars at the door, a review card, a live tracker (8/15)... | n/a | [#201](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/201), [#204](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/204) | `packages/arena-ui/test/handoff.test.ts`, `packages/arena-ui/test/laps.test.ts`, `packages/arena-ui/test/review-card.test.ts` |
+| R5.3 | playtest-v2 | Reviews SHALL feed the score as (stars - 3) x 40. (PT-C6) | n/a | [#161](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/161) | `packages/haunt/test/review.test.ts` |
+| R6 | playtest-v2 | World events | n/a | [#213](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/213) | `packages/arena-ui/test/world-events.test.ts`, `packages/core/test/world-events-a.test.ts`, `packages/core/test/world-events-b.test.ts`, `packages/core/test/world-events-c.test.ts` |
+| R6.1 | playtest-v2 | THE SYSTEM SHALL support smsdown, appdown, updatesdown, wrongaddress, noanswe... | n/a | - | `packages/core/test/world-events-a.test.ts`, `packages/core/test/world-events-b.test.ts`, `packages/core/test/world-events-c.test.ts` |
+| R6.2 | playtest-v2 | THE UI SHALL show a creature and caption for each, including four new creatur... | n/a | [#213](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/213) | `packages/arena-ui/test/world-events.test.ts` |
+| R6.3 | playtest-v2 | Stage 8 SHALL call the provider so handoff can fail. (PT-C7) | n/a | - | `packages/core/test/world-events-b.test.ts` |
+| R7 | playtest-v2 | Wrong order and decisions | n/a | - | `packages/arena-ui/test/decision.test.ts`, `packages/core/test/wrong-order-detect.test.ts`, `packages/core/test/wrong-order-provider.test.ts` |
+| R7.1 | playtest-v2 | WHEN ordertypo is armed, THE SYSTEM SHALL swap the order items and detect it ... | n/a | - | `packages/core/test/wrong-order-detect.test.ts`, `packages/core/test/wrong-order-provider.test.ts` |
+| R7.2 | playtest-v2 | WHEN detected, THE SYSTEM SHALL emit decisionneeded, accept POST /api/decisio... | n/a | - | `packages/core/test/wrong-order-detect.test.ts` |
+| R7.3 | playtest-v2 | THE UI SHALL show a decision popup with consequences and play each outcome. (... | n/a | - | `packages/arena-ui/test/decision.test.ts` |
+| R8 | playtest-v2 | Header, legend, controls | n/a | [#211](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/211) | `packages/arena-ui/test/gearmenu.test.ts` |
+| R8.1 | playtest-v2 | THE UI SHALL provide a gear menu for chaos mode, pace, speed, sound, motion, ... | n/a | [#211](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/211) | `packages/arena-ui/test/gearmenu.test.ts` |
+| R8.2 | playtest-v2 | THE UI SHALL explain the gear letters R J I B Q with tooltips and a legend. (... | n/a | [#211](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/211) | `packages/arena-ui/test/gearmenu.test.ts` |
 | R8.3 | playtest-v2 | THE UI SHALL show "Play demo" and "Stop demo" buttons and a mode badge toolti... | n/a | [#211](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/211) | - |
-| R9 | playtest-v2 | Quality | n/a | [#196](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/196), [#199](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/199) | - |
-| R9.1 | playtest-v2 | All new scoring and review functions SHALL be pure and covered by properties ... | n/a | - | - |
-| R9.2 | playtest-v2 | All new fixtures SHALL validate against the schema and the ordering rules 40 ... | n/a | - | - |
+| R9 | playtest-v2 | Quality | n/a | [#196](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/196), [#199](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/199) | `packages/haunt/test/pbt-playtest.test.ts`, `packages/haunt/test/validate-v1-1.test.ts` |
+| R9.1 | playtest-v2 | All new scoring and review functions SHALL be pure and covered by properties ... | n/a | - | `packages/haunt/test/pbt-playtest.test.ts` |
+| R9.2 | playtest-v2 | All new fixtures SHALL validate against the schema and the ordering rules 40 ... | n/a | - | `packages/haunt/test/validate-v1-1.test.ts` |
 | R9.3 | playtest-v2 | THE SYSTEM SHALL keep npm run demo and npm run fresh-clone working. (PT-X1) | n/a | [#196](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/196), [#199](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/199) | - |

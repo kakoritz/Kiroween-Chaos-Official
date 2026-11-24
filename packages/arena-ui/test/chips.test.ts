@@ -1,3 +1,4 @@
+// covers: playtest-v2/R3.1
 import { describe, expect, it } from 'vitest';
 import { chipState, chipTip, foldHeat, fromLegacy, heatAlpha, heatAt, heatTip, isIssue, newHeat } from '../src/arena/chips';
 import { applyEvent, emptyVM, newLane, stationX } from '../src/arena/model';

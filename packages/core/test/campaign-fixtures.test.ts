@@ -1,3 +1,4 @@
+// covers: CP-C3
 // CP-C3: campaign fixtures night1..night6 and finale (scripted, demo style), the mock's POST /api/wave/start {campaign}
 // and inpage getCampaign(). Contract: contract/V1_1.md sections 3, 4, 6, 7, 11 and 12.
 import { describe, expect, it } from 'vitest';

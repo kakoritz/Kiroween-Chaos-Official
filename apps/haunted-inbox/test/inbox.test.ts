@@ -1,3 +1,4 @@
+// covers: PK-C3 H6.2
 // H6.1: the second app. Config loads, the corpus classifies, and real Python processes run against the provider.
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readdirSync, rmSync } from 'node:fs';

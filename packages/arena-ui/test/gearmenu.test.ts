@@ -1,3 +1,4 @@
+// covers: playtest-v2/R8.1 playtest-v2/R8.2 playtest-v2/R1.4
 import { describe, expect, it } from 'vitest';
 import { BADGE_TIP, DEFAULT_PACE, badgeTitle, paceTag, shouldClose } from '../src/arena/gearmenu';
 import { GEAR_PARTS, gearTip, legendHtml } from '../src/arena/legend-modal';

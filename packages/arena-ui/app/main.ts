@@ -14,6 +14,7 @@ import { BossBar, bossAnnouncement } from '../src/arena/boss';
 import { ChaosModeControl, readChaosState } from '../src/arena/chaosmode';
 import { AppSwitcher, currentApp } from '../src/arena/appswitch';
 import { PackSwitcher } from '../src/arena/packs';
+import { taglineClipped } from '../src/arena/layout';
 import { GearMenu, DEFAULT_PACE, badgeTitle, type Pace } from '../src/arena/gearmenu';
 import '../src/arena/gearmenu.css';
 import { IntensityDial, applyIntensity, readDial, defaultDial } from '../src/arena/dial';
@@ -701,6 +702,13 @@ function fit() {
 }
 window.addEventListener('resize', fit);
 fit();
+// The tagline gives way first in a crowded header. Never show it cut off mid-word: hide it unless it fits whole.
+const taglineEl = document.querySelector<HTMLElement>('.hdr > .tagline');
+if (taglineEl) {
+  const fitTagline = (): void => { taglineEl.classList.toggle('tagline--hidden', taglineClipped(taglineEl.scrollWidth, taglineEl.clientWidth)); };
+  new ResizeObserver(fitTagline).observe(taglineEl);
+  fitTagline();
+}
 
 let slow = 0;
 let prev = performance.now();

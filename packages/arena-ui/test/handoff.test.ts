@@ -1,3 +1,4 @@
+// covers: playtest-v2/R1.3 playtest-v2/R5.2
 import { describe, expect, it } from 'vitest';
 import { applyEvent, emptyVM, type ArenaVM } from '../src/arena/model';
 import { ArenaScene } from '../src/arena/scene';

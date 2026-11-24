@@ -8,18 +8,23 @@ Owner: Lane A. UI work: none beyond reading the stage list from `/api/state`.
 
 An AI-style agent triages a support mailbox: it reads an email, classifies it, files a ticket, writes a reply, sends it, and archives it. After a crash a naive agent files the ticket twice and replies twice. Customers get duplicate replies. This is the 2026 version of the double charge.
 
-## Pipeline (6 stages)
+## Pipeline (11 stages)
 
-| # | id | label | min-max ms | effect (kind, key) | notes |
-|---|---|---|---|---|---|
-| 1 | `fetch` | Fetch mail | 400-800 | none | Reads `inbox/<id>.json` |
-| 2 | `classify` | Classify | 500-1000 | none | Deterministic stub that imitates an LLM (keyword rules, fixed latency). No real model, no key, no cost. |
-| 3 | `ticket` | File ticket | 500-1000 | `ticket`, key `<id>:ticket` | Helpdesk mock |
-| 4 | `draft` | Draft reply | 500-1000 | none | Template per class |
-| 5 | `reply` | Send reply | 500-1000 | `email`, key `<id>:reply` | Helpdesk mock |
-| 6 | `archive` | Archive | 300-600 | none | Marks done in journal |
+The Ticket Desk runs eleven stages. The source of truth is `apps/haunted-inbox/haunt.yaml`; `bot/run.py` `STAGES` and `INBOX_STAGES` in `packages/haunt/src/shared/catalog.ts` carry the same list and a test (`apps/haunted-inbox/test/inbox.test.ts`) keeps them equal. The first draft of this design had six stages (fetch, classify, ticket, draft, reply, archive); PK-C3 replaced them.
 
-Effect kinds added: `ticket`. (`email` already exists.)
+| # | id | label | min-max ms | effect (kind, key) |
+|---|---|---|---|---|
+| 1 | `login` | SSO login | 300-600 | `account`, key `login` |
+| 2 | `ingest` | Ingest request | 400-700 | none |
+| 3 | `validate` | Validate | 300-600 | none |
+| 4 | `dedupe` | Deduplicate | 300-600 | none |
+| 5 | `triage` | Triage | 400-800 | none (deterministic keyword stub, no model, no key, no cost) |
+| 6 | `assign` | Assign ticket | 500-900 | `ticket`, key `ticket` |
+| 7 | `sla` | SLA clock | 200-400 | none |
+| 8 | `notify` | Notify requester | 400-800 | `reply`, key `reply` |
+| 9 | `escalate` | Escalate | 300-600 | `notify`, key `escalate` (bugs only) |
+| 10 | `resolve` | Resolve | 300-600 | none |
+| 11 | `close` | Close and survey | 300-500 | none |
 
 ## Components
 
@@ -27,7 +32,7 @@ Effect kinds added: `ticket`. (`email` already exists.)
 - The inbox uses the **shared provider (7071)**: `POST /tickets` and `POST /replies` (ledger kind `email`, key `<id>:reply`), `GET /lookup`, `POST /_fault` with services `ticket` and `reply`. No separate helpdesk server. See `.kiro/specs/engine/runtime.md` section 25.
 - `apps/haunted-inbox/haunt.yaml`: the process definition (stages, effects, start command, truth endpoint, targets).
 
-## How Haunt drives it (no engine change)
+## How Kiroween Chaos drives it (no engine change)
 
 | Adapter | Use |
 |---|---|

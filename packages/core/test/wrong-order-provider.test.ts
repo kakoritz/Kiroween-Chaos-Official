@@ -1,3 +1,4 @@
+// covers: playtest-v2/R7.1
 import { describe, expect, it } from 'vitest';
 import { Provider, type ProviderClock } from '../src/provider';
 import { faultBody, RepeatDetector, scanRepeats } from '../../haunt/src/runner/provider';

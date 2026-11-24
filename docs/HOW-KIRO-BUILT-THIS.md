@@ -1,6 +1,6 @@
-# How Kiro built Haunt
+# How Kiro built Kiroween Chaos
 
-An evidence-only account of how Kiro was used to build Haunt (Kiroween-Chaos). Every claim points at a file in this repo. Where the repo cannot back a claim, it is marked **TODO (owner)**. The rubric-ordered companion is [`KIRO-WRITEUP.md`](KIRO-WRITEUP.md); the dated notes are [`KIRO-LOG.md`](KIRO-LOG.md).
+An evidence-only account of how Kiro was used to build Kiroween Chaos. Every claim points at a file in this repo. Where the repo cannot back a claim, it is marked **TODO (owner)**. The rubric-ordered companion is [`KIRO-WRITEUP.md`](KIRO-WRITEUP.md); the dated notes are [`KIRO-LOG.md`](KIRO-LOG.md).
 
 ## 1. Measured numbers
 
@@ -36,7 +36,7 @@ Specs were written before code (see `KIRO-LOG.md`, "2026-11-20: specs first"). E
 | `onboarding` | `spec`, `tasks` | `ON-C1`, `ON-U1` to `ON-U4`, `ON-D1`; `ON-D3` open. |
 | `share` | `spec`, `tasks` | `SH-C4` (loop proof, #192, recorded fix only), Workflow Lab, badge, Action. |
 | `tournament-v3` | `spec`, `tasks` | `TV3-C1` (11-step pipeline), `TV3-C7` (engine), `TV3-C11` (pattern miner, `c4d9055`), `TV3-C12` (fix spec writer and lint, `df0c353`), `TV3-C13` (improve loop, `c2b12f9`, follow-up `1f55fff`). |
-| `packs` | `spec`, `tasks` | `PK-C1` to `PK-C3`; all 10 boxes unticked although PK-C3 (Ticket Desk live) is described as landed in `docs/DECISIONS.md` 2026-11-22. |
+| `packs` | `spec`, `tasks` | `PK-C1` to `PK-C7` and `PK-U1` to `PK-U3`; the Ticket Desk (PK-C3) runs live with 11 stages (`docs/DECISIONS.md` 2026-11-22). |
 | `hardening-loop-w1` | `requirements`, `design`, `tasks` | Output of the reviewer, not hand-written; tasks `F1` to `F5`, all `[x]`. See section 5. |
 
 Convention: PR titles carry the task ID (for example `TV3-C13: self-improving loop`, `SH-C4: real loop proof write-up, recorded-fix label (#192)`). `docs/SPEC-MAP.md` maps specs to areas; `docs/TRACE.md` is generated from specs, git log and tests.

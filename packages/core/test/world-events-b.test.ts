@@ -1,3 +1,4 @@
+// covers: playtest-v2/R6.1 playtest-v2/R6.3
 import { describe, expect, it } from 'vitest';
 import { resolveOutcome, creatureForFault } from '@haunt/shared';
 import { assembleWave, BASE_TS, planWave } from '../src/sim/wave';

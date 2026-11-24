@@ -12,7 +12,7 @@ When two documents disagree, the higher one wins.
 | 2c | `.kiro/specs/campaign/`, `.kiro/specs/onboarding/`, `.kiro/specs/share/` | Campaign game, first-impression and video, badge, Action, Workflow Lab, real loop proof, Kiro proof |
 | 3 | `.kiro/specs/engine/design.md` and `acceptance.md` | Pipeline, provider, journal, tiers, faults, scoring, grading, oracle |
 | 4 | `.kiro/specs/inbox-app/design.md` | App 2 |
-| 5 | `.kiro/specs/harness/` | Haunt product requirements and Lane A tasks |
+| 5 | `.kiro/specs/harness/` | Kiroween Chaos product requirements and Lane A tasks |
 | 6 | `.kiro/specs/arena/` | Lane B requirements, visuals and tasks |
 | 7 | `docs/WINNING.md`, `DEMO-SCRIPT.md` | Rules, rubric, video |
 | 8 | `docs/SWIMLANES.md`, `DEV-SETUP.md`, `AGENTS.md` | Process |
@@ -30,7 +30,7 @@ When two documents disagree, the higher one wins.
 
 | Term | Meaning |
 |---|---|
-| Haunt | The product: harness plus CLI plus reports |
+| Kiroween Chaos | The product: harness plus CLI plus reports. `haunt` is the CLI and package name |
 | Arena | The game UI (Lane B) |
 | Lane (track) | One tier's track in the arena. Also "Lane A / Lane B" means a work stream. Context makes it clear: "lane 1" is a track, "Lane A" is a session. |
 | Tier | One of five bot implementations: rookie, retrier, journaler, reconciler, phoenix |
@@ -43,7 +43,7 @@ When two documents disagree, the higher one wins.
 | Journal | The bot's own append-only memory |
 | Repeat | An effect that happened more than once |
 | Wave | One run of N orders through all lanes |
-| Sweep, stack, ramp, soak | Haunt test modes |
+| Sweep, stack, ramp, soak | Kiroween Chaos test modes |
 | Hardening spec | A spec written by the reviewer from run findings, applied by Kiro |
 
 ## Glossary additions (play-test v2)

@@ -23,13 +23,13 @@ Branches `core/TV3-...` and `ui/TV3-...`. One PR per task. Contract first (TV3-C
 - [x] **TV3-U1 Stage list from server.** Draw chips from `state.stages`; 11 chips fit at 1600 wide and scale down; hosted demo fixtures updated.
 - [x] **TV3-U2 Review state.** "Review" tint, summary card with Next (Space and N), logs stay live-browsable.
 - [x] **TV3-U3 Popup log filters and freeze.** Order filter, type filter, pin, "paused" chip, Back to live, scroll and selection kept. Same filter on the main log.
-- [ ] **TV3-U4 Review card resize.** Half size over the ORDER card; door fully visible.
+- [x] **TV3-U4 Review card resize.** Half size over the ORDER card; door fully visible. Done: `arena/review-card.css` half-size rule; geometry test in `ui-smoke.test.ts`.
 - [x] **TV3-U5 Swarm FX.** Arrive, harass (shoo animation), dissipate, defeated circling, safety timer; reducer derived.
 - [x] **TV3-U6 Intensity dial.** Header knob 1 to 11, 11 override styling, auto-ramp toggle, sound rise.
 - [x] **TV3-U7 Curses.** Purple chips, lane tags, "Curse a lane" control, outage countdown ring.
 - [x] **TV3-U8 Tournament UI.** Round indicator, standings card with the drop, FALLEN row, corpse and wall corpse drawing, champion podium.
 - [x] **TV3-U9 Lessons and Casebook.** Scroll icons, learned sparkle, Casebook table, awards, final screen order.
-- [ ] **TV3-U10 Transit art.** Weather, hazard, out of gas, not on truck creatures or effects (code-drawn).
+- [x] **TV3-U10 Transit art.** Weather, hazard, out of gas, not on truck creatures or effects (code-drawn). Done: Storm Crow, Pothole Imp, Fuel Wraith, Lost Parcel Ghoul drawn in `arena/world-events.ts`, lab entries in `lab/world-sprites.ts`; test `streaming-art.test.ts`.
 - [x] **TV3-U11 Pattern and spec view.** List of patterns with status, open generated spec, rerun and compare buttons.
 
 ## Cut line

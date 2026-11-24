@@ -1,3 +1,4 @@
+// covers: playtest-v2/R9.2
 import { describe, expect, it } from 'vitest';
 import type { HauntEvent } from '@haunt/shared';
 import { validateEvents } from '../src/contract/validate';

@@ -16,7 +16,7 @@ Goal: a judge or a stranger understands the problem, the stake and how to play *
 
 - **Hook:** "Charged. Charged again." A bot crashes right after charging a customer and does the work twice.
 - **Problem:** Automations and AI agents crash halfway through, then repeat side effects (double charges, duplicate emails, duplicate tickets).
-- **Solution:** Haunt, chaos engineering as a game. Five bots, the same crash, ledger-proven results. Plug in your own process and get a graded report. Kiro closes the loop.
+- **Solution:** Kiroween Chaos, chaos engineering as a game. Five bots, the same crash, ledger-proven results. Plug in your own process and get a graded report. Kiro closes the loop.
 - **Number:** "Rookie: 2 charges. Phoenix: 1." And "F to A" after one Kiro-applied fix (only if the proof is real, see `share/spec.md` section 5).
 - **Tagline (pick one, test with the owner):** "Break your bots before the world does." / "Chaos engineering, played as a game."
 

@@ -29,7 +29,7 @@ In the arena: **Start tournament**, press **Next** between rounds, drag **INTENS
 | App | Language | What it does |
 |---|---|---|
 | [`apps/haunted-orders/`](apps/haunted-orders/) | Node | 11-stage order pipeline (account to handoff), five bot tiers Rookie to Phoenix. Money and parcels |
-| [`apps/haunted-inbox/`](apps/haunted-inbox/) | Python 3.12 | Ticket Desk: reads mail, classifies, files a ticket, drafts and sends a reply, archives. Same harness: a `haunt.yaml` and no engine change |
+| [`apps/haunted-inbox/`](apps/haunted-inbox/) | Python 3.12 | Ticket Desk: an 11-stage support flow (SSO login, ingest, validate, dedupe, triage, assign ticket, SLA clock, notify, escalate, resolve, close). Same harness: a `haunt.yaml` and no engine change |
 
 A third outfit (streaming) exists only as a model-based pack in [`packs/`](packs/) and a Workflow Lab preset. It has no runnable app.
 
@@ -111,7 +111,7 @@ More docs: [DEV-SETUP](docs/DEV-SETUP.md), [JUDGES](docs/JUDGES.md), [SPEC-MAP](
 - **Sweep is slow.** About 5 minutes with `--orders 1 --speed 16`, longer with defaults. For a quick look use `ramp`, `demo -- --check` or `validate:live`.
 - **Sim vs live.** The improve projection, the Workflow Lab, the hosted tournament and the packs are model-based or recorded. Only `npm run demo` runs real child processes against the real provider and ledger.
 - **Mobile.** The arena draws a fixed 1280x720 canvas, so a 390x844 phone shows it at about 30%. Use a desktop browser.
-- **Ticket Desk.** The inbox app runs 6 stages today. The 11-stage ticketing pack is specified, not a runnable app.
+- **Ticket Desk.** The Python inbox app runs 11 stages (login to close) on the same harness, with in-process fakes for jira, asana, kace and webhook. Those fakes are not real services.
 - **Kiro Power and Crew app.** Their manifests start the same MCP server (handshake proof in [`docs/proof/installed/`](docs/proof/installed/)). They are not yet installed into a Kiro window.
 - **Tests run locally.** CI does not run them. A worker timeout under load is a known flake: rerun that file alone.
 

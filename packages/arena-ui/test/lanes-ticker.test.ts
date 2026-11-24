@@ -1,3 +1,4 @@
+// covers: playtest-v2/R2.1
 import { describe, expect, it } from 'vitest';
 import { FAST_SHOW_MS, LaneTickerModel, MAX_QUEUE, MIN_SHOW_MS, bossMessage, laneMessage } from '../src/arena/lanes-ticker';
 import type { ArenaEvent } from '../src/api/types';

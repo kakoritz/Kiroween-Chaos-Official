@@ -1,6 +1,6 @@
 # Share, adopt, prove (requirements and design)
 
-Goal: make Haunt something a developer **adopts** (badge, CI gate, try-your-own-workflow) and make the **Kiro usage visibly deep and honest** (live fix, traceability, MCP scene, installed Power and Crew app). These target Potential Impact, Technological Implementation and Innovation, and remove the judge-panel red flags about "recorded" proof.
+Goal: make Kiroween Chaos something a developer **adopts** (badge, CI gate, try-your-own-workflow) and make the **Kiro usage visibly deep and honest** (live fix, traceability, MCP scene, installed Power and Crew app). These target Potential Impact, Technological Implementation and Innovation, and remove the judge-panel red flags about "recorded" proof.
 
 ## 1. Requirements (EARS)
 
