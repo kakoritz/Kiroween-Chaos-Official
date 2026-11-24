@@ -12,7 +12,7 @@ import { outageAt, outageFrame, ringLabel } from './outage';
 import { drawTombstone, drawWallCorpse, drawWisp, tombHeight } from './corpse';
 import { epitaphOf } from './tournament';
 import { CLASS_ICON, CLASS_WORD, POP_MS, curseShort, curseWord, type CurseClass, type CurseVM } from './curses';
-import { captionOf, creatureFrame, creatureTip, shown, spriteOf, MAX_SHOWN, type CreatureVM } from './creatures';
+import { captionOf, creatureFrame, creatureSlots, creatureTip, TRACK_X0, shown, spriteOf, MAX_SHOWN, type CreatureVM } from './creatures';
 import { drawCreature } from '../creatures/draw';
 import { drawStreaming } from '../creatures/streaming';
 import { streamingId } from '../creatures/streaming-defs';
@@ -35,8 +35,6 @@ export const STAGE_W = 1920;
 export const STAGE_H = 1080;
 const HEADER = 72;
 const LANES_H = 768;
-const TRACK_X0 = 260;
-const CREATURE_X1 = 1500;
 
 const C = {
   bg: '#0d0b14', stone: '#1c1830', stone2: '#2a2446', torch: '#ff9a3c', bone: '#efe6d2', text: '#f3ecff',
@@ -849,13 +847,12 @@ export class ArenaScene {
     if (!list.length) return;
     const skelX = this.walkers.get(l.lane)?.x ?? TRACK_X0 + 40;
     const stacked = list.length > 1;
-    const baseX = Math.max(TRACK_X0 + 40, Math.min(skelX + 84, CREATURE_X1 - 56 * (list.length - 1)));
-    const fromLeft = baseX < (TRACK_X0 + CREATURE_X1) / 2;
+    const { baseX, fromLeft, xs } = creatureSlots(list.length, skelX);
     list.forEach((c, i) => {
       const fr = creatureFrame(c, now, this.speed, this.reducedMotion);
       const scale = c.inner ? 0.55 : stacked ? 0.7 : 1;
       const size = 56 * scale;
-      const hx = c.inner ? skelX : baseX + i * 56;
+      const hx = c.inner ? skelX : xs[i]!;
       const hy = c.inner ? b.top + b.h * 0.8 - 80 : b.top + 74 - (stacked ? 0 : 6);
       const e = 1 - Math.pow(1 - fr.enter, 3);
       const x = hx + (fromLeft ? -1 : 1) * (1 - e) * 360;

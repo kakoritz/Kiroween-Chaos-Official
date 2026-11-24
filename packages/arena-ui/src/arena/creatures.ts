@@ -40,6 +40,16 @@ export const EXIT_MS = 300;
 export const PUFF_MS = 200;
 export const SHRUG_MS = 500;
 
+export const TRACK_X0 = 260;
+export const CREATURE_X1 = 1500;
+export const CREATURE_STEP = 56;
+
+/** Where the creature row starts on a lane: beside the skeleton, clamped to the track so a stack of n never leaves it. */
+export function creatureSlots(n: number, skelX: number): { baseX: number; fromLeft: boolean; xs: number[] } {
+  const baseX = Math.max(TRACK_X0 + 40, Math.min(skelX + 84, CREATURE_X1 - CREATURE_STEP * (n - 1)));
+  return { baseX, fromLeft: baseX < (TRACK_X0 + CREATURE_X1) / 2, xs: Array.from({ length: n }, (_, i) => baseX + i * CREATURE_STEP) };
+}
+
 const KILLERS = new Set(['reaper', 'wraith', 'lich']);
 /** Faults with no failure consequence: the creature acts 300 ms after `chaos`, then stays. */
 const QUIET_FAULTS = new Set(['duplicate_request', 'slow_link', 'disk_full', 'gremlin']);
@@ -54,7 +64,10 @@ export const FAULT_CAPTION: Record<string, string> = {
 export const captionOf = (fault: string): string => FAULT_CAPTION[fault] ?? WORLD_CAPTION[fault] ?? fault.replace(/_/g, ' ').toUpperCase();
 
 /** Sprite id to draw: a known creature, or null for the generic specter. */
-export const spriteOf = (id: string): CreatureId | null => (CREATURES.some((c) => c.id === id) ? (id as CreatureId) : null);
+/** Engine ids that differ from the sprite id (the catalog says will_o_wisp and headless_horseman; the art is wisp and horseman). */
+const SPRITE_ALIAS: Record<string, string> = { will_o_wisp: 'wisp', headless_horseman: 'horseman' };
+export const canonId = (id: string): string => SPRITE_ALIAS[id] ?? id;
+export const spriteOf = (id: string): CreatureId | null => { const k = canonId(id); return CREATURES.some((c) => c.id === k) ? (k as CreatureId) : null; };
 
 const words = (s: string): string => s.replace(/_/g, ' ');
 
@@ -180,15 +193,16 @@ export function creatureFrame(c: CreatureVM, now: number, speed = 1, reduced = f
     }
     return { anim: 'idle', p: (now % idleDur) / idleDur, enter, exit, acted };
   }
-  const def = CREATURES.find((x) => x.id === c.id);
+  const cid = canonId(c.id);
+  const def = CREATURES.find((x) => x.id === cid);
   if (!def) return { anim: 'idle', p: (now % 2200) / 2200, enter, exit, acted: false };
   if (acted) {
-    const a = def.anims.find((x) => x.id === actAnimOf(c.id));
+    const a = def.anims.find((x) => x.id === actAnimOf(cid));
     const dur = (a?.duration ?? 900) / sp;
     const t = (now - (c.actAt as number)) / dur;
     return { anim: a?.id ?? 'idle', p: a?.loop ? t % 1 : Math.min(1, t), enter, exit, acted };
   }
-  if (c.id === 'zombie') return { anim: 'shamble', p: (now * sp % 1600) / 1600, enter, exit, acted };
+  if (cid === 'zombie') return { anim: 'shamble', p: (now * sp % 1600) / 1600, enter, exit, acted };
   const idleDur = def.anims.find((x) => x.id === 'idle')?.duration ?? 2000;
   return { anim: 'idle', p: (now % idleDur) / idleDur, enter, exit, acted };
 }

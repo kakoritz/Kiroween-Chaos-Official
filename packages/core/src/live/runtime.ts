@@ -20,7 +20,7 @@ import { LaneTravel, travelAt } from '../../../haunt/src/runner/travel';
 import { crewPartsEnv } from '../../../haunt/src/campaign/crew';
 import { loadCampaign } from '../../../haunt/src/campaign/load';
 import { planScripts } from '../../../haunt/src/campaign/wave-config';
-import { loadDemo, type DemoScript } from './demo';
+import { loadDemo, type DemoPress, type DemoScript } from './demo';
 import { inboxBotCommand, inboxTarget, writeInboxMail } from './inbox-command';
 import type { LiveEngine } from './server';
 
@@ -187,8 +187,11 @@ export class DemoPlayer {
       const w = p.when;
       const s = this.st[i]!;
       if (!w || (s.firedAt !== undefined && !p.forEachOrder) || s.dueAt !== undefined && !p.forEachOrder) continue;
-      // Per lane: an earlier unfired `when` press of the same lane goes first.
-      if (presses.some((q, j) => j < i && q.when?.lane === w.lane && this.st[j]!.firedAt === undefined && this.st[j]!.dueAt === undefined && !q.forEachOrder)) continue;
+      // Per lane: an earlier unfired loose `when` press of the same lane goes first. A press pinned to an order and a stage
+      // (a tournament plan) needs no queue: it matches exactly one event, and a queue would freeze the whole lane behind one
+      // press that can never match (a second press at an earlier stage of the same order).
+      const pinned = (q: DemoPress): boolean => q.when?.order !== undefined && q.when.stage !== undefined;
+      if (!pinned(p) && presses.some((q, j) => j < i && q.when?.lane === w.lane && !pinned(q) && this.st[j]!.firedAt === undefined && this.st[j]!.dueAt === undefined && !q.forEachOrder)) continue;
       if (ev.type !== w.event || String(ev.lane) !== String(w.lane)) continue;
       if (w.stage !== undefined && ev.stage !== w.stage) continue;
       if (w.order !== undefined && ev.order !== w.order) continue;
@@ -204,7 +207,7 @@ export class DemoPlayer {
         if (p.forEachOrder) s.dueAt = undefined;
         this.fire(i, this.lastT);
       }
-      if (!p.forEachOrder) break;
+      if (!p.forEachOrder && !pinned(p)) break;
     }
   }
 
