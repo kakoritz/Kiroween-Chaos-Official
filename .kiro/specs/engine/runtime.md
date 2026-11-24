@@ -239,18 +239,20 @@ export default {
 ## 13. CLI (flags)
 
 ```
-haunt init [dir]                        scaffold a haunt.yaml
-haunt validate <haunt.yaml>             exit 1 on errors
-haunt sweep   --config <yaml> [--tiers all|<t,t>] [--seed N] [--out dir]
-haunt stack   --config <yaml> [--max-depth 5]
-haunt ramp    --config <yaml> [--steps 1,2,4,8,16,32]
-haunt soak    --config <yaml> [--minutes 5] [--frequency 0.3]
-haunt boss    --config <yaml> [--boss lich|banshee_queen|horseman]
-haunt compare <runA> <runB>
-haunt report  <run-id> [--format html|md|json]
-haunt serve   [--port 7070] [--mode live|mock]
-global: --i-own-this (allow non-local targets) --quiet --json
-exit codes: 0 pass, 1 targets failed, 2 usage error, 3 internal error
+haunt init [--pack id]                  scaffold a haunt.yaml (from a pack when given)
+haunt validate [haunt.yaml]             exit 1 on errors
+haunt sweep   [--config <yaml>] [--tier <t>] [--seed N] [--orders N] [--speed N] [--bot path] [--out dir]
+haunt stack   [--config <yaml>] [--max-depth 5]
+haunt ramp    [--config <yaml>] [--steps 1,2,4,8]
+haunt soak    [--config <yaml>] [--minutes 5] [--frequency 0.3]
+haunt boss    [--config <yaml>] [--boss lich|banshee_queen|horseman]
+haunt compare <runA> <runB> [--out file]
+haunt report  <run-id|report.json> [--format html|md|json] [--out file]
+haunt serve   [--port 7070] [--mode live|mock]      127.0.0.1 only; starts `npm run live` or `npm run mock`
+haunt badge | improve | spec-lint | pack | monkey | watch | stop      see `npm run haunt` for the flags
+`--tier` takes one tier per run; run it once per tier. `--no-gate` turns the CI exit code off.
+`--i-own-this` (haunt monkey and haunt watch): allow a non-local `--upstream`. Without it the run is refused with exit 2.
+exit codes: 0 pass, 1 targets failed, 2 usage error (also a refused non-local target), 3 internal error
 ```
 
 ## 14. Testing modes

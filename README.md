@@ -46,7 +46,7 @@ A third outfit (streaming) exists only as a model-based pack in [`packs/`](packs
 | Monkey (guarded) | `haunt monkey` injects faults through a proxy. `observe` injects nothing, `staging` is capped, `prod-guarded` needs a config with a schedule window and an allowlist, `haunt stop` is the kill switch ([`docs/PRODUCTION-MODE.md`](docs/PRODUCTION-MODE.md)) |
 | Workflow Lab and packs | Model your own workflow in the browser (`/workflow-lab.html`) and get a graded what-if. Presets: Orders, Inbox, Payments, Report generator, Streaming pack. Always labelled model-based |
 | Reports | Graded JSON, Markdown, offline HTML, SVG badge (`haunt badge`) |
-| MCP server and Power | `haunt_define`, `haunt_sweep`, `haunt_ramp`, `haunt_report`, `haunt_badge` ([`kiro-power/`](kiro-power/)) |
+| MCP server and Power | `haunt_define`, `haunt_sweep`, `haunt_ramp`, `haunt_report`, `haunt_specs`, `haunt_badge` ([`kiro-power/`](kiro-power/)) |
 
 ## Commands
 

@@ -24,9 +24,9 @@ const PLAY: { id: number; gear: Part[]; medal: Medal }[] = [
 const rank = (m: Medal): number => ['none', 'bronze', 'silver', 'gold'].indexOf(m);
 
 describe('the campaign data a player meets', () => {
-  it('starts with no gear and 300 credits, and the shop sells the five parts at 200, 300, 400, 500 and 500', () => {
+  it('starts with no gear and 300 credits, and the shop sells the five parts at 200, 300, 300, 500 and 500', () => {
     expect(start).toEqual({ gear: [], credits: 300 });
-    expect(gear.map((g) => g.cost)).toEqual([200, 300, 400, 500, 500]);
+    expect(gear.map((g) => g.cost)).toEqual([200, 300, 300, 500, 500]);
     expect(new Set(gear.map((g) => g.part)).size).toBe(5);
   });
 
@@ -52,10 +52,18 @@ describe('playing nights 1 to 5', () => {
     });
   }
 
-  it('a fresh save can afford a first night: one purchase of 300 credits or less wins bronze on night 1', async () => {
-    const affordable = gear.filter((g) => g.cost <= start.credits).map((g) => g.part as Part);
-    const medals = await Promise.all(affordable.map(async (part) => computeMedal(night(1), (await simulateNight(night(1), [part])).summary)));
-    expect(medals.some((m) => rank(m) >= 1), `medals by single purchase: ${medals.join(', ')}`).toBe(true);
+  it('CP-E2E: a fresh save can buy the Seal and the Seal alone wins at least bronze on night 1', async () => {
+    const seal = gear.find((g) => g.id === 'seal')!;
+    expect(seal.cost).toBeLessThanOrEqual(start.credits);
+    const run = await simulateNight(night(1), [seal.part as Part]);
+    expect(rank(computeMedal(night(1), run.summary)), JSON.stringify(run.summary)).toBeGreaterThanOrEqual(1);
+  });
+
+  it('the Rookie with no purchase cannot win night 1, and the retry-only purchase does not either', async () => {
+    for (const parts of [[], ['retry']] as Part[][]) {
+      const run = await simulateNight(night(1), parts);
+      expect(computeMedal(night(1), run.summary), parts.join('+')).toBe('none');
+    }
   });
 
   it('the campaign pays out: first gold of night 1 buys the next gear', async () => {

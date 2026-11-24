@@ -19,6 +19,8 @@ import { startProvider } from '../provider/server';
 import { lintSpecDir, renderLint } from '../../../haunt/src/miner/specs';
 import { monkeyCommand, stopCommand, watchCommand } from '../../../haunt/src/monkey/cli';
 import { initCommand, packCommand } from '../../../haunt/src/packs/cli';
+import { reportCommand } from '../../../haunt/src/report/cli';
+import { serveCommand } from './serve';
 
 const argv = process.argv.slice(2);
 const cmd = argv[0];
@@ -294,6 +296,16 @@ function compare(): number {
   if (out) { mkdirSync(resolve(out, '..'), { recursive: true }); writeFileSync(resolve(out), compareReportJson(report)); console.log(`report ${resolve(out)}`); }
   return argv.includes('--no-gate') ? 0 : report.verdict === 'regressed' ? 1 : 0;
 }
+/** `haunt report <run> [--format html|md|json] [--out file]`: a saved run as json, markdown or html. */
+function report(): number {
+  const id = argv[1];
+  if (!id || id.startsWith('--')) { console.error('usage: npm run haunt -- report <run-id|report.json> [--format html|md|json] [--out file]'); return 2; }
+  const r = reportCommand(process.cwd(), id, opt('format', 'md')!);
+  if ('error' in r) { console.error(r.error); return 2; }
+  const out = opt('out');
+  if (out) { mkdirSync(resolve(out, '..'), { recursive: true }); writeFileSync(resolve(out), r.text); console.log(`wrote ${resolve(out)}`); } else process.stdout.write(r.text);
+  return 0;
+}
 function badge(): number {
   const imp = opt('improve');
   if (imp) {
@@ -399,9 +411,15 @@ if (cmd === 'badge') {
   process.exitCode = await stopCommand(argv.slice(1));
 } else if (cmd === 'ramp') {
   process.exitCode = await ramp();
+} else if (cmd === 'report') {
+  process.exitCode = report();
+} else if (cmd === 'serve') {
+  process.exitCode = await serveCommand(argv.slice(1), process.cwd());
 } else {
   console.log(`usage: npm run haunt -- ramp|sweep|stack|soak|boss [--boss lich|banshee_queen|horseman] [--tier rookie|retrier|journaler|reconciler|phoenix] [--seed N] [--orders N] [--speed N] [--config path] [--bot path] [--out dir] [--no-gate]`);
   console.log('       npm run haunt -- compare <runA> <runB> [--out file]');
+  console.log('       npm run haunt -- report <run-id|report.json> [--format html|md|json] [--out file]');
+  console.log('       npm run haunt -- serve [--port 7070] [--mode live|mock]  (127.0.0.1 only)');
   console.log('       npm run haunt -- badge <run-id|report.json> [--out dir] | --improve <improve-report.json>');
   console.log('       npm run haunt -- spec-lint <.kiro/specs/hardening-run>');
   console.log('       npm run haunt -- monkey --mode observe|staging|prod-guarded [--config file] [--dry-run] | stop  (see docs/PRODUCTION-MODE.md)');

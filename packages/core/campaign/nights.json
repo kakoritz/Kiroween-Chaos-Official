@@ -154,8 +154,8 @@
     "rivals": ["retrier", "journaler", "reconciler", "phoenix"],
     "medals": {
       "bronze": { "credits": 150 },
-      "silver": { "credits": 400, "repeats": 0 },
-      "gold": { "credits": 700, "repeats": 0 }
+      "silver": { "credits": 300, "repeats": 0 },
+      "gold": { "credits": 450, "repeats": 0 }
     },
     "gearHint": ["retry", "journal", "idempotency", "breaker", "offline_queue"]
   },

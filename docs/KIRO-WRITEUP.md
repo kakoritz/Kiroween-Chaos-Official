@@ -12,7 +12,7 @@ How Kiro was used to build Haunt (Kiroween-Chaos), in the order of the hackathon
 | Pull requests (original repo) | 256 listed, 248 merged | `docs/PR-HISTORY.md` |
 | Commits in this repo | 50 (imported history), 2026-11-20 to 2026-11-23 | `git log` |
 | Hooks, agents, steering files | 5, 2, 4 | `.kiro/hooks`, `.kiro/agents`, `.kiro/steering` |
-| MCP tools | 5: `haunt_define`, `haunt_sweep`, `haunt_ramp`, `haunt_report`, `haunt_badge` | handshake in `docs/proof/installed/mcp-handshake.json` |
+| MCP tools | 6: `haunt_define`, `haunt_sweep`, `haunt_ramp`, `haunt_report`, `haunt_specs`, `haunt_badge` | handshake in `docs/proof/installed/mcp-handshake.json` |
 
 ## 1. Kiro IDE
 

@@ -17,7 +17,7 @@ describe('campaign data (CP-C1)', () => {
     expect(c.nights.map((n) => n.id)).toEqual([1, 2, 3, 4, 5, 6, 7]);
     expect(c.nights[6]!.finale).toBe(true);
     expect(c.gear.map((g) => g.badge)).toEqual(['R', 'J', 'I', 'B', 'Q']);
-    expect(c.gear.map((g) => g.cost)).toEqual([200, 300, 400, 500, 500]);
+    expect(c.gear.map((g) => g.cost)).toEqual([200, 300, 300, 500, 500]);
     expect(c.start).toEqual({ gear: [], credits: 300 });
     for (const g of c.gear) expect(g.part in PARTS).toBe(true);
   });

@@ -54,7 +54,7 @@ An order-processing bot charges a customer, then the process is killed. It resta
 
 ### R6. Bring your own bot
 1. THE SYSTEM SHALL provide a small SDK (`step()`, `effect()`) so any Node workflow can run inside the house.
-2. THE SYSTEM SHALL provide a CLI: `haunt run <room>`, `haunt report <run>`, `haunt list`.
+2. THE SYSTEM SHALL provide a CLI. Rooms became the creature and fault catalog, so `haunt run <room>` and `haunt list` do not exist: use `haunt sweep`, `haunt stack`, `haunt ramp`, `haunt soak`, `haunt boss`, and `haunt report <run>` (see `.kiro/specs/engine/runtime.md` section 13).
 
 ### R7. Safety
 1. THE SYSTEM SHALL use only a simulated payment provider. No real money, no real keys.

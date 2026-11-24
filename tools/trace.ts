@@ -15,6 +15,8 @@ export interface TraceItem {
   prs: number[];
   tests: string[];
   refs?: string[];
+  /** Task ids a requirement names in its own text, for example "(PT-C4, PT-U8)". They pass their PRs and tests back to the requirement. */
+  taskRefs?: string[];
 }
 
 const ID_RE = /^(?:[a-z][a-z0-9-]*\/)?[A-Za-z][A-Za-z0-9]*(?:[-.][A-Za-z0-9]+)*$/;
@@ -23,6 +25,11 @@ const SKIP_DIRS = new Set(['node_modules', 'dist', '.git', '.haunt', 'coverage',
 function clip(s: string): string {
   const t = s.replace(/[`*_]/g, '').replace(/\|/g, '/').replace(/\s+/g, ' ').trim();
   return t.length > 80 ? `${t.slice(0, 77)}...` : t;
+}
+
+/** Task-looking ids in a requirement line: PT-C4, SH-U1, TV3-C2, CP-C5. Whether one is a real task is checked later against the spec's tasks. */
+export function taskIdsIn(text: string): string[] {
+  return [...new Set(text.match(/\b[A-Z]{1,5}\d?-[A-Z]{0,4}\d+[a-z]?\b/g) ?? [])];
 }
 
 /** Parse one spec markdown file into requirement and task items. */
@@ -61,7 +68,7 @@ export function parseSpec(spec: string, md: string): TraceItem[] {
     const head = /^#{2,4}\s+(R\d+(?:\.\d+)?)[.:]?\s*(.*)$/.exec(line);
     if (head) {
       reqId = head[1]!;
-      out.push({ spec, id: reqId, kind: 'requirement', text: clip(head[2] ?? ''), status: 'n/a', prs: [], tests: [] });
+      out.push({ spec, id: reqId, kind: 'requirement', text: clip(head[2] ?? ''), status: 'n/a', prs: [], tests: [], taskRefs: taskIdsIn(head[2] ?? '') });
       continue;
     }
     if (/^#{1,4}\s/.test(line)) {
@@ -70,7 +77,7 @@ export function parseSpec(spec: string, md: string): TraceItem[] {
     }
     const num = /^\s*(\d+)\.\s+(.*)$/.exec(line);
     if (num && reqId && !reqId.includes('.')) {
-      out.push({ spec, id: `${reqId}.${num[1]}`, kind: 'requirement', text: clip(num[2]!), status: 'n/a', prs: [], tests: [] });
+      out.push({ spec, id: `${reqId}.${num[1]}`, kind: 'requirement', text: clip(num[2]!), status: 'n/a', prs: [], tests: [], taskRefs: taskIdsIn(num[2]!) });
     }
   }
   return out;
@@ -174,6 +181,20 @@ export function buildTrace(root: string): { items: TraceItem[]; md: string } {
       for (const n of t.prs) if (!r.prs.includes(n)) r.prs.push(n);
       for (const f of t.tests) if (!r.tests.includes(f)) r.tests.push(f);
     }
+  }
+  // A requirement that names a task ("(PT-C4)") takes that task's PRs and tests; R4 also takes what its R4.n lines took.
+  const taskOf = (spec: string, id: string) => uniq.find((t) => t.kind === 'task' && t.spec === spec && t.id === id);
+  const take = (to: TraceItem, from: TraceItem) => {
+    for (const n of from.prs) if (!to.prs.includes(n)) to.prs.push(n);
+    for (const f of from.tests) if (!to.tests.includes(f)) to.tests.push(f);
+  };
+  for (const r of uniq) {
+    if (r.kind !== 'requirement') continue;
+    for (const id of r.taskRefs ?? []) { const t = taskOf(r.spec, id); if (t) take(r, t); }
+  }
+  for (const r of uniq) {
+    if (r.kind !== 'requirement' || r.id.includes('.')) continue;
+    for (const c of uniq) if (c.kind === 'requirement' && c.spec === r.spec && c.id.startsWith(`${r.id}.`)) take(r, c);
   }
   for (const i of uniq) {
     i.prs.sort((a, b) => a - b);
