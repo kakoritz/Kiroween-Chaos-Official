@@ -318,6 +318,8 @@ export interface LiveRuntimeOptions {
   ledgerRows?: (lane: string) => LedgerRow[];
   /** Run random chaos and the boss schedule from the wave clock. Defaults to true. */
   clock?: boolean;
+  /** Starting chaos mode. Defaults to `random`: the intensity dial drives the creatures. `manual` waits for explicit presses. */
+  chaosMode?: 'off' | 'manual' | 'random';
   post?: RunnerEngineOptions['post'];
   /** Events about the finished wave, emitted before the next `wave_start`. */
   betweenWaves?: LiveEngine['betweenWaves'];
@@ -336,7 +338,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
   let demo: DemoPlayer | undefined;
   // Campaign night plan (CP-C2): one player per script, started with the wave when `settings.campaign` is set.
   let night: DemoPlayer[] = [];
-  const stopNight = (): void => { for (const p of night) p.stop(); night = []; laneStage.clear(); };
+  const stopNight = (): void => { for (const p of night) p.stop(); night = []; laneStage.clear(); laneSeen.clear(); };
   const startNight = (settings: EngineWaveSettings): void => {
     stopNight();
     if (!settings.campaign || !record) return;
@@ -347,15 +349,28 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
   };
   // Campaign nights press provider faults mid-stage, so the engine must know the stage a lane is in (and release deferred faults).
   const laneStage = new Map<string, string>();
+  // The stage a lane was last seen in until its order ends: between two stages the lane travels, and the director still needs a stage to press at.
+  const laneSeen = new Map<string, string>();
   // A tournament round presses faults by stage too, so it tracks the lane stage the same way.
   let tourneyOn = false;
+  let dialBeforeTournament: ReturnType<RunnerEngine['getIntensity']> | undefined;
+  // The seeded director (intensity dial) runs in random mode, except while a scripted demo, a campaign night or a tournament round owns the wave: their presses are the story.
+  const directorOn = (): boolean => engine.chaosMode.mode === 'random' && night.length === 0 && !demo && !tourneyOn;
   const trackNight = (e: { type?: string; lane?: unknown; stage?: unknown }): void => {
     if (e.lane === undefined) return;
     const lane = String(e.lane);
     if (e.type === 'stage_start' && typeof e.stage === 'string') {
       laneStage.set(lane, e.stage);
+      laneSeen.set(lane, e.stage);
       if (opts.post) for (const arm of engine.director.onStageStart(lane, e.stage)) void postProviderArm(opts.post, lane, e.stage, arm);
     } else if (e.type === 'stage_done' || e.type === 'order_done' || e.type === 'order_failed' || e.type === 'order_parked') laneStage.delete(lane);
+    // The director's stack empties as the story moves on (design.md section 5): a stage that completed drops its fired faults, an order that ended drops what never fired.
+    // Without it the stack fills to the depth limit and the lane gets no more creatures for the rest of the wave.
+    if (e.type === 'order_done' || e.type === 'order_failed' || e.type === 'order_parked' || e.type === 'order_quarantined') laneSeen.delete(lane);
+    try {
+      if (e.type === 'stage_done' || e.type === 'stage_fail') engine.director.stageComplete(lane);
+      else if (e.type === 'order_done' || e.type === 'order_failed' || e.type === 'order_parked' || e.type === 'order_quarantined') engine.director.orderEnd(lane);
+    } catch { /* a lane the director does not know */ }
   };
   let spawner: LaneSpawner | undefined;
   let curApp = 'orders';
@@ -403,8 +418,9 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
       if (opts.clock !== false && record) {
         clock = new WaveClock({
           engine, record, wave, orders: settings.orders, seed: settings.seed,
-          frequency: engine.chaosMode.frequency, speed: settings.speed,
-          bossEnabled: () => engine.chaosMode.mode === 'random',
+          frequency: engine.chaosMode.frequency, speed: settings.speed, show: true,
+          laneInfo: (lane) => ({ state: 'working', stage: laneSeen.get(lane) ?? null }),
+          randomEnabled: directorOn, bossEnabled: directorOn,
         });
         clock.start();
       }
@@ -412,6 +428,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
     },
     onWaveStop: () => { tourneyOn = false; clock?.stop(); clock = undefined; demo?.stop(); demo = undefined; stopNight(); spawner?.stop(); },
   });
+  engine.setChaosMode({ mode: opts.chaosMode ?? 'random', frequency: engine.chaosMode.frequency, seed: engine.chaosMode.seed });
   if (opts.botCommand) {
     // Server-enforced travel gaps (contract rule 40): a per-lane queue holds each bot event until its gap has passed.
     const chains = new Map<string, Promise<void>>();
@@ -509,8 +526,16 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
       engine.startWave(wave, settings, record);
       startNight(settings);
       tourneyOn = !!settings.tournament;
+      if (!settings.tournament && dialBeforeTournament) {
+        // The first wave after a tournament: the dial goes back to where the player left it, so a plain wave is not run at the last round's level.
+        const d = dialBeforeTournament;
+        dialBeforeTournament = undefined;
+        engine.setIntensity(d.level, { autoRamp: d.autoRamp, everyN: d.everyN, max: d.max });
+        record({ type: 'intensity', detail: { level: d.level, source: 'plan', autoRamp: d.autoRamp } } as unknown as HauntEvent);
+      }
       if (settings.tournament) {
         // Tournament round: the dial goes to the round's level and every live lane meets the one seeded storm.
+        dialBeforeTournament ??= engine.getIntensity();
         engine.setIntensity(settings.tournament.level);
         record({ type: 'intensity', detail: { level: settings.tournament.level, source: 'plan', autoRamp: false } } as unknown as HauntEvent);
         demo?.stop();

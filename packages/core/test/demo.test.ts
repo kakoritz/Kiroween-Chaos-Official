@@ -9,8 +9,20 @@ describe('demo scripts', () => {
       expect(d.pace).toBe('slow');
     });
   }
-  it('hero presses lanes 1 and 5 with a crash', () => {
-    expect(loadDemo('hero').presses.map((p) => [p.lane, p.fault])).toEqual([[1, 'crash'], [5, 'crash']]);
+  it('hero keeps the story crash on Rookie and Phoenix and sends every lane a procession of creatures', () => {
+    const h = loadDemo('hero');
+    expect(h.presses.slice(0, 2).map((p) => [p.lane, p.fault])).toEqual([[1, 'crash'], [5, 'crash']]);
+    for (const lane of [1, 2, 3, 4, 5]) expect(new Set(h.presses.filter((p) => p.lane === lane).map((p) => p.creature)).size).toBeGreaterThan(2);
+    const payment = (lane: number) => h.presses.filter((p) => p.lane === lane && p.when?.stage === 'payment').map((p) => p.fault);
+    expect(payment(1)).toEqual(['crash']);
+    expect(payment(5)).toEqual(['crash']);
+    expect(h.boss).toBeDefined();
+    const kinds = new Set(h.presses.map((p) => p.creature));
+    for (const k of ['ghost', 'zombie', 'witch', 'reaper', 'will_o_wisp', 'banshee', 'imp', 'gargoyle']) expect(kinds.has(k), k).toBe(true);
+  });
+  it('full sends every lane several creature kinds', () => {
+    const f = loadDemo('full');
+    for (const lane of [1, 2, 3, 4, 5]) expect(new Set(f.presses.filter((p) => p.lane === lane).map((p) => p.creature)).size).toBeGreaterThan(2);
   });
   it('full has a power-outage boss', () => {
     expect(loadDemo('full').boss?.id).toBe('boss_power_outage');

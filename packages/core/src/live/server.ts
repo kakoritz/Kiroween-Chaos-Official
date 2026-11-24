@@ -92,6 +92,8 @@ export interface LiveOptions {
   /** Hardening spec the reviewer wrote after a wave. Undefined means not ready (404). */
   hardening?: (wave: number) => HardeningBody | undefined;
   pingMs?: number;
+  /** Starting chaos mode shown in `/api/state`. Defaults to `random` when the engine takes a chaos mode (the live runtime does), else `manual`. */
+  chaosMode?: ChaosMode['mode'];
   /** Where lessons are kept (`<lane>.json` and `lane-<lane>.policy.json`). Defaults to `.haunt/lessons` under the working folder. */
   lessonsDir?: string;
   /** Pattern store file. Defaults to `.haunt/patterns.json` under the working folder. */
@@ -165,6 +167,8 @@ export class LiveServer {
     this.engine = opts.engine ?? {};
     this.engine.bindEmit?.((ev) => { this.log.emit({ ...ev, ...(this.waves.n > 0 ? { wave: this.waves.n } : {}) } as HauntEvent); });
     this.app = opts.app ?? 'orders';
+    if (this.engine.setChaosMode) this.chaosMode = { ...this.chaosMode, mode: opts.chaosMode ?? 'random' };
+    else if (opts.chaosMode) this.chaosMode = { ...this.chaosMode, mode: opts.chaosMode };
     this.ledger = opts.ledger ?? (() => ({ lanes: [] }));
     this.pingMs = opts.pingMs ?? PING_MS;
     this.lessons = new LessonsStore(opts.lessonsDir ?? joinPath(process.cwd(), '.haunt', 'lessons'));
@@ -413,8 +417,9 @@ export class LiveServer {
     if (this.app !== tApp) this.switchApp(tApp);
     this.lanes.clear();
     this.corpses = [];
-    this.engine.setChaosMode?.({ mode: 'manual', frequency: 0.3, seed });
-    this.chaosMode = { mode: 'manual', frequency: 0.3, seed };
+    // A tournament round is its own seeded storm (roundScript), the same for every lane: the runtime keeps the random director out of it (directorOn), whatever the mode, so every lane is scored on the same attacks.
+    this.chaosMode = { mode: this.chaosMode.mode, frequency: 0.3, seed };
+    this.engine.setChaosMode?.(this.chaosMode);
     if (body.resetLessons === true) this.lessons.reset();
     this.engine.clearCurses?.();
     this.tourney = { t, speed, pace, wave: 0, id: 't' + Date.now().toString(36), firstWave: this.waves.n + 1, ...(body.autoSpecs === false ? { autoSpecs: false } : {}), ...(autoContinueSec ? { autoContinueSec } : {}) };

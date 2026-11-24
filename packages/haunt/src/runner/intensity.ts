@@ -2,7 +2,7 @@
 // Pure and seeded: the same seed gives the same draws.
 import { faultById, FAULTS, MAX_DEPTH } from '../chaos/catalog';
 import { fnv1a32, mulberry32, unit } from '../shared/rng';
-import { COOLDOWN_MS, ORDER_MS, TICK_MS } from './schedule';
+import { COOLDOWN_MS, ORDER_MS, SHOW_PACE, TICK_MS } from './schedule';
 
 export const MIN_LEVEL = 1;
 export const MAX_LEVEL = 11;
@@ -115,6 +115,10 @@ export interface DialPress {
   fuzz?: FuzzFault;
 }
 
+/** The show rate: faults per order per lane = base + table rate * scale, so level 1 is already a haunted house and the dial still adds to it. */
+export const SHOW_BASE_RATE = 1.0;
+export const SHOW_RATE_SCALE = 0.8;
+
 /** Ticks per order at any speed: an order is ORDER_MS long and a tick is TICK_MS, both divided by speed. */
 const TICKS_PER_ORDER = ORDER_MS / TICK_MS;
 
@@ -126,8 +130,13 @@ const TICKS_PER_ORDER = ORDER_MS / TICK_MS;
 export class DialChaos {
   private readonly rng: () => number;
   private readonly last = new Map<string, number>();
+  private readonly seen = new Map<string, Set<string>>();
 
-  constructor(seed: string | number) {
+  /**
+   * `show` is the live default: the plan runs at SHOW_BASE_RATE plus the table rate, and each pick prefers a creature
+   * the lane has not met yet this wave, so every lane sees a procession of different creatures at any level.
+   */
+  constructor(seed: string | number, private readonly show = false) {
     this.rng = mulberry32(typeof seed === 'number' ? seed : fnv1a32(seed));
   }
 
@@ -137,17 +146,28 @@ export class DialChaos {
     const row = intensityRow(level);
     const prev = this.last.get(lane);
     if (!row.continuous && prev !== undefined && nowMs - prev < COOLDOWN_MS) return [];
-    const p = row.continuous ? 1 : Math.min(1, row.rate / TICKS_PER_ORDER);
+    const p = row.continuous ? 1 : Math.min(1, this.show ? (SHOW_BASE_RATE + row.rate * SHOW_RATE_SCALE) / (TICKS_PER_ORDER * SHOW_PACE) : row.rate / TICKS_PER_ORDER);
     if (this.rng() >= p) return [];
     const room = Math.max(0, Math.min(row.depth, MAX_DEPTH) - depth);
     const applicable = FAULTS.filter((f) => f.stages.includes(stage) && f.id !== 'order_typo');
     const n = Math.min(row.continuous ? applicable.length : row.simultaneous, room, applicable.length);
     if (n <= 0) return [];
     // Partial seeded shuffle: n distinct faults.
-    const pool = [...applicable];
+    let pool = [...applicable];
     const out: DialPress[] = [];
+    const met = this.seen.get(lane) ?? new Set<string>();
+    this.seen.set(lane, met);
     for (let i = 0; i < n; i++) {
+      if (this.show) {
+        const fresh = pool.filter((f) => !met.has(f.creature));
+        if (fresh.length > 0) pool = fresh;
+      }
       const pick = pool.splice(Math.floor(this.rng() * pool.length), 1)[0]!;
+      if (this.show) {
+        met.add(pick.creature);
+        pool = pool.filter((f) => f.creature !== pick.creature);
+        if (pool.length === 0 && i + 1 < n) pool = applicable.filter((f) => !out.some((o) => o.fault === f.id) && f.id !== pick.id);
+      }
       if (this.rng() < row.unknown) {
         const fuzz = fuzzFromRng(this.rng, stage);
         if (fuzz) { out.push({ fault: fuzz.fault, fuzz }); continue; }

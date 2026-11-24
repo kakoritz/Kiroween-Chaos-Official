@@ -108,6 +108,24 @@ try {
   }
   await sleep(600);
 
+  // 1b. a plain wave at the default chaos mode (random, dial-driven): every lane meets a procession of different creatures
+  {
+    const mode = (await c.get('/api/state')).json.chaos?.mode;
+    check('plain', 'the default chaos mode is random, so the dial drives the creatures', mode === 'random', String(mode));
+    for (const level of [5, 9]) {
+      await post('/api/intensity', { level });
+      const { wave } = await post('/api/wave/start', { orders: 8, seed: 7, speed: 4 });
+      // A plain wave at a high level is long by design: look at the first 100 s of it, then stop it.
+      await Promise.race([endOf(wave).catch(() => null), sleep(100_000)]);
+      if (!waveSlice(c.events, wave).some((e) => e.type === 'wave_end')) { await c.post('/api/wave/stop', {}); await endOf(wave); }
+      const chaos = waveSlice(c.events, wave).filter((e) => e.type === 'chaos' && e.detail?.source !== 'boss');
+      const per = [1, 2, 3, 4, 5].map((l) => new Set(chaos.filter((e) => Number(e.lane) === l).map((e) => e.detail?.creature)).size);
+      const all = new Set(chaos.map((e) => e.detail?.creature));
+      check('plain', `plain wave at intensity ${level}: a procession of creatures on the lanes (more than 2 kinds on at least 4 of 5 lanes, 6 kinds in all)`, per.filter((n) => n > 2).length >= 4 && all.size >= 6, `kinds per lane ${per.join(',')}, ${all.size} kinds, ${chaos.length} creatures`);
+    }
+  }
+  await sleep(600);
+
   // 2. campaign night 1 with the intended gear
   {
     const { wave } = await post('/api/wave/start', { campaign: { night: 1, parts: ['journal', 'idempotency'] }, speed: 4 });
