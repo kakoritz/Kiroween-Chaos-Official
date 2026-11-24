@@ -1,0 +1,39 @@
+1
+00:00:00,200 --> 00:00:26,150
+Kiroween Chaos: chaos engineering for AI agents, played as a haunted house.
+
+2
+00:00:26,450 --> 00:00:50,200
+Scripted hero demo, recorded for this video. Repo test: Rookie 2 charges, Phoenix 1.
+
+3
+00:00:50,500 --> 00:01:07,375
+Intensity 11: THROW EVERYTHING. Curses follow a lane.
+
+4
+00:01:07,675 --> 00:01:17,550
+The Casebook: every edge case, who solved it, how, and what it cost.
+
+5
+00:01:17,850 --> 00:01:35,450
+Patterns and the improve loop: a projection with simulated parts, not patched code running.
+
+6
+00:01:35,750 --> 00:01:53,025
+RECORDED fix (docs/proof/live-fix.md): wave 1 grade F, wave 2 grade A. Not applied live.
+
+7
+00:01:53,325 --> 00:02:11,550
+Second app: Python Ticket Desk. Same harness, no engine change.
+
+8
+00:02:11,850 --> 00:02:25,275
+Workflow Lab: model-based what-if. The streaming pack has no runnable app.
+
+9
+00:02:25,575 --> 00:02:41,025
+One skeleton, two apps. Built with Kiro specs, steering, hooks and Kiro Crew.
+
+10
+00:02:41,325 --> 00:02:50,050
+github.com/kakoritz/Kiroween-Chaos-Official
