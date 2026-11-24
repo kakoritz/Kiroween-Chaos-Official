@@ -1,3 +1,4 @@
+// covers: haunted-house/R2.1, haunted-house/R2.2, haunted-house/R2.3
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { build } from 'esbuild';
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';

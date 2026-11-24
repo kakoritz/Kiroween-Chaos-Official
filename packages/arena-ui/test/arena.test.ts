@@ -1,3 +1,4 @@
+// covers: haunted-house/R5.1, haunted-house/R5.4
 import { describe, expect, it } from 'vitest';
 import { applyEvent, emptyVM, loadSnapshot, newLane, stagesOf, LEGACY_STAGES, stationX, totalScore, type ArenaVM } from '../src/arena/model';
 import { laneBoxes } from '../src/arena/scene';

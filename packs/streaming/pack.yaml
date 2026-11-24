@@ -20,12 +20,12 @@ ledger:
   - { id: playbacks }
   - { id: history }
 faults:
-  - { id: buffering, stage: buffering, creature: Buffer Wraith, art: wraith, mode: stall, behavior: "Lower the bitrate, prefetch, do not restart the stream" }
-  - { id: cdn_timeout, stage: start_stream, creature: CDN Kraken, art: zombie, mode: timeout, behavior: "Failover to a second CDN, circuit breaker" }
-  - { id: drm_denied, stage: license, creature: DRM Gatekeeper, art: ghost, mode: status, behavior: "Refresh the token once, then show a clear message" }
-  - { id: render_fail, stage: render, creature: Render Gremlin, art: imp, mode: crash, behavior: "Restart the player, keep the position" }
-  - { id: remote_server_down, stage: any, creature: Cloud Banshee, art: banshee, mode: outage, behavior: "Offline queue of watch events, resume later" }
-  - { id: region_lock, stage: entitlement, creature: Region Warden, art: goblin, mode: status, behavior: "Clear message; no retry storm" }
+  - { id: buffering, stage: buffering, creature: Buffer Wraith, art: wraith, sprite: buffer_wraith, mode: stall, behavior: "Lower the bitrate, prefetch, do not restart the stream" }
+  - { id: cdn_timeout, stage: start_stream, creature: CDN Kraken, art: zombie, sprite: cdn_kraken, mode: timeout, behavior: "Failover to a second CDN, circuit breaker" }
+  - { id: drm_denied, stage: license, creature: DRM Gatekeeper, art: ghost, sprite: drm_gatekeeper, mode: status, behavior: "Refresh the token once, then show a clear message" }
+  - { id: render_fail, stage: render, creature: Render Gremlin, art: imp, sprite: render_gremlin, mode: crash, behavior: "Restart the player, keep the position" }
+  - { id: remote_server_down, stage: any, creature: Cloud Banshee, art: banshee, sprite: cloud_banshee, mode: outage, behavior: "Offline queue of watch events, resume later" }
+  - { id: region_lock, stage: entitlement, creature: Region Warden, art: goblin, sprite: region_ghost, mode: status, behavior: "Clear message; no retry storm" }
   - { id: double_play, stage: start_stream, creature: Doppelganger, art: doppelganger, mode: duplicate, behavior: "Idempotent session, one stream per account" }
   - { id: watch_history_dup, stage: finish, creature: Poltergeist, art: poltergeist, mode: duplicate, behavior: "Idempotency key on the history write" }
   - { id: token_expired, stage: any, creature: Reaper, art: reaper, mode: expire, behavior: "Refresh token, do not duplicate the purchase" }
