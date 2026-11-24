@@ -10,6 +10,8 @@ export const P_PER_FREQUENCY = 0.08;
 export const BOSS_LEAD_MS = 8000;
 export const BOSS_WARN_FRACTION = 0.4;
 export const ORDER_MS = 7350;
+/** A live order takes about this many times ORDER_MS on the wall clock (travel gaps between stages), measured on the plain wave. The show director plans by it. */
+export const SHOW_PACE = 3.5;
 
 export interface RandomChaosOptions {
   seed: string | number;
@@ -73,7 +75,7 @@ export function bossForWave(wave: number): BossId {
 }
 
 /** One boss per wave. Warning at 40% of expected duration, start 8000 ms later (both divided by speed). */
-export function planBoss(o: { wave: number; orders: number; speed?: number; pace?: 1 | 2 }): BossPlan {
+export function planBoss(o: { wave: number; orders: number; speed?: number; pace?: number }): BossPlan {
   const speed = o.speed ?? 1;
   const expectedMs = (o.orders * ORDER_MS * (o.pace ?? 1)) / speed;
   const warnAtMs = Math.round(BOSS_WARN_FRACTION * expectedMs);

@@ -6,7 +6,7 @@ import type { LedgerRow } from '../../../core/src/provider';
 import type { HauntEvent } from '../score/score';
 import type { RunnerEngine } from './engine';
 import { RepeatDetector } from './provider';
-import { RandomChaos, planBoss, TICK_MS, type BossPlan } from './schedule';
+import { RandomChaos, planBoss, SHOW_PACE, TICK_MS, type BossPlan } from './schedule';
 import { DialChaos } from './intensity';
 import { FLOOR_FRACTION } from './floor';
 
@@ -30,6 +30,8 @@ export interface WaveClockOptions {
   bossEnabled?: () => boolean;
   /** Floor rule (spec 5.3): inject a gremlin for a lane that has had no issue by mid-round. Default true. */
   floor?: boolean;
+  /** Live default: the dial plan keeps a minimum rate and prefers creatures a lane has not met (see DialChaos). */
+  show?: boolean;
 }
 
 export class WaveClock {
@@ -44,8 +46,8 @@ export class WaveClock {
   constructor(private readonly o: WaveClockOptions) {
     const speed = o.speed ?? o.engine.speed;
     this.random = new RandomChaos({ seed: o.seed, frequency: o.frequency, speed });
-    this.dial = new DialChaos(`${o.seed}|dial`);
-    this.boss = planBoss({ wave: o.wave, orders: o.orders, speed });
+    this.dial = new DialChaos(`${o.seed}|dial`, o.show === true);
+    this.boss = planBoss({ wave: o.wave, orders: o.orders, speed, ...(o.show ? { pace: SHOW_PACE } : {}) });
   }
 
   private info(lane: string): LaneInfo {
@@ -73,7 +75,7 @@ export class WaveClock {
       const at = this.nextTick;
       this.nextTick += tickMs;
       if (!this.randomOn()) continue;
-      if (engine.dialTouched) {
+      if (engine.dialTouched || this.o.show === true) {
         // The intensity dial drives the plan (spec 5.1): rate, simultaneous faults, unknown share and depth come from the level.
         for (const lane of engine.lanes) {
           const info = this.info(lane);

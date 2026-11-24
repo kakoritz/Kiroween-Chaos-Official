@@ -1,12 +1,226 @@
 {
-  "name": "hero",
-  "seed": 7,
-  "pace": "slow",
-  "orders": 3,
-  "lanes": 5,
-  "tiers": "race",
-  "presses": [
-    { "when": { "lane": 1, "event": "stage_start", "stage": "payment", "order": "ord-0001", "attempt": 1 }, "delayMs": 600, "lane": 1, "fault": "crash", "creature": "reaper", "point": "after_effect_before_journal" },
-    { "when": { "lane": 5, "event": "stage_start", "stage": "payment", "order": "ord-0001", "attempt": 1 }, "delayMs": 700, "lane": 5, "fault": "crash", "creature": "reaper", "point": "after_effect_before_journal" }
-  ]
+ "name": "hero",
+ "seed": 7,
+ "pace": "slow",
+ "orders": 3,
+ "lanes": 5,
+ "tiers": "race",
+ "presses": [
+  {
+   "when": {
+    "lane": 1,
+    "event": "stage_start",
+    "stage": "payment",
+    "order": "ord-0001",
+    "attempt": 1
+   },
+   "delayMs": 600,
+   "lane": 1,
+   "fault": "crash",
+   "creature": "reaper",
+   "point": "after_effect_before_journal"
+  },
+  {
+   "when": {
+    "lane": 5,
+    "event": "stage_start",
+    "stage": "payment",
+    "order": "ord-0001",
+    "attempt": 1
+   },
+   "delayMs": 700,
+   "lane": 5,
+   "fault": "crash",
+   "creature": "reaper",
+   "point": "after_effect_before_journal"
+  },
+  {
+   "when": {
+    "lane": 1,
+    "event": "stage_start",
+    "stage": "process",
+    "order": "ord-0003",
+    "attempt": 1
+   },
+   "delayMs": 400,
+   "lane": 1,
+   "fault": "http_404",
+   "creature": "ghost"
+  },
+  {
+   "when": {
+    "lane": 1,
+    "event": "stage_start",
+    "stage": "receive",
+    "order": "ord-0002",
+    "attempt": 1
+   },
+   "delayMs": 400,
+   "lane": 1,
+   "fault": "slow_link",
+   "creature": "zombie"
+  },
+  {
+   "when": {
+    "lane": 2,
+    "event": "stage_start",
+    "stage": "create",
+    "order": "ord-0001",
+    "attempt": 1
+   },
+   "delayMs": 400,
+   "lane": 2,
+   "fault": "malformed_payload",
+   "creature": "witch"
+  },
+  {
+   "when": {
+    "lane": 2,
+    "event": "stage_start",
+    "stage": "payment",
+    "order": "ord-0002",
+    "attempt": 1
+   },
+   "delayMs": 400,
+   "lane": 2,
+   "fault": "timeout",
+   "creature": "zombie"
+  },
+  {
+   "when": {
+    "lane": 2,
+    "event": "stage_start",
+    "stage": "ship",
+    "order": "ord-0003",
+    "attempt": 1
+   },
+   "delayMs": 400,
+   "lane": 2,
+   "fault": "http_500",
+   "creature": "imp"
+  },
+  {
+   "when": {
+    "lane": 3,
+    "event": "stage_start",
+    "stage": "submit",
+    "order": "ord-0001",
+    "attempt": 1
+   },
+   "delayMs": 400,
+   "lane": 3,
+   "fault": "http_500",
+   "creature": "imp"
+  },
+  {
+   "when": {
+    "lane": 3,
+    "event": "stage_start",
+    "stage": "confirmation",
+    "order": "ord-0002",
+    "attempt": 1
+   },
+   "delayMs": 400,
+   "lane": 3,
+   "fault": "endpoint_down",
+   "creature": "gargoyle"
+  },
+  {
+   "when": {
+    "lane": 3,
+    "event": "stage_start",
+    "stage": "transit",
+    "order": "ord-0003",
+    "attempt": 1
+   },
+   "delayMs": 400,
+   "lane": 3,
+   "fault": "driver_unreachable",
+   "creature": "will_o_wisp"
+  },
+  {
+   "when": {
+    "lane": 4,
+    "event": "stage_start",
+    "stage": "account",
+    "order": "ord-0001",
+    "attempt": 1
+   },
+   "delayMs": 400,
+   "lane": 4,
+   "fault": "http_404",
+   "creature": "ghost"
+  },
+  {
+   "when": {
+    "lane": 4,
+    "event": "stage_start",
+    "stage": "ship",
+    "order": "ord-0002",
+    "attempt": 1
+   },
+   "delayMs": 400,
+   "lane": 4,
+   "fault": "internet_outage",
+   "creature": "banshee"
+  },
+  {
+   "when": {
+    "lane": 4,
+    "event": "stage_start",
+    "stage": "payment",
+    "order": "ord-0003",
+    "attempt": 1
+   },
+   "delayMs": 400,
+   "lane": 4,
+   "fault": "crash",
+   "creature": "reaper",
+   "point": "after_effect_before_journal"
+  },
+  {
+   "when": {
+    "lane": 5,
+    "event": "stage_start",
+    "stage": "account",
+    "order": "ord-0002",
+    "attempt": 1
+   },
+   "delayMs": 400,
+   "lane": 5,
+   "fault": "http_404",
+   "creature": "ghost"
+  },
+  {
+   "when": {
+    "lane": 5,
+    "event": "stage_start",
+    "stage": "ship",
+    "order": "ord-0002",
+    "attempt": 1
+   },
+   "delayMs": 400,
+   "lane": 5,
+   "fault": "http_500",
+   "creature": "imp"
+  },
+  {
+   "when": {
+    "lane": 5,
+    "event": "stage_start",
+    "stage": "transit",
+    "order": "ord-0003",
+    "attempt": 1
+   },
+   "delayMs": 400,
+   "lane": 5,
+   "fault": "driver_unreachable",
+   "creature": "will_o_wisp"
+  }
+ ],
+ "boss": {
+  "id": "boss_hazard_storm",
+  "warnAtMs": 56000,
+  "startAtMs": 64000
+ }
 }

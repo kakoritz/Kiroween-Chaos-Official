@@ -26,7 +26,10 @@ describe('demo playback', () => {
     const engine = new RunnerEngine();
     const events: HauntEvent[] = [];
     engine.startWave(1, settings, (e) => events.push(e));
-    const p = new DemoPlayer(engine, (e) => events.push(e), loadDemo('hero'));
+    const hero = loadDemo('hero');
+    const story = { ...hero, presses: hero.presses.slice(0, 2) };
+    delete (story as { boss?: unknown }).boss;
+    const p = new DemoPlayer(engine, (e) => events.push(e), story);
     const payment = (lane: string, order = 'ord-0001', attempt = 1) => ({ type: 'stage_start', lane, order, stage: 'payment', detail: { attempt } });
     p.step(20000);
     expect(events).toHaveLength(0);
