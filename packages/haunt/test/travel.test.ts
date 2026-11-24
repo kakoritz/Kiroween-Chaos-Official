@@ -1,3 +1,4 @@
+// covers: playtest-v2/R1.1 playtest-v2/R1.2 playtest-v2/R1.4
 import { describe, expect, it } from 'vitest';
 import { LaneTravel, travelAt } from '../src/runner/travel';
 import { createLiveRuntime } from '../../core/src/live';

@@ -1,4 +1,4 @@
-// PK-U3: pure view model for the chaos monkey panel. No DOM, no network: unit tested. The wire shape is the `/api/monkey` answer of the
+// PK-U3: pure view model for the Live Chaos panel. No DOM, no network: unit tested. The wire shape is the `/api/monkey` answer of the
 // live server (packages/haunt/src/monkey/host.ts); anything missing or odd falls back to a calm default so a half-answer never crashes the panel.
 export type MonkeyMode = 'observe' | 'staging' | 'prod-guarded';
 export const MODES: readonly MonkeyMode[] = ['observe', 'staging', 'prod-guarded'];

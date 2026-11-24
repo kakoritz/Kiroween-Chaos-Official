@@ -69,8 +69,9 @@ export function loadShop(store: Pick<Storage, 'getItem'> | undefined, gear: read
   let raw: string | null = null;
   try { raw = store?.getItem(STORAGE_KEY) ?? null; } catch { raw = null; }
   const p = parseProgress(raw);
-  const owned = (raw ? p.owned : start.gear).filter((id) => !!find(gear, id));
-  const credits = raw ? p.credits : start.credits;
+  const fresh = !raw || (p.credits === 0 && p.owned.length === 0 && !Object.keys(p.medals).length && !Object.keys(p.best).length);
+  const owned = (fresh ? start.gear : p.owned).filter((id) => !!find(gear, id));
+  const credits = fresh ? start.credits : p.credits;
   let equipped: Record<string, string> = {};
   try {
     const e = JSON.parse(store?.getItem(EQUIP_KEY) ?? '{}') as Record<string, unknown>;

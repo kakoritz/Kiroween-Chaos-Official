@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ARENA_H, ARENA_TOP, computeFit, isNarrow, NARROW_MAX_W } from '../src/arena/layout';
+import { taglineClipped, ARENA_H, ARENA_TOP, computeFit, isNarrow, NARROW_MAX_W } from '../src/arena/layout';
 
 describe('responsive stage fit', () => {
   it('keeps the letterboxed full stage on desktop sizes', () => {
@@ -29,5 +29,13 @@ describe('responsive stage fit', () => {
     expect(f.top).toBeCloseTo(-ARENA_TOP * f.scale);
     expect(f.bandH).toBeCloseTo(ARENA_H * f.scale);
     expect(1920 * f.scale).toBeCloseTo(390);
+  });
+});
+
+describe('header tagline', () => {
+  it('is hidden only when it is wider than its box', () => {
+    expect(taglineClipped(180, 180)).toBe(false);
+    expect(taglineClipped(181, 180)).toBe(false);
+    expect(taglineClipped(260, 180)).toBe(true);
   });
 });

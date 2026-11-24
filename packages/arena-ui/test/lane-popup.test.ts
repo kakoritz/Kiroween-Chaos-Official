@@ -1,3 +1,4 @@
+// covers: playtest-v2/R2.2 playtest-v2/R2.3
 import { describe, expect, it } from 'vitest';
 import {
   bestSlowest, downtimePoints, filterLog, lapOf, logEntries, normReview, offsetText, orderRows, outcomeOf, reviewOf, segment,

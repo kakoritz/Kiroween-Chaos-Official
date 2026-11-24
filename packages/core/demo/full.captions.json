@@ -1,5 +1,5 @@
 ﻿[
-  { "at": { "ms": 0 }, "text": "Nine orders, five lanes, one chaos monkey.", "ms": 3500 },
+  { "at": { "ms": 0 }, "text": "Nine orders, five lanes, one chaos engine.", "ms": 3500 },
   { "at": { "lane": 1, "event": "stage_start", "stage": "payment", "order": "ord-0001", "attempt": 1 }, "text": "Reaper strike: crash after the charge.", "ms": 3500 },
   { "at": { "lane": 5, "event": "recover_start" }, "text": "Phoenix replays the journal and skips the second charge.", "ms": 4000 },
   { "at": { "lane": 5, "event": "stage_start", "stage": "payment", "order": "ord-0004", "attempt": 1 }, "text": "Zombie: a timeout that never answers.", "ms": 3500 },

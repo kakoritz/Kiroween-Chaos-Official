@@ -39,6 +39,7 @@ export class GearShop {
   constructor(host: HTMLElement, private night: ShopNight, private gear: ShopGear[], start: { gear: string[]; credits: number },
     private api: Pick<ShopApi, 'startWave'>, private onDone: (started: boolean) => void, private store: Storage | undefined = window.localStorage) {
     this.state = loadShop(store, gear, start);
+    saveShop(store, this.state);
     this.slots = slotsFor(gear);
     this.el = document.createElement('div');
     this.el.className = 'cpshop';
@@ -161,6 +162,8 @@ export class GearShop {
 }
 
 /** Returns the hub's `onStart` handler: opens the shop for the chosen night, then closes the hub once the night starts. */
+const DEFAULT_START_CREDITS = 300;
+
 export function gearShopStarter(stage: HTMLElement, api: ShopApi): (night: ShopNight) => void {
   let open = false;
   return (night) => {
@@ -168,7 +171,7 @@ export function gearShopStarter(stage: HTMLElement, api: ShopApi): (night: ShopN
     open = true;
     void api.getCampaign().then((c) => {
       const full = (c as { nights?: ShopNight[] }).nights?.find((n) => n.id === night.id) ?? night;
-      new GearShop(stage, { ...full }, c.gear ?? [], c.start ?? { gear: [], credits: 0 }, api, (started) => {
+      new GearShop(stage, { ...full }, c.gear ?? [], c.start ?? { gear: [], credits: DEFAULT_START_CREDITS }, api, (started) => {
         open = false;
         if (started) (document.querySelector('.cphub [data-act=close]') as HTMLElement | null)?.click();
       });

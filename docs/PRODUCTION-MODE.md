@@ -83,7 +83,7 @@ probe results become events for the pattern miner.
 
 ## The arena panel and the control endpoints
 
-The arena header has a **Monkey** button. The panel has a mode selector (observe, staging, prod-guarded), the guard-rail
+The arena header has a **Chaos** button (panel: Live Chaos). The panel has a mode selector (observe, staging, prod-guarded), the guard-rail
 summary of the mode, a large **KILL SWITCH**, the steady-state meter (the measured SLI against its threshold) and the audit
 log tail. It talks to the live server (`npm run live`), which runs the monkey against the **built-in demo target only**;
 the mock server and the hosted page have no monkey routes and the panel says so.
@@ -104,7 +104,7 @@ control port (`--control-port`) also serves `GET /snapshot`.
 - **It is not a safety certificate.** The guard rails reduce risk; they do not remove it. Adding latency or errors to
   real systems can still cause harm you did not model (retries piling up, a downstream alert, a customer who happened to
   be in the percent you opted into).
-- **Only what flows through the Haunt proxy is affected.** If clients bypass it, nothing is injected and nothing is
+- **Only what flows through the Kiroween Chaos proxy is affected.** If clients bypass it, nothing is injected and nothing is
   protected. If the proxy itself fails, the monkey cannot help: put the proxy where your own failover and health checks
   cover it.
 - **The kill switch needs the monkey and the proxy to be alive.** If the machine or process dies hard, rules die with

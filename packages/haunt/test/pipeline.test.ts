@@ -1,3 +1,4 @@
+// covers: haunted-house/R3.5
 import { describe, expect, it } from 'vitest';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';

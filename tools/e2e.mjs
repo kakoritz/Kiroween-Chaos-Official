@@ -147,6 +147,17 @@ try {
     const roundStarts = seen.filter((e) => e.type === 'round_start');
     // A halted lane drops at once, so the field can shrink faster than one lane a round and the champion can be named after round 3.
     check('tournament', 'rounds played with Next, each started and ended', roundStarts.length >= 3 && roundStarts.length === roundEnds.length, `${roundStarts.length} starts, ${roundEnds.length} ends`);
+    // Every round must bring the storm to every live lane with more than one kind of creature (a stalled plan once left rounds 3 and 4 with two creatures in all).
+    {
+      const thin = [];
+      for (const rs of roundStarts) {
+        const chaos = seen.filter((e) => e.wave === rs.wave && e.type === 'chaos' && e.detail?.source !== 'gremlin');
+        const kinds = new Set(chaos.map((e) => e.detail?.creature));
+        const bareLanes = rs.detail.lanes.filter((lane) => !chaos.some((e) => String(e.lane) === String(lane)));
+        if (kinds.size < 2 || bareLanes.length) thin.push(`round ${rs.detail.round}: ${kinds.size} kinds, bare lanes ${bareLanes.join(',') || 'none'}`);
+      }
+      check('tournament', 'every round sends more than one creature type to every live lane', thin.length === 0, thin.join('; ') || 'ok');
+    }
     check('tournament', 'tournament_end with a champion', seen.some((e) => e.type === 'tournament_end'), (await c.get('/api/tournament')).json.champion ?? '');
     // no zero-issue lane per round
     const zero = [];

@@ -1,3 +1,4 @@
+// covers: PK-C3
 // Ticket Desk faults on real Python bots: each fault is armed the way the arena arms it, and the ledger tells who coped.
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readdirSync, rmSync } from 'node:fs';

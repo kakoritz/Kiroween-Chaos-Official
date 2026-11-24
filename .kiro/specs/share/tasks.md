@@ -17,7 +17,7 @@ Branches `core/SH-...`, `ui/SH-...`, `docs/SH-...`.
 ## Lane B
 - [x] **SH-U1 Workflow Lab UI.** Form, presets, protections toggles, run view, report, export of `haunt.yaml`, badge, scorecard, honest "model-based" label.
 - [x] **SH-U2 Share button.** In the report viewer: download badge and scorecard, copy README snippet.
-- [ ] **SH-U3 Architecture diagram page.** In the hosted demo footer ("How it works").
+- [x] **SH-U3 Architecture diagram page.** In the hosted demo footer ("How it works"). Done: `onboarding/how-it-works.ts` linked from the hosted footer in `onboarding/hosted.ts`; test `how-it-works.test.ts`.
 
 ## Docs and owner
 - [x] **SH-D1 Architecture diagram.** Mermaid in README and `docs/img/architecture.svg`.

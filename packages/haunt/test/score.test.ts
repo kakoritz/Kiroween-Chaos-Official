@@ -1,3 +1,4 @@
+// covers: playtest-v2/R4.1 playtest-v2/R4.2 playtest-v2/R4.3
 import { mkdtempSync, appendFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';

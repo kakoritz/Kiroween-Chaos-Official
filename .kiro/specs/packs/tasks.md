@@ -12,8 +12,8 @@ Branches `core/PK-...`, `ui/PK-...`.
 - [x] **PK-C7 Docs.** `docs/PRODUCTION-MODE.md` with guarantees and limits, written plainly.
 
 ## Lane B
-- [ ] **PK-U1 Pack switcher.** App switcher lists packs; labels, creatures and review names from the pack; "model-based" tag.
-- [ ] **PK-U2 Streaming art.** Buffer Wraith, CDN Kraken, DRM Gatekeeper, Render Gremlin, Cloud Banshee, Region Warden (code-drawn).
+- [x] **PK-U1 Pack switcher.** App switcher lists packs; labels, creatures and review names from the pack; "model-based" tag. Done: `arena/packs.ts` `PackSwitcher` mounted in `app/main.ts`, labels from the pack, "model-based" tag; tests `pack-switch.test.ts`, `packs-client.test.ts`, `packages/haunt/test/packs-endpoint.test.ts`.
+- [x] **PK-U2 Streaming art.** Buffer Wraith, CDN Kraken, DRM Gatekeeper, Render Gremlin, Cloud Banshee, Region Warden (code-drawn). Done: `creatures/streaming.ts` and `streaming-defs.ts`, drawn in the arena and in `lab.html`; the pack's Region Warden is drawn as the Region Ghost; test `streaming-art.test.ts`.
 - [x] **PK-U3 Monkey panel.** Mode selector, guard-rail summary, big kill switch, steady-state meter.
 
 ## Cut line

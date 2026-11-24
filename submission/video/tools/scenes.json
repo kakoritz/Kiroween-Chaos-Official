@@ -1,0 +1,75 @@
+{
+  "title": "Kiroween Chaos: 3-minute demo (first draft)",
+  "scenes": [
+    {
+      "id": "s01-open",
+      "source": "capture:splash",
+      "action": "Title splash (real splash screen), then Skip into the arena with the hero demo running behind it. Recorded.",
+      "caption": "Kiroween Chaos: chaos engineering for AI agents, played as a haunted house.",
+      "text": "Charged. Charged again. Companies are pushing AI agents to production faster than ever, and fast code gets far less stress testing. One principal automation engineer wanted chaos engineering for bots, built as a game that does real testing in the background, on a monitor in the TechOps room. This is Kiroween Chaos: chaos engineering for AI agents, played as a haunted house."
+    },
+    {
+      "id": "s02-tournament",
+      "source": "capture:hero",
+      "action": "Local engine hero demo (?splash=0), real child processes and provider, recorded for this video.",
+      "caption": "Scripted hero demo, recorded for this video. Repo test: Rookie 2 charges, Phoenix 1.",
+      "text": "Five bots take the same crashes. Ghosts drop calls, reapers kill processes, and a separate ledger, the provider's own record, keeps score. This is a scripted demo run, recorded for this video. A process crashes right after charging a customer. In the repo's test, Rookie ends with two charges. Phoenix replays its journal and ends with one."
+    },
+    {
+      "id": "s03-dial",
+      "source": "capture:dial",
+      "action": "Local live arena, recorded: Start tournament, INTENSITY dial to 11, crashes and curse chips.",
+      "caption": "Intensity 11: THROW EVERYTHING. Curses follow a lane.",
+      "text": "Press next wave, then turn the intensity dial up to eleven. Eleven means throw everything: every stage takes a hit. And curses follow a lane. A lying endpoint. A slow one. A flaky server that only fails some of the time."
+    },
+    {
+      "id": "s04-casebook",
+      "source": "still:11-casebook.png",
+      "action": "Casebook still (Round-3 card with casebook table) from submission/gallery, slow zoom.",
+      "caption": "The Casebook: every edge case, who solved it, how, and what it cost.",
+      "text": "At the end comes the podium, the awards, and the prize: the Casebook. Every edge case, who solved it, how it was solved, and what it cost."
+    },
+    {
+      "id": "s05-patterns",
+      "source": "capture:patterns",
+      "action": "Hosted build (recorded run banner visible): Patterns table of recurring problems, Write fix spec, Improve loop at its rerun step.",
+      "caption": "Patterns and the improve loop: a projection with simulated parts, not patched code running.",
+      "text": "The pattern miner clusters what keeps happening and writes a fix spec for a human to review: evidence, the smallest patch, and a test. The improve loop reruns the same seed, but read it as a projection with simulated parts. It is not patched code running."
+    },
+    {
+      "id": "s06-fix",
+      "source": "still:12-grade-f-to-a.png",
+      "action": "Grade F to A still (top: recorded run, bottom: labelled simulation), caption states the fix is recorded.",
+      "caption": "RECORDED fix (docs/proof/live-fix.md): wave 1 grade F, wave 2 grade A. Not applied live.",
+      "text": "Kiro is meant to apply that spec, with a review step. The fix on screen is recorded, written ahead of time to satisfy the spec, not applied live. On the crash-only plan, wave one grades F, and wave two, with the spec's parts added, grades A."
+    },
+    {
+      "id": "s07-python",
+      "source": "capture:inbox",
+      "action": "Header app switcher to Haunted Inbox (Python Ticket Desk), run a wave, ticket and reply rows in the ledger.",
+      "caption": "Second app: Python Ticket Desk. Same harness, no engine change.",
+      "text": "Then switch the header to a second app, written in Python: the Ticket Desk. It reads mail, files a ticket, and sends a reply. The same crash that double charged a customer now shows up as a duplicate ticket. Same harness, same creatures, no engine change."
+    },
+    {
+      "id": "s08-lab",
+      "source": "capture:lab",
+      "action": "Workflow Lab with the streaming preset.",
+      "caption": "Workflow Lab: model-based what-if. The streaming pack has no runnable app.",
+      "text": "The Workflow Lab lets you model your own workflow and grades a what-if, with the parts that would fix it. A streaming preset is included, but it is model-based. There is no runnable streaming app."
+    },
+    {
+      "id": "s09-arch",
+      "source": "still:architecture.svg",
+      "action": "docs/img/architecture.svg, slow zoom.",
+      "caption": "One skeleton, two apps. Built with Kiro specs, steering, hooks and Kiro Crew.",
+      "text": "One skeleton, two interchangeable apps, Node Orders and Python Ticket Desk. Failure data goes to AI to draft spec-driven fixes, and a human reviews every one. It was built with Kiro and Kiro Crew."
+    },
+    {
+      "id": "s10-end",
+      "source": "card:end",
+      "action": "End card: name, tagline, repo URL, Pages URL.",
+      "caption": "github.com/kakoritz/Kiroween-Chaos-Official",
+      "text": "Break your bots before the world does. Kiroween Chaos. The repository and the hosted demo links are on screen."
+    }
+  ]
+}

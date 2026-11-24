@@ -1,18 +1,18 @@
-# Requirements: Haunt, the reusable chaos harness (Lane A)
+# Requirements: Kiroween Chaos, the reusable chaos harness (Lane A)
 
-The order bots are the demo. **Haunt** is the product: plug in any process, define it, and Haunt stress tests it and produces a report. The arena is one viewer for it.
+The order bots are the demo. **Kiroween Chaos** is the product: plug in any process, define it, and Kiroween Chaos stress tests it and produces a report. The arena is one viewer for it.
 
 ## Pitch
 
-"Chaos engineering for automation workflows, with a score." Define your process in a manifest. Point Haunt at it. Get a stress test report with a grade, a coverage map and fixes.
+"Chaos engineering for automation workflows, with a score." Define your process in a manifest. Point Kiroween Chaos at it. Get a stress test report with a grade, a coverage map and fixes.
 
 ## Ways to plug in
 
 | Adapter | For | How |
 |---|---|---|
 | **SDK** | Node and TypeScript workflows | `step()` and `effect()` wrappers. Deepest checks. |
-| **Proxy** | Any language, any HTTP service | Haunt sits between the process and its dependencies and injects faults (timeouts, 404, 429, 500, drops). |
-| **Process** | Any CLI or worker | Haunt starts it, kills it (SIGKILL), restarts it, feeds and removes input files. |
+| **Proxy** | Any language, any HTTP service | Kiroween Chaos sits between the process and its dependencies and injects faults (timeouts, 404, 429, 500, drops). |
+| **Process** | Any CLI or worker | Kiroween Chaos starts it, kills it (SIGKILL), restarts it, feeds and removes input files. |
 
 Adapters can be combined.
 
@@ -85,8 +85,8 @@ targets: { recoverMs: 20000, repeats: 0, throughputPerMin: 60 }
 THE SERVER SHALL implement [contract/CONTRACT.md](../../../contract/CONTRACT.md) in both `mock` and `live` mode.
 
 ### H9. Safety
-1. Haunt SHALL only target localhost and declared test endpoints by default.
-2. Haunt SHALL refuse non-local targets unless `--i-own-this` is passed. (Built for the proxy adapter, `haunt monkey` and `haunt watch`; the sweep, stack, ramp, soak and boss commands only start local processes and the local provider.)
+1. Kiroween Chaos SHALL only target localhost and declared test endpoints by default.
+2. Kiroween Chaos SHALL refuse non-local targets unless `--i-own-this` is passed. (Built for the proxy adapter, `haunt monkey` and `haunt watch`; the sweep, stack, ramp, soak and boss commands only start local processes and the local provider.)
 3. Faults SHALL always be cleaned up on exit, including on Ctrl+C.
 
 ## Out of scope

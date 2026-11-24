@@ -1,3 +1,4 @@
+// covers: CP-C1
 // CP-C2: campaign acceptance 1 to 4 in in-process mode (virtual clock, no child processes).
 import { describe, expect, it } from 'vitest';
 import { loadCampaign } from '../../haunt/src/campaign/load';

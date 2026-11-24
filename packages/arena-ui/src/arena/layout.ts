@@ -21,3 +21,6 @@ export function computeFit(w: number, h: number): Fit {
   const scale = Math.min(w / STAGE_W, h / STAGE_H);
   return { narrow: false, scale, left: (w - STAGE_W * scale) / 2, top: (h - STAGE_H * scale) / 2, bandH: STAGE_H * scale };
 }
+
+/** True when the header tagline is wider than the room it was given (it would show an ellipsis). */
+export const taglineClipped = (scrollW: number, clientW: number): boolean => scrollW > clientW + 1;

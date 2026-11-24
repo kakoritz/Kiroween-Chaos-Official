@@ -1,3 +1,4 @@
+// covers: playtest-v2/R2.3 playtest-v2/R3.2
 import { describe, expect, it } from 'vitest';
 import { LapTracker } from '../src/live/lap-tracker';
 import { LiveServer, type LiveEngine } from '../src/live/server';

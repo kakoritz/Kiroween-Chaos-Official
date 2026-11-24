@@ -1,3 +1,4 @@
+// covers: playtest-v2/R9.1
 // PT-C9 / TV3: engine properties P9 to P12, P14, P15 (ledger exemption lives in core/test/wrong-order-provider.test.ts), P16 (score.test.ts),
 // P18 and P19 (never-perfect.test.ts), with fast-check. P13 is in travel.test.ts. Spec: .kiro/specs/playtest-v2/design.md section 9.
 import { describe, expect, it } from 'vitest';

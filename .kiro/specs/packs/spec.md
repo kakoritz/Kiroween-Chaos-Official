@@ -4,7 +4,7 @@ Source: the owner's idea (2026-11-21): the same skeleton for a **streaming servi
 
 ## 1. Idea (and why it fits)
 
-Haunt is a skeleton: bots in lanes, a ledger as truth, a fault catalog, graded reports, fix specs. A **pack** is a small folder that tells the skeleton what the stages are, what can go wrong, what the creatures are called and what the reviewers say. Pack count shows **reuse**; it does not add engines.
+Kiroween Chaos is a skeleton: bots in lanes, a ledger as truth, a fault catalog, graded reports, fix specs. A **pack** is a small folder that tells the skeleton what the stages are, what can go wrong, what the creatures are called and what the reviewers say. Pack count shows **reuse**; it does not add engines.
 
 | Pack | Status | What it proves |
 |---|---|---|

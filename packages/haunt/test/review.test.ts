@@ -1,3 +1,4 @@
+// covers: playtest-v2/R5.1 playtest-v2/R5.3
 import { describe, expect, it } from 'vitest';
 import { INBOX_SUB_LABELS, StarTracker, ratingFor, review, reviewScore, type ReviewInput } from '../src/score/review';
 

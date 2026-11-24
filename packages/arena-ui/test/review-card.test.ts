@@ -1,3 +1,4 @@
+// covers: playtest-v2/R5.2
 import { describe, expect, it } from 'vitest';
 import { cardOf, ghostMood, laneRatingTitle } from '../src/arena/review-card';
 

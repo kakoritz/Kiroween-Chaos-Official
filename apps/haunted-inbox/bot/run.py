@@ -1,4 +1,4 @@
-"""Haunted Inbox bot, the Ticket Desk: triages a support mailbox, ten stages, driven by the Kiroween Chaos runner (no engine change).
+"""Haunted Inbox bot, the Ticket Desk: triages a support mailbox, eleven stages, driven by the Kiroween Chaos runner (no engine change).
 
 Reads the standard HAUNT_* environment (.kiro/specs/engine/runtime.md section 1). The tier decides the parts.
 `python run.py --parts` prints the parts the tier uses and exits.
