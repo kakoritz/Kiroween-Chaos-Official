@@ -1,6 +1,6 @@
 # Packs: the reusable skeleton
 
-Haunt is one skeleton: bots in lanes, a ledger as truth, a fault catalog, graded reports, fix specs. A **pack** is a small
+Kiroween Chaos is one skeleton: bots in lanes, a ledger as truth, a fault catalog, graded reports, fix specs. A **pack** is a small
 data file that tells the skeleton what the steps of your app are, what can go wrong at each, what the creatures are called,
 what the reviewers say, and what each protection means in your domain. A pack is **data, not a new engine**: adding an app
 means writing one YAML file, not code.

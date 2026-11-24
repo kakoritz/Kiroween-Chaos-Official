@@ -62,10 +62,10 @@ import { ApiError, createApi, resolveHttpBase, type ArenaApi, type ArenaEvent, t
 
 const root = document.getElementById('app')!;
 root.innerHTML = `
-  <div class="stage-root" id="stage" role="main" aria-label="Haunt arena">
+  <div class="stage-root" id="stage" role="main" aria-label="Kiroween Chaos arena">
     <canvas id="arena" width="1920" height="1080" aria-label="The haunted arena" role="img"></canvas>
     <header class="hdr">
-      <span class="logo">HAUNT</span>
+      <span class="logo">KIROWEEN CHAOS</span>
       <span class="tagline">${SPLASH_TAGLINE}</span>
       <span class="wave" id="wave"></span>
       <span id="round-ind"></span>

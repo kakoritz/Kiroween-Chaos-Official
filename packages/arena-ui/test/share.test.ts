@@ -17,7 +17,7 @@ describe('share model (SH-U2)', () => {
     expect(shareFiles(r)).toEqual(shareFiles(r));
   });
   it('uses the README snippet from the spec', () => {
-    expect(README_SNIPPET).toBe('![Haunt grade](./haunt-badge.svg)');
+    expect(README_SNIPPET).toBe('![Kiroween Chaos grade](./haunt-badge.svg)');
     expect(readmeSnippet()).toBe(README_SNIPPET);
   });
 });

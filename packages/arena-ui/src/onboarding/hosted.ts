@@ -23,7 +23,7 @@ export function mountRecordedBadge(doc: Document): HTMLElement {
   el.href = 'https://github.com/kakoritz/Kiroween-Chaos#readme';
   el.target = '_blank';
   el.rel = 'noopener';
-  el.textContent = `Hosted demo: runs in your browser. Tournament, Casebook and improve loop are a ${RECORDED_LABEL}. The real engine runs locally: npm run demo`;
+  el.textContent = `Kiroween Chaos hosted demo: runs in your browser. Tournament, Casebook and improve loop are a ${RECORDED_LABEL}. The real engine runs locally: npm run demo`;
   el.setAttribute('style', 'position:fixed;left:0;right:0;bottom:0;z-index:50;box-sizing:border-box;padding:3px 8px;font:12px/1.3 system-ui,sans-serif;color:#cfd3ff;background:#0a0818;border-top:1px solid #4a4a7a;text-align:center;text-decoration:none');
   doc.body.classList.add('hosted');
   doc.body.appendChild(el);

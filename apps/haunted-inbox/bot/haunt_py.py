@@ -1,4 +1,4 @@
-"""haunt_py: the Python mini-SDK for Haunt bots (Python 3.12, standard library only).
+"""haunt_py: the Python mini-SDK for Kiroween Chaos bots (Python 3.12, standard library only).
 
 Mirrors packages/haunt/src/sdk and packages/haunt/src/chaos: order(), stage(), effect(), a JSONL journal with
 resume, reconcile, retry, breaker and offline-queue parking, the kill rendezvous and the same parts report.

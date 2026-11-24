@@ -1,7 +1,7 @@
 # Share: badge, scorecard, CI, optional LLM reviewer
 
 ## Badge and scorecard
-`npm run haunt -- badge <run-id|report.json> [--out dir]` writes `haunt-badge.svg` (shields style, "Haunt" and a value like `A 94`, coloured by grade), `haunt-scorecard.svg` and `haunt-scorecard.html` (1200x630). Pure code, no fonts or images, same report gives the same bytes. The MCP tool `haunt_badge` does the same (`run`, `out`).
+`npm run haunt -- badge <run-id|report.json> [--out dir]` writes `haunt-badge.svg` (shields style, "Kiroween Chaos" and a value like `A 94`, coloured by grade), `haunt-scorecard.svg` and `haunt-scorecard.html` (1200x630). Pure code, no fonts or images, same report gives the same bytes. The MCP tool `haunt_badge` does the same (`run`, `out`).
 
 `npm run haunt -- badge --improve <improve-report.json> [--out dir]` (MCP: `haunt_badge` with `improve`) renders the improve loop result (report shape in `contract/V1_2.md`, C13) as a before and after card, "closed 5 of 9, C to B", to `haunt-improve.svg` and `.html`.
 

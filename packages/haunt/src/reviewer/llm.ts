@@ -26,7 +26,7 @@ export const MAX_DRAFT_CHARS = 6000;
 
 export function buildPrompt(run: string, findings: Finding[], botFile: string): string {
   const L = [
-    `You are the Haunt reviewer. Run ${run}. Target bot file: ${botFile}.`,
+    `You are the Kiroween Chaos reviewer. Run ${run}. Target bot file: ${botFile}.`,
     'Write a unified diff (one fenced block, no prose) that hardens the bot against the findings below.',
     'Use only SDK parts named in "Suggested part". Do not touch any other file. Keep it under 60 lines.',
     '',

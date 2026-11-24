@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" width="960" height="520" font-family="Segoe UI, Arial, sans-serif" font-size="14" role="img" aria-label="Haunt architecture: two apps on one skeleton, core server, arena UI, Kiro loop">
-  <title>Haunt architecture</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" width="960" height="520" font-family="Segoe UI, Arial, sans-serif" font-size="14" role="img" aria-label="Kiroween Chaos architecture: two apps on one skeleton, core server, arena UI, Kiro loop">
+  <title>Kiroween Chaos architecture</title>
   <rect width="960" height="520" fill="#14101f"/>
   <defs>
     <marker id="a" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#9b8cc4"/></marker>
@@ -27,7 +27,7 @@
     <text x="115" y="88" fill="#b9acdc">app 1: 11-step order pipeline</text>
     <text x="115" y="164" font-weight="bold">Haunted Inbox (Python)</text>
     <text x="115" y="188" fill="#b9acdc">app 2: mail to ticket and reply</text>
-    <text x="420" y="60" font-weight="bold">Haunt skeleton (packages/haunt)</text>
+    <text x="420" y="60" font-weight="bold">Kiroween Chaos skeleton (packages/haunt)</text>
     <text x="420" y="90" fill="#b9acdc">SDK: retry, journal, idempotency, breaker, queue</text>
     <text x="420" y="112" fill="#b9acdc">adapters: SDK, Proxy, Process</text>
     <text x="420" y="134" fill="#b9acdc">chaos engine, creatures, bosses, curses</text>

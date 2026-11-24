@@ -1,11 +1,11 @@
 # Production mode: what it does and does not guarantee
 
-`haunt monkey` injects a few kinds of failure through the Haunt fault proxy (the Proxy adapter) while it watches a
+`haunt monkey` injects a few kinds of failure through the Kiroween Chaos fault proxy (the Proxy adapter) while it watches a
 steady-state measurement. This page says plainly what that does, and what it does not.
 
 ## What it is
 
-A controller process. Your traffic goes through the Haunt proxy; the monkey tells the proxy to add latency, answer some
+A controller process. Your traffic goes through the Kiroween Chaos proxy; the monkey tells the proxy to add latency, answer some
 requests with an error, or answer one dependency path with 503. It measures a service-level indicator (SLI) with
 synthetic probe requests and stops everything when the indicator crosses a threshold.
 

@@ -1,7 +1,7 @@
 /** Title splash (ON-U1): logo, tagline, typed hook, four buttons. Pure decisions here, DOM in `Splash`. */
 
 export const SPLASH_HOOK = 'Charged. Charged again.';
-export const SPLASH_TAGLINE = 'Break your bots before the world does.';
+export const SPLASH_TAGLINE = 'Chaos Monkey for AI agents.';
 export const SPLASH_PROBLEM = 'Bots and AI agents crash halfway, then repeat the work: double charges, duplicate emails.';
 export const SPLASH_AUTO_MS = 4000;
 const TYPE_MS_PER_CHAR = 55;
@@ -65,10 +65,10 @@ export class Splash {
     this.el = document.createElement('section');
     this.el.className = 'splash';
     this.el.setAttribute('role', 'dialog');
-    this.el.setAttribute('aria-label', 'Haunt title');
+    this.el.setAttribute('aria-label', 'Kiroween Chaos title');
     this.el.innerHTML = `
       <div class="splash__box">
-        <h1 class="splash__logo">HAUNT</h1>
+        <h1 class="splash__logo">KIROWEEN CHAOS</h1>
         <p class="splash__tag">${SPLASH_TAGLINE}</p>
         <p class="splash__hook" aria-label="${SPLASH_HOOK}"><span id="splash-hook"></span><span class="splash__caret" aria-hidden="true"></span></p>
         <p class="splash__problem">${SPLASH_PROBLEM}</p>

@@ -1,6 +1,6 @@
 # Kiro write-up (SH-K2)
 
-How Kiro was used to build Haunt (Kiroween-Chaos), in the order of the hackathon rubric. Facts come from the repo, `docs/KIRO-LOG.md`, `docs/KIRO-LOG-ARCHIVE.md` (the old per-task notes), `.kiro/`, and the git and PR history. Lines marked **Owner** can only come from the person who drove the sessions. Nothing here is invented.
+How Kiro was used to build Kiroween Chaos (Kiroween-Chaos), in the order of the hackathon rubric. Facts come from the repo, `docs/KIRO-LOG.md`, `docs/KIRO-LOG-ARCHIVE.md` (the old per-task notes), `.kiro/`, and the git and PR history. Lines marked **Owner** can only come from the person who drove the sessions. Nothing here is invented.
 
 ## Measured numbers (2026-11-23, `main`)
 

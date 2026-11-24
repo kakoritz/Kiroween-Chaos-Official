@@ -21,7 +21,7 @@ describe('How it works (SH-U3)', () => {
   it('inlines the repo architecture diagram, with no external reference', () => {
     const svg = architectureSvg();
     expect(svg.startsWith('<svg')).toBe(true);
-    expect(svg).toContain('Haunt architecture');
+    expect(svg).toContain('Kiroween Chaos architecture');
     expect(svg).not.toMatch(/(?:href|src)=["']https?:/i);
   });
 

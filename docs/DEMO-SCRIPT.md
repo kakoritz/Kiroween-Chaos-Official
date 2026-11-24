@@ -8,7 +8,7 @@ Start: `npm run demo -- --no-open` (live server on 7070; with `HAUNT_PORT` and `
 
 | Time | On screen and what to click | Say |
 |---|---|---|
-| 0:00-0:10 | The title splash. | "Charged. Charged again. Haunt is chaos engineering for bots, played as a tournament." |
+| 0:00-0:10 | The title splash. | "Charged. Charged again. Kiroween Chaos is chaos engineering for bots, played as a tournament." |
 | 0:10-0:50 | Click **Skip**, then **Start tournament**. Five lanes race. Open the ledger at the payment crash: one lane shows 2 charges, Phoenix 1. Round ends: the standings card shows the dropped lane and a tombstone stays where it died | "Five bots take the same crashes. The ledger is the provider's own record. Rookie charged twice. Phoenix charged once. The worst lane is eliminated and leaves a corpse." |
 | 0:50-1:15 | Press **Next wave** (N). Drag **INTENSITY** to 11 (**THROW EVERYTHING**). Point at the curse chips on a lane | "Turn the dial. At eleven every stage takes a hit. Curses follow a lane: a lying endpoint, a slow one." |
 | 1:15-1:35 | Final screen: podium, awards, **Casebook** (edge case, who solved it, how, cost) | "The prize is the Casebook: every edge case, who solved it, and what it cost." |
