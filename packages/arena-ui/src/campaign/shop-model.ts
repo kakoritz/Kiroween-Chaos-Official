@@ -1,5 +1,5 @@
 // Gear shop model (CP-U2). Pure functions; the DOM lives in shop.ts. Gear data comes from GET /api/campaign (packages/core/campaign/gear.json).
-import { STORAGE_KEY, parseProgress } from './hub-model';
+import { STORAGE_KEY, isFreshProgress, parseProgress } from './hub-model';
 
 export interface ShopGear { id: string; label: string; badge: string; part: string; cost: number; effect: string; blocks: string }
 export interface ShopState { credits: number; owned: string[]; equipped: Record<string, string> }
@@ -69,7 +69,7 @@ export function loadShop(store: Pick<Storage, 'getItem'> | undefined, gear: read
   let raw: string | null = null;
   try { raw = store?.getItem(STORAGE_KEY) ?? null; } catch { raw = null; }
   const p = parseProgress(raw);
-  const fresh = !raw || (p.credits === 0 && p.owned.length === 0 && !Object.keys(p.medals).length && !Object.keys(p.best).length);
+  const fresh = !raw || isFreshProgress(p);
   const owned = (fresh ? start.gear : p.owned).filter((id) => !!find(gear, id));
   const credits = fresh ? start.credits : p.credits;
   let equipped: Record<string, string> = {};

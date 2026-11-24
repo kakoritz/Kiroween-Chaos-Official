@@ -128,6 +128,9 @@ try {
 
   // 2. campaign night 1 with the intended gear
   {
+    await post('/api/intensity', { level: 3 });
+    const grant = (await c.get('/api/campaign')).json.start;
+    check('campaign', 'campaign-credits: /api/campaign serves the 300-credit start grant the hub shows on first open', grant?.credits === 300 && Array.isArray(grant.gear) && grant.gear.length === 0, JSON.stringify(grant));
     const { wave } = await post('/api/wave/start', { campaign: { night: 1, parts: ['journal', 'idempotency'] }, speed: 4 });
     const end = await endOf(wave);
     const s1 = end.detail.summary['1'];
@@ -138,6 +141,7 @@ try {
     check('campaign', 'night 1: lane 1 is the Crew with the chosen parts', ready?.detail?.tier === 'crew' && ready.detail.parts.join() === 'journal,idempotency', JSON.stringify(ready?.detail));
     check('campaign', 'night 1: the plan really crashed the Crew', evs.some((e) => e.type === 'chaos' && e.detail?.fault === 'crash' && String(e.lane ?? '1') === '1') || evs.some((e) => e.type === 'process_dead' && String(e.lane) === '1'), `${evs.filter((e) => e.type === 'process_dead' && String(e.lane) === '1').length} process_dead on lane 1`);
     check('campaign', 'night 1: Spellbook + Seal give zero repeats and a medal', s1.repeats === 0 && s1.score >= night.medals.bronze.credits, `score ${s1.score}, repeats ${s1.repeats}, stars ${s1.stars?.avg}`);
+    check('campaign', 'campaign-credits: night 1 earns credits on top of the start grant (hub total = 300 + earned, not earned alone)', Math.floor(s1.score) > 0 && grant.credits + Math.floor(s1.score) > Math.floor(s1.score), `grant ${grant?.credits}, score ${s1.score}`);
   }
   await sleep(600);
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { nightCases, applyResult, creditsFor, exportProgress, explain, loadEarned, medalFor, nextGoal, parseImport, saveImport, saveOutcome, EARNED_KEY, type ResultGear, type ResultNight } from '../src/campaign/results-model';
-import { STORAGE_KEY, emptyProgress, isUnlocked, loadProgress } from '../src/campaign/hub-model';
+import { STORAGE_KEY, emptyProgress, isUnlocked, loadProgress, withStart } from '../src/campaign/hub-model';
 import { renderResults } from '../src/campaign/results';
 import data from '../../core/campaign/nights.json';
 import gearData from '../../core/campaign/gear.json';
@@ -145,4 +145,30 @@ describe('night casebook', () => {
     const o = applyResult(n1, { score: 0 }, emptyProgress(), {});
     expect(renderResults(n1, o, {}, [], gear, nights, [{ title: '<b>x</b>', verdict: 'v', fix: '' }])).not.toContain('<b>x</b>');
   });
+});
+
+// covers: campaign-credits/R2
+// covers: campaign-credits/CC-2
+describe('credits after a night with the shop never opened', () => {
+  it('keeps the start grant and adds the earned credits', () => {
+    const store = memory();
+    const s = { score: n1.medals.bronze.credits, repeats: 0 };
+    const o = applyResult(n1, s, withStart(loadProgress(store), { gear: [], credits: 300 }), loadEarned(store));
+    saveOutcome(store, o);
+    expect(o.credits).toBeGreaterThan(0);
+    expect(loadProgress(store).credits).toBe(300 + o.credits);
+    expect(withStart(loadProgress(store), { gear: [], credits: 300 }).credits).toBe(300 + o.credits);
+  });
+  it('shows the old bug without the grant', () => {
+    const o = applyResult(n1, { score: n1.medals.bronze.credits, repeats: 0 }, loadProgress(memory()), {});
+    expect(o.progress.credits).toBe(o.credits);
+  });
+});
+
+// covers: campaign-credits/R4
+// covers: campaign-credits/CC-3
+// covers: campaign-credits/CC-4
+// covers: campaign-credits/CC-5
+it('serves a 300-credit start grant with no gear (the value the hub shows on first open)', () => {
+  expect((gearData as unknown as { start: { gear: string[]; credits: number } }).start).toEqual({ gear: [], credits: 300 });
 });

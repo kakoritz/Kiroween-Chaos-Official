@@ -27,6 +27,20 @@ export function parseProgress(raw: string | null | undefined): CampaignProgress 
   } catch { return emptyProgress(); }
 }
 
+export const DEFAULT_START_CREDITS = 300;
+export interface StartGrant { gear: string[]; credits: number }
+
+/** A save with nothing earned, bought or recorded yet. Raw storage holds 0 credits for it, but the player is owed the start grant. */
+export function isFreshProgress(p: CampaignProgress): boolean {
+  return p.credits === 0 && p.owned.length === 0 && !Object.keys(p.medals).length && !Object.keys(p.best).length;
+}
+
+/** The true progress: a fresh save gets the start grant (credits and gear) so the hub, shop and results all agree. */
+export function withStart(p: CampaignProgress, start: Partial<StartGrant> | undefined): CampaignProgress {
+  if (!isFreshProgress(p)) return p;
+  return { ...p, credits: Math.max(0, Math.floor(num(start?.credits ?? DEFAULT_START_CREDITS))), owned: [...(start?.gear ?? [])] };
+}
+
 export function loadProgress(store: Pick<Storage, 'getItem'> | undefined): CampaignProgress {
   try { return parseProgress(store?.getItem(STORAGE_KEY)); } catch { return emptyProgress(); }
 }

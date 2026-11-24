@@ -6,8 +6,8 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 97. With a PR: 29 (30%). With a test: 97 (100%).
-- Tasks: 116. Done: 114. With a PR: 48 (41%). With a test: 23 (20%).
+- Requirements: 107. With a PR: 29 (27%). With a test: 107 (100%).
+- Tasks: 121. Done: 119. With a PR: 48 (40%). With a test: 28 (23%).
 - Test files scanned: 210.
 
 ## Tasks
@@ -29,6 +29,11 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | CP-U3 | campaign | Results, medals, persistence. Medal computation, credit awards, "what happene... | done | [#188](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/188) | - |
 | CP-U4 | campaign | Sandbox. Toggle parts on lane 1 before a wave, run, see the grade and the iss... | done | - | - |
 | CP-U5 | campaign | Campaign visuals. Rivals ghosted, "Your Crew" label and gear badge, medal and... | done | - | `packages/arena-ui/test/crew-lane.test.ts` |
+| CC-1 | campaign-credits | Shared start rule. isFreshProgress, withStart, DEFAULTSTARTCREDITS in hub-mod... | done | - | `packages/arena-ui/test/campaign-hub.test.ts` |
+| CC-2 | campaign-credits | Hub and results use it. Hub applies the grant on load and refresh; results ap... | done | - | `packages/arena-ui/test/campaign-results.test.ts` |
+| CC-3 | campaign-credits | Tests. Unit tests in campaign-hub.test.ts and campaign-results.test.ts. (R1, ... | done | - | `packages/arena-ui/test/campaign-results.test.ts` |
+| CC-4 | campaign-credits | End to end. tools/e2e.mjs campaign section: reset the dial, check the start g... | done | - | `packages/arena-ui/test/campaign-results.test.ts` |
+| CC-5 | campaign-credits | Docs. docs/TRACE.md regenerated. (R1 to R4) | done | - | `packages/arena-ui/test/campaign-results.test.ts` |
 | ON-C1 | onboarding | Hosted demo. Finish harness H6.3 (browser target) and the Pages workflow; fal... | done | [#156](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/156) | - |
 | ON-C2 | onboarding | Captions data. packages/core/demo/hero/full/loop.captions.json and the captio... | done | [#160](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/160) | - |
 | ON-D1 | onboarding | README front page. Per spec section 7; architecture diagram (mermaid and SVG)... | done | [#172](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/172) | - |
@@ -135,6 +140,16 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 | ID | Spec | Text | Status | PRs | Tests |
 |---|---|---|---|---|---|
+| R1 | campaign-credits | Hub shows the true total on first open | n/a | - | `packages/arena-ui/test/campaign-hub.test.ts`, `packages/arena-ui/test/campaign-results.test.ts` |
+| R1.1 | campaign-credits | A save with no credits, gear, medals or bests is fresh. The hub shows the sta... | n/a | - | `packages/arena-ui/test/campaign-results.test.ts` |
+| R1.2 | campaign-credits | A save that has any progress shows its stored credits unchanged. | n/a | - | `packages/arena-ui/test/campaign-results.test.ts` |
+| R2 | campaign-credits | Results build on the true total | n/a | - | `packages/arena-ui/test/campaign-results.test.ts` |
+| R2.1 | campaign-credits | Finishing a night adds the earned credits to the true total, so the start gra... | n/a | - | `packages/arena-ui/test/campaign-results.test.ts` |
+| R2.2 | campaign-credits | After a night the hub shows start grant plus earned credits. | n/a | - | `packages/arena-ui/test/campaign-results.test.ts` |
+| R3 | campaign-credits | One rule for "fresh" | n/a | - | `packages/arena-ui/test/campaign-hub.test.ts`, `packages/arena-ui/test/campaign-results.test.ts` |
+| R3.1 | campaign-credits | The hub, the shop and the results share one freshness check and one grant rul... | n/a | - | `packages/arena-ui/test/campaign-hub.test.ts`, `packages/arena-ui/test/campaign-results.test.ts` |
+| R4 | campaign-credits | End to end | n/a | - | `packages/arena-ui/test/campaign-results.test.ts` |
+| R4.1 | campaign-credits | GET /api/campaign serves a start grant of 300 credits, the value the hub show... | n/a | - | `packages/arena-ui/test/campaign-results.test.ts` |
 | R1 | haunted-house | Rooms | n/a | - | `packages/haunt/test/core-creatures.test.ts`, `packages/haunt/test/requirement-gaps.test.ts` |
 | R1.1 | haunted-house | THE SYSTEM SHALL ship three core rooms: Cellar (missing file), Mirror Hall (d... | n/a | - | `packages/haunt/test/core-creatures.test.ts` |
 | R1.2 | haunted-house | THE SYSTEM SHALL ship two bonus rooms: Poltergeist (timeouts and 429s that cl... | n/a | - | `packages/haunt/test/requirement-gaps.test.ts` |
