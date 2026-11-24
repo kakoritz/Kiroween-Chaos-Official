@@ -1,3 +1,4 @@
+// covers: haunted-house/R8.1
 // H6.7 The three Kiro hooks in .kiro/hooks/ parse and point at real files and scripts.
 import { describe, expect, it } from 'vitest';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';

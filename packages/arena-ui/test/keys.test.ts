@@ -1,3 +1,4 @@
+// covers: haunted-house/R5.5
 import { describe, expect, it } from 'vitest';
 import { STATE_LEGEND, chaosAnnouncement, isNextKey, keyAction, nextMode } from '../src/arena/keys';
 import { presentFromQuery } from '../src/mode';

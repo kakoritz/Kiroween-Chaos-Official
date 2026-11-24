@@ -14,6 +14,7 @@ import { fnv1a32, mulberry32 } from '../../../haunt/src/shared/rng';
 import { loadCampaign } from '../../../haunt/src/campaign/load';
 import { campaignWaveConfig, parseCampaignRequest, type CampaignRequest } from '../../../haunt/src/campaign/wave-config';
 import { APPS, APP_STAGES, CONTRACT_VERSION, CREATURES, DEMO_SCRIPTS, FAULT_IDS, type AppId } from './catalog';
+import { listPacks } from '../../../haunt/src/packs/list';
 import { LapTracker } from './lap-tracker';
 import { laneLaps, orderRecord, waveLaps, waveStars } from './laps';
 import { PACE_FACTOR } from '../../../haunt/src/runner/travel';
@@ -714,6 +715,7 @@ export class LiveServer {
       if (p === '/api/creatures') return { json: CREATURES };
       if (p === '/api/campaign') return { json: loadCampaign() };
       if (p === '/api/apps') return { json: APPS };
+      if (p === '/api/packs') return { json: listPacks() };
       if (seg[0] === 'api' && seg[1] === 'demo' && seg[2] === 'captions' && seg.length === 4) {
         if (!(CAPTION_SCRIPTS as readonly string[]).includes(seg[3])) fail(404, 'not_found', 'unknown demo script');
         return { json: loadCaptions(seg[3]) };

@@ -28,6 +28,7 @@ describe('trace generator', () => {
 
   it('reads covers comments with several IDs', () => {
     expect(coversIds('// covers: SH-U1, R4.1\nit()\n# covers: H1.2')).toEqual(['SH-U1', 'R4.1', 'H1.2']);
+    expect(coversIds('// covers: haunted-house/R2.1')).toEqual(['haunted-house/R2.1']);
     expect(coversIds('no marker here')).toEqual([]);
   });
 });

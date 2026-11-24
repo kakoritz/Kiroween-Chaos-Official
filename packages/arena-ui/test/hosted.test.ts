@@ -1,3 +1,4 @@
+// covers: haunted-house/R5.6
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { installHosted, RECORDED_LABEL } from '../src/onboarding/hosted';
 
