@@ -323,3 +323,30 @@ describe('buildLedger kind names', () => {
     expect(out.lanes[0]!.byKind.email).toEqual({ rows: 2, repeats: 1 });
   });
 });
+
+describe('wave end when a recorder throws', () => {
+  it('still ends the wave and keeps later events of the lane flowing', async () => {
+    const quiet = console.error;
+    console.error = () => {};
+    try {
+      const rt = createLiveRuntime({
+        clock: false, now: () => 0, sleep: async () => {},
+        botCommand: (lane) => ({ command: 'node', args: [lane] }),
+        run: async (o) => {
+          o.onEvent?.({ type: 'order_start', order: 'ord-0001', detail: { index: 1, total: 1 } });
+          o.onEvent?.({ type: 'order_done', order: 'ord-0001', detail: {} });
+          return { starts: 1, kills: [], exit: { code: 0, signal: null }, clean: true };
+        },
+      });
+      const seen: string[] = [];
+      let ended!: () => void;
+      const done = new Promise<void>((r) => { ended = r; });
+      rt.live.startWave!(1, { ...settings, lanes: 1, orders: 1 } as never, (e) => {
+        if (e.type === 'order_start' && e.lane === '1') throw new Error('recorder blew up');
+        seen.push(e.type);
+      }, ended);
+      await Promise.race([done, new Promise((_, rej) => setTimeout(() => rej(new Error('wave never ended')), 5000))]);
+      expect(seen).toContain('order_done');
+    } finally { console.error = quiet; }
+  });
+});

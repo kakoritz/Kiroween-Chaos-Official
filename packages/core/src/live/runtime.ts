@@ -443,7 +443,9 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
       }
       return t;
     };
-    const idle = (): Promise<unknown> => Promise.all([...chains.values()]);
+    // A recorder that throws on one event must not reject the lane's chain: a rejected chain skips every later event of the lane and keeps `idle` from ever settling, so the wave never ends.
+    const safe = (fn: () => void): void => { try { fn(); } catch (e) { console.error('[live] dropped an event after an error:', e); } };
+    const idle = (): Promise<unknown> => Promise.allSettled([...chains.values()]);
     spawner = new LaneSpawner({
       engine, botCommand: opts.botCommand, run: opts.run,
       // order_typo (design.md section 8): at the bot's `input_read` the next order file is swapped for a different cart,
@@ -475,7 +477,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
         // A fault pressed by hand that waits for a later stage (director deferred) reaches the provider when the bot itself gets there:
         // the bot runs ahead of what the arena shows, so waiting for the shown stage_start would be too late.
         if (opts.post && ev.type === 'stage_start' && typeof ev.stage === 'string') for (const arm of engine.director.onStageStart(lane, ev.stage)) void postProviderArm(opts.post, lane, ev.stage, arm);
-        if (opts.travel === false) { for (const e of norm.shape(lane, { detail: {}, ...ev, lane })) record?.({ ...e, lane } as unknown as HauntEvent); return; }
+        if (opts.travel === false) { for (const e of norm.shape(lane, { detail: {}, ...ev, lane })) safe(() => record?.({ ...e, lane } as unknown as HauntEvent)); return; }
         const my = epoch;
         const lt = travelOf(lane);
         const next = (chains.get(lane) ?? Promise.resolve()).then(async () => {
@@ -484,7 +486,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
           for (const e of norm.shape(lane, { detail: {}, ...ev, lane })) {
             await lt.wait(e);
             if (my !== epoch) return;
-            record?.(lt.annotate({ ...e, lane }) as unknown as HauntEvent);
+            safe(() => record?.(lt.annotate({ ...e, lane }) as unknown as HauntEvent));
           }
         });
         chains.set(lane, next);
@@ -500,7 +502,7 @@ export function createLiveRuntime(opts: LiveRuntimeOptions = {}) {
     onLaneQueue = (lane, fn) => {
       if (opts.travel === false || !chains.has(lane)) return false;
       const my = epoch;
-      chains.set(lane, chains.get(lane)!.then(() => { if (my === epoch) fn(); }));
+      chains.set(lane, chains.get(lane)!.then(() => { if (my === epoch) safe(fn); }));
       return true;
     };
   }

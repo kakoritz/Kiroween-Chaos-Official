@@ -225,6 +225,8 @@ try {
 
   // 5. inbox
   {
+    // The dial is global and sticks: the plain waves above leave it at level 9, whose storm (bosses, breakers, parked orders) can keep a 3-order wave running for minutes. This check is about the inbox app, so run it at the default level.
+    await post('/api/intensity', { level: 3 });
     await post('/api/app', { app: 'inbox' });
     const app = (await c.get('/api/state')).json.app;
     check('inbox', 'app switch to inbox', app === 'inbox', app);
