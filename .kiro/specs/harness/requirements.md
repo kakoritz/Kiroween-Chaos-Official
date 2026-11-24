@@ -79,14 +79,14 @@ targets: { recoverMs: 20000, repeats: 0, throughputPerMin: 60 }
 3. THE REPORT SHALL show the score change against the previous run.
 
 ### H7. CLI
-`haunt init`, `haunt validate`, `haunt sweep`, `haunt stack`, `haunt ramp`, `haunt soak`, `haunt boss`, `haunt compare A B`, `haunt report <run>`, `haunt serve` (starts the server for the arena).
+`haunt init`, `haunt validate`, `haunt sweep`, `haunt stack`, `haunt ramp`, `haunt soak`, `haunt boss`, `haunt compare A B`, `haunt report <run>`, `haunt serve` (starts the server for the arena; a wrapper over `npm run live` and `npm run mock`).
 
 ### H8. Server for the arena
 THE SERVER SHALL implement [contract/CONTRACT.md](../../../contract/CONTRACT.md) in both `mock` and `live` mode.
 
 ### H9. Safety
 1. Haunt SHALL only target localhost and declared test endpoints by default.
-2. Haunt SHALL refuse non-local targets unless `--i-own-this` is passed.
+2. Haunt SHALL refuse non-local targets unless `--i-own-this` is passed. (Built for the proxy adapter, `haunt monkey` and `haunt watch`; the sweep, stack, ramp, soak and boss commands only start local processes and the local provider.)
 3. Faults SHALL always be cleaned up on exit, including on Ctrl+C.
 
 ## Out of scope

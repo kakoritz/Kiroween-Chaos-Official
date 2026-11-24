@@ -116,7 +116,7 @@ Which surface ran which lane (IDE, CLI, Crew) is not recorded in the repo beyond
 
 - `kiro-power/`: `plugin.json`, `mcp.json`, `skills/stress-test-my-workflow/`.
 - `kiro-crew-app/`: `app.json`, `agents/reviewer.json`, `skills/stress-test-my-workflow/`, a page that hosts the arena UI from 127.0.0.1.
-- Both start the same stdio server, `packages/core/src/bin/haunt-mcp.ts`, with tools `haunt_define`, `haunt_sweep`, `haunt_ramp`, `haunt_report`, `haunt_badge`.
+- Both start the same stdio server, `packages/core/src/bin/haunt-mcp.ts`, with tools `haunt_define`, `haunt_sweep`, `haunt_ramp`, `haunt_report`, `haunt_specs`, `haunt_badge`.
 - **Proven:** a stdio client started the server from the manifest command, ran `initialize` and `tools/list`, and got the tool list (`docs/proof/installed/mcp-handshake.json`, `docs/proof/installed/README.md`).
 - **Not proven:** the Power imported into a Kiro IDE window, or the Crew app installed with `kirocrew app install ./kiro-crew-app`. No screenshot in the repo is a Kiro window. **TODO (owner):** install both and add captures.
 

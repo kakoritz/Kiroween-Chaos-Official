@@ -1,5 +1,6 @@
 // Proxy adapter (H3.7): a fault-injecting HTTP reverse proxy for any language. The process under test talks to the
 // proxy; the proxy forwards to the real dependency unless a fault rule matches. Binds 127.0.0.1 only.
+import { assertLocalTarget } from './guard';
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
 
@@ -50,6 +51,8 @@ export interface FaultProxy {
 export interface FaultProxyOptions {
   /** Base URL of the real dependency, e.g. http://127.0.0.1:7071 . */
   upstream: string;
+  /** H9.2: allow a non-local upstream. Off by default; the CLI sets it from `--i-own-this`. */
+  iOwnThis?: boolean;
   port?: number;
   now?: () => number;
   /** Random source in [0,1) for percent rules (tests inject a fixed one). */
@@ -59,7 +62,7 @@ export interface FaultProxyOptions {
 }
 
 export async function startFaultProxy(opts: FaultProxyOptions): Promise<FaultProxy> {
-  const upstream = new URL(opts.upstream);
+  const upstream = assertLocalTarget(opts.upstream, opts.iOwnThis);
   const now = opts.now ?? Date.now;
   const random = opts.random ?? Math.random;
   const tag = (opts.injectedHeader ?? 'x-haunt-injected').toLowerCase();

@@ -6,34 +6,34 @@ Order matters. The hero demo comes first, the rest widens it.
 
 ## Phase 1: Hero demo (must ship)
 
-- [ ] 1. Scaffold TypeScript, Vitest, lint, `npm run demo` stub. (R8)
-- [ ] 2. Fake provider with idempotency keys and its own ledger. (R7)
-- [ ] 3. SDK: journal, `step()`, `effect()`, replay and reconcile. (R3)
-- [ ] 4. Naive bot and Survivor bot for the order workflow. (R3)
-- [ ] 5. Chaos controller and named crash points, real SIGKILL. (R2)
-- [ ] 6. Runner with auto-restart and event bus. (R2, R4)
-- [ ] 7. Crypt room end to end: naive 2 charges, survivor 1 charge. (R1)
-- [ ] 8. Property test over all crash points. (Testing)
+- [x] 1. Scaffold TypeScript, Vitest, lint, `npm run demo` stub. (R8)
+- [x] 2. Fake provider with idempotency keys and its own ledger. (R7)
+- [x] 3. SDK: journal, `step()`, `effect()`, replay and reconcile. (R3)
+- [x] 4. Naive bot and Survivor bot for the order workflow. (R3)
+- [x] 5. Chaos controller and named crash points, real SIGKILL. (R2)
+- [x] 6. Runner with auto-restart and event bus. (R2, R4)
+- [x] 7. Crypt room end to end: naive 2 charges, survivor 1 charge. (R1)
+- [x] 8. Property test over all crash points. (Testing)
 
 ## Phase 2: See it
 
-- [ ] 9. Report builder: HTML and JSON, journal vs ledger table. (R4)
-- [ ] 10. UI floor plan, ghosts, ledger panel over SSE. (R5)
-- [ ] 11. Kill button and demo mode (90 s script). (R5)
-- [ ] 12. Generated sound effects. (R5)
+- [x] 9. Report builder: HTML and JSON, journal vs ledger table. (R4)
+- [x] 10. UI floor plan, ghosts, ledger panel over SSE. (R5)
+- [x] 11. Kill button and demo mode (90 s script). (R5)
+- [x] 12. Generated sound effects. (R5)
 
 ## Phase 3: Widen it
 
-- [ ] 13. Cellar room with quarantine and resume. (R1, R3.5)
-- [ ] 14. Mirror Hall room. (R1, R3.4)
-- [ ] 15. Poltergeist room. (R1.2)
-- [ ] 16. Locked Door room with "DIED but safe" verdict. (R1.2)
-- [ ] 17. SDK docs and `haunt` CLI. (R6)
+- [x] 13. Cellar room with quarantine and resume. (R1, R3.5) *(superseded: the creature and fault catalog replaced rooms; see docs/SPEC-MAP.md)*
+- [x] 14. Mirror Hall room. (R1, R3.4) *(superseded: the creature and fault catalog replaced rooms; see docs/SPEC-MAP.md)*
+- [x] 15. Poltergeist room. (R1.2) *(superseded: the creature and fault catalog replaced rooms; see docs/SPEC-MAP.md)*
+- [x] 16. Locked Door room with "DIED but safe" verdict. (R1.2) *(superseded: the creature and fault catalog replaced rooms; see docs/SPEC-MAP.md)*
+- [x] 17. SDK docs and `haunt` CLI. (R6) *(SDK built; the CLI is `haunt sweep` and friends, see runtime.md section 13)*
 
 ## Phase 4: Win it
 
-- [ ] 18. Determinism test and CI. (Acceptance 3)
-- [ ] 19. README with GIF of the hero demo, and "How Kiro built this". (R8)
+- [x] 18. Determinism test and CI. (Acceptance 3)
+- [x] 19. README with GIF of the hero demo, and "How Kiro built this". (R8)
 - [ ] 20. Record the 3-minute demo video from demo mode.
 - [ ] 21. submission text: problem, solution, Kiro usage, category.
 

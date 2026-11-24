@@ -31,10 +31,10 @@ Night 6 runs the Python inbox app in the same arena (this is the Skeleton Crew p
 |---|---|---|---|
 | Lantern (R, retry) | 200 | Tries again 3 times | One-off timeouts and 5xx |
 | Spellbook (J, journal) | 300 | Remembers finished work after a crash | Restarting from zero |
-| Seal (I, idempotency) | 400 | Every charge carries a unique key; checks before repeating | Double charges and double emails |
+| Seal (I, idempotency) | 300 | Every charge carries a unique key; checks before repeating | Double charges and double emails |
 | Shield (B, breaker) | 500 | Waits longer each try and stops hammering a broken service | Retry storms, rate limits |
 | Coffin Stash (Q, queue) | 500 | Parks broken orders and resumes them later | Lost orders, poison input |
-Start with 0 gear (the Rookie) and 300 credits. Gear is permanent once bought. A **Sandbox** mode (any night, any gear, no credits needed) lets players experiment.
+Start with 0 gear (the Rookie) and 300 credits (enough for the Seal, which costs 300 and wins night 1 on its own). Gear is permanent once bought. A **Sandbox** mode (any night, any gear, no credits needed) lets players experiment.
 
 ## 4. Requirements (EARS)
 

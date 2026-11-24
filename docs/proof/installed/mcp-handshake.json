@@ -9,6 +9,7 @@
     "haunt_sweep",
     "haunt_ramp",
     "haunt_report",
+    "haunt_specs",
     "haunt_badge"
   ],
   "powerAndAppUseSameServerArgs": true

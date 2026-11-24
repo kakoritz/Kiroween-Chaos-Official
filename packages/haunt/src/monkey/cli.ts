@@ -17,7 +17,7 @@ const flag = (argv: string[], name: string): string | undefined => {
 
 export const CONTROL_FILE = '.haunt/monkey.control.json';
 
-export const MONKEY_USAGE = 'usage: haunt monkey --mode observe|staging|prod-guarded [--config file.yaml] [--dry-run] [--upstream URL] [--probe-path /api/items] [--audit file.jsonl] [--who name] [--control-port N]\n       haunt stop [--port N]\n       haunt watch --mode observe|staging|prod-guarded [--speed 1..100] [--rounds N] [--round-ms N] [--config file.yaml] [--upstream URL] [--probe-path /api/items]\n                   [--patterns .haunt/patterns.json] [--specs .kiro/specs] [--report .haunt/watch-report.json] [--control-port N]';
+export const MONKEY_USAGE = 'usage: haunt monkey --mode observe|staging|prod-guarded [--config file.yaml] [--dry-run] [--upstream URL] [--i-own-this] [--probe-path /api/items] [--audit file.jsonl] [--who name] [--control-port N]\n       haunt stop [--port N]\n       haunt watch --mode observe|staging|prod-guarded [--speed 1..100] [--rounds N] [--round-ms N] [--config file.yaml] [--upstream URL] [--probe-path /api/items]\n                   [--patterns .haunt/patterns.json] [--specs .kiro/specs] [--report .haunt/watch-report.json] [--control-port N]';
 
 export function loadMonkeyConfig(argv: string[]): { ok: true; config: MonkeyConfig } | { ok: false; errors: string[] } {
   const mode = flag(argv, '--mode') as MonkeyMode | undefined;
@@ -53,7 +53,8 @@ export async function monkeyCommand(argv: string[], log: (s: string) => void = c
 
   const demo = flag(argv, '--upstream') ? undefined : await startDemoTarget();
   const upstream = flag(argv, '--upstream') ?? demo!.url;
-  const proxy = await startFaultProxy({ upstream });
+  const proxy = await startFaultProxy({ upstream, iOwnThis: argv.includes('--i-own-this') }).catch((e) => e);
+  if (proxy instanceof Error) { log(`error: ${proxy.message}`); return 2; }
   const auditFile = resolve(flag(argv, '--audit') ?? '.haunt/monkey-audit.jsonl');
   const probePath = flag(argv, '--probe-path') ?? config.allow.endpoints[0] ?? '/';
   const monkey = new Monkey({
@@ -91,7 +92,8 @@ export async function watchCommand(argv: string[], log: (s: string) => void = co
 
   const demo = flag(argv, '--upstream') ? undefined : await startDemoTarget();
   const upstream = flag(argv, '--upstream') ?? demo!.url;
-  const proxy = await startFaultProxy({ upstream });
+  const proxy = await startFaultProxy({ upstream, iOwnThis: argv.includes('--i-own-this') }).catch((e) => e);
+  if (proxy instanceof Error) { log(`error: ${proxy.message}`); return 2; }
   const auditFile = resolve(flag(argv, '--audit') ?? '.haunt/monkey-audit.jsonl');
   const probePath = flag(argv, '--probe-path') ?? config.allow.endpoints[0] ?? '/';
   // A round is short: the config's duration cap is trimmed to 10 s so the watch keeps cycling.
