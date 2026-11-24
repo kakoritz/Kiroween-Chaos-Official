@@ -257,7 +257,7 @@ function shareView(): HTMLElement {
 function render(): void {
   root.replaceChildren();
   const bar = el('header', 'bar');
-  bar.append(el('strong', undefined, 'CHAOS HAUNT'), el('span', 'muted', 'Report viewer'));
+  bar.append(el('strong', undefined, 'KIROWEEN CHAOS'), el('span', 'muted', 'Report viewer'));
   const tabs = el('nav', 'tabs'); tabs.setAttribute('role', 'tablist');
   for (const [id, label] of [['compare', 'Compare'], ['summary', 'Summary'], ['laps', 'Laps & stars'], ['share', 'Share']]) {
     const b = el('button', 'tab', label); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(tab === id));

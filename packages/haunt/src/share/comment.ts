@@ -21,8 +21,8 @@ const cell = (s: string): string => s.replace(/\|/g, '\\|').replace(/\r?\n/g, ' 
 export function renderPrComment(report: unknown, opts: CommentOptions = {}): string {
   const d = scorecardData(report);
   const lines: string[] = [COMMENT_MARKER];
-  const badge = opts.badgeUrl ? `![Chaos Haunt ${d.grade} ${d.score}](${opts.badgeUrl}) ` : '';
-  lines.push(`## ${badge}Chaos Haunt: grade ${d.grade} (${d.score})`);
+  const badge = opts.badgeUrl ? `![Kiroween Chaos ${d.grade} ${d.score}](${opts.badgeUrl}) ` : '';
+  lines.push(`## ${badge}Kiroween Chaos: grade ${d.grade} (${d.score})`);
   lines.push('');
   const status = opts.targetsPassed === undefined ? 'unknown' : opts.targetsPassed ? 'passed' : 'FAILED';
   lines.push(`App \`${cell(d.app)}\`. Targets: **${status}**. Reliability ${d.reliabilityPct}%, repeated side effects ${d.repeats}, lost orders ${d.lost}.`);

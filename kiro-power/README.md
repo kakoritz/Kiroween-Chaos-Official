@@ -1,8 +1,8 @@
-# Chaos Haunt Kiro Power
+# Kiroween Chaos Kiro Power
 
-Chaos engineering for AI agents and automation, played as a haunted house.
+Chaos Monkey for AI agents, played as a haunted house. Kiroween Chaos crashes and curses your bots, grades how they survive, and shows the exact fix. One engine, two apps: Node and Python.
 
-Packaging of the Chaos Haunt MCP server as a Kiro Power. Format source: https://kiro.dev/docs/powers/create/ (`plugin.json`, `mcp.json`, `skills/<name>/SKILL.md`).
+Packaging of the Kiroween Chaos MCP server as a Kiro Power. Format source: https://kiro.dev/docs/powers/create/ (`plugin.json`, `mcp.json`, `skills/<name>/SKILL.md`).
 
 Contents:
 - `plugin.json`: manifest and activation keywords.

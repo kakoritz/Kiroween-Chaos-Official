@@ -1,5 +1,5 @@
-# Example: use Chaos Haunt as a CI gate for your own app. Copy to .github/workflows/ in your repo and adjust.
-# Chaos Haunt exits 0 when every target in haunt.yaml passes, 1 when a target fails, 2 on a usage or config error.
+# Example: use Kiroween Chaos as a CI gate for your own app. Copy to .github/workflows/ in your repo and adjust.
+# Kiroween Chaos exits 0 when every target in haunt.yaml passes, 1 when a target fails, 2 on a usage or config error.
 # This runs chaos against your built app. It does not run your unit tests.
 name: haunt
 

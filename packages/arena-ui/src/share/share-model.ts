@@ -6,7 +6,7 @@ export type ShareFileName = keyof BadgeFiles;
 
 export interface ShareFile { name: ShareFileName; mime: string; label: string; text: string }
 
-export const README_SNIPPET = '![Chaos Haunt grade](./haunt-badge.svg)';
+export const README_SNIPPET = '![Kiroween Chaos grade](./haunt-badge.svg)';
 
 const MIME: Record<ShareFileName, string> = {
   'haunt-badge.svg': 'image/svg+xml',
@@ -27,5 +27,5 @@ export function shareFiles(report: unknown): ShareFile[] {
 
 /** README snippet for a badge file name; defaults to the standard one. */
 export function readmeSnippet(file: ShareFileName = 'haunt-badge.svg'): string {
-  return `![Chaos Haunt grade](./${file})`;
+  return `![Kiroween Chaos grade](./${file})`;
 }

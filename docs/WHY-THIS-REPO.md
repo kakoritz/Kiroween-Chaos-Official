@@ -1,6 +1,6 @@
 # Why this repository exists
 
-This repository is the public copy of the Chaos Haunt project (Kiroween 2026, Skeleton Crew).
+This repository is the public copy of the Kiroween Chaos project (Kiroween 2026, Skeleton Crew).
 
 The work was first done in a private repository. Its commit history held personal data (author email addresses and local paths) that we did not want to publish. Rewriting a GitHub repository in place does not remove old commits, because every pull request keeps its own hidden copy. So the full history was rewritten once (authors set to the project's GitHub no-reply address, personal strings removed from file content and messages) and published here as a new repository.
 
