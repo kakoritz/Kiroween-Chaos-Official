@@ -2,15 +2,15 @@
 
 How Kiro was used to build Haunt (Kiroween-Chaos), in the order of the hackathon rubric. Facts come from the repo, `docs/KIRO-LOG.md`, `docs/KIRO-LOG-ARCHIVE.md` (the old per-task notes), `.kiro/`, and the git and PR history. Lines marked **Owner** can only come from the person who drove the sessions. Nothing here is invented.
 
-## Measured numbers (2026-11-22, branch `stack/tv3`)
+## Measured numbers (2026-11-23, `main`)
 
 | Measure | Value | How it was measured |
 |---|---|---|
 | Spec folders and files | 12 folders, 30 files in `.kiro/specs/` | `find .kiro/specs -type f` |
-| Task boxes | 159 ticked, 76 open across 10 `tasks.md` files | count of `[x]` and `[ ]` (boxes lag some merged TV3 work) |
+| Task boxes | 174 ticked, 61 open across 10 `tasks.md` files | count of `[x]` and `[ ]` (boxes lag some merged TV3 work) |
 | Tests | 1,434 tests in 157 files | `npx vitest run`; one run gave 1,432 passed, 1 failed (worker RPC timeout while the suite ran under load), 1 todo. Which test failed was not checked |
-| Pull requests | 216 (all states, `gh pr list --state all --limit 300`), 199 merged | GitHub |
-| Commits on this branch | 246, between 2026-11-20 and 2026-11-22 | `git log` |
+| Pull requests (original repo) | 256 listed, 248 merged | `docs/PR-HISTORY.md` |
+| Commits in this repo | 50 (imported history), 2026-11-20 to 2026-11-23 | `git log` |
 | Hooks, agents, steering files | 5, 2, 4 | `.kiro/hooks`, `.kiro/agents`, `.kiro/steering` |
 | MCP tools | 6: `haunt_define`, `haunt_sweep`, `haunt_ramp`, `haunt_report`, `haunt_specs`, `haunt_badge` | handshake in `docs/proof/installed/mcp-handshake.json` |
 
@@ -18,23 +18,23 @@ How Kiro was used to build Haunt (Kiroween-Chaos), in the order of the hackathon
 
 Best at: spec-driven work in `.kiro/specs/` (requirements, design, tasks per area) and agent hooks that fire on file save.
 Weak at: long multi-file tasks drifted from the task text unless the task named the exact file and acceptance row.
-**Owner:** add one or two IDE moments and say which tasks were done there.
+Hooks and steering are the IDE-side features the repo actually contains (`.kiro/hooks/*.kiro.hook`, `.kiro/steering/*.md`). **TODO(owner):** a real Kiro IDE window capture and one or two IDE moments with the tasks done there.
 
 ## 2. Kiro CLI
 
 Best at: repeatable runs. `haunt sweep`, `haunt ramp`, `haunt badge` and `haunt spec-lint` are plain CLIs, so the same command works from a terminal, a hook, an agent or a CI step. The reviewer has an optional `--llm` pass that uses the Kiro CLI when configured and falls back to the rule-based reviewer.
-**Owner:** state where the CLI was used for build work.
+The agent files in `.kiro/agents/` use the Kiro agent format, so the same agents load from the CLI. **TODO(owner):** state where the CLI was used for build work.
 
 ## 3. Web and Kiro Crew
 
 Best at: parallel lanes of work (core, arena UI, campaign, share, tournament) as separate branches, one PR per task, merged after local gates (typecheck, `npm test`, `ui:build`, `validate:events`).
 Weak at: long runs hit the per-run time limit and had to be relaunched; one run was lost to a gateway restart with only a partial result saved. Two flaky tests under load needed fixes afterwards (PRs #175 and #203).
-**Owner:** the Crew app screenshot is not captured (see section 10).
+Kiro Web: **TODO(owner)**, no file in the repo records its use. **TODO(owner):** a Kiro Crew window capture (see section 10). The summary of roles per surface is in `HOW-KIRO-BUILT-THIS.md` section 6a.
 
 ## 4. Custom agents
 
-- `chaos-director` runs sweeps and never edits bots.
-- `reviewer` reads a run log and writes `postmortem.md` plus a hardening spec under `.kiro/specs/hardening-<run>/`. Write access is limited by path to hardening specs, `.haunt/runs/` and `.tmp/`; it has no code-edit path.
+- `chaos-director` runs sweeps and never edits bots. It loads `product.md`, `engine/design.md` and `engine/acceptance.md` as `resources`, and can write only under `.tmp/` and `.haunt/`.
+- `reviewer` (tools `fs_read`, `fs_write`; only `fs_read` is pre-approved, so every write asks) reads a run log and writes `postmortem.md` plus a hardening spec under `.kiro/specs/hardening-<run>/`. Write access is limited by path to hardening specs, `.haunt/runs/` and `.tmp/`; it has no code-edit path.
 
 Measured benefit: in the loop proof the reviewer's hardening spec for wave 1 listed findings F1 to F5 and the hardened Rookie resolved all five (`docs/proof/loop-proof.md`). The fix file is **recorded**, not applied live by Kiro. Since then the pattern miner and spec writer (TV3-C11, C12) produce the spec; a sample is in `docs/proof/sample-hardening-spec/`.
 
@@ -48,12 +48,15 @@ Measured benefit: in the loop proof the reviewer's hardening spec for wave 1 lis
 | `lint-hardening-spec` | save of a hardening spec file | asks the agent to run `haunt spec-lint` and fix the spec only |
 | `reviewer-on-wave-end` | manual | asks the reviewer agent for a postmortem and hardening spec |
 
+The five hooks form three workflows: guards on save (`pbt-on-sdk-save`, `fixtures-on-contract-save`), bookkeeping on save (`trace-on-merge`), and agent steps (`lint-hardening-spec`, `reviewer-on-wave-end`). Details in `HOW-KIRO-BUILT-THIS.md` section 7b.
+
 Measured benefit: the property test and the event validator are the two checks that found real bugs (sections 9 and 11). **Owner:** add a count of times each hook caught something.
 
 ## 6. Spec-driven development vs vibe coding
 
-What the repo shows: 12 spec folders, 159 ticked tasks, and every PR title names the task ID it implements (for example `TV3-C7: tournament engine`), so behaviour traces to a requirement. `docs/TRACE.md` is generated from the specs and the git log.
-What it does not show: a side-by-side build of one feature both ways. **Owner:** pick one feature, describe a vibe-coded version, and fill in tasks, tests and defects for both. Until then this section makes no comparison claim.
+What the repo shows: 12 spec folders, 174 ticked tasks, and every PR title names the task ID it implements (for example `TV3-C7: tournament engine`), so behaviour traces to a requirement. `docs/TRACE.md` is generated from the specs and the git log.
+Drift is also on record: `haunted-house` (21 open boxes) was superseded, `tournament-v3/tasks.md` lags merged work, and requirement IDs have 0% PR or test links in `docs/TRACE.md`. Several bugs (section 11) were fixed in unplanned PRs without a spec. The table by area is in `HOW-KIRO-BUILT-THIS.md` section 7a.
+What it does not show: a side-by-side build of one feature both ways. **TODO(owner):** pick one feature, describe a vibe-coded version, and fill in tasks, tests and defects for both. Until then this section makes no comparison claim.
 
 ## 7. Steering
 

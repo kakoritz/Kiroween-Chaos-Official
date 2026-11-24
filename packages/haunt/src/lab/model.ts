@@ -21,9 +21,11 @@ export interface LabStage {
   effects?: LabEffect[];
 }
 /** Ids of the creatures the lab sends (checked against engine LAB_CREATURES by the tests). */
+/** Code-drawn pack creature sprites in the arena (PK-U2). A pack fault may name one in `sprite`; `art` stays a lab creature. */
+export const PACK_SPRITE_IDS: readonly string[] = ['buffer_wraith', 'cdn_kraken', 'drm_gatekeeper', 'render_gremlin', 'cloud_banshee', 'region_ghost'];
 export const LAB_CREATURE_IDS: readonly string[] = ['reaper', 'wraith', 'banshee', 'zombie', 'ghost', 'goblin', 'imp', 'poltergeist', 'doppelganger', 'witch', 'mummy'];
 
-export interface PackFault { id: string; stage: string; creature: string; art: string; mode: string; behavior: string }
+export interface PackFault { id: string; stage: string; creature: string; art: string; sprite?: string; mode: string; behavior: string }
 export interface PackBoss { id: string; label?: string; hits: string[]; story?: string }
 /** A cursed endpoint: a persistent trait, so the stage it sits behind always sees the fault (not once per sweep). */
 export interface PackCurse { id: string; endpoint: string; stage?: string; fault?: string }

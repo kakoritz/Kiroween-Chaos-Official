@@ -1,7 +1,7 @@
 // Scenario packs (PK-C1): a pack is data (stages, faults, creature names, reviews, tiers). The engine builds a generic bot
 // from the stages and the five parts (the Workflow Lab model). No node imports: this bundles for the browser.
 // Spec: .kiro/specs/packs/spec.md sections 2 and 3.
-import { LAB_CREATURE_IDS, LAB_FAULT_IDS, LAB_PARTS, ROLES, validateLabModel, type LabModel, type LabPart, type LabStage, type LabPackMeta, type PackFault, type PackBoss, type PackCurse, type PackReviews } from '../lab/model';
+import { LAB_CREATURE_IDS, PACK_SPRITE_IDS, LAB_FAULT_IDS, LAB_PARTS, ROLES, validateLabModel, type LabModel, type LabPart, type LabStage, type LabPackMeta, type PackFault, type PackBoss, type PackCurse, type PackReviews } from '../lab/model';
 import { parseYaml } from '../config/yaml';
 
 export type { LabPackMeta, PackFault, PackBoss, PackCurse, PackReviews };
@@ -64,6 +64,7 @@ export function validatePack(raw: unknown): string[] {
     if (f.stage !== 'any' && !(isStr(f.stage) && ids.has(f.stage))) errs.push(`${p}.stage: must be a declared stage id or "any"`);
     if (!isStr(f.creature)) errs.push(`${p}.creature: required text`);
     if (!isStr(f.art) || !LAB_CREATURE_IDS.includes(f.art)) errs.push(`${p}.art: an existing creature id (${LAB_CREATURE_IDS.join(', ')})`);
+    if (f.sprite !== undefined && !(isStr(f.sprite) && PACK_SPRITE_IDS.includes(f.sprite))) errs.push(`${p}.sprite: one of ${PACK_SPRITE_IDS.join(', ')}`);
     if (!isStr(f.mode)) errs.push(`${p}.mode: required text`);
     if (!isStr(f.behavior)) errs.push(`${p}.behavior: required text`);
   });

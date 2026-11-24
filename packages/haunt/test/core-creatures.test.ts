@@ -1,3 +1,4 @@
+// covers: haunted-house/R1.1
 import { describe, expect, it } from 'vitest';
 import { CORE_CREATURES, CreatureRegistry, type CoreContext } from '../src/creatures';
 import { FAULTS } from '../src/chaos/catalog';

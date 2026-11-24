@@ -1,3 +1,4 @@
+// covers: haunted-house/R3.1, haunted-house/R3.2, haunted-house/R3.3, haunted-house/R3.4, haunted-house/R6.1
 import { describe, expect, it } from 'vitest';
 import { appendFileSync, mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';

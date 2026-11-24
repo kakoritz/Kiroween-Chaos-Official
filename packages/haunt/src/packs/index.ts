@@ -2,4 +2,4 @@ export * from './pack';
 export * from './embedded';
 export * from './streaming';
 export * from './ticketing';
-export * from './summary';
+export * from './list';

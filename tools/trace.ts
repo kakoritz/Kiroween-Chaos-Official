@@ -19,7 +19,7 @@ export interface TraceItem {
   taskRefs?: string[];
 }
 
-const ID_RE = /^[A-Za-z][A-Za-z0-9]*(?:[-.][A-Za-z0-9]+)*$/;
+const ID_RE = /^(?:[a-z][a-z0-9-]*\/)?[A-Za-z][A-Za-z0-9]*(?:[-.][A-Za-z0-9]+)*$/;
 const SKIP_DIRS = new Set(['node_modules', 'dist', '.git', '.haunt', 'coverage', '.vite', '__pycache__']);
 
 function clip(s: string): string {

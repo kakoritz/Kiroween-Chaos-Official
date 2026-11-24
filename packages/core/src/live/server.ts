@@ -12,9 +12,9 @@ import { MAX_DEPTH } from '../../../haunt/src/chaos/catalog';
 import type { PartId } from '../../../haunt/src/shared/catalog';
 import { fnv1a32, mulberry32 } from '../../../haunt/src/shared/rng';
 import { loadCampaign } from '../../../haunt/src/campaign/load';
-import { listPackSummaries } from '../../../haunt/src/packs/summary';
 import { campaignWaveConfig, parseCampaignRequest, type CampaignRequest } from '../../../haunt/src/campaign/wave-config';
 import { APPS, APP_STAGES, CONTRACT_VERSION, CREATURES, DEMO_SCRIPTS, FAULT_IDS, type AppId } from './catalog';
+import { listPacks } from '../../../haunt/src/packs/list';
 import { LapTracker } from './lap-tracker';
 import { laneLaps, orderRecord, waveLaps, waveStars } from './laps';
 import { PACE_FACTOR } from '../../../haunt/src/runner/travel';
@@ -113,13 +113,6 @@ const MIME: Record<string, string> = {
 };
 const ORIGIN_RE = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 
-/** Seconds to wait in the review state before pressing Next; undefined and 0 mean off. A bad value is a 400. */
-function parseAutoContinue(v: unknown): number {
-  if (v === undefined || v === null || v === false) return 0;
-  if (typeof v !== 'number' || !Number.isFinite(v) || v < 0 || v > 3600) return fail(400, 'bad_request', 'auto-continue seconds must be 0 to 3600');
-  return v;
-}
-
 export class LiveServer {
   readonly log: EventLog;
   readonly waves: WaveManager;
@@ -134,8 +127,7 @@ export class LiveServer {
   /** The chaos monkey panel's backend (PK-U3): one built-in demo target, created on first use, never a third-party system. */
   private monkeyHost?: MonkeyHost;
   /** The running tournament (TV3-C7), if any. */
-  tourney?: { t: Tournament; speed: number; pace: 'normal' | 'show' | 'slow'; wave: number; id: string; firstWave?: number; autoSpecs?: boolean; autoContinueSec?: number };
-  private autoNextTimer?: ReturnType<typeof setTimeout>;
+  tourney?: { t: Tournament; speed: number; pace: 'normal' | 'show' | 'slow'; wave: number; id: string; firstWave?: number; autoSpecs?: boolean };
   /** The improve loop (TV3-C13): one job at a time. */
   improveJob?: { id: string; phase: string; startedAt: number; request: Record<string, unknown>; report?: ImproveReport; error?: string; spec?: unknown };
   /** Casebook of the Crew lane for the last finished campaign night (GET /api/casebook when no tournament runs). */
@@ -202,7 +194,6 @@ export class LiveServer {
   }
 
   async close(): Promise<void> {
-    this.clearAutoNext();
     await this.monkeyHost?.close();
     this.monkeyHost = undefined;
     for (const c of this.clients) c.end();
@@ -404,7 +395,6 @@ export class LiveServer {
     const pace = body.pace ?? 'slow';
     if (pace !== 'normal' && pace !== 'show' && pace !== 'slow') fail(400, 'bad_request', 'bad pace');
     if (body.lanes !== undefined && !(Number.isInteger(body.lanes) && body.lanes >= 2 && body.lanes <= 5)) fail(400, 'bad_request', 'lanes must be 2 to 5');
-    const autoContinueSec = parseAutoContinue(body.autoContinueSec);
     let t: Tournament;
     try { t = new Tournament({ seed, rounds: body.rounds, lanes: body.lanes }); } catch (e) { return fail(400, 'bad_request', e instanceof Error ? e.message : 'bad rounds'); }
     // The tournament runs on the app that is selected (or the one asked for): the same rounds, curses, Casebook and rules for both.
@@ -417,9 +407,8 @@ export class LiveServer {
     this.chaosMode = { mode: 'manual', frequency: 0.3, seed };
     if (body.resetLessons === true) this.lessons.reset();
     this.engine.clearCurses?.();
-    this.tourney = { t, speed, pace, wave: 0, id: 't' + Date.now().toString(36), firstWave: this.waves.n + 1, ...(body.autoSpecs === false ? { autoSpecs: false } : {}), ...(autoContinueSec ? { autoContinueSec } : {}) };
-    this.clearAutoNext();
-    return { tournament: true, ...(autoContinueSec ? { autoContinueSec } : {}), ...this.beginRound() };
+    this.tourney = { t, speed, pace, wave: 0, id: 't' + Date.now().toString(36), firstWave: this.waves.n + 1, ...(body.autoSpecs === false ? { autoSpecs: false } : {}) };
+    return { tournament: true, ...this.beginRound() };
   }
 
   private beginRound() {
@@ -454,7 +443,6 @@ export class LiveServer {
       }
     });
     this.minePatterns(tn.id, tn.t.round, n, evs, evs.map((e) => Number(e.lane)).filter((l) => Number.isInteger(l)));
-    this.armAutoNext();
     if ((tn.t.phase as string) === 'done') {
       this.log.emit({ ...(tn.t.endEvent(this.finalExtras(tn.t)) as HauntEvent), wave: n });
       if (this.specsDir && tn.autoSpecs !== false && this.patterns.list().some((p) => qualifies(p) && (p.status === 'new'))) { try { this.writeSpecs(tn.id, n); } catch { /* a spec that cannot be written must not stop the tournament */ } }
@@ -600,35 +588,7 @@ export class LiveServer {
   private tournamentNext() {
     const tn = this.tourney;
     if (!tn || tn.t.phase !== 'awaiting_next') fail(409, 'not_awaiting_next', 'no round is waiting for Next');
-    this.clearAutoNext();
     return this.beginRound();
-  }
-
-  /** TV3-C2: the optional auto-continue. Off (0) by default; when set, a review state that nobody advances presses Next after N seconds. */
-  private armAutoNext() {
-    this.clearAutoNext();
-    const tn = this.tourney;
-    const sec = tn?.autoContinueSec;
-    if (!tn || !sec || (tn.t.phase as string) !== 'awaiting_next') return;
-    const round = tn.t.round;
-    this.autoNextTimer = setTimeout(() => {
-      this.autoNextTimer = undefined;
-      const cur = this.tourney;
-      if (!cur || cur !== tn || (cur.t.phase as string) !== 'awaiting_next' || cur.t.round !== round) return;
-      try { this.tournamentNext(); } catch { /* the wave could not start; the review state stays and Next still works */ }
-    }, sec * 1000);
-    this.autoNextTimer.unref?.();
-  }
-  private clearAutoNext() { if (this.autoNextTimer) { clearTimeout(this.autoNextTimer); this.autoNextTimer = undefined; } }
-
-  /** POST /api/tournament/auto-continue {seconds}: change the setting of the running tournament; 0 turns it off. */
-  private setAutoContinue(body: Record<string, any>) {
-    const tn = this.tourney;
-    if (!tn) return fail(409, 'no_tournament', 'no tournament is running');
-    const sec = parseAutoContinue(body.seconds);
-    if (sec) tn.autoContinueSec = sec; else delete tn.autoContinueSec;
-    this.armAutoNext();
-    return { autoContinueSec: sec };
   }
 
   private endWave(stopped = false) {
@@ -755,7 +715,7 @@ export class LiveServer {
       if (p === '/api/creatures') return { json: CREATURES };
       if (p === '/api/campaign') return { json: loadCampaign() };
       if (p === '/api/apps') return { json: APPS };
-      if (p === '/api/packs') return { json: { packs: listPackSummaries() } };
+      if (p === '/api/packs') return { json: listPacks() };
       if (seg[0] === 'api' && seg[1] === 'demo' && seg[2] === 'captions' && seg.length === 4) {
         if (!(CAPTION_SCRIPTS as readonly string[]).includes(seg[3])) fail(404, 'not_found', 'unknown demo script');
         return { json: loadCaptions(seg[3]) };
@@ -849,7 +809,6 @@ export class LiveServer {
       case '/api/curse/end': return { json: this.endCurse(body) };
       case '/api/tournament/start': return { json: this.startTournament(body) };
       case '/api/next': return { json: this.tournamentNext() };
-      case '/api/tournament/auto-continue': return { json: this.setAutoContinue(body) };
       case '/api/decision': return { json: this.decision(body) };
       case '/api/demo/start':
         if (!(DEMO_SCRIPTS as readonly string[]).includes(body.script)) fail(400, 'bad_request', 'bad script');

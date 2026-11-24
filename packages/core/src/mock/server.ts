@@ -1,5 +1,6 @@
 // Mock server (H0.3): the whole REST surface of contract/PROTOCOL.md plus SSE, driven by fixtures and a small chaos
 // simulator. It is not an engine. Event sequences come from the lane planner fixtures; outcomes from the outcome table.
+import { listPacks } from '../../../haunt/src/packs/list';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -14,7 +15,6 @@ import { OutcomeTable } from './outcomes';
 import { ChaosSim, DEMO_SCRIPTS, MockError, Player, fixtureFor, scaledWave } from './play';
 import { hardening, laneLaps, laneLog, laneOrderRecord, laneOrders, ledger, pendingDecision, postmortem, stageDetail, waveCompare, waveLaps, waveReport, waveStars, wavesList } from './queries';
 import { loadCampaign } from '../../../haunt/src/campaign/load';
-import { listPackSummaries } from '../../../haunt/src/packs/summary';
 import { parseCampaignRequest } from '../../../haunt/src/campaign/wave-config';
 import { campaignFixture, parseCampaignFixtureName } from '../../mock/campaign-fixtures';
 
@@ -204,8 +204,8 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
         return send(res, 200, loadCaptions(s));
       }
       if (path === '/api/campaign') return send(res, 200, campaign ??= loadCampaign());
-      if (path === '/api/packs') return send(res, 200, { packs: listPackSummaries() });
       if (path === '/api/apps') return send(res, 200, Object.values(APPS).map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role, kind: stageKind(s.role) })) })));
+      if (path === '/api/packs') return send(res, 200, listPacks());
       if (path === '/api/state') return send(res, 200, stateBody());
       if (path === '/api/curses') return send(res, 200, { curses: [...hub.curses], table: [], kinds: ['404', 'slow', 'flaky500', 'clock_skew', 'rate_limit'] });
       if (path === '/api/patterns') {

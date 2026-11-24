@@ -118,6 +118,8 @@ export interface ArenaApi {
   /** GET /api/campaign (contract V1_1.md section 12): `{nights, gear, start}`. */
   getCampaign(): Promise<any>;
   getApps(): Promise<AppInfo[]>;
+  /** GET /api/packs: the shipped packs (id, title, stages, faults with creature names). Absent on servers without it. */
+  getPacks?(): Promise<unknown[]>;
   setApp(app: string): Promise<unknown>;
   getLaneStage(lane: number, stage: string, order?: string): Promise<any>;
   getLaneLog(lane: number, opts?: { order?: string; since?: number }): Promise<{ lines: LogLine[] }>;

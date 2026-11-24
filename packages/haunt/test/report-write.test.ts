@@ -1,3 +1,4 @@
+// covers: haunted-house/R4.1, haunted-house/R4.2, haunted-house/R4.4
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
