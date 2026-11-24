@@ -1,9 +1,10 @@
 // Static catalogs served by the live server: creatures, apps, stages, gear (contract/CONTRACT.md, PROTOCOL.md rule 19).
 import { FAULTS, BOSSES } from '../../../haunt/src/chaos/catalog';
-import { INBOX_STAGES, ORDERS_STAGES, stageKind, type StageKind } from '../../../haunt/src/shared/catalog';
+import { INBOX_STAGES, ORDERS_STAGES, STREAM_STAGES, stageKind, type StageKind } from '../../../haunt/src/shared/catalog';
 
 export const CONTRACT_VERSION = 1;
-export type AppId = 'orders' | 'inbox';
+export type AppId = 'orders' | 'inbox' | 'stream';
+export const isAppId = (v: unknown): v is AppId => v === 'orders' || v === 'inbox' || v === 'stream';
 
 export interface Creature {
   id: string;
@@ -62,13 +63,13 @@ export function buildCreatures(): Creature[] {
       const named = LABELS[f.creature];
       if (!named) throw new Error('creature display name missing in catalog: ' + f.creature);
       const [label, description] = named;
-      out.set(f.creature, { id: f.creature, label, family: f.family, sprite: f.creature, causes: [f.id], boss: false, apps: ORDERS_ONLY.has(f.creature) ? ['orders'] : ['orders', 'inbox'], description });
+      out.set(f.creature, { id: f.creature, label, family: f.family, sprite: f.creature, causes: [f.id], boss: false, apps: ORDERS_ONLY.has(f.creature) ? ['orders'] : ['orders', 'inbox', 'stream'], description });
     }
   }
   for (const b of BOSSES) {
     const [id, family] = BOSS_CREATURE[b]!;
     const [label, description] = LABELS[id]!;
-    out.set(id, { id, label, family, sprite: id, causes: [b], boss: true, apps: ['orders', 'inbox'], description });
+    out.set(id, { id, label, family, sprite: id, causes: [b], boss: true, apps: ['orders', 'inbox', 'stream'], description });
   }
   return [...out.values()];
 }
@@ -83,11 +84,13 @@ export const APP_STAGES: Record<AppId, StageView[]> = {
   // The orders list comes from the one stage table (haunt/shared/catalog), so ids, labels and kinds cannot drift.
   orders: ORDERS_STAGES.map((d) => ({ id: d.id, label: d.label, icon: d.icon, workAnimation: d.workAnimation, kind: stageKind(d.role) })),
   inbox: INBOX_STAGES.map((d) => ({ id: d.id, label: d.label, icon: d.icon, workAnimation: d.workAnimation, kind: stageKind(d.role) })),
+  stream: STREAM_STAGES.map((d) => ({ id: d.id, label: d.label, icon: d.icon, workAnimation: d.workAnimation, kind: stageKind(d.role) })),
 };
 
 export const APPS = [
   { id: 'orders' as const, label: 'Orders', stages: APP_STAGES.orders },
   { id: 'inbox' as const, label: 'Inbox', stages: APP_STAGES.inbox },
+  { id: 'stream' as const, label: 'Stream', stages: APP_STAGES.stream },
 ];
 
 export const PARTS: { id: string; label: string }[] = [

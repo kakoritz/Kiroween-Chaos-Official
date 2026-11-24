@@ -6,9 +6,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 73. With a PR: 29 (40%). With a test: 73 (100%).
-- Tasks: 110. Done: 108. With a PR: 48 (44%). With a test: 17 (15%).
-- Test files scanned: 207.
+- Requirements: 97. With a PR: 29 (30%). With a test: 97 (100%).
+- Tasks: 116. Done: 114. With a PR: 48 (41%). With a test: 23 (20%).
+- Test files scanned: 210.
 
 ## Tasks
 
@@ -93,6 +93,12 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | SH-U1 | share | Workflow Lab UI. Form, presets, protections toggles, run view, report, export... | done | [#210](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/210) | `packages/arena-ui/test/lab.test.ts`, `packages/haunt/test/trace.test.ts` |
 | SH-U2 | share | Share button. In the report viewer: download badge and scorecard, copy README... | done | [#205](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/205) | - |
 | SH-U3 | share | Architecture diagram page. In the hosted demo footer ("How it works"). Done: ... | done | - | `packages/arena-ui/test/how-it-works.test.ts` |
+| SP-C1 | stream-pack-app | Stage table and app id. STREAMSTAGES, app id stream in shared and live catalo... | done | - | `packages/core/test/stream-live.test.ts` |
+| SP-C2 | stream-pack-app | Stream pipeline and bots. StreamPipeline, five tier bots and the Crew, define... | done | - | `apps/haunted-stream/test/stream.test.ts` |
+| SP-C3 | stream-pack-app | Live wiring. Bot command and job files in live/runtime.ts, app validation in ... | done | - | `packages/core/test/stream-live.test.ts` |
+| SP-C4 | stream-pack-app | Tests. Catalog, config, bots (--parts, real child run with a crash), live ser... | done | - | `packages/core/test/stream-live.test.ts` |
+| SP-C5 | stream-pack-app | End to end. tools/e2e.mjs Stream section: reset the dial, switch app, run a w... | done | - | `tools/e2e-stream.test.ts` |
+| SP-D1 | stream-pack-app | Docs. README, docs/PACKS.md, docs/JUDGES.md, docs/TRACE.md. (R6) | done | - | `packages/haunt/test/docs-truth.test.ts` |
 | TG-1 | test-gaps | Write requirements, design and tasks. | done | - | - |
 | TG-2 | test-gaps | Tests for haunted-house R1.2, R1.3, R4.3, R6.2 in packages/haunt/test/require... | done | - | - |
 | TG-3 | test-gaps | Tests for haunted-house R5.2, R5.3 and playtest-v2 R8.3, R9.3 in packages/cor... | done | - | - |
@@ -202,3 +208,27 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R9.1 | playtest-v2 | All new scoring and review functions SHALL be pure and covered by properties ... | n/a | - | `packages/haunt/test/pbt-playtest.test.ts` |
 | R9.2 | playtest-v2 | All new fixtures SHALL validate against the schema and the ordering rules 40 ... | n/a | - | `packages/haunt/test/validate-v1-1.test.ts` |
 | R9.3 | playtest-v2 | THE SYSTEM SHALL keep npm run demo and npm run fresh-clone working. (PT-X1) | n/a | [#196](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/196), [#199](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/199) | `packages/core/test/requirement-gaps-ui.test.ts` |
+| R1 | stream-pack-app | A runnable Stream app | n/a | - | `apps/haunted-stream/test/stream.test.ts`, `packages/core/test/stream-live.test.ts` |
+| R1.1 | stream-pack-app | apps/haunted-stream holds a Node/TypeScript pipeline of five stages: ingest u... | n/a | - | `apps/haunted-stream/test/stream.test.ts`, `packages/core/test/stream-live.test.ts` |
+| R1.2 | stream-pack-app | apps/haunted-stream/haunt.yaml declares the same five stages and loads with l... | n/a | - | `apps/haunted-stream/test/stream.test.ts`, `packages/core/test/stream-live.test.ts` |
+| R1.3 | stream-pack-app | The stage table in packages/haunt/src/shared/catalog.ts (STREAMSTAGES) and th... | n/a | - | `apps/haunted-stream/test/stream.test.ts`, `packages/core/test/stream-live.test.ts` |
+| R2 | stream-pack-app | Same harness, no engine fork | n/a | - | `packages/core/test/stream-live.test.ts` |
+| R2.1 | stream-pack-app | The app plugs in as app id stream: POST /api/app {app: "stream"} works, /api/... | n/a | - | `packages/core/test/stream-live.test.ts` |
+| R2.2 | stream-pack-app | A wave on the Stream app uses the same lanes, tiers, intensity dial, chaos di... | n/a | - | `packages/core/test/stream-live.test.ts` |
+| R2.3 | stream-pack-app | Side effects go to the existing fake provider (store, dispatch, notify); no p... | n/a | - | `packages/core/test/stream-live.test.ts` |
+| R3 | stream-pack-app | Tiers and parts | n/a | - | `apps/haunted-stream/test/stream.test.ts` |
+| R3.1 | stream-pack-app | Five bots (Rookie, Retrier, Journaler, Reconciler, Phoenix) plus the campaign... | n/a | - | `apps/haunted-stream/test/stream.test.ts` |
+| R3.2 | stream-pack-app | Each bot declares the same parts as its Orders namesake; --parts reports them. | n/a | - | `apps/haunted-stream/test/stream.test.ts` |
+| R3.3 | stream-pack-app | A Rookie that crashes after an effect repeats it; a Reconciler or Phoenix doe... | n/a | - | `apps/haunted-stream/test/stream.test.ts` |
+| R4 | stream-pack-app | Contract | n/a | - | `packages/core/test/stream-live.test.ts` |
+| R4.1 | stream-pack-app | A Stream wave passes the contract validator with zero violations. | n/a | - | `packages/core/test/stream-live.test.ts` |
+| R4.2 | stream-pack-app | Stream events carry only Stream stage ids; the hello event lists the five sta... | n/a | - | `packages/core/test/stream-live.test.ts` |
+| R5 | stream-pack-app | Pack creatures and curses | n/a | - | `packages/core/test/stream-live.test.ts` |
+| R5.1 | stream-pack-app | Faults land only on Stream stages. The Streaming pack's creatures (Buffer Wra... | n/a | - | `packages/core/test/stream-live.test.ts` |
+| R5.2 | stream-pack-app | Curses (cursed catalog, cursed manifest) land on the Stream endpoints; curse ... | n/a | - | `packages/core/test/stream-live.test.ts` |
+| R5.3 | stream-pack-app | Creatures that exist only for orders (delivery world faults) are not offered ... | n/a | - | `packages/core/test/stream-live.test.ts` |
+| R6 | stream-pack-app | Docs say what is true | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R6.1 | stream-pack-app | README and docs/PACKS.md say the Streaming pack now has a real app; the other... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R6.2 | stream-pack-app | docs/TRACE.md stays at 100 percent requirement coverage. | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R7 | stream-pack-app | End to end | n/a | - | `tools/e2e-stream.test.ts` |
+| R7.1 | stream-pack-app | npm run e2e switches to Stream (after resetting the intensity dial), runs a w... | n/a | - | `tools/e2e-stream.test.ts` |

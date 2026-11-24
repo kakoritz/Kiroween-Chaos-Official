@@ -21,6 +21,11 @@ const STAGE_SERVICE: Record<string, Service> = {
   assign: 'ticket',
   notify: 'reply',
   escalate: 'notify',
+  // Stream app stages
+  fetch: 'store',
+  draft: 'dispatch',
+  reply: 'notify',
+  archive: 'store',
 };
 
 /** Transit faults (V1_2 section 4): stalls and reroutes on the tracking poll. */

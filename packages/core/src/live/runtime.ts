@@ -22,6 +22,7 @@ import { loadCampaign } from '../../../haunt/src/campaign/load';
 import { planScripts } from '../../../haunt/src/campaign/wave-config';
 import { loadDemo, type DemoPress, type DemoScript } from './demo';
 import { inboxBotCommand, inboxTarget, writeInboxMail } from './inbox-command';
+import { writeStreamJobs } from '../../../../apps/haunted-stream/src/jobs';
 import type { LiveEngine } from './server';
 
 export const HARDENING_FILES = ['requirements.md', 'design.md', 'tasks.md'] as const;
@@ -127,7 +128,8 @@ export function makeBotCommand(o: BotCommandOptions): SpawnerOptions['botCommand
       : tiersForLanes(settings.lanes, settings.tiers, settings.campaign ? { parts: settings.campaign.parts } : undefined)[Number(lane) - 1];
     if (!tier) return undefined;
     const bundle = o.bundleFor?.(lane, wave, tier.id) ?? tier.id;
-    const file = join(botsDir, `${bundle}.js`);
+    // The Stream app has its own bundles, built next to the orders ones (stream-pack-app SP-C3).
+    const file = settings.app === 'stream' ? join(o.root, 'dist', 'stream-bots', `${tier.id}.js`) : join(botsDir, `${bundle}.js`);
     // SH-C6: the inbox app runs the Python bot for real; without Python it falls back to the built TypeScript bots.
     const inbox = settings.app === 'inbox' ? inboxTarget(o.root, tier.id) : undefined;
     if (!inbox && !existsSync(file)) return undefined;
@@ -136,6 +138,7 @@ export function makeBotCommand(o: BotCommandOptions): SpawnerOptions['botCommand
     const attempt = (attempts.get(lane) ?? 0) + 1;
     attempts.set(lane, attempt);
     if (inbox) writeInboxMail(paths.orders, settings.orders, inbox.corpus);
+    if (settings.app === 'stream') writeStreamJobs(paths.orders, settings.orders);
     const env = {
       HAUNT_RUN_DIR: dir, HAUNT_LANE: lane, HAUNT_TIER: tier.id, HAUNT_SEED: String(settings.seed),
       HAUNT_PROVIDER: o.providerUrl, HAUNT_ORDERS_DIR: paths.orders, HAUNT_SPEED: String(settings.speed),

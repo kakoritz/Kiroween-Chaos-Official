@@ -29,4 +29,22 @@ await build({
   banner: { js: "import { createRequire as __cr } from 'node:module'; const require = __cr(import.meta.url);" },
 });
 for (const f of entries) console.log(`built dist/bots/${basename(f, '.ts')}.js`);
-console.log(`build:bots ok (${entries.length} bots)`);
+// The Stream app's bots (stream-pack-app SP-C2) go to their own folder so tier names do not collide.
+const streamDir = resolve(root, 'apps/haunted-stream/src/bots');
+const streamEntries = existsSync(streamDir) ? readdirSync(streamDir).filter((f) => f.endsWith('.ts') && !f.endsWith('.d.ts')).sort() : [];
+if (streamEntries.length > 0) {
+  await build({
+    entryPoints: streamEntries.map((f) => resolve(streamDir, f)),
+    outdir: resolve(root, 'dist/stream-bots'),
+    entryNames: '[name]',
+    bundle: true,
+    platform: 'node',
+    format: 'esm',
+    target: 'node20',
+    tsconfig: resolve(root, 'tsconfig.json'),
+    logLevel: 'warning',
+    banner: { js: "import { createRequire as __cr } from 'node:module'; const require = __cr(import.meta.url);" },
+  });
+  for (const f of streamEntries) console.log(`built dist/stream-bots/${basename(f, '.ts')}.js`);
+}
+console.log(`build:bots ok (${entries.length + streamEntries.length} bots)`);

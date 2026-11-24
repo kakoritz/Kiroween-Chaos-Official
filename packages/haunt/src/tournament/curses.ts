@@ -40,6 +40,8 @@ export function drawCurse(seed: string | number, lane: number, n: number, kind?:
 /** The stage a call to a provider endpoint belongs to. `index` tells the two store steps and the two notices apart. */
 export function stageOfCall(service: string, index?: number, app: AppId = 'orders'): string {
   if (app !== 'orders') {
+    // The Stream app calls the store twice (upload, then archive), told apart by index like the orders store steps.
+    if (app === 'stream' && service === 'store') return index === 2 ? 'archive' : 'fetch';
     const hit = APPS[app].stages.find((s) => s.effects.some((e) => e.service === service));
     if (hit) return hit.id;
   }

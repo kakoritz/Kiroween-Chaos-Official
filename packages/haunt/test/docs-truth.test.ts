@@ -1,4 +1,4 @@
-// covers: haunted-house/R8.2 PK-C3
+// covers: haunted-house/R8.2 PK-C3 stream-pack-app/R6 stream-pack-app/R6.1 stream-pack-app/R6.2 SP-D1
 // The docs say one true thing about the Ticket Desk (11 stages) and README links the Kiro write-up.
 import { describe, expect, it } from 'vitest';
 import { existsSync, readFileSync } from 'node:fs';
@@ -33,5 +33,17 @@ describe('README explains how Kiro was used', () => {
       expect(t).toContain(p);
       expect(existsSync(join(root, p))).toBe(true);
     }
+  });
+});
+
+describe('Stream app docs (stream-pack-app R6)', () => {
+  it('README and PACKS say the streaming pack has a runnable app and no doc still calls it label-only or not runnable', () => {
+    for (const d of ['README.md', 'docs/PACKS.md', 'docs/JUDGES.md']) {
+      const t = read(d);
+      expect(t, d).not.toMatch(/It has no runnable app|Not built: a runnable streaming app|Two real apps live/);
+    }
+    expect(read('README.md')).toContain('apps/haunted-stream');
+    expect(read('docs/PACKS.md')).toMatch(/Three real apps live/);
+    expect(existsSync(join(root, 'apps/haunted-stream/haunt.yaml'))).toBe(true);
   });
 });

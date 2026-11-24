@@ -1,6 +1,6 @@
 // npm run e2e: end-to-end smoke of the live product on private ports (no browser).
 // Starts the live server (HAUNT_PORT, default 7171; provider HAUNT_PROVIDER_PORT, default 7172) and plays: the hero demo wave,
-// campaign night 1, a tournament at speed 4 pressing Next between rounds, the improve loop, and an app switch to the inbox with a wave.
+// campaign night 1, a tournament at speed 4 pressing Next between rounds, the improve loop, an app switch to the inbox with a wave, and an app switch to the Stream app with a wave whose events must pass the contract validator.
 // Then it checks invariants on the event stream and prints a pass/fail table. Exit code 1 if any check fails.
 // Flags: --quick (skip the improve loop), --keep-log (write the stream to .tmp/e2e/events.jsonl, always written on failure).
 import { spawn } from 'node:child_process';
@@ -237,6 +237,37 @@ try {
     check('inbox', 'wave ran on the Python inbox', evs.some((e) => e.type === 'effect' && ['ticket', 'email', 'notify', 'reply', 'account_create'].includes(e.detail?.kind)), `${inboxStages.length} stages: ${inboxStages.map((s) => s.id).join(',')}`);
     const s = end.detail.summary;
     check('inbox', 'every inbox order finished', Object.values(s).every((l) => (l.orders.done + l.orders.cancelled + l.orders.parked + l.orders.quarantined + l.orders.abandoned) >= 3), JSON.stringify(Object.fromEntries(Object.entries(s).map(([k, v]) => [k, v.orders]))));
+  }
+  await sleep(300);
+
+  // 6. stream (stream-pack-app SP-C5)
+  {
+    // The dial is global and sticks (see the inbox section): reset it so the Stream wave is not a minutes-long storm.
+    await post('/api/intensity', { level: 3 });
+    await post('/api/app', { app: 'stream' });
+    const app = (await c.get('/api/state')).json.app;
+    check('stream', 'app switch to stream', app === 'stream', app);
+    const streamStages = (await c.get('/api/state')).json.stages;
+    check('stream', 'state lists the 5 Stream stages', streamStages.length === 5 && streamStages.map((x) => x.id).join() === 'fetch,classify,draft,reply,archive', streamStages.map((x) => x.id).join());
+    const apps = (await c.get('/api/apps')).json;
+    check('stream', 'the app switcher lists stream', Array.isArray(apps) && apps.some((a) => a.id === 'stream'), apps.map((a) => a.id).join());
+    const { wave } = await post('/api/wave/start', { orders: 3, lanes: 2, speed: 4, seed: 5 });
+    const end = await endOf(wave);
+    const evs = waveSlice(c.events, wave);
+    check('stream', 'wave ran on the Node Stream bots', evs.some((e) => e.type === 'effect' && ['store', 'dispatch', 'notify'].includes(e.detail?.kind)) && evs.filter((e) => e.stage).every((e) => streamStages.some((x) => x.id === e.stage)), `${evs.filter((e) => e.type === 'effect').length} effects`);
+    const s = end.detail.summary;
+    check('stream', 'every Stream order finished', Object.values(s).every((l) => (l.orders.done + l.orders.cancelled + l.orders.parked + l.orders.quarantined + l.orders.abandoned) >= 3), JSON.stringify(Object.fromEntries(Object.entries(s).map(([k, v]) => [k, v.orders]))));
+    // Strict, unlike the informational check below: the Stream wave alone, behind the first hello, must have zero violations.
+    mkdirSync(resolve(root, '.tmp/e2e'), { recursive: true });
+    const streamLog = resolve(root, '.tmp/e2e/stream-wave.jsonl');
+    const hello = c.events.find((e) => e.type === 'hello');
+    writeFileSync(streamLog, [{ ...hello, app: 'stream', stages: streamStages }, ...evs].map((e) => JSON.stringify(e)).join('\n') + '\n');
+    const sv = await new Promise((done) => {
+      const p = spawn(process.execPath, [resolve(root, 'tools/run-ts.mjs'), resolve(root, 'tools/validate-events.ts'), streamLog], { cwd: root, windowsHide: true });
+      let out = ''; p.stdout.on('data', (d) => { out += d; }); p.stderr.on('data', (d) => { out += d; });
+      p.on('exit', (code) => done({ code, out }));
+    });
+    check('stream', `contract validator over the Stream wave (${evs.length} events): zero violations`, sv.code === 0, sv.code === 0 ? 'no violations' : sv.out.split('\n').slice(0, 4).join(' | ').slice(0, 150));
   }
   await sleep(300);
 

@@ -30,8 +30,9 @@ In the arena: **Start tournament**, press **Next** between rounds, drag **INTENS
 |---|---|---|
 | [`apps/haunted-orders/`](apps/haunted-orders/) | Node | 11-stage order pipeline (account to handoff), five bot tiers Rookie to Phoenix. Money and parcels |
 | [`apps/haunted-inbox/`](apps/haunted-inbox/) | Python 3.12 | Ticket Desk: an 11-stage support flow (SSO login, ingest, validate, dedupe, triage, assign ticket, SLA clock, notify, escalate, resolve, close). Same harness: a `haunt.yaml` and no engine change |
+| [`apps/haunted-stream/`](apps/haunted-stream/) | Node | The Streaming pack made real: a 5-stage video pipeline (ingest upload, transcode, publish, notify subscribers, archive), five bot tiers, same contract and fake provider ledger. Pick Stream in the app switcher |
 
-A third outfit (streaming) exists only as a model-based pack in [`packs/`](packs/) and a Workflow Lab preset. It has no runnable app.
+The Streaming pack is no longer label-only: its 11-stage model stays in [`packs/`](packs/) and the Workflow Lab (labelled model-based), and `apps/haunted-stream` is the runnable 5-stage cut of it. The ticketing pack is still a model-based preview of the Ticket Desk.
 
 ## What is in the box
 
@@ -98,6 +99,7 @@ packages/core/        live server, mock server, provider, campaign data
 packages/arena-ui/    the arena, Workflow Lab, hosted build
 apps/haunted-orders/  app 1, Node
 apps/haunted-inbox/   app 2, Python
+apps/haunted-stream/  app 3, Node (the Streaming pack, runnable)
 packs/                scenario packs (ticketing, streaming), data only
 contract/             events schema, fixtures, protocol
 tools/                demo, e2e, validate-live, hosted build, trace

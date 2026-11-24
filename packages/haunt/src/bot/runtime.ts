@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline';
 import { ChaosHost } from '../chaos';
-import { InputError, LaneHalted, Pipeline, STAGES, tierById, type OrderData, type TierDef } from '../pipeline';
+import { InputError, LaneHalted, Pipeline, STAGES, tierById, type OrderData, type PipelineDeps, type PipelineResult, type TierDef } from '../pipeline';
 import { PARTS, ParkSignal, Sdk, WrongOrder, parsePolicy, backoffRule, type Policy, type DecisionQuestion, type DecisionSource, type Part, type Transport } from '../sdk';
 import { DECISION_CHOICES, type DecisionChoice } from '../shared/catalog';
 
@@ -14,6 +14,10 @@ export interface BotDef {
   use: readonly Part[];
   /** What the bot does with a wrong order when nobody answers in time. Defaults to the tier policy. */
   onWrongOrder?: DecisionChoice;
+  /** Another app's pipeline (the Stream app). Absent: the eleven-stage orders pipeline. */
+  pipeline?: (deps: PipelineDeps) => { run(id: string): Promise<PipelineResult> };
+  /** Stage table for the progress heartbeat of that pipeline. */
+  stages?: readonly { id: string; label: string; max: number }[];
 }
 
 /**
@@ -22,7 +26,7 @@ export interface BotDef {
  * `HAUNT_TIER`, or `--parts` is passed) it starts running; importing it in a test does nothing.
  */
 export function defineBot(def: BotDef): BotDef {
-  const frozen: BotDef = { tier: def.tier, use: PARTS.filter((p) => def.use.includes(p)), ...(def.onWrongOrder ? { onWrongOrder: def.onWrongOrder } : {}) };
+  const frozen: BotDef = { tier: def.tier, use: PARTS.filter((p) => def.use.includes(p)), ...(def.onWrongOrder ? { onWrongOrder: def.onWrongOrder } : {}), ...(def.pipeline ? { pipeline: def.pipeline } : {}), ...(def.stages ? { stages: def.stages } : {}) };
   if (process.argv.includes('--parts') || process.env.HAUNT_TIER !== undefined) {
     runBot(frozen).catch((e) => {
       process.stderr.write(`bot ${def.tier} crashed: ${e instanceof Error ? e.stack ?? e.message : String(e)}\n`);
@@ -109,7 +113,7 @@ export async function runBot(def: BotDef): Promise<void> {
   };
   const heartbeat = setInterval(() => {
     if (!cur || paused) return;
-    const def_ = STAGES.find((s) => s.id === cur!.stage);
+    const def_ = (def.stages ?? STAGES).find((s) => s.id === cur!.stage);
     const pct = Math.min(95, Math.floor(((now() - cur.at) / (def_?.max ?? 1000)) * 100));
     send({ type: 'stage_progress', order: cur.order, stage: cur.stage, detail: { pct, label: def_?.label ?? cur.stage } });
   }, Math.max(40, 300 / speed));
@@ -307,7 +311,8 @@ export async function runBot(def: BotDef): Promise<void> {
     }
   };
 
-  let curOrder = '';  const pipeline = new Pipeline({
+  let curOrder = '';
+  const pipelineDeps: PipelineDeps = {
     sdk, tier, seed, lane, speed: 1 / workScale, attempt,
     readOrder: () => readOrder(),
     pollTracking,
@@ -319,7 +324,8 @@ export async function runBot(def: BotDef): Promise<void> {
       await waitFor((f) => { onProceed = f; }, 2000);
       onProceed = null;
     },
-  });
+   };
+  const pipeline = def.pipeline ? def.pipeline(pipelineDeps) : new Pipeline(pipelineDeps);
 
   // ---- start: ready, wait for `go`, then startup hook and hello ----
   send({ k: 'ready' });

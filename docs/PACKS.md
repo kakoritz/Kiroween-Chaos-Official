@@ -5,7 +5,7 @@ data file that tells the skeleton what the steps of your app are, what can go wr
 what the reviewers say, and what each protection means in your domain. A pack is **data, not a new engine**: adding an app
 means writing one YAML file, not code.
 
-This page describes the format, walks through the streaming pack, and shows how to add a third app in under 30 minutes.
+This page describes the format, walks through the streaming pack and its runnable app, and shows how to add another app in under 30 minutes.
 
 Packs are **model-based**: the Workflow Lab sweeps a generic bot built from your stages and the protections you declare. The
 results come from rules over those declarations, not from running your real code. Every pack screen says so
@@ -84,9 +84,19 @@ What it teaches: the **double stream** after a blind retry. The Retrier repeats 
 Reconciler's keys fix it; the Phoenix survives the Kraken night. The ticketing pack (`packs/ticketing/pack.yaml`) teaches the
 same lesson in another domain: **duplicate tickets** (`webhook_retry_storm`, `duplicate_storm`) and lost replies.
 
-## Add a third app in under 30 minutes
+## The streaming app
 
-The proof that the skeleton is reusable: a new app is a new folder, and nothing else changes. Example: a **shop-desk** app.
+`apps/haunted-stream` runs the streaming pack for real: five stages (ingest upload, transcode, publish, notify subscribers, archive) on the same
+harness, contract and fake provider ledger (store, dispatch, notify) as Orders and the Ticket Desk. Pick **Stream** in the app switcher or
+`POST /api/app {"app": "stream"}`. The five tier bots (Rookie to Phoenix) and the campaign Crew are built into `dist/stream-bots` by `npm run build:bots`;
+the double stream becomes a double store or double publish after a crash, and keys fix it. Faults and curses are the catalog ones that act on those
+stages: the pack's Buffer Wraith, CDN Kraken, DRM Gatekeeper, Render Gremlin and Cloud Banshee map onto the Zombie, Ghost, Imp, Reaper and Banshee. The
+stage ids (`fetch`, `classify`, `draft`, `reply`, `archive`) come from the contract's stage enum; the labels carry the meaning. The spec is
+`.kiro/specs/stream-pack-app/`.
+
+## Add another app in under 30 minutes
+
+The proof that the skeleton is reusable: a new app is a new folder, and nothing else changes. Example: a **shop-desk** app (a pack first, then a real app the way `apps/haunted-stream` did it).
 
 1. **Scaffold (1 minute).** `npm run haunt -- pack new shop-desk --title "Haunted Shop"`. This writes
    `packs/shop-desk/pack.yaml` from a validated template (5 stages, 4 faults, a curse, a boss, a review, the five tier texts).
@@ -119,9 +129,10 @@ npm run haunt -- sweep         # runs the real faults against your real bot and 
 ```
 
 There is no `haunt` binary: always go through `npm run haunt --`. A pack argument is an id (`streaming`, `ticketing`, or your own after `pack new`) or a path to a pack
-folder or its `pack.yaml`; both work from any folder (relative paths are resolved from where you typed the command). Validate and sweep take `haunt.yaml` (`validate haunt.yaml`, `sweep --config haunt.yaml`). A pack stays labelled model-based until a real app backs it. Two real apps live
-in this repo: `apps/haunted-orders` (Node) and `apps/haunted-inbox` (Python). The streaming and ticketing packs are
-model-based demos.
+folder or its `pack.yaml`; both work from any folder (relative paths are resolved from where you typed the command). Validate and sweep take `haunt.yaml` (`validate haunt.yaml`, `sweep --config haunt.yaml`). A pack stays labelled model-based until a real app backs it. Three real apps live
+in this repo: `apps/haunted-orders` (Node), `apps/haunted-inbox` (Python) and `apps/haunted-stream` (Node). The streaming pack is no longer
+label-only: `apps/haunted-stream` is its runnable 5-stage cut (see "The streaming app" below). The Lab preset keeps the full 11-stage pack and stays
+labelled model-based. The ticketing pack is a model-based demo of the Ticket Desk.
 
 ## Reviewer rules in the Lab
 

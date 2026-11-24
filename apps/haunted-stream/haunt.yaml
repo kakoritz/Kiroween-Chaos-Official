@@ -1,0 +1,35 @@
+name: haunted-stream
+start: node dist/stream-bots/phoenix.js
+adapter: sdk
+inputs: ./videos/
+truth: http://127.0.0.1:7071
+targets:
+  recoverMs: 20000
+  repeats: 0
+  concurrency: 8
+stages:
+  - id: fetch
+    label: Ingest upload
+    role: effect
+    effects:
+      - { kind: store, key: "store:1", idempotent: required }
+    duration: [400, 800]
+  - { id: classify, label: Transcode, role: work, duration: [800, 1400] }
+  - id: draft
+    label: Publish
+    role: effect
+    effects:
+      - { kind: dispatch, key: dispatch, idempotent: required }
+    duration: [400, 800]
+  - id: reply
+    label: Notify subscribers
+    role: effect
+    effects:
+      - { kind: notify, key: "notify:1", idempotent: preferred }
+    duration: [300, 600]
+  - id: archive
+    label: Archive
+    role: effect
+    effects:
+      - { kind: store, key: "store:2", idempotent: required }
+    duration: [300, 600]

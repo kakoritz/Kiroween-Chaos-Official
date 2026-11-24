@@ -131,7 +131,7 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
       boss: hub.boss,
       demo: { scripts: DEMO_SCRIPTS, running: hub.demoRunning },
       // Earlier mock fields, kept for clients written against the first slice.
-      apps: Object.values(APPS).map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, role: s.role, kind: stageKind(s.role) })) })),
+      apps: Object.values(APPS).filter((a) => a.id !== 'stream').map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, role: s.role, kind: stageKind(s.role) })) })),
       tiers: TIER_ORDER.map((t) => ({ id: t, label: TIERS[t].label, parts: TIERS[t].parts })),
       parts: Object.values(PARTS),
       scripts: DEMO_SCRIPTS,
@@ -204,7 +204,7 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
         return send(res, 200, loadCaptions(s));
       }
       if (path === '/api/campaign') return send(res, 200, campaign ??= loadCampaign());
-      if (path === '/api/apps') return send(res, 200, Object.values(APPS).map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role, kind: stageKind(s.role) })) })));
+      if (path === '/api/apps') return send(res, 200, Object.values(APPS).filter((a) => a.id !== 'stream').map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role, kind: stageKind(s.role) })) })));
       if (path === '/api/packs') return send(res, 200, listPacks());
       if (path === '/api/state') return send(res, 200, stateBody());
       if (path === '/api/curses') return send(res, 200, { curses: [...hub.curses], table: [], kinds: ['404', 'slow', 'flaky500', 'clock_skew', 'rate_limit'] });
