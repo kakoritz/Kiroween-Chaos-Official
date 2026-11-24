@@ -131,7 +131,7 @@ export class LiveServer {
   /** Intensity dial (V1_2 section 5): default level 3. Moved by POST /api/intensity and by auto-ramp. */
   intensity = { level: 3, autoRamp: false, everyN: 4, max: 11 };
   demoRunning: string | null = null;
-  /** The chaos monkey panel's backend (PK-U3): one built-in demo target, created on first use, never a third-party system. */
+  /** The Live Chaos panel's backend (PK-U3): one built-in demo target, created on first use, never a third-party system. */
   private monkeyHost?: MonkeyHost;
   /** The running tournament (TV3-C7), if any. */
   tourney?: { t: Tournament; speed: number; pace: 'normal' | 'show' | 'slow'; wave: number; id: string; firstWave?: number; autoSpecs?: boolean; autoContinueSec?: number };

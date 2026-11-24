@@ -57,6 +57,13 @@ describe('gear shop model', () => {
     expect(nextSlot(slots, 2, 'x')).toBe(2);
   });
 
+  it('treats a stored record with no credits, gear or medals as a fresh save', () => {
+    const st = memory({ [STORAGE_KEY]: JSON.stringify({ credits: 0, owned: [], medals: {}, best: {} }) });
+    const s = loadShop(st, gear, start);
+    expect(s.credits).toBe(300);
+    expect(buy(s, gear, 'seal').ok).toBe(true);
+  });
+
   it('starts new players with the start credits and persists purchases', () => {
     const st = memory();
     const s = loadShop(st, gear, start);
@@ -83,6 +90,7 @@ describe('gear shop model', () => {
     expect(saved.medals).toEqual({ '1': 'gold' });
     expect(saved.best).toEqual({ '1': 900 });
     expect(saved.credits).toBe(10);
-    expect(loadShop(memory({ [STORAGE_KEY]: '{bad', [EQUIP_KEY]: '[[' }), gear, start).credits).toBe(0);
+    // unreadable data holds no credits, gear or medals, so it counts as a fresh save and gets the start credits (was 0, which left night 1 with nothing affordable)
+    expect(loadShop(memory({ [STORAGE_KEY]: '{bad', [EQUIP_KEY]: '[[' }), gear, start).credits).toBe(300);
   });
 });

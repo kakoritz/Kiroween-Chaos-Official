@@ -78,7 +78,7 @@ root.innerHTML = `
       <button class="btn btn--ghost" id="tour-open" type="button" title="Guided tour">Tour</button>
       <button class="btn btn--ghost" id="keys-btn" type="button" aria-expanded="false" aria-controls="keys-pop" aria-label="Keys" title="Keyboard shortcuts and state legend">&#9000;</button>
       <button class="btn btn--ghost" id="patterns-btn" type="button" title="Recurring trouble, fix specs and the improve loop">Patterns<span class="pt-badge hidden" id="patterns-badge"></span></button>
-      <button class="btn btn--ghost" id="monkey-btn" type="button" title="Chaos monkey: modes, guard rails and the kill switch">Monkey<span class="mk-badge hidden" id="monkey-badge">ON</span></button>
+      <button class="btn btn--ghost" id="monkey-btn" type="button" title="Live Chaos: modes, guard rails and the kill switch">Chaos<span class="mk-badge hidden" id="monkey-badge">ON</span></button>
       <button class="btn btn--ghost" id="legend-btn" type="button" aria-expanded="false" title="What do R J I B Q mean?">?</button>
       <span class="gear-wrap" id="gear-wrap"><button class="btn btn--ghost" id="gear-btn" type="button" title="Settings: chaos, pace, speed, sound, motion" aria-label="Settings">&#9881;</button></span>
       <span class="pace-tag" id="pace-tag" title="Slow pace is on"></span>

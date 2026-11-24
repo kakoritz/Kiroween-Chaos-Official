@@ -1,4 +1,4 @@
-/* PK-U3: Chaos Monkey panel */
+/* PK-U3: Live Chaos panel */
 .mk-badge { display: inline-block; margin-left: 8px; min-width: 20px; padding: 0 6px; border-radius: 10px; background: var(--fail); color: #fff; font: 800 13px ui-monospace, Menlo, monospace; text-align: center; }
 .mk-badge.hidden { display: none; }
 .mk-card { width: 1100px; max-height: 1000px; }

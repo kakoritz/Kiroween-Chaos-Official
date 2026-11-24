@@ -5,7 +5,7 @@
 
 ![Kiroween Chaos: five bots race through an order pipeline while chaos creatures attack](packages/arena-ui/docs/screens/demo-autoplay-25s.png)
 
-Chaos Monkey for AI agents, played as a haunted house. Kiroween Chaos crashes and curses your bots, grades how they survive, and shows the exact fix. One engine, two apps: Node and Python. **Break your bots before the world does.** Five bots take the same crashes in a tournament, the worst one dies each round and leaves a corpse, and what is left is a Casebook of every edge case plus a fix spec that Kiro can apply.
+Chaos engineering for AI agents, played as a haunted house. Kiroween Chaos crashes and curses your bots, grades how they survive, and shows the exact fix. One engine, two apps: Node and Python. **Break your bots before the world does.** Five bots take the same crashes in a tournament, the worst one dies each round and leaves a corpse, and what is left is a Casebook of every edge case plus a fix spec that Kiro can apply.
 
 **The hero moment:** a process crashes right after charging a customer, restarts, and charges again. The provider's own ledger decides who is right: **Rookie: 2 charges. Phoenix: 1** ([`hero-crash.test.ts`](packages/haunt/test/hero-crash.test.ts)). The same bug shows up as a duplicate ticket in the second app.
 
@@ -43,7 +43,7 @@ A third outfit (streaming) exists only as a model-based pack in [`packs/`](packs
 | Curses | Per-lane traits: cursed 404, slow endpoint, flaky 500, clock skew, rate limit |
 | Casebook | Every edge case, who solved it, how, what it cost. Awards: Champion, Battle-Tested, Iron Skeleton, Fastest Recovery, Wooden Spoon |
 | Fix specs | The miner clusters recurring problems into `.haunt/patterns.json` and writes `.kiro/specs/hardening-<run>/` ([sample](docs/proof/sample-hardening-spec/index.md)). Nothing is applied automatically |
-| Monkey (guarded) | `haunt monkey` injects faults through a proxy. `observe` injects nothing, `staging` is capped, `prod-guarded` needs a config with a schedule window and an allowlist, `haunt stop` is the kill switch ([`docs/PRODUCTION-MODE.md`](docs/PRODUCTION-MODE.md)) |
+| Live Chaos (guarded) | `haunt monkey` injects faults through a proxy. `observe` injects nothing, `staging` is capped, `prod-guarded` needs a config with a schedule window and an allowlist, `haunt stop` is the kill switch ([`docs/PRODUCTION-MODE.md`](docs/PRODUCTION-MODE.md)) |
 | Workflow Lab and packs | Model your own workflow in the browser (`/workflow-lab.html`) and get a graded what-if. Presets: Orders, Inbox, Payments, Report generator, Streaming pack. Always labelled model-based |
 | Reports | Graded JSON, Markdown, offline HTML, SVG badge (`haunt badge`) |
 | MCP server and Power | `haunt_define`, `haunt_sweep`, `haunt_ramp`, `haunt_report`, `haunt_specs`, `haunt_badge` ([`kiro-power/`](kiro-power/)) |
@@ -56,7 +56,7 @@ The CLI is `npm run haunt -- <args>`. There is no `haunt` binary on your PATH (`
 |---|---|
 | `npm run haunt -- ramp --tier phoenix --orders 4 --steps 1,2 --speed 16 --no-gate` | Raises concurrency until the bot breaks. About 12 s as written |
 | `npm run haunt -- sweep --tier phoenix --orders 1 --speed 16` | Graded sweep, one fault per stage and creature. **About 5 minutes even with these flags** |
-| `npm run haunt -- monkey --mode staging --dry-run` | Prints what the monkey would inject; nothing runs |
+| `npm run haunt -- monkey --mode staging --dry-run` | Prints what Live Chaos would inject; nothing runs |
 | `npm run haunt -- spec-lint <dir>` | Lints a generated fix spec |
 | `npm run demo -- --check` | Starts a server on a free port, checks it answers, exits. About 6 s |
 | `npm run validate:events` | Fixtures against the event schema and ordering rules |

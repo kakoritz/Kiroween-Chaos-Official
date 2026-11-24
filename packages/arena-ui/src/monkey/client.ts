@@ -7,7 +7,7 @@ export interface MonkeyClient {
 }
 
 export class MonkeyUnavailable extends Error {
-  constructor(msg = 'The chaos monkey needs the live server (npm run live). The hosted demo does not run it.') { super(msg); }
+  constructor(msg = 'Live Chaos needs the live server (npm run live). The hosted demo does not run it.') { super(msg); }
 }
 
 export function monkeyClient(base: string | null, fetchFn: typeof fetch = fetch): MonkeyClient {

@@ -1,6 +1,6 @@
 # Judges: the first 5 minutes
 
-"Charged. Charged again." Chaos Monkey for AI agents, played as a haunted house. Kiroween Chaos crashes and curses your bots, grades how they survive, and shows the exact fix. One engine, two apps: Node and Python. Break your bots before the world does. Category: Skeleton Crew (one lean skeleton, two apps on it). Also entering Best Kiro Crew App.
+"Charged. Charged again." Chaos engineering for AI agents, played as a haunted house. Kiroween Chaos crashes and curses your bots, grades how they survive, and shows the exact fix. One engine, two apps: Node and Python. Break your bots before the world does. Category: Skeleton Crew (one lean skeleton, two apps on it). Also entering Best Kiro Crew App.
 
 Links (filled in by a human at release): hosted demo, repo.
 

@@ -276,3 +276,14 @@ body.narrow .lp-foot { height: auto; flex-direction: column; padding: 8px; flex:
 
 /* PT-U12: reduced motion also stills the decorative loops in the shell. */
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; } }
+
+/* Header fit (1280 to 1500 wide): the design header must stay inside 1920 design px even with the demo controls and a pack note showing. */
+.hdr { gap: 4px; padding: 0 10px; }
+.hdr .logo { font-size: 22px; letter-spacing: 0.1em; }
+.hdr .btn { padding: 6px 9px; }
+.hdr .seg-b { padding: 6px 8px; }
+.hdr .as .seg-b { padding: 6px 9px; }
+.hdr .pk-info { max-width: 70px; }
+.hdr .pace-tag:empty { display: none; }
+body.narrow .hdr .pk-info { display: none; }
+.hdr .pk-info { flex: 0 1 auto; min-width: 0; }

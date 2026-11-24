@@ -18,6 +18,7 @@ export interface PackChoice {
 }
 
 export const MODEL_TAG = 'model-based';
+export const PREVIEW_TAG = 'preview';
 /** Packs that also have a real runnable app. */
 export const PACK_APP: Readonly<Record<string, string>> = { ticketing: 'inbox' };
 
@@ -122,6 +123,8 @@ export class PackSwitcher {
     this.paint();
   }
 
+  private switchable(c: PackChoice): boolean { return !!(this.host.setPack || (c.appId && this.apps.has(c.appId))); }
+
   get current(): PackChoice | null { return this.choices.find((c) => c.id === this.active) ?? null; }
 
   async choose(id: string | null): Promise<void> {
@@ -130,7 +133,7 @@ export class PackSwitcher {
     if (id !== null && !pack) return;
     this.busy = true; this.paint();
     try {
-      if (pack && (this.host.setPack || (pack.appId && this.apps.has(pack.appId)))) {
+      if (pack && this.switchable(pack)) {
         await this.host.stopRunning();
         if (this.host.setPack) await this.host.setPack(pack.id);
         else await this.host.setApp(pack.appId!);
@@ -166,8 +169,8 @@ export class PackSwitcher {
       b.disabled = this.busy;
     }
     const cur = this.current;
-    this.info.textContent = cur ? `${cur.title}${cur.modelBased ? ` · ${MODEL_TAG}` : ''}${cur.reviewLabel ? ` · ${cur.reviewLabel}` : ''}` : '';
-    this.info.title = cur ? packTip(cur) : '';
+    this.info.textContent = cur ? `${this.switchable(cur) ? '' : `${PREVIEW_TAG} · `}${cur.title}${cur.modelBased ? ` · ${MODEL_TAG}` : ''}${cur.reviewLabel ? ` · ${cur.reviewLabel}` : ''}` : '';
+    this.info.title = cur ? `${this.switchable(cur) ? '' : 'Preview only: the lanes keep the Orders stages until this pack has a runnable app.\n'}${packTip(cur)}` : '';
     this.info.classList.toggle('pk-info--model', !!cur?.modelBased);
   }
 }

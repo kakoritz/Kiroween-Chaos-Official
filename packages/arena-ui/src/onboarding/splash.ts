@@ -1,7 +1,7 @@
 /** Title splash (ON-U1): logo, tagline, typed hook, four buttons. Pure decisions here, DOM in `Splash`. */
 
 export const SPLASH_HOOK = 'Charged. Charged again.';
-export const SPLASH_TAGLINE = 'Chaos Monkey for AI agents.';
+export const SPLASH_TAGLINE = 'Chaos engineering for AI agents.';
 export const SPLASH_PROBLEM = 'Bots and AI agents crash halfway, then repeat the work: double charges, duplicate emails.';
 export const SPLASH_AUTO_MS = 4000;
 const TYPE_MS_PER_CHAR = 55;

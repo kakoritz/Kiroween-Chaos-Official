@@ -83,7 +83,7 @@ probe results become events for the pattern miner.
 
 ## The arena panel and the control endpoints
 
-The arena header has a **Monkey** button. The panel has a mode selector (observe, staging, prod-guarded), the guard-rail
+The arena header has a **Chaos** button (panel: Live Chaos). The panel has a mode selector (observe, staging, prod-guarded), the guard-rail
 summary of the mode, a large **KILL SWITCH**, the steady-state meter (the measured SLI against its threshold) and the audit
 log tail. It talks to the live server (`npm run live`), which runs the monkey against the **built-in demo target only**;
 the mock server and the hosted page have no monkey routes and the panel says so.

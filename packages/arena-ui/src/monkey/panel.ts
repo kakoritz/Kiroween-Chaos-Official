@@ -1,4 +1,4 @@
-// PK-U3: the Chaos Monkey panel. A modal opened from the header: mode selector, guard-rail summary, a big KILL SWITCH, the steady-state
+// PK-U3: the Live Chaos panel. A modal opened from the header: mode selector, guard-rail summary, a big KILL SWITCH, the steady-state
 // meter and the audit log tail. It drives the built-in demo target on the live server and nothing else.
 import { Card, el } from '../arena/tournament-view';
 import { MODES, MODE_LABEL, MODE_NOTE, auditLine, killNote, meterView, parseMonkey, parsePreview, railsView, statusLine, type MonkeyMode, type MonkeyView } from './model';
@@ -83,7 +83,7 @@ export class MonkeyPanel extends Card {
   private paintShell(): void {
     const dlg = el('div', 'tv-card mk-card');
     const head = el('div', 'tv-head');
-    const title = el('h2', '', 'Chaos Monkey');
+    const title = el('h2', '', 'Live Chaos');
     title.id = 'mk-title';
     head.append(title, el('span', 'tv-sub', 'demo target only'));
     const close = el('button', 'btn btn--ghost mk-close', 'Close'); close.type = 'button';
@@ -117,7 +117,7 @@ export class MonkeyPanel extends Card {
     b.append(status);
 
     // Mode selector: radio-style buttons; starting is a separate, deliberate press.
-    const modes = el('div', 'mk-modes'); modes.setAttribute('role', 'radiogroup'); modes.setAttribute('aria-label', 'Monkey mode');
+    const modes = el('div', 'mk-modes'); modes.setAttribute('role', 'radiogroup'); modes.setAttribute('aria-label', 'Live Chaos mode');
     const shown: MonkeyMode = v.running ? v.mode : this.picked;
     for (const m of MODES) {
       const on = shown === m;
