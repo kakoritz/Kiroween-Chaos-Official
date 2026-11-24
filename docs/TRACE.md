@@ -6,9 +6,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 73. With a PR: 29 (40%). With a test: 65 (89%).
-- Tasks: 105. Done: 104. With a PR: 48 (46%). With a test: 17 (16%).
-- Test files scanned: 201.
+- Requirements: 73. With a PR: 29 (40%). With a test: 73 (100%).
+- Tasks: 110. Done: 108. With a PR: 48 (44%). With a test: 17 (15%).
+- Test files scanned: 206.
 
 ## Tasks
 
@@ -93,6 +93,11 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | SH-U1 | share | Workflow Lab UI. Form, presets, protections toggles, run view, report, export... | done | [#210](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/210) | `packages/arena-ui/test/lab.test.ts`, `packages/haunt/test/trace.test.ts` |
 | SH-U2 | share | Share button. In the report viewer: download badge and scorecard, copy README... | done | [#205](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/205) | - |
 | SH-U3 | share | Architecture diagram page. In the hosted demo footer ("How it works"). Done: ... | done | - | `packages/arena-ui/test/how-it-works.test.ts` |
+| TG-1 | test-gaps | Write requirements, design and tasks. | done | - | - |
+| TG-2 | test-gaps | Tests for haunted-house R1.2, R1.3, R4.3, R6.2 in packages/haunt/test/require... | done | - | - |
+| TG-3 | test-gaps | Tests for haunted-house R5.2, R5.3 and playtest-v2 R8.3, R9.3 in packages/cor... | done | - | - |
+| TG-4 | test-gaps | Regenerate docs/TRACE.md with npm run trace. | done | - | - |
+| TG-5 | test-gaps | e2e hang after a tournament: investigate; fix only if repo code is the cause.... | open | - | - |
 | TV3-C0 | tournament-v3 | Contract v1.2. Land contract/V12.md in the mock: stages list in state, round ... | done | - | - |
 | TV3-C1 | tournament-v3 | New order and stage list. Eleven stages, legacy mapping, ledger columns, kill... | done | - | - |
 | TV3-C2 | tournament-v3 | Wave end review state. awaitingnext, POST /api/next, no auto start; optional ... | done | - | - |
@@ -124,10 +129,10 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 | ID | Spec | Text | Status | PRs | Tests |
 |---|---|---|---|---|---|
-| R1 | haunted-house | Rooms | n/a | - | `packages/haunt/test/core-creatures.test.ts` |
+| R1 | haunted-house | Rooms | n/a | - | `packages/haunt/test/core-creatures.test.ts`, `packages/haunt/test/requirement-gaps.test.ts` |
 | R1.1 | haunted-house | THE SYSTEM SHALL ship three core rooms: Cellar (missing file), Mirror Hall (d... | n/a | - | `packages/haunt/test/core-creatures.test.ts` |
-| R1.2 | haunted-house | THE SYSTEM SHALL ship two bonus rooms: Poltergeist (timeouts and 429s that cl... | n/a | - | - |
-| R1.3 | haunted-house | WHEN a room is selected, THE SYSTEM SHALL run both bots through it with the s... | n/a | - | - |
+| R1.2 | haunted-house | THE SYSTEM SHALL ship two bonus rooms: Poltergeist (timeouts and 429s that cl... | n/a | - | `packages/haunt/test/requirement-gaps.test.ts` |
+| R1.3 | haunted-house | WHEN a room is selected, THE SYSTEM SHALL run both bots through it with the s... | n/a | - | `packages/haunt/test/requirement-gaps.test.ts` |
 | R2 | haunted-house | Chaos injection | n/a | - | `packages/haunt/test/chaos.test.ts` |
 | R2.1 | haunted-house | THE SYSTEM SHALL inject faults at named crash points: beforecharge, afterchar... | n/a | - | `packages/haunt/test/chaos.test.ts` |
 | R2.2 | haunted-house | THE SYSTEM SHALL make every run reproducible from a seed and a fault plan (JS... | n/a | - | `packages/haunt/test/chaos.test.ts` |
@@ -138,21 +143,21 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R3.3 | haunted-house | IF an intent has no result, THEN IT SHALL ask the provider by idempotency key... | n/a | - | `packages/haunt/test/sdk.test.ts` |
 | R3.4 | haunted-house | WHEN a duplicate request arrives with a known key, IT SHALL return the first ... | n/a | - | `packages/haunt/test/sdk.test.ts` |
 | R3.5 | haunted-house | WHEN an input file is missing, IT SHALL park the order in a quarantine queue,... | n/a | - | `packages/haunt/test/pipeline.test.ts` |
-| R4 | haunted-house | Run report (the core product) | n/a | - | `packages/haunt/test/report-write.test.ts` |
+| R4 | haunted-house | Run report (the core product) | n/a | - | `packages/haunt/test/report-write.test.ts`, `packages/haunt/test/requirement-gaps.test.ts` |
 | R4.1 | haunted-house | EACH run SHALL produce a report with: timeline of steps, the exact step where... | n/a | - | `packages/haunt/test/report-write.test.ts` |
 | R4.2 | haunted-house | THE REPORT SHALL show side-effect counts from the provider's ledger, not from... | n/a | - | `packages/haunt/test/report-write.test.ts` |
-| R4.3 | haunted-house | THE REPORT SHALL state "resumed from step N, skipped M completed steps, repea... | n/a | - | - |
+| R4.3 | haunted-house | THE REPORT SHALL state "resumed from step N, skipped M completed steps, repea... | n/a | - | `packages/haunt/test/requirement-gaps.test.ts` |
 | R4.4 | haunted-house | THE REPORT SHALL be a single self-contained HTML file and a JSON file. | n/a | - | `packages/haunt/test/report-write.test.ts` |
-| R5 | haunted-house | Haunted house UI | n/a | - | `packages/arena-ui/test/arena.test.ts`, `packages/arena-ui/test/hosted.test.ts`, `packages/arena-ui/test/keys.test.ts` |
+| R5 | haunted-house | Haunted house UI | n/a | - | `packages/arena-ui/test/arena.test.ts`, `packages/arena-ui/test/hosted.test.ts`, `packages/arena-ui/test/keys.test.ts`, `packages/core/test/requirement-gaps-ui.test.ts` |
 | R5.1 | haunted-house | THE UI SHALL show a floor plan with one door per room and a ghost for each bot. | n/a | - | `packages/arena-ui/test/arena.test.ts` |
-| R5.2 | haunted-house | WHEN a bot crashes, THE UI SHALL show the ghost dying and the crash point hig... | n/a | - | - |
-| R5.3 | haunted-house | WHEN a bot resumes, THE UI SHALL show the ghost rising and replaying complete... | n/a | - | - |
+| R5.2 | haunted-house | WHEN a bot crashes, THE UI SHALL show the ghost dying and the crash point hig... | n/a | - | `packages/core/test/requirement-gaps-ui.test.ts` |
+| R5.3 | haunted-house | WHEN a bot resumes, THE UI SHALL show the ghost rising and replaying complete... | n/a | - | `packages/core/test/requirement-gaps-ui.test.ts` |
 | R5.4 | haunted-house | THE UI SHALL show a live provider ledger beside both bots. | n/a | - | `packages/arena-ui/test/arena.test.ts` |
 | R5.5 | haunted-house | THE UI SHALL have a "Kill it now" button for live, audience-driven crashes. | n/a | - | `packages/arena-ui/test/keys.test.ts` |
 | R5.6 | haunted-house | THE UI SHALL work offline with no external services. | n/a | - | `packages/arena-ui/test/hosted.test.ts` |
-| R6 | haunted-house | Bring your own bot | n/a | - | `packages/haunt/test/sdk.test.ts` |
+| R6 | haunted-house | Bring your own bot | n/a | - | `packages/haunt/test/requirement-gaps.test.ts`, `packages/haunt/test/sdk.test.ts` |
 | R6.1 | haunted-house | THE SYSTEM SHALL provide a small SDK (step(), effect()) so any Node workflow ... | n/a | - | `packages/haunt/test/sdk.test.ts` |
-| R6.2 | haunted-house | THE SYSTEM SHALL provide a CLI. Rooms became the creature and fault catalog, ... | n/a | - | - |
+| R6.2 | haunted-house | THE SYSTEM SHALL provide a CLI. Rooms became the creature and fault catalog, ... | n/a | - | `packages/haunt/test/requirement-gaps.test.ts` |
 | R7 | haunted-house | Safety | n/a | - | `packages/core/test/provider.test.ts` |
 | R7.1 | haunted-house | THE SYSTEM SHALL use only a simulated payment provider. No real money, no rea... | n/a | - | `packages/core/test/provider.test.ts` |
 | R7.2 | haunted-house | THE SYSTEM SHALL contain no network calls except to localhost. | n/a | - | `packages/core/test/provider.test.ts` |
@@ -189,11 +194,11 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R7.1 | playtest-v2 | WHEN ordertypo is armed, THE SYSTEM SHALL swap the order items and detect it ... | n/a | - | `packages/core/test/wrong-order-detect.test.ts`, `packages/core/test/wrong-order-provider.test.ts` |
 | R7.2 | playtest-v2 | WHEN detected, THE SYSTEM SHALL emit decisionneeded, accept POST /api/decisio... | n/a | - | `packages/core/test/wrong-order-detect.test.ts` |
 | R7.3 | playtest-v2 | THE UI SHALL show a decision popup with consequences and play each outcome. (... | n/a | - | `packages/arena-ui/test/decision.test.ts` |
-| R8 | playtest-v2 | Header, legend, controls | n/a | [#211](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/211) | `packages/arena-ui/test/gearmenu.test.ts` |
+| R8 | playtest-v2 | Header, legend, controls | n/a | [#211](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/211) | `packages/arena-ui/test/gearmenu.test.ts`, `packages/core/test/requirement-gaps-ui.test.ts` |
 | R8.1 | playtest-v2 | THE UI SHALL provide a gear menu for chaos mode, pace, speed, sound, motion, ... | n/a | [#211](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/211) | `packages/arena-ui/test/gearmenu.test.ts` |
 | R8.2 | playtest-v2 | THE UI SHALL explain the gear letters R J I B Q with tooltips and a legend. (... | n/a | [#211](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/211) | `packages/arena-ui/test/gearmenu.test.ts` |
-| R8.3 | playtest-v2 | THE UI SHALL show "Play demo" and "Stop demo" buttons and a mode badge toolti... | n/a | [#211](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/211) | - |
-| R9 | playtest-v2 | Quality | n/a | [#196](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/196), [#199](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/199) | `packages/haunt/test/pbt-playtest.test.ts`, `packages/haunt/test/validate-v1-1.test.ts` |
+| R8.3 | playtest-v2 | THE UI SHALL show "Play demo" and "Stop demo" buttons and a mode badge toolti... | n/a | [#211](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/211) | `packages/core/test/requirement-gaps-ui.test.ts` |
+| R9 | playtest-v2 | Quality | n/a | [#196](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/196), [#199](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/199) | `packages/core/test/requirement-gaps-ui.test.ts`, `packages/haunt/test/pbt-playtest.test.ts`, `packages/haunt/test/validate-v1-1.test.ts` |
 | R9.1 | playtest-v2 | All new scoring and review functions SHALL be pure and covered by properties ... | n/a | - | `packages/haunt/test/pbt-playtest.test.ts` |
 | R9.2 | playtest-v2 | All new fixtures SHALL validate against the schema and the ordering rules 40 ... | n/a | - | `packages/haunt/test/validate-v1-1.test.ts` |
-| R9.3 | playtest-v2 | THE SYSTEM SHALL keep npm run demo and npm run fresh-clone working. (PT-X1) | n/a | [#196](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/196), [#199](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/199) | - |
+| R9.3 | playtest-v2 | THE SYSTEM SHALL keep npm run demo and npm run fresh-clone working. (PT-X1) | n/a | [#196](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/196), [#199](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/199) | `packages/core/test/requirement-gaps-ui.test.ts` |
