@@ -1,6 +1,8 @@
-# Haunt Kiro Power
+# Chaos Haunt Kiro Power
 
-Packaging of the Haunt MCP server as a Kiro Power. Format source: https://kiro.dev/docs/powers/create/ (`plugin.json`, `mcp.json`, `skills/<name>/SKILL.md`).
+Chaos engineering for AI agents and automation, played as a haunted house.
+
+Packaging of the Chaos Haunt MCP server as a Kiro Power. Format source: https://kiro.dev/docs/powers/create/ (`plugin.json`, `mcp.json`, `skills/<name>/SKILL.md`).
 
 Contents:
 - `plugin.json`: manifest and activation keywords.

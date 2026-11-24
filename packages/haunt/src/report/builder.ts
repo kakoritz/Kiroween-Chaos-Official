@@ -134,7 +134,7 @@ const lapStars = (l: LapRow): string => (l.cancelled ? 'cancelled' : l.stars ===
 
 export function renderMarkdown(r: Report): string {
   const L: string[] = [];
-  L.push(`# Haunt report: ${r.app}`, '');
+  L.push(`# Chaos Haunt report: ${r.app}`, '');
   L.push(`Run \`${r.run}\`, mode ${r.mode}, seed ${r.seed}.`, '');
   L.push(`**Grade ${r.grade}** (reliability ${r.reliability.toFixed(1)})` + (r.scalability ? `, scalability ${r.scalability}` : ''), '');
   L.push('## Targets', '', '| Target | Value | Limit | Result |', '|---|---|---|---|');
@@ -200,7 +200,7 @@ const CSS =
 /** Single self-contained HTML file: inline CSS, no scripts, no external requests. */
 export function renderHtml(r: Report): string {
   const P: string[] = [];
-  P.push(`<h1>Haunt report: ${escapeHtml(r.app)}</h1>`);
+  P.push(`<h1>Chaos Haunt report: ${escapeHtml(r.app)}</h1>`);
   P.push(`<p>Run <code>${escapeHtml(r.run)}</code>, mode ${escapeHtml(r.mode)}, seed ${r.seed}, generated ${escapeHtml(r.generatedAt)}.</p>`);
   P.push(
     `<p class="grade">Grade ${r.grade}</p><p>Reliability ${r.reliability.toFixed(1)}` +
@@ -221,7 +221,7 @@ export function renderHtml(r: Report): string {
   if (r.laps) P.push('<h2>Laps and stars</h2>' + table(['Order', 'Lap ms', 'Stars', 'Downtime ms'], r.laps.map((l) => [l.order, lapMs(l), lapStars(l), l.downtimeMs ?? ''])));
   P.push('<h2>Findings</h2>' + table(['Severity', 'Id', 'Rule', 'Stage', 'Fault', 'Summary', 'Suggested part'], r.findings.map((f) => [f.severity, f.id, f.rule, f.stage, f.fault, f.summary, f.suggestedPart])));
   return (
-    '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><title>Haunt report: ' +
+    '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><title>Chaos Haunt report: ' +
     escapeHtml(r.app) +
     '</title><style>' +
     CSS +

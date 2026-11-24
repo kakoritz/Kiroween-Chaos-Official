@@ -1,6 +1,6 @@
 # Judges: the first 5 minutes
 
-"Charged. Charged again." Haunt is chaos engineering for automation and AI agents, played as a game. Break your bots before the world does. Category: Skeleton Crew (one lean skeleton, two apps on it). Also entering Best Kiro Crew App.
+"Charged. Charged again." Chaos Haunt: chaos engineering for AI agents and automation, played as a haunted house. Break your bots before the world does. Category: Skeleton Crew (one lean skeleton, two apps on it). Also entering Best Kiro Crew App.
 
 Links (filled in by a human at release): hosted demo, repo.
 

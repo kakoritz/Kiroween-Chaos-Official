@@ -115,7 +115,7 @@ export async function handle(opts: McpOptions, msg: Json): Promise<Json | undefi
   const fail = (code: number, message: string): Json => ({ jsonrpc: '2.0', id, error: { code, message } });
   if (id === undefined) return undefined; // notifications get no reply
   switch (msg.method) {
-    case 'initialize': return reply({ protocolVersion: '2024-11-05', capabilities: { tools: {} }, serverInfo: { name: 'haunt-mcp', version: '0.1.0' } });
+    case 'initialize': return reply({ protocolVersion: '2024-11-05', capabilities: { tools: {} }, serverInfo: { name: 'haunt-mcp', title: 'Chaos Haunt', version: '0.1.0' } });
     case 'ping': return reply({});
     case 'tools/list': return reply({ tools: TOOLS });
     case 'tools/call': {

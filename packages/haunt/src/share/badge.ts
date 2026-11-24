@@ -104,9 +104,9 @@ export function scorecardData(report: unknown): ScorecardData {
   };
 }
 
-/** Shields-style badge, 20 px tall: label "Haunt", value "A 94". */
+/** Shields-style badge, 20 px tall: label "Chaos Haunt", value "A 94". */
 export function renderBadgeSvg(d: Pick<ScorecardData, 'grade' | 'score'>): string {
-  const label = 'Haunt';
+  const label = 'Chaos Haunt';
   const value = `${d.grade} ${d.score}`;
   const lw = 6 * label.length + 14;
   const vw = 6.6 * value.length + 14;
@@ -136,10 +136,10 @@ export function renderScorecardSvg(d: ScorecardData): string {
   const t = (x: number, y: number, size: number, fill: string, s: string, extra = ''): void => {
     out.push(`<text x="${x}" y="${y}" font-size="${size}" fill="${fill}" ${extra}>${esc(s)}</text>`);
   };
-  out.push(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" role="img" aria-label="Haunt resilience scorecard: ${esc(d.grade)} ${d.score}">`);
-  out.push(`<title>Haunt resilience scorecard</title>`);
+  out.push(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" role="img" aria-label="Chaos Haunt resilience scorecard: ${esc(d.grade)} ${d.score}">`);
+  out.push(`<title>Chaos Haunt resilience scorecard</title>`);
   out.push(`<rect width="1200" height="630" fill="#14121c"/><rect x="0" y="0" width="1200" height="8" fill="${colour}"/>`);
-  t(48, 70, 34, '#ffffff', 'Haunt resilience scorecard', 'font-weight="bold"');
+  t(48, 70, 34, '#ffffff', 'Chaos Haunt resilience scorecard', 'font-weight="bold"');
   t(48, 104, 20, '#a9a4bd', trunc(d.app, 60));
   // grade ring
   const cx = 220, cy = 270, rad = 100, circ = 2 * Math.PI * rad;
@@ -194,7 +194,7 @@ export function renderScorecardSvg(d: ScorecardData): string {
   // findings
   const worst = d.findings.map((f, i) => `${i + 1}. ${trunc(f, 90)}`);
   worst.forEach((line, i) => t(48, 520 + i * 22, 15, '#d8d4ea', line));
-  t(48, 612, 14, '#6f6a86', 'tested with Haunt \u00b7 kakoritz/Kiroween-Chaos');
+  t(48, 612, 14, '#6f6a86', 'tested with Chaos Haunt \u00b7 kakoritz/Kiroween-Chaos');
   out.push('</svg>');
   return out.join('\n') + '\n';
 }
@@ -205,7 +205,7 @@ export function renderScorecardHtml(d: ScorecardData): string {
     '<!doctype html>',
     '<html lang="en"><head><meta charset="utf-8">',
     '<meta name="viewport" content="width=device-width,initial-scale=1">',
-    `<title>Haunt resilience scorecard: ${esc(d.app)} ${esc(d.grade)} ${d.score}</title>`,
+    `<title>Chaos Haunt resilience scorecard: ${esc(d.app)} ${esc(d.grade)} ${d.score}</title>`,
     '<style>html,body{margin:0;background:#0b0a10;display:flex;align-items:center;justify-content:center;min-height:100vh}svg{max-width:100%;height:auto}</style>',
     '</head><body>',
     renderScorecardSvg(d).replace(/\n$/, ''),
@@ -267,10 +267,10 @@ export function renderImproveSvg(d: ImproveCardData): string {
     out.push(`<text x="${x}" y="${y}" font-size="${size}" fill="${fill}" ${extra}>${esc(s)}</text>`);
   };
   const headline = `closed ${d.closed} of ${d.of}, ${d.before.grade} to ${d.after.grade}`;
-  out.push(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" role="img" aria-label="Haunt improve: ${esc(headline)}">`);
-  out.push(`<title>Haunt improve: ${esc(headline)}</title>`);
+  out.push(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" role="img" aria-label="Chaos Haunt improve: ${esc(headline)}">`);
+  out.push(`<title>Chaos Haunt improve: ${esc(headline)}</title>`);
   out.push(`<rect width="1200" height="630" fill="#14121c"/><rect x="0" y="0" width="1200" height="8" fill="${GRADE_COLOURS[d.after.grade]}"/>`);
-  t(48, 70, 34, '#ffffff', 'Haunt improve loop', 'font-weight="bold"');
+  t(48, 70, 34, '#ffffff', 'Chaos Haunt improve loop', 'font-weight="bold"');
   t(48, 104, 22, '#a9a4bd', headline);
   const ring = (cx: number, label: string, side: ImproveCardData['before']): void => {
     const colour = GRADE_COLOURS[side.grade];
@@ -292,7 +292,7 @@ export function renderImproveSvg(d: ImproveCardData): string {
     out.push(`<rect x="880" y="${186 + i * 30}" width="12" height="12" rx="2" fill="${ok ? '#2ea44f' : p.status === 'applied' ? '#dfb317' : '#e05d44'}"/>`);
     t(900, 197 + i * 30, 13, '#d8d4ea', `${trunc(p.signature, 36)} (${p.status})`);
   });
-  t(48, 612, 14, '#6f6a86', 'tested with Haunt · kakoritz/Kiroween-Chaos');
+  t(48, 612, 14, '#6f6a86', 'tested with Chaos Haunt · kakoritz/Kiroween-Chaos');
   out.push('</svg>');
   return out.join('\n') + '\n';
 }
@@ -307,7 +307,7 @@ export function renderImproveFiles(report: unknown): ImproveFiles {
     'haunt-improve.html': [
       '<!doctype html>', '<html lang="en"><head><meta charset="utf-8">',
       '<meta name="viewport" content="width=device-width,initial-scale=1">',
-      `<title>Haunt improve: closed ${d.closed} of ${d.of}, ${esc(d.before.grade)} to ${esc(d.after.grade)}</title>`,
+      `<title>Chaos Haunt improve: closed ${d.closed} of ${d.of}, ${esc(d.before.grade)} to ${esc(d.after.grade)}</title>`,
       '<style>html,body{margin:0;background:#0b0a10;display:flex;align-items:center;justify-content:center;min-height:100vh}svg{max-width:100%;height:auto}</style>',
       '</head><body>', svg.replace(/\n$/, ''), '</body></html>', '',
     ].join('\n'),

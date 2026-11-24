@@ -40,7 +40,7 @@ describe('badge and scorecard', () => {
     const f = renderBadgeFiles(report);
     const svg = f['haunt-scorecard.svg'];
     expect(svg).toContain('width="1200" height="630"');
-    expect(svg).toContain('Haunt resilience scorecard');
+    expect(svg).toContain('Chaos Haunt resilience scorecard');
     expect(svg).toContain('1. Charge repeats after timeout');
     expect(svg).toContain('2. low one &lt;&amp;&gt;');
     expect(svg).not.toMatch(/https?:\/\/(?!www\.w3\.org)/);

@@ -16,7 +16,7 @@
     <text x="115" y="92" fill="#b9acdc">app 1: order pipeline</text>
     <text x="115" y="188" font-weight="bold">Haunted Inbox (Python)</text>
     <text x="115" y="212" fill="#b9acdc">app 2: mail triage</text>
-    <text x="395" y="68" font-weight="bold">Haunt skeleton (packages/haunt)</text>
+    <text x="395" y="68" font-weight="bold">Chaos Haunt skeleton (packages/haunt)</text>
     <text x="395" y="100" fill="#b9acdc">SDK: retry, journal, idempotency</text>
     <text x="395" y="124" fill="#b9acdc">chaos engine and creatures</text>
     <text x="395" y="148" fill="#b9acdc">bosses, ramp, sweep, score</text>

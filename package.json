@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Haunt: a chaos and resilience harness with a haunted arena.",
+  "description": "Chaos Haunt: chaos engineering for AI agents and automation, played as a haunted house.",
   "license": "MIT",
   "repository": { "type": "git", "url": "git+https://github.com/kakoritz/Kiroween-Chaos.git" },
   "engines": { "node": ">=20" },

@@ -1,5 +1,5 @@
-name: Haunt sweep
-description: Run a Haunt chaos sweep, upload the report and badge, comment the grade on the pull request and fail when targets fail.
+name: Chaos Haunt sweep
+description: Run a Chaos Haunt chaos sweep, upload the report and badge, comment the grade on the pull request and fail when targets fail.
 inputs:
   config:
     description: Path to haunt.yaml
