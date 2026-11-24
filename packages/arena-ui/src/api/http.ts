@@ -73,6 +73,7 @@ export class HttpApi implements ArenaApi {
   getCaptions(script: DemoScript) { return this.request<Caption[]>('GET', `/api/demo/captions/${encodeURIComponent(script)}`); }
   getCreatures() { return this.request<Creature[]>('GET', '/api/creatures'); }
   getCampaign() { return this.request('GET', '/api/campaign'); }
+  getPacks() { return this.request<unknown[]>('GET', '/api/packs'); }
   getApps() { return this.request<AppInfo[]>('GET', '/api/apps'); }
   setApp(app: string) { return this.request('POST', '/api/app', { app }); }
   getLaneStage(lane: number, stage: string, order?: string) {

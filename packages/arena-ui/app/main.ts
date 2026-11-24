@@ -527,7 +527,7 @@ async function boot() {
   });
 
   const packSwitch = new PackSwitcher($('pack-switch'), {
-    getPacks: (api as unknown as { getPacks?: () => Promise<unknown> }).getPacks?.bind(api),
+    getPacks: api.getPacks?.bind(api),
     getApps: () => api.getApps(),
     setApp: (id) => api.setApp(id),
     stopRunning: async () => {
