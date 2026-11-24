@@ -1,0 +1,8 @@
+{
+  "name": "@haunt/haunted-stream",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "App 3: the video publishing pipeline target (Node). Five tier bots, one haunt.yaml. Backs the Streaming pack.",
+  "license": "MIT"
+}

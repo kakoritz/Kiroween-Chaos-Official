@@ -282,7 +282,8 @@
             "app": {
               "enum": [
                 "orders",
-                "inbox"
+                "inbox",
+                "stream"
               ]
             },
             "lane": false,
@@ -372,7 +373,8 @@
                 "app": {
                   "enum": [
                     "orders",
-                    "inbox"
+                    "inbox",
+                    "stream"
                   ]
                 },
                 "pace": {

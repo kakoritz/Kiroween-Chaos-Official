@@ -71,7 +71,7 @@ export function createInPageMock(outcomeRows: ConstructorParameters<typeof Outco
       lanes: [...hub.lanes.values()].sort((a, b) => a.lane - b.lane),
       boss: hub.boss,
       demo: { scripts: DEMO_SCRIPTS, running: hub.demoRunning },
-      apps: Object.values(APPS).map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, role: s.role, kind: stageKind(s.role) })) })),
+      apps: Object.values(APPS).filter((a) => a.id !== 'stream').map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, role: s.role, kind: stageKind(s.role) })) })),
       tiers: TIER_ORDER.map((t) => ({ id: t, label: TIERS[t].label, parts: TIERS[t].parts })),
       parts: Object.values(PARTS),
       scripts: DEMO_SCRIPTS,
@@ -122,7 +122,7 @@ export function createInPageMock(outcomeRows: ConstructorParameters<typeof Outco
       if (!(CAPTION_SCRIPTS as readonly string[]).includes(script)) throw new MockError(404, 'not_found', 'unknown demo script');
       return loadCaptions(script);
     },
-    getApps: async () => Object.values(APPS).map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role, kind: stageKind(s.role) })) })),
+    getApps: async () => Object.values(APPS).filter((a) => a.id !== 'stream').map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role, kind: stageKind(s.role) })) })),
     setApp: async (app: string) => guard(() => {
       if (app !== 'orders' && app !== 'inbox') throw new MockError(400, 'bad_request', 'app must be orders or inbox');
       if (hub.running) throw new MockError(409, 'wave_running', 'a wave is running');

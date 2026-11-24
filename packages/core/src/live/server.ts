@@ -14,7 +14,7 @@ import { fnv1a32, mulberry32 } from '../../../haunt/src/shared/rng';
 import { loadCampaign } from '../../../haunt/src/campaign/load';
 import { listPacks } from '../../../haunt/src/packs/list';
 import { campaignWaveConfig, parseCampaignRequest, type CampaignRequest } from '../../../haunt/src/campaign/wave-config';
-import { APPS, APP_STAGES, CONTRACT_VERSION, CREATURES, DEMO_SCRIPTS, FAULT_IDS, type AppId } from './catalog';
+import { APPS, APP_STAGES, CONTRACT_VERSION, CREATURES, DEMO_SCRIPTS, FAULT_IDS, isAppId, type AppId } from './catalog';
 import { LapTracker } from './lap-tracker';
 import { laneLaps, orderRecord, waveLaps, waveStars } from './laps';
 import { PACE_FACTOR } from '../../../haunt/src/runner/travel';
@@ -357,7 +357,7 @@ export class LiveServer {
     let pace = body.pace ?? 'slow';
     if (pace !== 'normal' && pace !== 'show' && pace !== 'slow') fail(400, 'bad_request', 'bad pace');
     let app = body.app ?? this.app;
-    if (app !== 'orders' && app !== 'inbox') fail(400, 'bad_request', 'bad app');
+    if (!isAppId(app)) fail(400, 'bad_request', 'bad app');
     // Campaign night (CP-C2, additive): the night fixes orders, seed, pace, lanes and app. Lane 1 becomes the Crew.
     let campaign: CampaignRequest | undefined;
     let crew: CrewSpec | undefined;
@@ -413,7 +413,7 @@ export class LiveServer {
     try { t = new Tournament({ seed, rounds: body.rounds, lanes: body.lanes }); } catch (e) { return fail(400, 'bad_request', e instanceof Error ? e.message : 'bad rounds'); }
     // The tournament runs on the app that is selected (or the one asked for): the same rounds, curses, Casebook and rules for both.
     const tApp = body.app ?? this.app;
-    if (tApp !== 'orders' && tApp !== 'inbox') fail(400, 'bad_request', 'bad app');
+    if (!isAppId(tApp)) fail(400, 'bad_request', 'bad app');
     if (this.app !== tApp) this.switchApp(tApp);
     this.lanes.clear();
     this.corpses = [];
@@ -873,7 +873,7 @@ export class LiveServer {
         this.demoRunning = null;
         return { json: {} };
       case '/api/app':
-        if (body.app !== 'orders' && body.app !== 'inbox') fail(400, 'bad_request', 'bad app');
+        if (!isAppId(body.app)) fail(400, 'bad_request', 'bad app');
         this.switchApp(body.app);
         return { json: {} };
       default: return undefined;

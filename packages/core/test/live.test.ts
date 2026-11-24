@@ -73,7 +73,7 @@ describe('live server: reads', () => {
 
   it('apps list and app switch emits reset', async () => {
     const { get, post } = await boot();
-    expect((await get('/api/apps')).body.map((a: any) => a.id)).toEqual(['orders', 'inbox']);
+    expect((await get('/api/apps')).body.map((a: any) => a.id)).toEqual(['orders', 'inbox', 'stream']);
     const before = srv!.log.events.length;
     expect((await post('/api/app', { app: 'inbox' })).status).toBe(200);
     expect(srv!.log.events.length).toBe(before + 1);

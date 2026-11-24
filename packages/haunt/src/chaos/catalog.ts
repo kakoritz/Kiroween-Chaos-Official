@@ -15,14 +15,17 @@ export const RECOVERY_POINTS: readonly HookPoint[] = ['during_replay', 'during_r
 export const INBOX_ORDER: readonly string[] = ['login', 'ingest', 'validate', 'dedupe', 'triage', 'assign', 'sla', 'notify', 'escalate', 'resolve', 'close'];
 /** Inbox stages that make provider calls. */
 const INBOX_EFFECT: readonly string[] = ['login', 'assign', 'notify', 'escalate'];
+/** The Stream app's stages in order (shared/catalog STREAM_STAGES) and the ones that make provider calls. */
+export const STREAM_ORDER: readonly string[] = ['fetch', 'classify', 'draft', 'reply', 'archive'];
+const STREAM_EFFECT: readonly string[] = ['fetch', 'draft', 'reply', 'archive'];
 /** Stages that make provider calls. */
-export const EFFECT_STAGES: readonly string[] = ['account', 'submit', 'payment', 'confirmation', 'receive', 'process', 'updates', 'ship', 'transit', ...INBOX_EFFECT];
+export const EFFECT_STAGES: readonly string[] = ['account', 'submit', 'payment', 'confirmation', 'receive', 'process', 'updates', 'ship', 'transit', ...INBOX_EFFECT, ...STREAM_EFFECT];
 /** Stages that run a journaled effect (transit only polls), so only these have an after_effect_before_journal hook. */
 export const JOURNALED_EFFECT_STAGES: readonly string[] = EFFECT_STAGES.filter((s) => s !== 'transit');
 const ORDERS_ORDER = ['account', 'create', 'submit', 'payment', 'confirmation', 'receive', 'process', 'updates', 'ship', 'transit', 'handoff'];
-const ALL = [...ORDERS_ORDER, ...INBOX_ORDER];
+const ALL = [...ORDERS_ORDER, ...INBOX_ORDER, ...STREAM_ORDER];
 /** Effect stages that retry on a count fault (updates degrades instead, transit polls). */
-const CALL_STAGES: readonly string[] = ['account', 'submit', 'payment', 'confirmation', 'receive', 'process', 'ship', 'login', 'assign', 'notify', 'escalate'];
+const CALL_STAGES: readonly string[] = ['account', 'submit', 'payment', 'confirmation', 'receive', 'process', 'ship', 'login', 'assign', 'notify', 'escalate', ...STREAM_EFFECT];
 
 export interface FaultDef {
   id: string;
@@ -50,7 +53,7 @@ export const FAULTS: readonly FaultDef[] = [
   def({ id: 'comm_timeout', creature: 'zombie', family: 'network', kind: 'provider', stages: CALL_STAGES, count: 1 }),
   def({ id: 'slow_link', creature: 'zombie', family: 'network', kind: 'provider', stages: EFFECT_STAGES, forMs: 6000 }),
   def({ id: 'http_404', creature: 'ghost', family: 'http', kind: 'provider', stages: CALL_STAGES, count: 2 }),
-  def({ id: 'http_429', creature: 'goblin', family: 'http', kind: 'provider', stages: ['payment', 'confirmation', 'ship', 'assign', 'notify'], count: 3 }),
+  def({ id: 'http_429', creature: 'goblin', family: 'http', kind: 'provider', stages: ['payment', 'confirmation', 'ship', 'assign', 'notify', 'draft', 'reply'], count: 3 }),
   def({ id: 'http_500', creature: 'imp', family: 'http', kind: 'provider', stages: EFFECT_STAGES, count: 2 }),
   def({ id: 'missing_file', creature: 'poltergeist', family: 'data', kind: 'file', stages: ['create'], forMs: 6000 }),
   def({ id: 'duplicate_request', creature: 'doppelganger', family: 'data', kind: 'file', stages: ['create'], count: 1 }),
@@ -104,13 +107,12 @@ export function restartDelay(base: number, nested: number): number {
 }
 
 /** First stage at or after `from` (wrapping into the next order) where the fault applies. `app` picks the stage list when `from` is unknown. */
-export function nextApplicableStage(f: FaultDef, from: string | null, app: 'orders' | 'inbox' = 'orders'): { stage: string; nextOrder: boolean } {
-  const order = from !== null && INBOX_ORDER.includes(from) && !ORDERS_ORDER.includes(from) ? INBOX_ORDER : from === null && app === 'inbox' ? INBOX_ORDER : ORDERS_ORDER;
+export function nextApplicableStage(f: FaultDef, from: string | null, app: 'orders' | 'inbox' | 'stream' = 'orders'): { stage: string; nextOrder: boolean } {
+  const order = from !== null && STREAM_ORDER.includes(from) ? STREAM_ORDER : from !== null && INBOX_ORDER.includes(from) && !ORDERS_ORDER.includes(from) ? INBOX_ORDER : from === null && app === 'stream' ? STREAM_ORDER : from === null && app === 'inbox' ? INBOX_ORDER : ORDERS_ORDER;
   const i = from === null ? 0 : Math.max(0, order.indexOf(from));
   for (let j = i; j < order.length; j++) if (f.stages.includes(order[j]!)) return { stage: order[j]!, nextOrder: false };
   for (let j = 0; j < order.length; j++) if (f.stages.includes(order[j]!)) return { stage: order[j]!, nextOrder: true };
-  const other = order === INBOX_ORDER ? ORDERS_ORDER : INBOX_ORDER;
-  const hit = other.find((st) => f.stages.includes(st));
+  const hit = [ORDERS_ORDER, INBOX_ORDER, STREAM_ORDER].filter((o) => o !== order).flat().find((st) => f.stages.includes(st));
   if (hit) return { stage: hit, nextOrder: false };
   throw new Error(`fault ${f.id} applies to no stage`);
 }

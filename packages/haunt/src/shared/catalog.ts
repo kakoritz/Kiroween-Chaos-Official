@@ -1,7 +1,7 @@
 // Shared catalogs: apps and stages, tiers, parts, faults, creatures. Source of truth for the
 // IDs in contract/CONTRACT.md and the numbers in .kiro/specs/engine/design.md and runtime.md.
 
-export type AppId = 'orders' | 'inbox';
+export type AppId = 'orders' | 'inbox' | 'stream';
 export type TierId = 'rookie' | 'retrier' | 'journaler' | 'reconciler' | 'phoenix';
 export type PartId = 'retry' | 'journal' | 'idempotency' | 'breaker' | 'offline_queue';
 export type EffectKind = 'account_create' | 'order' | 'charge' | 'email' | 'store' | 'dispatch' | 'notify' | 'ticket';
@@ -62,9 +62,19 @@ export const INBOX_STAGES: StageDef[] = [
   { id: 'resolve', label: 'Resolve', icon: 'box', workAnimation: 'archive_box', role: 'work', min: 300, max: 600, effects: [], verb: 'Resolving' },
   { id: 'close', label: 'Close and survey', icon: 'archive', workAnimation: 'archive_box', role: 'final', min: 300, max: 500, effects: [], verb: 'Closing' },
 ];
+// The Stream app (stream-pack-app SP-C1): a five-stage video pipeline on the existing fake provider (store, dispatch, notify).
+// Stage ids come from the contract's closed stage enum (contract/events.schema.json stageId), so no contract change is needed: fetch, classify, draft, reply and archive are enum members no other app uses. The labels carry the meaning; apps/haunted-stream/haunt.yaml has the same five.
+export const STREAM_STAGES: StageDef[] = [
+  { id: 'fetch', label: 'Ingest upload', icon: 'box', workAnimation: 'archive_box', role: 'effect', min: 400, max: 800, effects: [{ kind: 'store', key: 'store:1', service: 'store' }], verb: 'Ingesting upload' },
+  { id: 'classify', label: 'Transcode', icon: 'brain', workAnimation: 'think', role: 'work', min: 800, max: 1400, effects: [], verb: 'Transcoding' },
+  { id: 'draft', label: 'Publish', icon: 'plane', workAnimation: 'load_scooter', role: 'effect', min: 400, max: 800, effects: [{ kind: 'dispatch', key: 'dispatch', service: 'dispatch' }], verb: 'Publishing to the CDN' },
+  { id: 'reply', label: 'Notify subscribers', icon: 'bubbles', workAnimation: 'send_bubbles', role: 'effect', min: 300, max: 600, effects: [{ kind: 'notify', key: 'notify:1', service: 'notify' }], verb: 'Notifying subscribers' },
+  { id: 'archive', label: 'Archive', icon: 'archive', workAnimation: 'archive_box', role: 'effect', min: 300, max: 600, effects: [{ kind: 'store', key: 'store:2', service: 'store' }], verb: 'Archiving' },
+];
 export const APPS: Record<AppId, { id: AppId; label: string; stages: StageDef[]; orderPrefix: string }> = {
   orders: { id: 'orders', label: 'Haunted Orders', stages: ORDERS_STAGES, orderPrefix: 'ord' },
   inbox: { id: 'inbox', label: 'Haunted Inbox', stages: INBOX_STAGES, orderPrefix: 'msg' },
+  stream: { id: 'stream', label: 'Haunted Stream', stages: STREAM_STAGES, orderPrefix: 'ord' },
 };
 
 /** Wording of one app, so UI lines and review text read right (a ticket desk talks about tickets and replies, not orders and charges). */
@@ -102,8 +112,13 @@ export const APP_VOCAB: Record<AppId, AppVocab> = {
     low: { timeliness: 'Took forever to answer', delays: 'Kept me waiting', issues: 'So many hiccups', delivery: 'Wrong answer', ease: 'Hard to reach support' },
     high: { timeliness: 'Answered in a flash', delays: 'No waiting around', issues: 'Smooth as a ghost', delivery: 'Got the right answer', ease: 'Easy to reach support' },
   },
+  stream: {
+    unit: 'video', idPrefix: 'vid', start: 'picked up', done: 'published', dupKind: 'store', dupReason: 'Stored the video twice!', wrong: 'Wrong video', never: 'Never published', cancelled: 'VIDEO CANCELLED',
+    low: { timeliness: 'Took forever to go live', delays: 'Buffering again', issues: 'So many hiccups', delivery: 'Wrong video', ease: 'Hard to watch' },
+    high: { timeliness: 'Live in a flash', delays: 'No buffering', issues: 'Smooth as a ghost', delivery: 'Plays perfectly', ease: 'Easy to watch' },
+  },
 };
-export const vocabOf = (app: string | undefined): AppVocab => APP_VOCAB[app === 'inbox' ? 'inbox' : 'orders'];
+export const vocabOf = (app: string | undefined): AppVocab => APP_VOCAB[app === 'inbox' || app === 'stream' ? app : 'orders'];
 
 /** Contract stage list for an app (V1_2.md section 1): `[{id, label, kind}]`. */
 export function stageList(app: AppId): { id: string; label: string; kind: StageKind }[] {
@@ -198,7 +213,7 @@ export interface CreatureDef {
   description: string;
 }
 
-const both: AppId[] = ['orders', 'inbox'];
+const both: AppId[] = ['orders', 'inbox', 'stream'];
 export const CREATURES: CreatureDef[] = [
   { id: 'reaper', label: 'Reaper', family: 'process', sprite: 'reaper', causes: ['crash', 'out_of_memory', 'sso_expired'], boss: false, apps: both, description: 'Kills the bot process without warning.' },
   { id: 'wraith', label: 'Wraith', family: 'world', sprite: 'wraith', causes: ['power_outage'], boss: false, apps: both, description: 'Cuts the power. The bot stays dead for five seconds.' },

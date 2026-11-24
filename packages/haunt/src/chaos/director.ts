@@ -15,7 +15,7 @@ export interface LaneInfo {
   /** Stage in flight, or null between orders. */
   stage: string | null;
   /** The app of the wave, for the stage order when `stage` is unknown. Orders when omitted. */
-  app?: 'orders' | 'inbox';
+  app?: 'orders' | 'inbox' | 'stream';
 }
 
 export interface ArmRequest {
