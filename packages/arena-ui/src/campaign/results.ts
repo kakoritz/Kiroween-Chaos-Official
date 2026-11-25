@@ -1,14 +1,14 @@
 // Campaign results (CP-U3): medal, credits, "what happened", credits roll, and save export/import.
 // `mountCampaignResults` returns a handle: call `begin(night)` when a campaign night starts and `onEvent(ev)` for every arena event.
 import { medalSvg } from './art';
-import { loadProgress } from './hub-model';
+import { loadProgress, withStart } from './hub-model';
 import { creditCount } from '../arena/crew-lane';
 import {
   applyResult, exportProgress, explain, loadEarned, nextGoal, parseImport, saveImport, saveOutcome,
   nightCases, type LaneSummary, type NightCase, type Outcome, type ResultGear, type ResultNight, type ScoreHit,
 } from './results-model';
 
-export interface ResultsApi { getCampaign(): Promise<{ nights?: ResultNight[]; gear?: ResultGear[] }>; /** GET /api/casebook: the Crew lane's cases of the night that just ended. */ getCasebook?(): Promise<unknown> }
+export interface ResultsApi { getCampaign(): Promise<{ nights?: ResultNight[]; gear?: ResultGear[]; start?: { gear: string[]; credits: number } }>; /** GET /api/casebook: the Crew lane's cases of the night that just ended. */ getCasebook?(): Promise<unknown> }
 export interface ResultsHandlers { onNight?: (night: ResultNight) => void; onHub?: () => void; /** CP-U5: ask the shared sound module to play a cue. */ onSound?: (name: 'medal' | 'coin') => void }
 export interface ResultsHandle { begin(nightId: number): void; onEvent(ev: { type?: string; lane?: number; detail?: unknown }): void; close(): void }
 
@@ -50,7 +50,7 @@ export function mountCampaignResults(stage: HTMLElement, api: ResultsApi, handle
     const night = nights.find((n) => n.id === nightId);
     if (!night) return;
     const cases = await api.getCasebook?.().then((raw) => nightCases(raw, 5, night.id), () => [] as NightCase[]) ?? [];
-    const o = applyResult(night, summary, loadProgress(store), loadEarned(store));
+    const o = applyResult(night, summary, withStart(loadProgress(store), c.start), loadEarned(store));
     saveOutcome(store, o);
     close();
     el = document.createElement('div');

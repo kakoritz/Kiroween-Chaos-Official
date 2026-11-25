@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildDoors, isUnlocked, moveFocus, parseProgress, emptyProgress, type HubNight } from '../src/campaign/hub-model';
+import { buildDoors, isUnlocked, moveFocus, parseProgress, emptyProgress, withStart, isFreshProgress, loadProgress, STORAGE_KEY, type HubNight } from '../src/campaign/hub-model';
 
 const night = (id: number, extra: Partial<HubNight> = {}): HubNight => ({
   id, title: `T${id}`, briefing: 'b', lesson: ['a', 'b', 'c'], hint: 'h', orders: 5,
@@ -36,5 +36,23 @@ describe('campaign hub model', () => {
     expect(moveFocus(3, 'Home', 7)).toBe(0);
     expect(moveFocus(3, 'End', 7)).toBe(6);
     expect(moveFocus(3, 'x', 7)).toBe(3);
+  });
+});
+
+// covers: campaign-credits/R1
+// covers: campaign-credits/R3
+// covers: campaign-credits/CC-1
+describe('hub credits before the shop was opened', () => {
+  it('shows the start grant for a fresh save and the stored total otherwise', () => {
+    expect(isFreshProgress(emptyProgress())).toBe(true);
+    expect(withStart(emptyProgress(), { gear: [], credits: 300 }).credits).toBe(300);
+    expect(withStart(emptyProgress(), undefined).credits).toBe(300);
+    expect(withStart({ ...emptyProgress(), credits: 120 }, { gear: [], credits: 300 }).credits).toBe(120);
+    expect(withStart({ ...emptyProgress(), medals: { '1': 'bronze' } }, { gear: [], credits: 300 }).credits).toBe(0);
+  });
+  it('does not write storage', () => {
+    const m = new Map<string, string>();
+    withStart(loadProgress({ getItem: (k: string) => m.get(k) ?? null }), { gear: [], credits: 300 });
+    expect(m.has(STORAGE_KEY)).toBe(false);
   });
 });

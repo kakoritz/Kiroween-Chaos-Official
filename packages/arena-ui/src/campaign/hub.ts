@@ -2,10 +2,10 @@
 // Mounted on the `haunt:splash` window event (action 'campaign'). Starting a night is handled by the shop (CP-U2) through `onStart`.
 import { doorSvg, lockSvg, medalSvg } from './art';
 import { openSaveDialog } from './results';
-import { buildDoors, loadProgress, moveFocus, type HubNight, type CampaignProgress } from './hub-model';
+import { buildDoors, loadProgress, moveFocus, withStart, type HubNight, type CampaignProgress, type StartGrant } from './hub-model';
 
 export interface HubHandlers { onStart?: (night: HubNight) => void; onClose?: () => void }
-export interface HubApi { getCampaign(): Promise<{ nights: HubNight[] }> }
+export interface HubApi { getCampaign(): Promise<{ nights: HubNight[]; start?: StartGrant }> }
 
 const esc = (s: string): string => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] as string);
 
@@ -13,11 +13,12 @@ export class CampaignHub {
   private el: HTMLElement;
   private nights: HubNight[] = [];
   private progress: CampaignProgress;
+  private start: StartGrant | undefined;
   private focus = 0;
   private brief: HTMLElement | null = null;
 
   constructor(host: HTMLElement, api: HubApi, private handlers: HubHandlers = {}, private store?: Pick<Storage, 'getItem'>) {
-    this.progress = loadProgress(store);
+    this.progress = withStart(loadProgress(store), undefined);
     this.el = document.createElement('div');
     this.el.className = 'cphub';
     this.el.setAttribute('role', 'dialog');
@@ -25,10 +26,10 @@ export class CampaignHub {
     this.el.addEventListener('keydown', (e) => this.onKey(e));
     host.appendChild(this.el);
     this.el.innerHTML = '<p class="cphub__sub">Loading the crypt...</p>';
-    void api.getCampaign().then((c) => { this.nights = c.nights ?? []; this.render(); }).catch(() => { this.el.innerHTML = '<p class="cphub__sub">The crypt is closed. Could not load the campaign.</p>'; });
+    void api.getCampaign().then((c) => { this.nights = c.nights ?? []; this.start = c.start; this.progress = withStart(loadProgress(this.store), this.start); this.render(); }).catch(() => { this.el.innerHTML = '<p class="cphub__sub">The crypt is closed. Could not load the campaign.</p>'; });
   }
 
-  refresh(): void { this.progress = loadProgress(this.store); this.render(); }
+  refresh(): void { this.progress = withStart(loadProgress(this.store), this.start); this.render(); }
 
   close(): void { this.el.remove(); this.handlers.onClose?.(); }
 
