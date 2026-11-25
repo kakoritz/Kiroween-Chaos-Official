@@ -4,8 +4,8 @@ Rule: one PR per phase, spec ticks only when done, `npm run verify` green before
 
 ## M0. Safety net (0.5 d)
 - [x] 0.1 Tag `v1-fixed-stages` on main (done).
-- [ ] 0.2 Golden tests: stage table per app, fault-to-stage table per app, event hash of one seeded wave per app. They must pass unchanged through M1 to M3.
-- [ ] 0.3 Size check: list every place that names stages (script `tools/stage-literals.mjs`), commit the report to the spec.
+- [x] 0.2 Golden tests: stage table per app, fault-to-stage table per app, event hash of one seeded wave per app. They must pass unchanged through M1 to M3.
+- [x] 0.3 Size check: list every place that names stages (script `tools/stage-literals.mjs`), commit the report to the spec.
 
 ## M1. Registry (1 d)
 - [ ] 1.1 `AppDef` and registry; built-ins register.

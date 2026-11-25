@@ -1,0 +1,257 @@
+{
+ "orders": [
+  {
+   "id": "account",
+   "label": "Account or login",
+   "role": "effect",
+   "min": 400,
+   "max": 800,
+   "effects": [
+    "account_create:account:account"
+   ]
+  },
+  {
+   "id": "create",
+   "label": "Create order",
+   "role": "input",
+   "min": 300,
+   "max": 700,
+   "effects": []
+  },
+  {
+   "id": "submit",
+   "label": "Submit order",
+   "role": "effect",
+   "min": 200,
+   "max": 400,
+   "effects": [
+    "order:order:order"
+   ]
+  },
+  {
+   "id": "payment",
+   "label": "Payment",
+   "role": "effect",
+   "min": 700,
+   "max": 1300,
+   "effects": [
+    "charge:charge:charge"
+   ]
+  },
+  {
+   "id": "confirmation",
+   "label": "Confirmation",
+   "role": "effect",
+   "min": 300,
+   "max": 600,
+   "effects": [
+    "email:email:email"
+   ]
+  },
+  {
+   "id": "receive",
+   "label": "Store receives",
+   "role": "effect",
+   "min": 200,
+   "max": 400,
+   "effects": [
+    "store:store:1:store"
+   ]
+  },
+  {
+   "id": "process",
+   "label": "Process order",
+   "role": "effect",
+   "min": 300,
+   "max": 600,
+   "effects": [
+    "store:store:2:store"
+   ]
+  },
+  {
+   "id": "updates",
+   "label": "Order updates",
+   "role": "effect",
+   "min": 300,
+   "max": 600,
+   "effects": [
+    "notify:notify:1:notify",
+    "notify:notify:2:notify"
+   ]
+  },
+  {
+   "id": "ship",
+   "label": "Ship and pack",
+   "role": "effect",
+   "min": 500,
+   "max": 1000,
+   "effects": [
+    "dispatch:dispatch:dispatch"
+   ]
+  },
+  {
+   "id": "transit",
+   "label": "Delivery updates",
+   "role": "poll",
+   "min": 1500,
+   "max": 3000,
+   "effects": []
+  },
+  {
+   "id": "handoff",
+   "label": "Handoff",
+   "role": "final",
+   "min": 300,
+   "max": 600,
+   "effects": []
+  }
+ ],
+ "inbox": [
+  {
+   "id": "login",
+   "label": "SSO login",
+   "role": "effect",
+   "min": 300,
+   "max": 600,
+   "effects": [
+    "account_create:login:account"
+   ]
+  },
+  {
+   "id": "ingest",
+   "label": "Ingest request",
+   "role": "input",
+   "min": 400,
+   "max": 700,
+   "effects": []
+  },
+  {
+   "id": "validate",
+   "label": "Validate",
+   "role": "work",
+   "min": 300,
+   "max": 600,
+   "effects": []
+  },
+  {
+   "id": "dedupe",
+   "label": "Deduplicate",
+   "role": "work",
+   "min": 300,
+   "max": 600,
+   "effects": []
+  },
+  {
+   "id": "triage",
+   "label": "Triage",
+   "role": "work",
+   "min": 400,
+   "max": 800,
+   "effects": []
+  },
+  {
+   "id": "assign",
+   "label": "Assign ticket",
+   "role": "effect",
+   "min": 500,
+   "max": 900,
+   "effects": [
+    "ticket:ticket:ticket"
+   ]
+  },
+  {
+   "id": "sla",
+   "label": "SLA clock",
+   "role": "work",
+   "min": 200,
+   "max": 400,
+   "effects": []
+  },
+  {
+   "id": "notify",
+   "label": "Notify requester",
+   "role": "effect",
+   "min": 400,
+   "max": 800,
+   "effects": [
+    "email:reply:reply"
+   ]
+  },
+  {
+   "id": "escalate",
+   "label": "Escalate",
+   "role": "effect",
+   "min": 300,
+   "max": 600,
+   "effects": [
+    "notify:escalate:notify"
+   ]
+  },
+  {
+   "id": "resolve",
+   "label": "Resolve",
+   "role": "work",
+   "min": 300,
+   "max": 600,
+   "effects": []
+  },
+  {
+   "id": "close",
+   "label": "Close and survey",
+   "role": "final",
+   "min": 300,
+   "max": 500,
+   "effects": []
+  }
+ ],
+ "stream": [
+  {
+   "id": "fetch",
+   "label": "Ingest upload",
+   "role": "effect",
+   "min": 400,
+   "max": 800,
+   "effects": [
+    "store:store:1:store"
+   ]
+  },
+  {
+   "id": "classify",
+   "label": "Transcode",
+   "role": "work",
+   "min": 800,
+   "max": 1400,
+   "effects": []
+  },
+  {
+   "id": "draft",
+   "label": "Publish",
+   "role": "effect",
+   "min": 400,
+   "max": 800,
+   "effects": [
+    "dispatch:dispatch:dispatch"
+   ]
+  },
+  {
+   "id": "reply",
+   "label": "Notify subscribers",
+   "role": "effect",
+   "min": 300,
+   "max": 600,
+   "effects": [
+    "notify:notify:1:notify"
+   ]
+  },
+  {
+   "id": "archive",
+   "label": "Archive",
+   "role": "effect",
+   "min": 300,
+   "max": 600,
+   "effects": [
+    "store:store:2:store"
+   ]
+  }
+ ]
+}
