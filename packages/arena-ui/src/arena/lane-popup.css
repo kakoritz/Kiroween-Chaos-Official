@@ -26,7 +26,7 @@
 .lp-st-active .lp-status { color: var(--ghost); }
 .lp-st-trouble .lp-status { color: var(--warn); }
 .lp-st-failed .lp-status, .lp-st-dead .lp-status { color: var(--fail); }
-.lp-st-quarantined .lp-status { color: var(--hex); }
+.lp-st-quarantined .lp-status { color: var(--hex-text); }
 .lp-st-pending .lp-status, .lp-st-next .lp-status { color: var(--muted); }
 .lp-logwrap { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 .lp-loghead { display: flex; align-items: center; gap: 8px; padding-bottom: 6px; }

@@ -38,7 +38,7 @@ const LANES_H = 768;
 
 const C = {
   bg: '#0d0b14', stone: '#1c1830', stone2: '#2a2446', torch: '#ff9a3c', bone: '#efe6d2', text: '#f3ecff',
-  muted: '#8f86a8', ok: '#5ee08a', fail: '#ff4d5e', warn: '#ffc247', ghost: '#7ab8ff', hex: '#9b6bff', out: '#14101f',
+  muted: '#a89fc2', ok: '#5ee08a', fail: '#ff6673', warn: '#ffc247', ghost: '#7ab8ff', hex: '#9b6bff', out: '#14101f',
 };
 const MONO = 'ui-monospace, "Cascadia Code", Menlo, monospace';
 const SANS = 'ui-sans-serif, system-ui, sans-serif';

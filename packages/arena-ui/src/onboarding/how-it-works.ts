@@ -5,7 +5,7 @@ import archSvg from '../../../../docs/img/architecture.svg?raw';
 
 export const HOW_LABEL = 'How it works';
 export const HOW_TITLE = 'How Kiroween Chaos works';
-export const HOW_CAPTION = 'Two apps on one skeleton, the core server, the arena UI and the Kiro loop that turns a failed run into a hardening spec.';
+export const HOW_CAPTION = 'Three apps (Orders, Ticket Desk, Stream) on one skeleton, the core server, the arena UI and the Kiro loop that turns a failed run into a hardening spec.';
 
 /** The diagram markup. The svg already carries role="img" and an aria-label; the dialog adds the caption. */
 export const architectureSvg = (): string => archSvg;
