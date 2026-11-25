@@ -6,6 +6,7 @@ import { FIXTURES } from '../sim/fixtures';
 import { Hub } from './hub';
 import { CAPTION_SCRIPTS, loadCaptions } from '../live/captions';
 import { OutcomeTable } from './outcomes';
+import { isAppId } from '../live/catalog';
 import { ChaosSim, DEMO_SCRIPTS, MockError, Player, demoFillerTimes, fixtureFor, scaledWave } from './play';
 import { hardening, laneLaps, laneLog, laneOrderRecord, laneOrders, ledger, postmortem, stageDetail, waveCompare, waveLaps, waveReport, waveStars, wavesList } from './queries';
 
@@ -85,7 +86,7 @@ export function createInPageMock(outcomeRows: ConstructorParameters<typeof Outco
       lanes: [...hub.lanes.values()].sort((a, b) => a.lane - b.lane),
       boss: hub.boss,
       demo: { scripts: DEMO_SCRIPTS, running: hub.demoRunning },
-      apps: Object.values(APPS).filter((a) => a.id !== 'stream').map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, role: s.role, kind: stageKind(s.role) })) })),
+      apps: Object.values(APPS).map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, role: s.role, kind: stageKind(s.role) })) })),
       tiers: TIER_ORDER.map((t) => ({ id: t, label: TIERS[t].label, parts: TIERS[t].parts })),
       parts: Object.values(PARTS),
       scripts: DEMO_SCRIPTS,
@@ -104,7 +105,7 @@ export function createInPageMock(outcomeRows: ConstructorParameters<typeof Outco
     startWave: async (o: Record<string, any> = {}) => guard(() => {
       if (hub.running) throw new MockError(409, 'wave_running', 'a wave is already running');
       const app = (o.app ?? hub.app) as AppId;
-      if (app !== 'orders' && app !== 'inbox') throw new MockError(400, 'bad_request', 'app must be orders or inbox');
+      if (!isAppId(app)) throw new MockError(400, 'bad_request', 'app must be orders, inbox or stream');
       const speed = o.speed ?? hub.speed;
       if (!INPAGE_SPEEDS.includes(speed)) throw new MockError(400, 'bad_request', 'bad speed');
       if (app !== hub.app) { hub.app = app; hub.reset(); }
@@ -136,9 +137,9 @@ export function createInPageMock(outcomeRows: ConstructorParameters<typeof Outco
       if (!(CAPTION_SCRIPTS as readonly string[]).includes(script)) throw new MockError(404, 'not_found', 'unknown demo script');
       return loadCaptions(script);
     },
-    getApps: async () => Object.values(APPS).filter((a) => a.id !== 'stream').map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role, kind: stageKind(s.role) })) })),
+    getApps: async () => Object.values(APPS).map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role, kind: stageKind(s.role) })) })),
     setApp: async (app: string) => guard(() => {
-      if (app !== 'orders' && app !== 'inbox') throw new MockError(400, 'bad_request', 'app must be orders or inbox');
+      if (!isAppId(app)) throw new MockError(400, 'bad_request', 'app must be orders, inbox or stream');
       if (hub.running) throw new MockError(409, 'wave_running', 'a wave is running');
       hub.app = app;
       hub.reset();

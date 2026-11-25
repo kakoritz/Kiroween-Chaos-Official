@@ -6,9 +6,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 199. With a PR: 29 (15%). With a test: 169 (85%).
+- Requirements: 205. With a PR: 29 (14%). With a test: 175 (85%).
 - Tasks: 158. Done: 156. With a PR: 48 (30%). With a test: 39 (25%).
-- Test files scanned: 218.
+- Test files scanned: 219.
 
 ## Tasks
 
@@ -340,6 +340,12 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R3.3 | readme-gif | submission/README.md and submission/gallery-captions.md say three apps. | n/a | - | - |
 | R4 | readme-gif | A test guards the README clip | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
 | R4.1 | readme-gif | A docs-truth test fails if README.md does not reference docs/img/demo.gif, th... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R1 | stream-in-mock | Mock server | n/a | - | `packages/core/test/stream-in-mock.test.ts` |
+| R1.1 | stream-in-mock | POST /api/app {app:"stream"} and POST /api/wave {app:"stream"} succeed. | n/a | - | `packages/core/test/stream-in-mock.test.ts` |
+| R1.2 | stream-in-mock | GET /api/apps lists Stream with its five stages; /api/state reports the Strea... | n/a | - | `packages/core/test/stream-in-mock.test.ts` |
+| R2 | stream-in-mock | In-page mock (hosted demo) | n/a | - | `packages/core/test/stream-in-mock.test.ts` |
+| R2.1 | stream-in-mock | setApp('stream') and startWave({app:'stream'}) succeed; getApps() lists Stream. | n/a | - | `packages/core/test/stream-in-mock.test.ts` |
+| R2.2 | stream-in-mock | A hosted Stream wave emits only Stream stage ids. | n/a | - | `packages/core/test/stream-in-mock.test.ts` |
 | R1 | stream-pack-app | A runnable Stream app | n/a | - | `apps/haunted-stream/test/stream.test.ts`, `packages/core/test/stream-live.test.ts` |
 | R1.1 | stream-pack-app | apps/haunted-stream holds a Node/TypeScript pipeline of five stages: ingest u... | n/a | - | `apps/haunted-stream/test/stream.test.ts`, `packages/core/test/stream-live.test.ts` |
 | R1.2 | stream-pack-app | apps/haunted-stream/haunt.yaml declares the same five stages and loads with l... | n/a | - | `apps/haunted-stream/test/stream.test.ts`, `packages/core/test/stream-live.test.ts` |

@@ -5,6 +5,7 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { APPS, CONTRACT_VERSION, stageKind, CREATURES, PARTS, TIERS, TIER_ORDER, type AppId, type HauntEvent } from '@haunt/shared';
+import { isAppId } from '../live/catalog';
 import { findRepoRoot } from '../../../haunt/src/contract/validate';
 import { FIXTURES } from '../sim/fixtures';
 import { mockTournament } from '../sim/tournament-fixtures';
@@ -131,7 +132,7 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
       boss: hub.boss,
       demo: { scripts: DEMO_SCRIPTS, running: hub.demoRunning },
       // Earlier mock fields, kept for clients written against the first slice.
-      apps: Object.values(APPS).filter((a) => a.id !== 'stream').map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, role: s.role, kind: stageKind(s.role) })) })),
+      apps: Object.values(APPS).map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, role: s.role, kind: stageKind(s.role) })) })),
       tiers: TIER_ORDER.map((t) => ({ id: t, label: TIERS[t].label, parts: TIERS[t].parts })),
       parts: Object.values(PARTS),
       scripts: DEMO_SCRIPTS,
@@ -204,7 +205,7 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
         return send(res, 200, loadCaptions(s));
       }
       if (path === '/api/campaign') return send(res, 200, campaign ??= loadCampaign());
-      if (path === '/api/apps') return send(res, 200, Object.values(APPS).filter((a) => a.id !== 'stream').map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role, kind: stageKind(s.role) })) })));
+      if (path === '/api/apps') return send(res, 200, Object.values(APPS).map((a) => ({ id: a.id, label: a.label, stages: a.stages.map((s) => ({ id: s.id, label: s.label, icon: s.icon, workAnimation: s.workAnimation, role: s.role, kind: stageKind(s.role) })) })));
       if (path === '/api/packs') return send(res, 200, listPacks());
       if (path === '/api/state') return send(res, 200, stateBody());
       if (path === '/api/curses') return send(res, 200, { curses: [...hub.curses], table: [], kinds: ['404', 'slow', 'flaky500', 'clock_skew', 'rate_limit'] });
@@ -296,7 +297,7 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
       if (tiers !== 'race' && tiers !== 'allPhoenix') return fail(res, 400, 'bad_request', 'tiers must be race or allPhoenix');
       if (!SPEEDS.includes(speed)) return fail(res, 400, 'bad_request', `speed must be one of ${SPEEDS.join(', ')}`);
       if (pace !== 'normal' && pace !== 'show' && pace !== 'slow') return fail(res, 400, 'bad_request', 'pace must be normal, show or slow');
-      if (app !== 'orders' && app !== 'inbox') return fail(res, 400, 'bad_request', 'app must be orders or inbox');
+      if (!isAppId(app)) return fail(res, 400, 'bad_request', 'app must be orders, inbox or stream');
       if (app !== hub.app) { hub.app = app; hub.reset(); }
       const wave = startWave(scaledWave({ orders, seed, tiers, lanes, pace, app }), speed);
       return send(res, 200, { wave });
@@ -371,7 +372,7 @@ export function createMockServer(opts: MockOptions = {}): { server: Server; list
     }
     if (path === '/api/demo/stop') { stopWave(); return send(res, 200, {}); }
     if (path === '/api/app') {
-      if (b.app !== 'orders' && b.app !== 'inbox') return fail(res, 400, 'bad_request', 'app must be orders or inbox');
+      if (!isAppId(b.app)) return fail(res, 400, 'bad_request', 'app must be orders, inbox or stream');
       if (hub.running) return fail(res, 409, 'wave_running', 'a wave is running');
       hub.app = b.app;
       hub.reset();
