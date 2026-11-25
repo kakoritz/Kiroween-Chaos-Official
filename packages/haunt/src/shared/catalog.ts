@@ -37,6 +37,8 @@ export interface StageDef {
   verb: string;
   /** Fault ids that must not land here (registered apps; modular-engine R2.2). */
   deny?: readonly string[];
+  /** Library block this stage came from (chain blame, modular-engine R12.4). */
+  block?: string;
 }
 
 export const ORDERS_STAGES: StageDef[] = [
@@ -84,6 +86,8 @@ export interface AppDef {
   shortLabel?: string;
   stages: StageDef[];
   orderPrefix: string;
+  /** Folder of the app's haunt.yaml for a registered app (the generic bot reads it). */
+  source?: string;
 }
 /** The live app table. Built-ins are here at load; `registerApp` (shared/registry.ts) adds more. Do not assign to it directly. */
 export const APPS: Record<AppId, AppDef> = {

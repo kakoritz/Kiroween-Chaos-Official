@@ -1,6 +1,6 @@
 // Registers an app from a directory holding a `haunt.yaml` (node only). Spec: .kiro/specs/modular-engine R3.2, R3.3.
 import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { loadHauntConfig } from './load';
 import { appFromConfig, registerApp, validateAppDef } from '../shared/registry';
 import type { AppDef } from '../shared/catalog';
@@ -14,7 +14,7 @@ export function registerAppFromDir(dir: string): RegisterResult {
   if (!existsSync(file)) return { ok: false, errors: [`${file}: not found. An app folder needs a haunt.yaml (see docs/OWN-BOT.md)`] };
   const loaded = loadHauntConfig(file);
   if (!loaded.ok) return { ok: false, errors: loaded.errors.map((e) => `${file}: ${e}`) };
-  const app = appFromConfig(loaded.config);
+  const app = appFromConfig(loaded.config, { source: dirname(file) });
   const errs = validateAppDef(app);
   if (errs.length > 0) return { ok: false, errors: errs.map((e) => `${file}: ${e}`) };
   try { registerApp(app); } catch (e) { return { ok: false, errors: [`${file}: ${(e as Error).message}`] }; }

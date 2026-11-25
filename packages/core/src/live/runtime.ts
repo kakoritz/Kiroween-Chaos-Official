@@ -16,6 +16,8 @@ import type { BossId } from '../../../haunt/src/chaos/catalog';
 import type { LedgerRow } from '../provider';
 import { DetailNormalizer, SettleGate } from './normalize';
 import { APPS } from '../../../haunt/src/shared/catalog';
+import { isBuiltinApp } from '../../../haunt/src/shared/registry';
+import { writeGenericJobs } from '../../../../apps/generic/src/jobs';
 import { LaneTravel, travelAt } from '../../../haunt/src/runner/travel';
 import { crewPartsEnv } from '../../../haunt/src/campaign/crew';
 import { loadCampaign } from '../../../haunt/src/campaign/load';
@@ -131,7 +133,9 @@ export function makeBotCommand(o: BotCommandOptions): SpawnerOptions['botCommand
     if (!tier) return undefined;
     const bundle = o.bundleFor?.(lane, wave, tier.id) ?? tier.id;
     // The Stream app has its own bundles, built next to the orders ones (stream-pack-app SP-C3).
-    const file = settings.app === 'stream' ? join(o.root, 'dist', 'stream-bots', `${tier.id}.js`) : join(botsDir, `${bundle}.js`);
+    // A registered app (modular-engine) runs the generic bots, which read the app's haunt.yaml.
+    const registered = !isBuiltinApp(settings.app) ? APPS[settings.app] : undefined;
+    const file = registered ? join(o.root, 'dist', 'generic-bots', `${tier.id}.js`) : settings.app === 'stream' ? join(o.root, 'dist', 'stream-bots', `${tier.id}.js`) : join(botsDir, `${bundle}.js`);
     // SH-C6: the inbox app runs the Python bot for real; without Python it falls back to the built TypeScript bots.
     const inbox = settings.app === 'inbox' ? inboxTarget(o.root, tier.id) : undefined;
     if (!inbox && !o.custom && !existsSync(file)) return undefined;
@@ -141,10 +145,12 @@ export function makeBotCommand(o: BotCommandOptions): SpawnerOptions['botCommand
     attempts.set(lane, attempt);
     if (inbox) writeInboxMail(paths.orders, settings.orders, inbox.corpus);
     if (settings.app === 'stream') writeStreamJobs(paths.orders, settings.orders);
+    if (registered) writeGenericJobs(paths.orders, settings.orders);
     const env = {
       HAUNT_RUN_DIR: dir, HAUNT_LANE: lane, HAUNT_TIER: tier.id, HAUNT_SEED: String(settings.seed),
       HAUNT_PROVIDER: o.providerUrl, HAUNT_ORDERS_DIR: paths.orders, HAUNT_SPEED: String(settings.speed),
       HAUNT_ATTEMPT: String(attempt), HAUNT_APP: settings.app,
+      ...(registered?.source ? { HAUNT_APP_DIR: registered.source } : {}),
       ...(o.policyDir && existsSync(join(o.policyDir, `lane-${lane}.policy.json`)) ? { HAUNT_POLICY: join(o.policyDir, `lane-${lane}.policy.json`) } : {}),
       ...(tier.id === 'crew' ? { HAUNT_PARTS: crewPartsEnv(tier.use) } : {}),
     };

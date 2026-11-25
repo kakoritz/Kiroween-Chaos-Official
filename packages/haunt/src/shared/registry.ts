@@ -63,13 +63,13 @@ const ROLE_ICON: Record<StageRole, [string, string]> = {
 const DEFAULT_MS: Record<StageRole, [number, number]> = { input: [300, 600], work: [600, 1200], effect: [400, 800], poll: [800, 1600], final: [300, 600] };
 
 /** A registered app from a parsed haunt config. Stage ids, roles, effects and durations come from the file; icons and animations default by role. */
-export function appFromConfig(config: HauntConfig, opts: { id?: string; label?: string; idPrefix?: string } = {}): AppDef {
+export function appFromConfig(config: HauntConfig, opts: { id?: string; label?: string; idPrefix?: string; source?: string } = {}): AppDef {
   const id = opts.id ?? config.name;
   const stages: StageDef[] = config.stages.map((s) => {
     const [icon, workAnimation] = ROLE_ICON[s.role];
     const [min, max] = s.duration ?? DEFAULT_MS[s.role];
     const effects: EffectDef[] = s.effects.map((e) => ({ kind: e.kind, key: e.key, service: e.kind }));
-    return { id: s.id, label: s.label, icon, workAnimation, role: s.role, min, max, effects, verb: s.label, ...(s.deny ? { deny: s.deny } : {}) };
+    return { id: s.id, label: s.label, icon, workAnimation, role: s.role, min, max, effects, verb: s.label, ...(s.deny ? { deny: s.deny } : {}), ...(s.block ? { block: s.block } : {}) };
   });
-  return { id, label: opts.label ?? config.label ?? id, stages, orderPrefix: opts.idPrefix ?? config.idPrefix ?? 'job' };
+  return { id, label: opts.label ?? config.label ?? id, stages, orderPrefix: opts.idPrefix ?? config.idPrefix ?? 'job', ...(opts.source ? { source: opts.source } : {}) };
 }

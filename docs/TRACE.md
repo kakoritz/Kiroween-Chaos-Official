@@ -6,9 +6,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 270. With a PR: 29 (11%). With a test: 192 (71%).
+- Requirements: 270. With a PR: 29 (11%). With a test: 198 (73%).
 - Tasks: 158. Done: 156. With a PR: 48 (30%). With a test: 39 (25%).
-- Test files scanned: 223.
+- Test files scanned: 225.
 
 ## Tasks
 
@@ -287,17 +287,17 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R3.2 | modular-engine | npm run live -- --app ./path (and the custom bot command) registers an app fr... | n/a | - | `packages/haunt/test/registry.test.ts` |
 | R3.3 | modular-engine | An invalid manifest fails at start with a plain message naming the file, the ... | n/a | - | `packages/haunt/test/registry.test.ts` |
 | R3.4 | modular-engine | GET /api/apps lists every registered app with its stages. The arena switcher ... | n/a | - | `packages/haunt/test/registry.test.ts` |
-| R4 | modular-engine | Blocks and composition | n/a | - | - |
-| R4.1 | modular-engine | A block library (YAML, data only) ships at least 16 blocks covering the four ... | n/a | - | - |
-| R4.2 | modular-engine | A manifest may reference a block (use: charge) and override label, duration, ... | n/a | - | - |
-| R4.3 | modular-engine | An app may also define a stage inline with no block (no lock-in). | n/a | - | - |
+| R4 | modular-engine | Blocks and composition | n/a | - | `packages/haunt/test/blocks.test.ts` |
+| R4.1 | modular-engine | A block library (YAML, data only) ships at least 16 blocks covering the four ... | n/a | - | `packages/haunt/test/blocks.test.ts` |
+| R4.2 | modular-engine | A manifest may reference a block (use: charge) and override label, duration, ... | n/a | - | `packages/haunt/test/blocks.test.ts` |
+| R4.3 | modular-engine | An app may also define a stage inline with no block (no lock-in). | n/a | - | `packages/haunt/test/blocks.test.ts` |
 | R4.4 | modular-engine | Composition is checked: ids unique, at least one input-or-effect stage, effec... | n/a | - | - |
 | R4.5 | modular-engine | The Workflow Lab exports and imports the same manifest, so a flow built in th... | n/a | - | - |
 | R4.6 | modular-engine | Block-alone mode: one block can be run as a one-stage app, to test it in isol... | n/a | - | - |
-| R5 | modular-engine | Generic bot from a manifest | n/a | - | `packages/haunt/test/contract-v13.test.ts` |
-| R5.1 | modular-engine | For any manifest, the engine can build a runnable generic bot at the five tie... | n/a | - | - |
+| R5 | modular-engine | Generic bot from a manifest | n/a | - | `apps/generic/test/generic.test.ts`, `packages/haunt/test/contract-v13.test.ts` |
+| R5.1 | modular-engine | For any manifest, the engine can build a runnable generic bot at the five tie... | n/a | - | `apps/generic/test/generic.test.ts` |
 | R5.2 | modular-engine | The generic bot passes the contract validator with zero violations for every ... | n/a | - | `packages/haunt/test/contract-v13.test.ts` |
-| R5.3 | modular-engine | Real bots (Node, Python, own bot) keep working with no change if they use the... | n/a | - | - |
+| R5.3 | modular-engine | Real bots (Node, Python, own bot) keep working with no change if they use the... | n/a | - | `apps/generic/test/generic.test.ts` |
 | R6 | modular-engine | Stream, finished, on the new engine | n/a | - | - |
 | R6.1 | modular-engine | Stream is rebuilt as a composition of blocks, telling one story: a viewer wat... | n/a | - | - |
 | R6.2 | modular-engine | All nine pack creatures land on stages they belong to; each creature has a re... | n/a | - | - |

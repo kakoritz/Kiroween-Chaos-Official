@@ -1,4 +1,5 @@
 import { parseYaml, YamlError } from './yaml';
+import { blockById } from '../blocks/library';
 
 export type Adapter = 'sdk' | 'proxy' | 'process';
 export type StageRole = 'input' | 'work' | 'effect' | 'poll' | 'final';
@@ -13,6 +14,8 @@ export interface StageDef {
   duration?: [number, number];
   /** Fault ids that must not land on this stage (modular-engine R2.2). */
   deny?: string[];
+  /** The library block this stage was composed from (`use:`), for per-block blame in a chain report. */
+  block?: string;
 }
 export interface Targets {
   recoverMs: number;
@@ -47,6 +50,36 @@ function checkUnknown(o: Record<string, unknown>, known: string[], path: string,
   for (const k of Object.keys(o)) if (!known.includes(k)) errors.push(`${path}${k}: unknown field`);
 }
 
+/**
+ * Expands `use: <block>` stages into plain stages (modular-engine R4.2). A stage may override id, label, role, effects, duration and
+ * the first effect's `key`. An effect key already taken by an earlier stage gets `:2`, `:3`... so a block can be used twice.
+ */
+function expandUses(list: unknown[], errors: string[]): unknown[] {
+  const keys = new Set<string>();
+  const uses = new Map<string, number>();
+  return list.map((s, i) => {
+    if (!isObj(s) || s.use === undefined) {
+      if (isObj(s) && Array.isArray(s.effects)) for (const e of s.effects) if (isObj(e) && isNonEmptyStr(e.key)) keys.add(e.key);
+      return s;
+    }
+    const p = `stages[${i}].`;
+    if (!isNonEmptyStr(s.use)) { errors.push(`${p}use: expected a block id`); return s; }
+    const b = blockById(s.use);
+    if (!b) { errors.push(`${p}use: unknown block "${s.use}" (see docs/BLOCKS.md for the list)`); return s; }
+    const n = (uses.get(b.id) ?? 0) + 1;
+    uses.set(b.id, n);
+    const effects = s.effects !== undefined ? s.effects : b.effects.map((e, j) => {
+      let key = j === 0 && isNonEmptyStr(s.key) ? s.key : e.key;
+      for (let t = 2; keys.has(key); t++) key = `${e.key}:${t}`;
+      keys.add(key);
+      return { kind: e.kind, key, idempotent: e.idempotent };
+    });
+    if (Array.isArray(s.effects)) for (const e of s.effects) if (isObj(e) && isNonEmptyStr(e.key)) keys.add(e.key);
+    const { use: _u, key: _k, ...rest } = s;
+    return { ...rest, id: s.id ?? (n === 1 ? b.id : `${b.id}_${n}`), label: s.label ?? b.label, role: s.role ?? b.role, duration: s.duration ?? (b.duration[1] > 0 ? b.duration : undefined), effects, __block: b.id };
+  });
+}
+
 export function validateHauntConfig(raw: unknown): LoadResult {
   const errors: string[] = [];
   if (!isObj(raw)) return { ok: false, errors: ['root: expected a mapping'] };
@@ -68,10 +101,10 @@ export function validateHauntConfig(raw: unknown): LoadResult {
     errors.push('stages: required non-empty list');
   } else {
     const seen = new Set<string>();
-    raw.stages.forEach((s, i) => {
+    expandUses(raw.stages, errors).forEach((s, i) => {
       const p = `stages[${i}].`;
       if (!isObj(s)) { errors.push(`stages[${i}]: expected a mapping`); return; }
-      checkUnknown(s, ['id', 'label', 'role', 'effects', 'duration', 'deny'], p, errors);
+      checkUnknown(s, ['id', 'label', 'role', 'effects', 'duration', 'deny', '__block'], p, errors);
       if (!isNonEmptyStr(s.id)) errors.push(`${p}id: required non-empty string`);
       else if (seen.has(s.id)) errors.push(`${p}id: duplicate stage id "${s.id}"`);
       else seen.add(s.id);
@@ -108,7 +141,7 @@ export function validateHauntConfig(raw: unknown): LoadResult {
       }
       stages.push({
         id: String(s.id), label: isNonEmptyStr(s.label) ? s.label : String(s.id),
-        role: s.role as StageRole, effects, ...(duration ? { duration } : {}), ...(deny ? { deny } : {}),
+        role: s.role as StageRole, effects, ...(duration ? { duration } : {}), ...(deny ? { deny } : {}), ...(typeof s.__block === 'string' ? { block: s.__block } : {}),
       });
     });
   }

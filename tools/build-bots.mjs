@@ -47,4 +47,22 @@ if (streamEntries.length > 0) {
   });
   for (const f of streamEntries) console.log(`built dist/stream-bots/${basename(f, '.ts')}.js`);
 }
-console.log(`build:bots ok (${entries.length + streamEntries.length} bots)`);
+// The generic bots (modular-engine M5): one set of tier bots that runs any registered app from its haunt.yaml.
+const genericDir = resolve(root, 'apps/generic/src/bots');
+const genericEntries = existsSync(genericDir) ? readdirSync(genericDir).filter((f) => f.endsWith('.ts') && !f.endsWith('.d.ts')).sort() : [];
+if (genericEntries.length > 0) {
+  await build({
+    entryPoints: genericEntries.map((f) => resolve(genericDir, f)),
+    outdir: resolve(root, 'dist/generic-bots'),
+    entryNames: '[name]',
+    bundle: true,
+    platform: 'node',
+    format: 'esm',
+    target: 'node20',
+    tsconfig: resolve(root, 'tsconfig.json'),
+    logLevel: 'warning',
+    banner: { js: "import { createRequire as __cr } from 'node:module'; const require = __cr(import.meta.url);" },
+  });
+  for (const f of genericEntries) console.log(`built dist/generic-bots/${basename(f, '.ts')}.js`);
+}
+console.log(`build:bots ok (${entries.length + streamEntries.length + genericEntries.length} bots)`);
