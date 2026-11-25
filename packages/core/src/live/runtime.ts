@@ -106,6 +106,8 @@ export interface BotCommandOptions {
   policyDir?: string;
   /** Bundle name to run instead of `<tier>` (for example `rookie.hardened` for the `loop` wave 2, runtime.md section 32). */
   bundleFor?: (lane: string, wave: number, tier: string) => string | undefined;
+  /** Own-bot quickstart: run this command on every lane instead of a built bundle (docs/OWN-BOT.md). */
+  custom?: { command: string; args: string[] };
 }
 
 /** Folder of one wave inside the run folder. Waves are isolated (runtime.md section 31). */
@@ -132,7 +134,7 @@ export function makeBotCommand(o: BotCommandOptions): SpawnerOptions['botCommand
     const file = settings.app === 'stream' ? join(o.root, 'dist', 'stream-bots', `${tier.id}.js`) : join(botsDir, `${bundle}.js`);
     // SH-C6: the inbox app runs the Python bot for real; without Python it falls back to the built TypeScript bots.
     const inbox = settings.app === 'inbox' ? inboxTarget(o.root, tier.id) : undefined;
-    if (!inbox && !existsSync(file)) return undefined;
+    if (!inbox && !o.custom && !existsSync(file)) return undefined;
     const dir = waveDir(o.runDir, wave);
     const { paths } = prepareLane(dir, Number(lane), settings.seed, settings.orders);
     const attempt = (attempts.get(lane) ?? 0) + 1;
@@ -146,6 +148,7 @@ export function makeBotCommand(o: BotCommandOptions): SpawnerOptions['botCommand
       ...(o.policyDir && existsSync(join(o.policyDir, `lane-${lane}.policy.json`)) ? { HAUNT_POLICY: join(o.policyDir, `lane-${lane}.policy.json`) } : {}),
       ...(tier.id === 'crew' ? { HAUNT_PARTS: crewPartsEnv(tier.use) } : {}),
     };
+    if (o.custom) return { command: o.custom.command, args: o.custom.args, env };
     if (inbox) return inboxBotCommand(inbox, env);
     return { command: process.execPath, args: [file], env };
   };
