@@ -32,7 +32,7 @@ Workflow Lab: model-based what-if. The streaming pack has no runnable app.
 
 9
 00:02:25,575 --> 00:02:41,025
-One skeleton, two apps. Built with Kiro specs, steering, hooks and Kiro Crew.
+One skeleton, three apps. Built with Kiro specs, steering, hooks and Kiro Crew.
 
 10
 00:02:41,325 --> 00:02:50,050

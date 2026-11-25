@@ -16,7 +16,7 @@ Honesty rules: every capture is recorded footage and says so in the caption or v
 | 6 s06-fix | 1:35.55 | 17.6s | still:12-grade-f-to-a.png | Grade F to A still (top: recorded run, bottom: labelled simulation), caption states the fix is recorded. | RECORDED fix (docs/proof/live-fix.md): wave 1 grade F, wave 2 grade A. Not applied live. |
 | 7 s07-python | 1:53.12 | 18.5s | capture:inbox | Header app switcher to Haunted Inbox (Python Ticket Desk), run a wave, ticket and reply rows in the ledger. | Second app: Python Ticket Desk. Same harness, no engine change. |
 | 8 s08-lab | 2:11.65 | 13.7s | capture:lab | Workflow Lab with the streaming preset. | Workflow Lab: model-based what-if. The streaming pack has no runnable app. |
-| 9 s09-arch | 2:25.38 | 15.8s | still:architecture.svg | docs/img/architecture.svg, slow zoom. | One skeleton, two apps. Built with Kiro specs, steering, hooks and Kiro Crew. |
+| 9 s09-arch | 2:25.38 | 15.8s | still:architecture.svg | docs/img/architecture.svg, slow zoom. | One skeleton, three apps. Built with Kiro specs, steering, hooks and Kiro Crew. |
 | 10 s10-end | 2:41.12 | 9.0s | card:end | End card: name, tagline, repo URL, Pages URL. | github.com/kakoritz/Kiroween-Chaos-Official |
 
 ## Narration (exact text)

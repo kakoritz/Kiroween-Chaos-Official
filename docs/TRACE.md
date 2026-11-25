@@ -6,9 +6,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 152. With a PR: 29 (19%). With a test: 140 (92%).
-- Tasks: 141. Done: 139. With a PR: 48 (34%). With a test: 33 (23%).
-- Test files scanned: 215.
+- Requirements: 184. With a PR: 29 (16%). With a test: 165 (90%).
+- Tasks: 152. Done: 150. With a PR: 48 (32%). With a test: 39 (26%).
+- Test files scanned: 216.
 
 ## Tasks
 
@@ -56,6 +56,13 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | ON-U2 | onboarding | Captions and callouts. Subtitle line in the safe strip, CC toggle, callout ar... | done | [#166](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/166) | - |
 | ON-U3 | onboarding | Guided tour. Six steps with spotlight, ?tour=1, button, Esc. (Lane B) (done: ... | done | [#168](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/168) | - |
 | ON-U4 | onboarding | First-impression polish. No MOCK or "Wave 4" noise on first load (quiet state... | done | [#169](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/169) | - |
+| OB-C1 | own-bot-quickstart | Command resolver. packages/core/src/live/own-bot.ts: resolveOwnBot, ownBotCom... | done | - | `packages/core/test/own-bot.test.ts` |
+| OB-C2 | own-bot-quickstart | CLI. packages/core/src/bin/own-bot.ts and npm run own-bot. (R2) | done | - | `packages/core/test/own-bot.test.ts` |
+| OB-D1 | own-bot-quickstart | Spec. This folder. (R1 to R4) | done | - | - |
+| OB-D2 | own-bot-quickstart | Doc. docs/OWN-BOT.md, linked from README and START-HERE. (R3) | done | - | `packages/haunt/test/docs-truth.test.ts` |
+| OB-T1 | own-bot-quickstart | Template. templates/own-bot/bot.mjs, bot.py, README.md. (R1) | done | - | `packages/core/test/own-bot.test.ts` |
+| OB-X1 | own-bot-quickstart | Tests. packages/core/test/own-bot.test.ts, docs-truth extension. (R4) | done | - | `packages/core/test/own-bot.test.ts`, `packages/haunt/test/docs-truth.test.ts` |
+| OB-X2 | own-bot-quickstart | Trace. npm run trace. (R4) | done | - | - |
 | PK-C1 | packs | Pack format and loader. packs/<id>/pack.yaml schema, validator, generic bot f... | done | - | `packages/haunt/test/packs-endpoint.test.ts` |
 | PK-C2 | packs | Streaming pack. Stages, faults, tiers, bosses, reviews; fixtures; sweep grade... | done | - | - |
 | PK-C3 | packs | Ticketing mode (Python). Extend apps/haunted-inbox with the 11 stages, fake j... | done | - | `apps/haunted-inbox/test/desk.test.ts`, `apps/haunted-inbox/test/inbox.test.ts`, `packages/haunt/test/docs-truth.test.ts` |
@@ -96,6 +103,10 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | PT-U13 | playtest-v2 | UI tests. Reducers unit tests, one smoke e2e (ui.md section 16). Done: packag... | done | - | `packages/arena-ui/test/ui-smoke.test.ts` |
 | PT-X1 | playtest-v2 | Regression. (done for the loop proof: docs/proof re-recorded with scoring v2,... | done | [#196](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/196), [#199](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/199) | - |
 | PT-X2 | playtest-v2 | Docs. docs/SPEC-MAP.md row, docs/DEMO-SCRIPT.md timings (3 min video is edite... | done | [#198](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/198) | - |
+| RG-T1 | readme-gif | Capture tool. tools/make-readme-gif.mjs and tools/make-readme-gif.py. (R2) | done | - | - |
+| RG-T2 | readme-gif | The GIF. Build docs/img/demo.gif, embed it under the README title. (R1) | done | - | - |
+| RG-T3 | readme-gif | Image 06. tools/make-gallery-06.py, regenerate the image, fix the captions an... | done | - | - |
+| RG-T4 | readme-gif | Test. Add the README clip guard to docs-truth.test.ts; run npm run trace. (R4) | done | - | `packages/haunt/test/docs-truth.test.ts` |
 | SH-C1 | share | Badge and scorecard. haunt badge, SVG and HTML generators (deterministic), MC... | done | [#183](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/183) | - |
 | SH-C2 | share | GitHub Action. Composite action, example workflow, optional demo repo; PR com... | done | [#186](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/186) | - |
 | SH-C3 | share | Workflow Lab engine. Generic bot built from declared stages and parts; in-pag... | done | [#189](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/189) | - |
@@ -238,6 +249,25 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R8 | haunted-house | Kiro showcase | n/a | - | `packages/haunt/test/docs-truth.test.ts`, `packages/haunt/test/hooks.test.ts` |
 | R8.1 | haunted-house | THE REPO SHALL include specs, steering files and agent hooks used to build it. | n/a | - | `packages/haunt/test/hooks.test.ts` |
 | R8.2 | haunted-house | THE README SHALL explain how Kiro was used, with links to those files. | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R1 | own-bot-quickstart | A copy-paste template | n/a | - | `packages/core/test/own-bot.test.ts` |
+| R1.1 | own-bot-quickstart | templates/own-bot/ holds a Node (bot.mjs) and a Python (bot.py) variant. Each... | n/a | - | `packages/core/test/own-bot.test.ts` |
+| R1.2 | own-bot-quickstart | Each variant runs three stages (fetch, draft, reply) against the fake provide... | n/a | - | `packages/core/test/own-bot.test.ts` |
+| R1.3 | own-bot-quickstart | The template is deliberately naive: no retry, no idempotency key, no journal.... | n/a | - | `packages/core/test/own-bot.test.ts` |
+| R1.4 | own-bot-quickstart | Each variant has a one-line comment per hardening step marking where a fix goes. | n/a | - | `packages/core/test/own-bot.test.ts` |
+| R2 | own-bot-quickstart | A command that runs it | n/a | - | `packages/core/test/own-bot.test.ts` |
+| R2.1 | own-bot-quickstart | npm run own-bot -- <path-or-command> starts the live server and the fake prov... | n/a | - | `packages/core/test/own-bot.test.ts` |
+| R2.2 | own-bot-quickstart | The argument is a file path (.mjs, .js, .py) or a quoted command line. A miss... | n/a | - | `packages/core/test/own-bot.test.ts` |
+| R2.3 | own-bot-quickstart | The bot runs on every lane; the fake provider is the only network target. No ... | n/a | - | `packages/core/test/own-bot.test.ts` |
+| R2.4 | own-bot-quickstart | HAUNTPORT and HAUNTPROVIDERPORT override the ports, as for npm run live. | n/a | - | `packages/core/test/own-bot.test.ts` |
+| R2.5 | own-bot-quickstart | Fixes are never applied automatically: the command reads the bot, it never ed... | n/a | - | `packages/core/test/own-bot.test.ts` |
+| R3 | own-bot-quickstart | A five-minute doc | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R3.1 | own-bot-quickstart | docs/OWN-BOT.md walks through: copy the template, run it, see it fail under c... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R3.2 | own-bot-quickstart | It is linked from README.md and docs/START-HERE.md. | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R3.3 | own-bot-quickstart | It names the bot environment variables and the line protocol in one table each. | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R4 | own-bot-quickstart | Tests | n/a | - | `packages/core/test/own-bot.test.ts`, `packages/haunt/test/docs-truth.test.ts` |
+| R4.1 | own-bot-quickstart | The command line builder is a pure function with unit tests: path to command,... | n/a | - | `packages/core/test/own-bot.test.ts`, `packages/haunt/test/docs-truth.test.ts` |
+| R4.2 | own-bot-quickstart | The Node template passes the contract validator on a short in-process wave (u... | n/a | - | `packages/core/test/own-bot.test.ts`, `packages/haunt/test/docs-truth.test.ts` |
+| R4.3 | own-bot-quickstart | The docs-truth test fails if docs/OWN-BOT.md or the template files are missin... | n/a | - | `packages/core/test/own-bot.test.ts`, `packages/haunt/test/docs-truth.test.ts` |
 | R1 | playtest-v2 | Motion and pacing | n/a | [#154](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/154), [#159](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/159), [#164](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/164), [#194](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/194), [#211](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/211) | `packages/arena-ui/test/gearmenu.test.ts`, `packages/arena-ui/test/handoff.test.ts`, `packages/haunt/test/travel.test.ts` |
 | R1.1 | playtest-v2 | WHEN an order starts, THE SYSTEM SHALL NOT emit the first stagestart until gr... | n/a | [#154](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/154), [#159](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/159) | `packages/haunt/test/travel.test.ts` |
 | R1.2 | playtest-v2 | WHEN a stage completes, THE SYSTEM SHALL NOT emit the next stagestart until w... | n/a | [#154](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/154), [#159](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/159) | `packages/haunt/test/travel.test.ts` |
@@ -276,6 +306,19 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R9.1 | playtest-v2 | All new scoring and review functions SHALL be pure and covered by properties ... | n/a | - | `packages/haunt/test/pbt-playtest.test.ts` |
 | R9.2 | playtest-v2 | All new fixtures SHALL validate against the schema and the ordering rules 40 ... | n/a | - | `packages/haunt/test/validate-v1-1.test.ts` |
 | R9.3 | playtest-v2 | THE SYSTEM SHALL keep npm run demo and npm run fresh-clone working. (PT-X1) | n/a | [#196](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/196), [#199](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/199) | `packages/core/test/requirement-gaps-ui.test.ts` |
+| R1 | readme-gif | A looping demo clip at the top of the README | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R1.1 | readme-gif | docs/img/demo.gif exists, loops, is about 9 s long and 960 px wide, and shows... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R1.2 | readme-gif | README.md embeds it directly under the title, with alt text that says what it... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R1.3 | readme-gif | The GIF is under 3 MB so the README loads fast. | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R2 | readme-gif | The clip is reproducible | n/a | - | - |
+| R2.1 | readme-gif | tools/make-readme-gif.mjs rebuilds the GIF from dist/hosted (serve, record he... | n/a | - | - |
+| R2.2 | readme-gif | Its options (--demo, --start, --len, --fps, --colors, --width) are documented... | n/a | - | - |
+| R3 | readme-gif | Gallery image 06 shows three apps | n/a | - | - |
+| R3.1 | readme-gif | submission/gallery/06-skeleton-crew.png is 1500x1000 (3:2), under 5 MB, and r... | n/a | - | - |
+| R3.2 | readme-gif | tools/make-gallery-06.py regenerates it. | n/a | - | - |
+| R3.3 | readme-gif | submission/README.md and submission/gallery-captions.md say three apps. | n/a | - | - |
+| R4 | readme-gif | A test guards the README clip | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R4.1 | readme-gif | A docs-truth test fails if README.md does not reference docs/img/demo.gif, th... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
 | R1 | stream-pack-app | A runnable Stream app | n/a | - | `apps/haunted-stream/test/stream.test.ts`, `packages/core/test/stream-live.test.ts` |
 | R1.1 | stream-pack-app | apps/haunted-stream holds a Node/TypeScript pipeline of five stages: ingest u... | n/a | - | `apps/haunted-stream/test/stream.test.ts`, `packages/core/test/stream-live.test.ts` |
 | R1.2 | stream-pack-app | apps/haunted-stream/haunt.yaml declares the same five stages and loads with l... | n/a | - | `apps/haunted-stream/test/stream.test.ts`, `packages/core/test/stream-live.test.ts` |
