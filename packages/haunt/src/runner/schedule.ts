@@ -1,6 +1,6 @@
 // Random chaos tick and boss schedule. Pure and clock-injected: the caller supplies `nowMs`.
 // Spec: design.md section 5 (Random chaos mode, Boss schedule); runtime.md section 19.
-import { BOSSES, FAULTS, type BossId, type Family } from '../chaos/catalog';
+import { BOSSES, FAULTS, faultFacesStage, type BossId, type Family } from '../chaos/catalog';
 import type { ArmRequest } from '../chaos/director';
 import { fnv1a32, mulberry32 } from '../shared/rng';
 
@@ -49,7 +49,7 @@ export class RandomChaos {
     const prev = this.last.get(lane);
     if (prev !== undefined && nowMs - prev < COOLDOWN_MS) return null;
     if (this.rng() >= this.frequency * P_PER_FREQUENCY) return null;
-    const applicable = FAULTS.filter((f) => f.stages.includes(stage));
+    const applicable = FAULTS.filter((f) => faultFacesStage(f, stage));
     const families = [...new Set(applicable.map((f) => f.family))] as Family[];
     if (families.length === 0) return null;
     const fam = families[Math.floor(this.rng() * families.length)]!;

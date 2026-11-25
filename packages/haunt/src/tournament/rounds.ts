@@ -1,7 +1,7 @@
 // Tournament rounds and the seeded storm every live lane meets in a round (spec 3.1: "same storm for all").
 import { TIER_ORDER, type TierId } from '../shared/catalog';
 import { fnv1a32, mulberry32 } from '../shared/rng';
-import { FAULTS } from '../chaos/catalog';
+import { FAULTS, faultFacesStage } from '../chaos/catalog';
 import { drawOutageMs, fuzzFromRng, intensityRow, isLevel, OUTAGE_FAULTS, type FuzzFault } from '../runner/intensity';
 
 export interface RoundCfg { lanes: number; orders: number; intensity: number }
@@ -71,7 +71,7 @@ export function roundPlan(seed: string | number, round: number, cfg: RoundCfg, a
     for (let i = 0; i < Math.min(n, row.continuous ? 4 : row.simultaneous); i++) {
       const stage = stages[Math.floor(rng() * stages.length)]!;
       const unknown = rng() < row.unknown ? fuzzFromRng(rng, stage) : null;
-      const pool = [...basePool, ...(cfg.intensity >= 6 ? HEAVY : [])].filter((id) => FAULTS.some((f) => f.id === id && f.stages.includes(stage)));
+      const pool = [...basePool, ...(cfg.intensity >= 6 ? HEAVY : [])].filter((id) => FAULTS.some((f) => f.id === id && faultFacesStage(f, stage)));
       const fault = unknown ? unknown.fault : pool[Math.floor(rng() * pool.length)]!;
       const press: PlanPress = { order, stage, fault };
       if (fault === 'crash' || fault === 'power_outage') press.point = POINTS[Math.floor(rng() * POINTS.length)]!;

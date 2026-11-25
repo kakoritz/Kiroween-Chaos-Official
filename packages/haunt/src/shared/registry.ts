@@ -69,7 +69,7 @@ export function appFromConfig(config: HauntConfig, opts: { id?: string; label?: 
     const [icon, workAnimation] = ROLE_ICON[s.role];
     const [min, max] = s.duration ?? DEFAULT_MS[s.role];
     const effects: EffectDef[] = s.effects.map((e) => ({ kind: e.kind, key: e.key, service: e.kind }));
-    return { id: s.id, label: s.label, icon, workAnimation, role: s.role, min, max, effects, verb: s.label };
+    return { id: s.id, label: s.label, icon, workAnimation, role: s.role, min, max, effects, verb: s.label, ...(s.deny ? { deny: s.deny } : {}) };
   });
   return { id, label: opts.label ?? config.label ?? id, stages, orderPrefix: opts.idPrefix ?? config.idPrefix ?? 'job' };
 }

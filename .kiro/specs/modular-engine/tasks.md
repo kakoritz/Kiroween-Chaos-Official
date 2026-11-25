@@ -15,10 +15,10 @@ Rule: one PR per phase, spec ticks only when done, `npm run verify` green before
 - [x] 1.5 `/api/apps` and the mock server list the registry (R3.4).
 
 ## M2. Role-based faults (1 d)
-- [ ] 2.1 `FaultDef.applies`; convert catalog; resolver `facesStage`.
-- [ ] 2.2 Per-app deny list.
-- [ ] 2.3 Golden equivalence test passes (R2.3).
-- [ ] 2.4 A fresh test app gets faults by role only (R2.4).
+- [x] 2.1 `FaultDef.applies`; convert catalog; resolver `facesStage`.
+- [x] 2.2 Per-app deny list.
+- [x] 2.3 Golden equivalence test passes (R2.3).
+- [x] 2.4 A fresh test app gets faults by role only (R2.4).
 
 ## M3. Contract (0.5 d) , OWNER APPROVAL GATE
 - [ ] 3.1 Schema: `stageId` pattern, `orderId` pattern, `hello.stages` documented.

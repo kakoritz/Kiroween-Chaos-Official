@@ -6,9 +6,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 270. With a PR: 29 (11%). With a test: 179 (66%).
+- Requirements: 270. With a PR: 29 (11%). With a test: 182 (67%).
 - Tasks: 158. Done: 156. With a PR: 48 (30%). With a test: 39 (25%).
-- Test files scanned: 220.
+- Test files scanned: 221.
 
 ## Tasks
 
@@ -276,12 +276,12 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R1.3 | modular-engine | contract/events.schema.json: stageId becomes the pattern above instead of a f... | n/a | - | - |
 | R1.4 | modular-engine | A contract version bump (1.x to 1.y) is advertised in hello; contract/PROTOCO... | n/a | - | - |
 | R1.5 | modular-engine | The three built-in apps keep their current stage ids; their wave results do n... | n/a | - | `packages/haunt/test/golden-apps.test.ts` |
-| R2 | modular-engine | Faults attach by role, not by name | n/a | - | `packages/haunt/test/golden-apps.test.ts` |
+| R2 | modular-engine | Faults attach by role, not by name | n/a | - | `packages/haunt/test/fault-roles.test.ts`, `packages/haunt/test/golden-apps.test.ts` |
 | R2.1 | modular-engine | Each fault in the catalog declares applies: roles and/or effect kinds (for ex... | n/a | - | - |
-| R2.2 | modular-engine | An app may add per-stage allow or deny lists in its manifest (for example a s... | n/a | - | - |
+| R2.2 | modular-engine | An app may add per-stage allow or deny lists in its manifest (for example a s... | n/a | - | `packages/haunt/test/fault-roles.test.ts` |
 | R2.3 | modular-engine | The built-in apps get the same fault set on the same stages as today (golden ... | n/a | - | `packages/haunt/test/golden-apps.test.ts` |
-| R2.4 | modular-engine | A new app gets a sensible fault set from its roles alone, with no catalog edit. | n/a | - | - |
-| R2.5 | modular-engine | Creatures shown for a fault are chosen from the fault, so a new app inherits ... | n/a | - | - |
+| R2.4 | modular-engine | A new app gets a sensible fault set from its roles alone, with no catalog edit. | n/a | - | `packages/haunt/test/fault-roles.test.ts` |
+| R2.5 | modular-engine | Creatures shown for a fault are chosen from the fault, so a new app inherits ... | n/a | - | `packages/haunt/test/fault-roles.test.ts` |
 | R3 | modular-engine | Registry and discovery | n/a | - | `packages/haunt/test/registry.test.ts` |
 | R3.1 | modular-engine | APPS, APPSTAGES, vocab and the app switcher read from the registry. | n/a | - | `packages/haunt/test/registry.test.ts` |
 | R3.2 | modular-engine | npm run live -- --app ./path (and the custom bot command) registers an app fr... | n/a | - | `packages/haunt/test/registry.test.ts` |

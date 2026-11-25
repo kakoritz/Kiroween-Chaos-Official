@@ -1,6 +1,6 @@
 // Intensity dial and outage timer. Spec: .kiro/specs/tournament-v3/spec.md sections 5.1 and 5.4; contract V1_2.md section 5.
 // Pure and seeded: the same seed gives the same draws.
-import { faultById, FAULTS, MAX_DEPTH } from '../chaos/catalog';
+import { faultById, faultFacesStage, FAULTS, MAX_DEPTH } from '../chaos/catalog';
 import { fnv1a32, mulberry32, unit } from '../shared/rng';
 import { COOLDOWN_MS, ORDER_MS, SHOW_PACE, TICK_MS } from './schedule';
 
@@ -89,7 +89,7 @@ const WINDOW_FAULTS: ReadonlySet<string> = new Set(['slow_link', 'endpoint_down'
 
 /** One fuzz fault for `stage`, drawn from `rng`. Null when no provider fault can land on that stage (create, handoff). */
 export function fuzzFromRng(rng: () => number, stage: string): FuzzFault | null {
-  const pool = FUZZ_BASES.filter((id) => faultById(id)?.stages.includes(stage));
+  const pool = FUZZ_BASES.filter((id) => faultFacesStage(faultById(id)!, stage));
   if (pool.length === 0) return null;
   const fault = pool[Math.floor(rng() * pool.length)]!;
   const f: Omit<FuzzFault, 'fingerprint'> = { fault };
@@ -155,7 +155,7 @@ export class DialChaos {
     if (!overdue && this.rng() >= p) return [];
     // An overdue lane may nest past the dial's depth cap (up to the director's MAX_DEPTH): an armed fault that never fired would otherwise hold a depth-1 lane creature-free until its order ends.
     const room = Math.max(0, Math.min(overdue ? MAX_DEPTH : row.depth, MAX_DEPTH) - depth);
-    const applicable = FAULTS.filter((f) => f.stages.includes(stage) && f.id !== 'order_typo');
+    const applicable = FAULTS.filter((f) => faultFacesStage(f, stage) && f.id !== 'order_typo');
     const n = Math.min(row.continuous ? applicable.length : row.simultaneous, room, applicable.length);
     if (n <= 0) return [];
     // Partial seeded shuffle: n distinct faults.

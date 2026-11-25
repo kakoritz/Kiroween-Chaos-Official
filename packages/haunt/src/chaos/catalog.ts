@@ -1,6 +1,7 @@
 // Fault catalog: which faults exist, where they apply, how they act.
 // Spec: .kiro/specs/engine/design.md section 5; runtime.md sections 3, 19, 29.
 import type { HookPoint } from '../sdk/sdk';
+import { APPS, isBuiltinApp, type StageRole } from '../shared';
 
 /** `desk`: armed on the Python Ticket Desk, which applies the fault at its own stage (apps/haunted-inbox/bot/desk.py). */
 export type FaultKind = 'process' | 'provider' | 'file' | 'disk' | 'desk';
@@ -27,13 +28,20 @@ const ALL = [...ORDERS_ORDER, ...INBOX_ORDER, ...STREAM_ORDER];
 /** Effect stages that retry on a count fault (updates degrades instead, transit polls). */
 const CALL_STAGES: readonly string[] = ['account', 'submit', 'payment', 'confirmation', 'receive', 'process', 'ship', 'login', 'assign', 'notify', 'escalate', ...STREAM_EFFECT];
 
+const ANY_ROLE: readonly StageRole[] = ['input', 'work', 'effect', 'poll', 'final'];
+const EFFECT_OR_POLL: readonly StageRole[] = ['effect', 'poll'];
+const EFFECT_ONLY: readonly StageRole[] = ['effect'];
+const INPUT_ONLY: readonly StageRole[] = ['input'];
+
 export interface FaultDef {
   id: string;
   creature: string;
   family: Family;
   kind: FaultKind;
-  /** Stages where it can land. */
+  /** Stages where it can land in the built-in apps. */
   stages: readonly string[];
+  /** Roles it lands on in a registered app (modular-engine R2). Built-in stages keep the exact `stages` list above. */
+  applies?: readonly StageRole[];
   /** Restart delay for process faults (ms, speed 1x). */
   restartMs?: number;
   /** Window length (ms) or number of calls. */
@@ -44,21 +52,21 @@ export interface FaultDef {
 const def = (d: FaultDef): FaultDef => d;
 
 export const FAULTS: readonly FaultDef[] = [
-  def({ id: 'crash', creature: 'reaper', family: 'process', kind: 'process', stages: ALL, restartMs: 1000, count: 1 }),
-  def({ id: 'out_of_memory', creature: 'reaper', family: 'process', kind: 'process', stages: ALL, restartMs: 2500, count: 1 }),
-  def({ id: 'power_outage', creature: 'wraith', family: 'process', kind: 'process', stages: ALL, restartMs: 5000, count: 1 }),
-  def({ id: 'internet_outage', creature: 'banshee', family: 'network', kind: 'provider', stages: EFFECT_STAGES, forMs: 8000 }),
-  def({ id: 'endpoint_down', creature: 'gargoyle', family: 'network', kind: 'provider', stages: EFFECT_STAGES, forMs: 10000 }),
-  def({ id: 'timeout', creature: 'zombie', family: 'network', kind: 'provider', stages: CALL_STAGES, count: 1 }),
-  def({ id: 'comm_timeout', creature: 'zombie', family: 'network', kind: 'provider', stages: CALL_STAGES, count: 1 }),
-  def({ id: 'slow_link', creature: 'zombie', family: 'network', kind: 'provider', stages: EFFECT_STAGES, forMs: 6000 }),
-  def({ id: 'http_404', creature: 'ghost', family: 'http', kind: 'provider', stages: CALL_STAGES, count: 2 }),
-  def({ id: 'http_429', creature: 'goblin', family: 'http', kind: 'provider', stages: ['payment', 'confirmation', 'ship', 'assign', 'notify', 'draft', 'reply'], count: 3 }),
-  def({ id: 'http_500', creature: 'imp', family: 'http', kind: 'provider', stages: EFFECT_STAGES, count: 2 }),
-  def({ id: 'missing_file', creature: 'poltergeist', family: 'data', kind: 'file', stages: ['create'], forMs: 6000 }),
-  def({ id: 'duplicate_request', creature: 'doppelganger', family: 'data', kind: 'file', stages: ['create'], count: 1 }),
-  def({ id: 'malformed_payload', creature: 'witch', family: 'data', kind: 'file', stages: ['create'], count: 1 }),
-  def({ id: 'disk_full', creature: 'mummy', family: 'data', kind: 'disk', stages: ALL, count: 1 }),
+  def({ id: 'crash', creature: 'reaper', family: 'process', kind: 'process', stages: ALL, restartMs: 1000, count: 1, applies: ANY_ROLE }),
+  def({ id: 'out_of_memory', creature: 'reaper', family: 'process', kind: 'process', stages: ALL, restartMs: 2500, count: 1, applies: ANY_ROLE }),
+  def({ id: 'power_outage', creature: 'wraith', family: 'process', kind: 'process', stages: ALL, restartMs: 5000, count: 1, applies: ANY_ROLE }),
+  def({ id: 'internet_outage', creature: 'banshee', family: 'network', kind: 'provider', stages: EFFECT_STAGES, forMs: 8000, applies: EFFECT_OR_POLL }),
+  def({ id: 'endpoint_down', creature: 'gargoyle', family: 'network', kind: 'provider', stages: EFFECT_STAGES, forMs: 10000, applies: EFFECT_OR_POLL }),
+  def({ id: 'timeout', creature: 'zombie', family: 'network', kind: 'provider', stages: CALL_STAGES, count: 1, applies: EFFECT_ONLY }),
+  def({ id: 'comm_timeout', creature: 'zombie', family: 'network', kind: 'provider', stages: CALL_STAGES, count: 1, applies: EFFECT_ONLY }),
+  def({ id: 'slow_link', creature: 'zombie', family: 'network', kind: 'provider', stages: EFFECT_STAGES, forMs: 6000, applies: EFFECT_OR_POLL }),
+  def({ id: 'http_404', creature: 'ghost', family: 'http', kind: 'provider', stages: CALL_STAGES, count: 2, applies: EFFECT_ONLY }),
+  def({ id: 'http_429', creature: 'goblin', family: 'http', kind: 'provider', stages: ['payment', 'confirmation', 'ship', 'assign', 'notify', 'draft', 'reply'], count: 3, applies: EFFECT_ONLY }),
+  def({ id: 'http_500', creature: 'imp', family: 'http', kind: 'provider', stages: EFFECT_STAGES, count: 2, applies: EFFECT_OR_POLL }),
+  def({ id: 'missing_file', creature: 'poltergeist', family: 'data', kind: 'file', stages: ['create'], forMs: 6000, applies: INPUT_ONLY }),
+  def({ id: 'duplicate_request', creature: 'doppelganger', family: 'data', kind: 'file', stages: ['create'], count: 1, applies: INPUT_ONLY }),
+  def({ id: 'malformed_payload', creature: 'witch', family: 'data', kind: 'file', stages: ['create'], count: 1, applies: INPUT_ONLY }),
+  def({ id: 'disk_full', creature: 'mummy', family: 'data', kind: 'disk', stages: ALL, count: 1, applies: ANY_ROLE }),
   def({ id: 'hazard_event', creature: 'werewolf', family: 'world', kind: 'provider', stages: ['transit'], forMs: 5000 }),
   def({ id: 'sms_down', creature: 'gargoyle', family: 'network', kind: 'provider', stages: ['confirmation'], forMs: 8000 }),
   def({ id: 'app_down', creature: 'imp', family: 'http', kind: 'provider', stages: ['ship'], forMs: 8000 }),
@@ -85,6 +93,24 @@ export const FAULTS: readonly FaultDef[] = [
   def({ id: 'rate_limited', creature: 'goblin', family: 'http', kind: 'desk', stages: ['assign'], count: 1 }),
 ];
 
+/** Role of `stage` in a registered (non built-in) app; with no `app` the first registered app that has the stage id. */
+function registeredStage(stage: string, app?: string): { role: StageRole; deny: readonly string[] } | undefined {
+  const pick = (a: { stages: readonly { id: string; role: StageRole; deny?: readonly string[] }[] }) => { const st = a.stages.find((x) => x.id === stage); return st ? { role: st.role, deny: st.deny ?? [] } : undefined; };
+  if (app !== undefined) return isBuiltinApp(app) || !APPS[app] ? undefined : pick(APPS[app]!);
+  for (const a of Object.values(APPS)) if (!isBuiltinApp(a.id)) { const r = pick(a); if (r) return r; }
+  return undefined;
+}
+
+/**
+ * Can fault `f` land on `stage`? Built-in stages use the fault's exact `stages` list, so the three built-in apps are unchanged.
+ * A stage of a registered app is matched by its role against `f.applies` (no catalog edit for a new app).
+ */
+export function faultFacesStage(f: FaultDef, stage: string, app?: string): boolean {
+  const reg = registeredStage(stage, app);
+  if (reg !== undefined && (app !== undefined || !f.stages.includes(stage))) return !reg.deny.includes(f.id) && (f.applies?.includes(reg.role) ?? false);
+  return f.stages.includes(stage);
+}
+
 export const BOSSES = ['boss_power_outage', 'boss_internet_outage', 'boss_hazard_storm'] as const;
 export type BossId = (typeof BOSSES)[number];
 
@@ -110,8 +136,8 @@ export function restartDelay(base: number, nested: number): number {
 export function nextApplicableStage(f: FaultDef, from: string | null, app: string = 'orders'): { stage: string; nextOrder: boolean } {
   const order = from !== null && STREAM_ORDER.includes(from) ? STREAM_ORDER : from !== null && INBOX_ORDER.includes(from) && !ORDERS_ORDER.includes(from) ? INBOX_ORDER : from === null && app === 'stream' ? STREAM_ORDER : from === null && app === 'inbox' ? INBOX_ORDER : ORDERS_ORDER;
   const i = from === null ? 0 : Math.max(0, order.indexOf(from));
-  for (let j = i; j < order.length; j++) if (f.stages.includes(order[j]!)) return { stage: order[j]!, nextOrder: false };
-  for (let j = 0; j < order.length; j++) if (f.stages.includes(order[j]!)) return { stage: order[j]!, nextOrder: true };
+  for (let j = i; j < order.length; j++) if (faultFacesStage(f, order[j]!, app)) return { stage: order[j]!, nextOrder: false };
+  for (let j = 0; j < order.length; j++) if (faultFacesStage(f, order[j]!, app)) return { stage: order[j]!, nextOrder: true };
   const hit = [ORDERS_ORDER, INBOX_ORDER, STREAM_ORDER].filter((o) => o !== order).flat().find((st) => f.stages.includes(st));
   if (hit) return { stage: hit, nextOrder: false };
   throw new Error(`fault ${f.id} applies to no stage`);

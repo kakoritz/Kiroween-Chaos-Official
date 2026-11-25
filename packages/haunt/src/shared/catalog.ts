@@ -35,6 +35,8 @@ export interface StageDef {
   effects: EffectDef[];
   /** Short verb phrase shown in stage_progress labels. */
   verb: string;
+  /** Fault ids that must not land here (registered apps; modular-engine R2.2). */
+  deny?: readonly string[];
 }
 
 export const ORDERS_STAGES: StageDef[] = [

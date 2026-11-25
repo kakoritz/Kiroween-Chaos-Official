@@ -11,6 +11,8 @@ export interface StageDef {
   role: StageRole;
   effects: StageEffect[];
   duration?: [number, number];
+  /** Fault ids that must not land on this stage (modular-engine R2.2). */
+  deny?: string[];
 }
 export interface Targets {
   recoverMs: number;
@@ -69,7 +71,7 @@ export function validateHauntConfig(raw: unknown): LoadResult {
     raw.stages.forEach((s, i) => {
       const p = `stages[${i}].`;
       if (!isObj(s)) { errors.push(`stages[${i}]: expected a mapping`); return; }
-      checkUnknown(s, ['id', 'label', 'role', 'effects', 'duration'], p, errors);
+      checkUnknown(s, ['id', 'label', 'role', 'effects', 'duration', 'deny'], p, errors);
       if (!isNonEmptyStr(s.id)) errors.push(`${p}id: required non-empty string`);
       else if (seen.has(s.id)) errors.push(`${p}id: duplicate stage id "${s.id}"`);
       else seen.add(s.id);
@@ -99,9 +101,14 @@ export function validateHauntConfig(raw: unknown): LoadResult {
           errors.push(`${p}duration: expected [min, max] in ms with 0 <= min <= max`);
         } else duration = [d[0] as number, d[1] as number];
       }
+      let deny: string[] | undefined;
+      if (s.deny !== undefined && s.deny !== null) {
+        if (!Array.isArray(s.deny) || !s.deny.every(isNonEmptyStr)) errors.push(`${p}deny: expected a list of fault ids`);
+        else deny = s.deny as string[];
+      }
       stages.push({
         id: String(s.id), label: isNonEmptyStr(s.label) ? s.label : String(s.id),
-        role: s.role as StageRole, effects, ...(duration ? { duration } : {}),
+        role: s.role as StageRole, effects, ...(duration ? { duration } : {}), ...(deny ? { deny } : {}),
       });
     });
   }

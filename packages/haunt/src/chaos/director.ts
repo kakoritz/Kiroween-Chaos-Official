@@ -2,7 +2,7 @@
 // Spec: design.md section 5 (Nesting, Crash points); runtime.md sections 3, 19, 29.
 import type { HookPoint, Part } from '../sdk/sdk';
 import {
-  BOSSES, INBOX_ORDER, JOURNALED_EFFECT_STAGES, MAX_DEPTH, faultById, injectedAtFor, nextApplicableStage, restartDelay,
+  BOSSES, INBOX_ORDER, JOURNALED_EFFECT_STAGES, MAX_DEPTH, faultById, faultFacesStage, injectedAtFor, nextApplicableStage, restartDelay,
   type BossId, type FaultDef, type InjectedAt,
 } from './catalog';
 import { innerPoints, matchesHook, type ArmMsg } from './hooks';
@@ -160,7 +160,7 @@ export class ChaosDirector {
         detail.deferredTo = at;
       }
     } else if (def.kind !== 'process') {
-      const applies = info.stage !== null && def.stages.includes(info.stage);
+      const applies = info.stage !== null && faultFacesStage(def, info.stage);
       // Inner provider faults go to the next call made by recovery code, whatever the stage.
       if (!applies && eff === 'outer') {
         const next = nextApplicableStage(def, info.stage, info.app);
