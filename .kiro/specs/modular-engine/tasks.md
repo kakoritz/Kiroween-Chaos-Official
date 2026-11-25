@@ -8,11 +8,11 @@ Rule: one PR per phase, spec ticks only when done, `npm run verify` green before
 - [x] 0.3 Size check: list every place that names stages (script `tools/stage-literals.mjs`), commit the report to the spec.
 
 ## M1. Registry (1 d)
-- [ ] 1.1 `AppDef` and registry; built-ins register.
-- [ ] 1.2 `APPS`, `APP_STAGES`, `isAppId` read the registry; `AppId` loosens to `string`.
-- [ ] 1.3 Manifest loader and validator with plain error messages (R3.3).
-- [ ] 1.4 `--app <dir>` and `custom` command register an app (R3.2).
-- [ ] 1.5 `/api/apps` and the mock server list the registry (R3.4).
+- [x] 1.1 `AppDef` and registry; built-ins register.
+- [x] 1.2 `APPS`, `APP_STAGES`, `isAppId` read the registry; `AppId` loosens to `string`.
+- [x] 1.3 Manifest loader and validator with plain error messages (R3.3).
+- [x] 1.4 `--app <dir>` registers an app at live start (R3.2). The `custom` bot command takes the app's stages in M5 (generic bot).
+- [x] 1.5 `/api/apps` and the mock server list the registry (R3.4).
 
 ## M2. Role-based faults (1 d)
 - [ ] 2.1 `FaultDef.applies`; convert catalog; resolver `facesStage`.

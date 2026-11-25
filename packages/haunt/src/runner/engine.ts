@@ -49,7 +49,7 @@ export class RunnerEngine {
   lanes: string[] = [];
   private record?: (ev: HauntEvent) => void;
   private wave = 0;
-  private app: 'orders' | 'inbox' | 'stream' = 'orders';
+  private app: string = 'orders';
   private seq = 0;
   private seed: number | string = 7;
   /** The intensity dial (spec 5.1): level 1 to 11, default 3, optional auto-ramp. */

@@ -6,9 +6,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 270. With a PR: 29 (11%). With a test: 173 (64%).
+- Requirements: 270. With a PR: 29 (11%). With a test: 179 (66%).
 - Tasks: 158. Done: 156. With a PR: 48 (30%). With a test: 39 (25%).
-- Test files scanned: 219.
+- Test files scanned: 220.
 
 ## Tasks
 
@@ -211,11 +211,11 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R1.2 | docs-truth-pass | Docs that describe hooks say what each one runs and when. | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
 | R2 | docs-truth-pass | The hosted link is present | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
 | R2.1 | docs-truth-pass | The hosted build URL (https://kakoritz.github.io/Kiroween-Chaos-Official/) is... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
-| R3 | docs-truth-pass | One name per app, one count | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R3 | docs-truth-pass | One name per app, one count | n/a | - | `packages/haunt/test/docs-truth.test.ts`, `packages/haunt/test/registry.test.ts` |
 | R3.1 | docs-truth-pass | The product is Kiroween Chaos. The three apps are Orders, Ticket Desk and Str... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
 | R3.2 | docs-truth-pass | The docs say three apps (Node, Python, Node), not two. The Ticket Desk has 11... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
 | R3.3 | docs-truth-pass | Chaos Haunt, Chaos Monkey and haunt-crew-app appear nowhere in the live docs ... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
-| R3.4 | docs-truth-pass | The story and gallery captions match the repo (spec count, task count, number... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R3.4 | docs-truth-pass | The story and gallery captions match the repo (spec count, task count, number... | n/a | - | `packages/haunt/test/docs-truth.test.ts`, `packages/haunt/test/registry.test.ts` |
 | R4 | docs-truth-pass | A judges start page | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
 | R4.1 | docs-truth-pass | docs/START-HERE.md exists, is linked from the top of README.md, and says in o... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
 | R5 | docs-truth-pass | The truth test guards the fixes | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
@@ -228,11 +228,11 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R2.1 | haunted-house | THE SYSTEM SHALL inject faults at named crash points: beforecharge, afterchar... | n/a | - | `packages/haunt/test/chaos.test.ts` |
 | R2.2 | haunted-house | THE SYSTEM SHALL make every run reproducible from a seed and a fault plan (JS... | n/a | - | `packages/haunt/test/chaos.test.ts` |
 | R2.3 | haunted-house | WHEN a crash point fires, THE SYSTEM SHALL kill the bot process for real (not... | n/a | - | `packages/haunt/test/chaos.test.ts` |
-| R3 | haunted-house | Survival behavior (Survivor bot) | n/a | - | `packages/haunt/test/pipeline.test.ts`, `packages/haunt/test/sdk.test.ts` |
+| R3 | haunted-house | Survival behavior (Survivor bot) | n/a | - | `packages/haunt/test/pipeline.test.ts`, `packages/haunt/test/registry.test.ts`, `packages/haunt/test/sdk.test.ts` |
 | R3.1 | haunted-house | WHEN the bot is about to cause a side effect, IT SHALL first write an intent ... | n/a | - | `packages/haunt/test/sdk.test.ts` |
 | R3.2 | haunted-house | WHEN the bot restarts, IT SHALL read the journal and resume at the first step... | n/a | - | `packages/haunt/test/sdk.test.ts` |
 | R3.3 | haunted-house | IF an intent has no result, THEN IT SHALL ask the provider by idempotency key... | n/a | - | `packages/haunt/test/sdk.test.ts` |
-| R3.4 | haunted-house | WHEN a duplicate request arrives with a known key, IT SHALL return the first ... | n/a | - | `packages/haunt/test/sdk.test.ts` |
+| R3.4 | haunted-house | WHEN a duplicate request arrives with a known key, IT SHALL return the first ... | n/a | - | `packages/haunt/test/registry.test.ts`, `packages/haunt/test/sdk.test.ts` |
 | R3.5 | haunted-house | WHEN an input file is missing, IT SHALL park the order in a quarantine queue,... | n/a | - | `packages/haunt/test/pipeline.test.ts` |
 | R4 | haunted-house | Run report (the core product) | n/a | - | `packages/haunt/test/report-write.test.ts`, `packages/haunt/test/requirement-gaps.test.ts` |
 | R4.1 | haunted-house | EACH run SHALL produce a report with: timeline of steps, the exact step where... | n/a | - | `packages/haunt/test/report-write.test.ts` |
@@ -270,8 +270,8 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R4 | lively-lanes-ui | Valid review-card CSS | n/a | - | `packages/arena-ui/test/lively-lanes-ui.test.ts` |
 | R4.1 | lively-lanes-ui | .rc-bars in review-card.css has a valid declaration list. The bars stay hidde... | n/a | - | - |
 | R4.2 | lively-lanes-ui | npm run ui:build prints no CSS warning. | n/a | - | - |
-| R1 | modular-engine | Apps declare their own stages | n/a | - | `packages/haunt/test/golden-apps.test.ts` |
-| R1.1 | modular-engine | An app manifest declares any number of stages (1 to 24), each with an id matc... | n/a | - | - |
+| R1 | modular-engine | Apps declare their own stages | n/a | - | `packages/haunt/test/golden-apps.test.ts`, `packages/haunt/test/registry.test.ts` |
+| R1.1 | modular-engine | An app manifest declares any number of stages (1 to 24), each with an id matc... | n/a | - | `packages/haunt/test/registry.test.ts` |
 | R1.2 | modular-engine | The hello event carries the declared stages (id, label, role, effects). The a... | n/a | - | - |
 | R1.3 | modular-engine | contract/events.schema.json: stageId becomes the pattern above instead of a f... | n/a | - | - |
 | R1.4 | modular-engine | A contract version bump (1.x to 1.y) is advertised in hello; contract/PROTOCO... | n/a | - | - |
@@ -282,11 +282,11 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R2.3 | modular-engine | The built-in apps get the same fault set on the same stages as today (golden ... | n/a | - | `packages/haunt/test/golden-apps.test.ts` |
 | R2.4 | modular-engine | A new app gets a sensible fault set from its roles alone, with no catalog edit. | n/a | - | - |
 | R2.5 | modular-engine | Creatures shown for a fault are chosen from the fault, so a new app inherits ... | n/a | - | - |
-| R3 | modular-engine | Registry and discovery | n/a | - | - |
-| R3.1 | modular-engine | APPS, APPSTAGES, vocab and the app switcher read from the registry. | n/a | - | - |
-| R3.2 | modular-engine | npm run live -- --app ./path (and the custom bot command) registers an app fr... | n/a | - | - |
-| R3.3 | modular-engine | An invalid manifest fails at start with a plain message naming the file, the ... | n/a | - | - |
-| R3.4 | modular-engine | GET /api/apps lists every registered app with its stages. The arena switcher ... | n/a | - | - |
+| R3 | modular-engine | Registry and discovery | n/a | - | `packages/haunt/test/registry.test.ts` |
+| R3.1 | modular-engine | APPS, APPSTAGES, vocab and the app switcher read from the registry. | n/a | - | `packages/haunt/test/registry.test.ts` |
+| R3.2 | modular-engine | npm run live -- --app ./path (and the custom bot command) registers an app fr... | n/a | - | `packages/haunt/test/registry.test.ts` |
+| R3.3 | modular-engine | An invalid manifest fails at start with a plain message naming the file, the ... | n/a | - | `packages/haunt/test/registry.test.ts` |
+| R3.4 | modular-engine | GET /api/apps lists every registered app with its stages. The arena switcher ... | n/a | - | `packages/haunt/test/registry.test.ts` |
 | R4 | modular-engine | Blocks and composition | n/a | - | - |
 | R4.1 | modular-engine | A block library (YAML, data only) ships at least 16 blocks covering the four ... | n/a | - | - |
 | R4.2 | modular-engine | A manifest may reference a block (use: charge) and override label, duration, ... | n/a | - | - |

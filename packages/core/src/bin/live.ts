@@ -3,7 +3,16 @@ import { join } from 'node:path';
 import { EventLog } from '../../../haunt/src/events/eventlog';
 import { LIVE_PORT, LiveServer, createLiveRuntime, loopFixEvents, makeBotCommand, readHardening } from '../live';
 import { startProvider } from '../provider/server';
+import { registerAppFromDir } from '../../../haunt/src/config/register-dir';
 
+// `--app <dir>` (repeatable): register an app from a folder with a haunt.yaml. A bad manifest stops the start with a plain message.
+process.argv.forEach((a, i, all) => {
+  if (a !== '--app') return;
+  const dir = all[i + 1];
+  const r = dir ? registerAppFromDir(dir) : { ok: false as const, errors: ['--app needs a folder'] };
+  if (!r.ok) { console.error(`cannot register app:\n- ${r.errors.join('\n- ')}`); process.exit(2); }
+  console.log(`registered app ${r.app.id} (${r.app.stages.length} stages)`);
+});
 const port = Number(process.argv.find((a, i) => i >= 2 && /^\d+$/.test(a)) ?? process.env.HAUNT_PORT ?? LIVE_PORT);
 const runDir = join(process.cwd(), '.haunt');
 const provider = await startProvider({ port: Number(process.env.HAUNT_PROVIDER_PORT) || undefined });

@@ -1,0 +1,18 @@
+name: coffee
+label: Coffee Shop
+idPrefix: cof
+start: node bot.js
+truth: http://127.0.0.1:7071
+stages:
+  - { id: read_request, label: Read request, role: input }
+  - id: pay
+    label: Take payment
+    role: effect
+    effects:
+      - { kind: charge, key: "charge:1", idempotent: required }
+  - { id: brew, label: Brew, role: work, duration: [800, 1500] }
+  - id: ready
+    label: Tell customer
+    role: effect
+    effects:
+      - { kind: notify, key: "notify:1", idempotent: preferred }
