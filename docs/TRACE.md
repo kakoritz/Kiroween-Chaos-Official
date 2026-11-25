@@ -6,9 +6,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 121. With a PR: 29 (24%). With a test: 121 (100%).
-- Tasks: 126. Done: 124. With a PR: 48 (38%). With a test: 33 (26%).
-- Test files scanned: 210.
+- Requirements: 133. With a PR: 29 (22%). With a test: 133 (100%).
+- Tasks: 133. Done: 131. With a PR: 48 (36%). With a test: 33 (25%).
+- Test files scanned: 214.
 
 ## Tasks
 
@@ -114,6 +114,13 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | TG-3 | test-gaps | Tests for haunted-house R5.2, R5.3 and playtest-v2 R8.3, R9.3 in packages/cor... | done | - | - |
 | TG-4 | test-gaps | Regenerate docs/TRACE.md with npm run trace. | done | - | - |
 | TG-5 | test-gaps | e2e hang after a tournament: investigate; fix only if repo code is the cause.... | open | - | - |
+| TS-1 | tournament-stall | Spec. Requirements, design, tasks. (R1 to R3) | done | - | - |
+| TS-2 | tournament-stall | Hook release. ChaosHost.release, called on proceed. Root cause. (R1) | done | - | - |
+| TS-2b | tournament-stall | Runner grace kill. runLane kills a bot that outlives shutdown, and a bot that... | done | - | - |
+| TS-3 | tournament-stall | Regression tests. packages/haunt/test/chaos-host-proceed.test.ts, packages/ha... | done | - | - |
+| TS-4 | tournament-stall | e2e diagnostics. Timeout error prints phase, round, wave, lanes, last events.... | done | - | - |
+| TS-5 | tournament-stall | Hosted filler. demoFillerTimes and the in-page schedule. (R3) | done | - | - |
+| TS-6 | tournament-stall | Hosted frame check. check:hosted samples ?demo=full. (R3) | done | - | - |
 | TV3-C0 | tournament-v3 | Contract v1.2. Land contract/V12.md in the mock: stages list in state, round ... | done | - | - |
 | TV3-C1 | tournament-v3 | New order and stage list. Eleven stages, legacy mapping, ledger columns, kill... | done | - | - |
 | TV3-C2 | tournament-v3 | Wave end review state. awaitingnext, POST /api/next, no auto start; optional ... | done | - | - |
@@ -266,3 +273,15 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R6.2 | stream-pack-app | docs/TRACE.md stays at 100 percent requirement coverage. | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
 | R7 | stream-pack-app | End to end | n/a | - | `tools/e2e-stream.test.ts` |
 | R7.1 | stream-pack-app | npm run e2e switches to Stream (after resetting the intensity dial), runs a w... | n/a | - | `tools/e2e-stream.test.ts` |
+| R1 | tournament-stall | A lane loop always ends | n/a | - | `packages/haunt/test/chaos-host-proceed.test.ts`, `packages/haunt/test/runner-shutdown-grace.test.ts` |
+| R1.1 | tournament-stall | A bot blocked at an armed process-fault hook goes on when the runner answers ... | n/a | - | `packages/haunt/test/chaos-host-proceed.test.ts` |
+| R1.2 | tournament-stall | After the runner sends shutdown to a bot (idle), the bot has a grace period t... | n/a | - | `packages/haunt/test/runner-shutdown-grace.test.ts` |
+| R1.3 | tournament-stall | A bot that never reports ready (or dies before it) is killed, not left runnin... | n/a | - | `packages/haunt/test/runner-shutdown-grace.test.ts` |
+| R1.4 | tournament-stall | A bot that exits on its own inside the grace period is not killed. | n/a | - | `packages/haunt/test/runner-shutdown-grace.test.ts` |
+| R2 | tournament-stall | A stuck tournament says where | n/a | - | `packages/haunt/test/tournament-stall-tools.test.ts` |
+| R2.1 | tournament-stall | When npm run e2e gives up on the tournament it prints the tournament phase an... | n/a | - | `packages/haunt/test/tournament-stall-tools.test.ts` |
+| R2.2 | tournament-stall | The wait is HAUNTE2ETOURNEYMS (default 20 minutes). Raising it is not the fix. | n/a | - | `packages/haunt/test/tournament-stall-tools.test.ts` |
+| R3 | tournament-stall | Hosted demo has no long empty stretches | n/a | - | `packages/core/test/inpage-demo-filler.test.ts`, `packages/haunt/test/tournament-stall-tools.test.ts` |
+| R3.1 | tournament-stall | While a demo script plays in the hosted page, no stretch longer than 5 s at 1... | n/a | - | `packages/core/test/inpage-demo-filler.test.ts` |
+| R3.2 | tournament-stall | Filler chaos uses the same ChaosSim a user press uses, only on active lanes, ... | n/a | - | `packages/core/test/inpage-demo-filler.test.ts` |
+| R3.3 | tournament-stall | npm run check:hosted samples frames of ?demo=full and fails on a creature-fre... | n/a | - | `packages/haunt/test/tournament-stall-tools.test.ts` |

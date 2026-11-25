@@ -45,6 +45,7 @@ async function waitHealth() {
 }
 
 const WAVE_MS = 240_000;
+const TOURNEY_MS = Number(process.env.HAUNT_E2E_TOURNEY_MS) || 20 * 60_000;
 let c;
 const endOf = (wave) => c.waitFor((e) => e.type === 'wave_end' && e.wave === wave, WAVE_MS);
 async function post(path, body) {
@@ -162,7 +163,14 @@ try {
       } else {
         await sleep(300);
       }
-      if (Date.now() - t0 > 20 * 60_000) throw new Error('tournament did not finish in 20 minutes');
+      if (Date.now() - t0 > TOURNEY_MS) {
+        const tn = (await c.get('/api/tournament')).json; const st = (await c.get('/api/state')).json;
+        const quiet = ['effect', 'log', 'chaos', 'pattern', 'stage_progress'];
+        const lastBy = {};
+        for (const e of seen) if (!quiet.includes(e.type) && e.lane !== undefined) lastBy[e.lane] = `${e.type}:${e.stage ?? ''}:${e.order ?? ''}`;
+        const last = `${seen.filter((e) => !quiet.includes(e.type)).slice(-6).map((e) => `${e.type}:w${e.wave}:${e.lane ?? ''}`).join(' ')} | last per lane ${JSON.stringify(lastBy)}`;
+        throw new Error(`tournament did not finish in ${Math.round(TOURNEY_MS / 60_000)} minutes: phase=${tn.phase ?? tn.tournament?.phase} round=${tn.round ?? tn.tournament?.round} wave=${JSON.stringify(st.wave)} lanes=${JSON.stringify((st.lanes || []).map((l) => `${l.id ?? l.lane}:${l.state}`))} awaiting_next=${awaits.length} last events: ${last}`);
+      }
     }
     const seen = c.events.slice(tStart);
     const roundEnds = seen.filter((e) => e.type === 'round_end');

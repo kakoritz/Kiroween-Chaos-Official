@@ -14,6 +14,26 @@ export class MockError extends Error {
 export const DEMO_ALIASES: Record<string, string> = { hero: 'hero-crash' };
 export const DEMO_SCRIPTS = ['hero', 'full', 'loop'];
 
+/**
+ * Offsets (ms at 1x since the first event) where a recorded demo owes a creature: a recorded fixture can go a minute without
+ * a `chaos` event, and the hosted page then shows downtime with nothing on the lanes. One entry per `everyMs` inside every
+ * stretch longer than `maxGapMs` (the first is `everyMs` after the last chaos, the run's start counts as one).
+ */
+export function demoFillerTimes(events: { type: string; ts: number }[], maxGapMs = 3000, everyMs = 2000): number[] {
+  if (events.length === 0) return [];
+  const t0 = events[0]!.ts;
+  const end = events[events.length - 1]!.ts - t0;
+  const marks = [0, ...events.filter((e) => e.type === 'chaos' || e.type === 'boss_start').map((e) => e.ts - t0), end];
+  const out: number[] = [];
+  for (let i = 1; i < marks.length; i++) {
+    const a = marks[i - 1]!;
+    const b = marks[i]!;
+    if (b - a <= maxGapMs) continue;
+    for (let t = a + everyMs; t < b - 500; t += everyMs) out.push(t);
+  }
+  return out;
+}
+
 export const fixtureFor = (script: string): string | undefined => {
   const name = DEMO_ALIASES[script] ?? script;
   return name in FIXTURES ? name : undefined;

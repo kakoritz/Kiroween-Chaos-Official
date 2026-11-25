@@ -58,7 +58,7 @@ export interface ChaosHostOptions {
   sleep(ms: number): Promise<void>;
   /** Writes one JSON message to the runner. */
   send(msg: Record<string, unknown>): void;
-  /** `child`: send `at_point` and block forever, the runner SIGKILLs us. `throw`: in-process stand-in. */
+  /** `child`: send `at_point` and block until the runner SIGKILLs us (or answers `proceed`). `throw`: in-process stand-in. */
   mode: 'child' | 'throw';
   /** Wrong-order decision: ask the runner and wait. Without it the bot's own policy applies at once. */
   decide?: Host['decide'];
@@ -71,6 +71,7 @@ export interface ChaosHostOptions {
 export class ChaosHost implements Host {
   readonly armed: ArmedList;
   private sdk: Sdk | null = null;
+  private released: (() => void) | null = null;
 
   constructor(private readonly o: ChaosHostOptions) {
     this.armed = new ArmedList(innerPoints(o.parts));
@@ -118,7 +119,14 @@ export class ChaosHost implements Host {
     if (!a) return;
     if (this.o.mode === 'throw') throw new ProcessKilled(`${a.fault}@${point}`);
     this.o.send({ k: 'at_point', point, fault: a.fault, ...ctx });
-    // The runner kills this process. Never busy-wait.
-    await new Promise<void>(() => {});
+    // The runner either kills this process or, when its director does not fire at this point (the arm was cleared or already used there), answers `proceed`.
+    // Waiting forever for the kill alone left the bot asleep with no timer for the rest of the wave. Never busy-wait.
+    await new Promise<void>((res) => { this.released = res; });
+    this.released = null;
+  }
+
+  /** The runner answered `proceed`: it did not kill us, so a hook that waits for the kill goes on. */
+  release(): void {
+    this.released?.();
   }
 }
