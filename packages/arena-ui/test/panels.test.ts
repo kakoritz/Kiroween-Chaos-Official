@@ -101,10 +101,10 @@ describe('ledger warning (BUG b)', () => {
 });
 
 describe('inbox ledger', () => {
-  it('uses desk column labels and order when the app has an assign stage', () => {
+  it('uses desk column labels and order when the app is the Ticket Desk', () => {
     const vm = vm2();
     expect(isInboxVM(vm)).toBe(false);
-    vm.stages = [{ id: 'assign' } as never];
+    vm.app = 'inbox';
     expect(isInboxVM(vm)).toBe(true);
     expect(ledgerKinds(vm)).toEqual(['account_create', 'ticket', 'email', 'notify']);
     expect(kindLabel('ticket', false, true)).toBe('Tickets');

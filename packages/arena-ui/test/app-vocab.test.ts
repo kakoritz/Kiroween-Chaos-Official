@@ -3,7 +3,7 @@ import { laneMessage } from '../src/arena/lanes-ticker';
 import { tickerLine } from '../src/arena/ticker';
 import { logEntries } from '../src/arena/lane-popup-model';
 import { applyEvent, emptyVM, loadSnapshot, reconcileLedger } from '../src/arena/model';
-import { appIdOf, displayId } from '../src/arena/vocab';
+import { appIdOf, displayId, vocabOf } from '../src/arena/vocab';
 import type { ArenaEvent } from '../src/api/types';
 
 const label = (id: string) => id;
@@ -29,7 +29,10 @@ describe('app-aware wording', () => {
     expect(displayId('inbox', 'msg-0012')).toBe('tkt-0012');
     expect(displayId('orders', 'ord-0012')).toBe('ord-0012');
     expect(appIdOf({ id: 'inbox', stages: [] })).toBe('inbox');
-    expect(appIdOf('weird')).toBe('orders');
+    expect(appIdOf('weird')).toBe('weird');
+    expect(appIdOf(undefined)).toBe('orders');
+    expect(vocabOf('weird').unit).toBe('job');
+    expect(vocabOf(undefined).unit).toBe('order');
     const vm = emptyVM();
     loadSnapshot(vm, { app: { id: 'inbox', stages: [{ id: 'login', label: 'SSO login' }] }, lanes: [] } as never, 0);
     expect(vm.app).toBe('inbox');

@@ -139,8 +139,8 @@ export const APP_VOCAB: Record<AppId, AppVocab> = {
     high: { timeliness: 'Live in a flash', delays: 'No buffering', issues: 'Smooth as a ghost', delivery: 'Plays perfectly', ease: 'Easy to watch' },
   },
 };
-/** Wording for an app. A registered app without its own wording gets the generic one; an unknown id falls back to Orders. */
-export const vocabOf = (app: string | undefined): AppVocab => (app !== undefined && app in APPS ? APP_VOCAB[app] ?? GENERIC_VOCAB : APP_VOCAB.orders!);
+/** Wording for an app. No app id means Orders; any other app without its own wording gets the generic one (the browser may not have the app registered). */
+export const vocabOf = (app: string | undefined): AppVocab => (app === undefined ? APP_VOCAB.orders! : APP_VOCAB[app] ?? GENERIC_VOCAB);
 
 /** Contract stage list for an app (V1_2.md section 1): `[{id, label, kind}]`. */
 export function stageList(app: AppId): { id: string; label: string; kind: StageKind }[] {

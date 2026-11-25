@@ -6,9 +6,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 270. With a PR: 29 (11%). With a test: 187 (69%).
+- Requirements: 270. With a PR: 29 (11%). With a test: 192 (71%).
 - Tasks: 158. Done: 156. With a PR: 48 (30%). With a test: 39 (25%).
-- Test files scanned: 222.
+- Test files scanned: 223.
 
 ## Tasks
 
@@ -305,11 +305,11 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R6.4 | modular-engine | Five tier bots plus the campaign Crew run Stream; Rookie shows a duplicate pl... | n/a | - | - |
 | R6.5 | modular-engine | The old 5-stage upload app is kept as a second example (haunted-upload) or re... | n/a | - | - |
 | R6.6 | modular-engine | A fourth, tiny app (examples/coffee-shop, 5 blocks, config file only, no engi... | n/a | - | - |
-| R7 | modular-engine | UI and vocab follow the manifest | n/a | - | - |
-| R7.1 | modular-engine | Stage names, icons, work animations and verbs come from the manifest (with ro... | n/a | - | - |
-| R7.2 | modular-engine | App wording (unit, id prefix, review labels) comes from the manifest vocab wi... | n/a | - | - |
-| R7.3 | modular-engine | A new app shows a lively lane, tournament, Casebook and improve loop with no ... | n/a | - | - |
-| R7.4 | modular-engine | No stage-name string literal remains in packages/arena-ui/src outside the thr... | n/a | - | - |
+| R7 | modular-engine | UI and vocab follow the manifest | n/a | - | `packages/arena-ui/test/no-stage-literals.test.ts` |
+| R7.1 | modular-engine | Stage names, icons, work animations and verbs come from the manifest (with ro... | n/a | - | `packages/arena-ui/test/no-stage-literals.test.ts` |
+| R7.2 | modular-engine | App wording (unit, id prefix, review labels) comes from the manifest vocab wi... | n/a | - | `packages/arena-ui/test/no-stage-literals.test.ts` |
+| R7.3 | modular-engine | A new app shows a lively lane, tournament, Casebook and improve loop with no ... | n/a | - | `packages/arena-ui/test/no-stage-literals.test.ts` |
+| R7.4 | modular-engine | No stage-name string literal remains in packages/arena-ui/src outside the thr... | n/a | - | `packages/arena-ui/test/no-stage-literals.test.ts` |
 | R8 | modular-engine | Scoring, Casebook, improve loop, tournament | n/a | - | - |
 | R8.1 | modular-engine | Scoring, tournament rounds, Casebook entries and fix specs work for any app. | n/a | - | - |
 | R8.2 | modular-engine | Fix specs name the app's own stage ids and effect kinds. | n/a | - | - |
@@ -386,10 +386,10 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R6.1 | playtest-v2 | THE SYSTEM SHALL support smsdown, appdown, updatesdown, wrongaddress, noanswe... | n/a | - | `packages/core/test/world-events-a.test.ts`, `packages/core/test/world-events-b.test.ts`, `packages/core/test/world-events-c.test.ts` |
 | R6.2 | playtest-v2 | THE UI SHALL show a creature and caption for each, including four new creatur... | n/a | [#213](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/213) | `packages/arena-ui/test/world-events.test.ts` |
 | R6.3 | playtest-v2 | Stage 8 SHALL call the provider so handoff can fail. (PT-C7) | n/a | - | `packages/core/test/world-events-b.test.ts` |
-| R7 | playtest-v2 | Wrong order and decisions | n/a | - | `packages/arena-ui/test/decision.test.ts`, `packages/core/test/wrong-order-detect.test.ts`, `packages/core/test/wrong-order-provider.test.ts` |
+| R7 | playtest-v2 | Wrong order and decisions | n/a | - | `packages/arena-ui/test/decision.test.ts`, `packages/arena-ui/test/no-stage-literals.test.ts`, `packages/core/test/wrong-order-detect.test.ts`, `packages/core/test/wrong-order-provider.test.ts` |
 | R7.1 | playtest-v2 | WHEN ordertypo is armed, THE SYSTEM SHALL swap the order items and detect it ... | n/a | - | `packages/core/test/wrong-order-detect.test.ts`, `packages/core/test/wrong-order-provider.test.ts` |
 | R7.2 | playtest-v2 | WHEN detected, THE SYSTEM SHALL emit decisionneeded, accept POST /api/decisio... | n/a | - | `packages/core/test/wrong-order-detect.test.ts` |
-| R7.3 | playtest-v2 | THE UI SHALL show a decision popup with consequences and play each outcome. (... | n/a | - | `packages/arena-ui/test/decision.test.ts` |
+| R7.3 | playtest-v2 | THE UI SHALL show a decision popup with consequences and play each outcome. (... | n/a | - | `packages/arena-ui/test/decision.test.ts`, `packages/arena-ui/test/no-stage-literals.test.ts` |
 | R8 | playtest-v2 | Header, legend, controls | n/a | [#211](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/211) | `packages/arena-ui/test/gearmenu.test.ts`, `packages/core/test/requirement-gaps-ui.test.ts` |
 | R8.1 | playtest-v2 | THE UI SHALL provide a gear menu for chaos mode, pace, speed, sound, motion, ... | n/a | [#211](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/211) | `packages/arena-ui/test/gearmenu.test.ts` |
 | R8.2 | playtest-v2 | THE UI SHALL explain the gear letters R J I B Q with tooltips and a legend. (... | n/a | [#211](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/211) | `packages/arena-ui/test/gearmenu.test.ts` |

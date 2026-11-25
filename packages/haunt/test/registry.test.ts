@@ -36,7 +36,8 @@ describe('app registry', () => {
   it('gives a registered app generic wording and its own id prefix', () => {
     registerAppFromDir(COFFEE);
     expect(vocabOf('coffee')).toMatchObject({ unit: GENERIC_VOCAB.unit, idPrefix: 'cof' });
-    expect(vocabOf('nope').unit).toBe('order');
+    expect(vocabOf('nope').unit).toBe('job');
+    expect(vocabOf(undefined).unit).toBe('order');
   });
 
   it('tells listeners when an app is added or removed', () => {

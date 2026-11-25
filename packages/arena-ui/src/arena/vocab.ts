@@ -6,8 +6,8 @@ import type { AppRef } from '../api/types';
 export { APP_VOCAB, displayId, vocabOf };
 export type { AppVocab };
 
-/** The app id of a state snapshot or event: the string, or `app.id` of the v1.2 object. Orders when unknown. */
+/** The app id of a state snapshot or event: the string, or `app.id` of the v1.2 object. Orders when missing. */
 export function appIdOf(app: string | AppRef | undefined | null): string {
   const id = typeof app === 'string' ? app : app && typeof app === 'object' ? app.id : undefined;
-  return id === 'inbox' ? 'inbox' : 'orders';
+  return typeof id === 'string' && id !== '' ? id : 'orders';
 }

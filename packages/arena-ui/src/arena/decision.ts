@@ -96,7 +96,7 @@ export class DecisionTracker {
       case 'decision_needed': {
         if (lane < 0) return {};
         const p: PendingDecision = {
-          lane, order: typeof d.order === 'string' ? d.order : '', detectedAt: typeof d.detectedAt === 'string' ? d.detectedAt : 'confirmation',
+          lane, order: typeof d.order === 'string' ? d.order : '', detectedAt: typeof d.detectedAt === 'string' ? d.detectedAt : '',
           defaultChoice: isChoice(d.defaultChoice) ? d.defaultChoice : 'refund', timeoutMs: typeof d.timeoutMs === 'number' && d.timeoutMs > 0 ? d.timeoutMs : 6000, shownAt: now,
         };
         this.pending.set(lane, p);

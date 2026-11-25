@@ -26,9 +26,9 @@ Rule: one PR per phase, spec ticks only when done, `npm run verify` green before
 - [x] 3.3 Owner approved the contract change (2026-11-25).
 
 ## M4. UI follows the manifest (1 d)
-- [ ] 4.1 Stage labels, icons, animations, verbs from state with role fallbacks.
-- [ ] 4.2 Vocab from manifest; review labels default generic.
-- [ ] 4.3 Remove name literals from `arena-ui/src`; lint test guards it (R7.4).
+- [x] 4.1 Stage labels, icons, animations, verbs from state with role fallbacks.
+- [x] 4.2 Vocab from manifest; review labels default generic.
+- [x] 4.3 Remove name literals from `arena-ui/src`; lint test guards it (R7.4).
 
 ## M5. Blocks and generic bot (1.5 d)
 - [ ] 5.1 Block schema; 16+ blocks in `blocks/`.

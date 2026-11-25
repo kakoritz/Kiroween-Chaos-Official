@@ -13,8 +13,8 @@ const KIND_ORDER = ['account_create', 'order', 'charge', 'email', 'store', 'disp
 /** The Ticket Desk's ledger, in pipeline order: SSO accounts, tickets, replies, escalation notices. */
 const INBOX_KIND_ORDER = ['account_create', 'ticket', 'email', 'notify'];
 export const INBOX_KIND_LABEL: Record<string, string> = { account_create: 'Accounts', ticket: 'Tickets', email: 'Replies', notify: 'Notices' };
-/** The inbox app has an `assign` stage; the orders app has none. */
-export const isInboxVM = (vm: Pick<ArenaVM, 'stages'>): boolean => vm.stages.some((s) => s.id === 'assign');
+/** The Ticket Desk has its own ledger columns and wording. */
+export const isInboxVM = (vm: Pick<ArenaVM, 'app'>): boolean => vm.app === 'inbox';
 export const KIND_LABEL: Record<string, string> = {
   account_create: 'Accounts', order: 'Orders', charge: 'Charges', email: 'Emails', store: 'Store', dispatch: 'Shipments', notify: 'Notices', ticket: 'Tickets',
 };
