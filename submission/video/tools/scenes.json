@@ -61,7 +61,7 @@
       "id": "s09-arch",
       "source": "still:architecture.svg",
       "action": "docs/img/architecture.svg, slow zoom.",
-      "caption": "One skeleton, two apps. Built with Kiro specs, steering, hooks and Kiro Crew.",
+      "caption": "One skeleton, three apps. Built with Kiro specs, steering, hooks and Kiro Crew.",
       "text": "One skeleton, two interchangeable apps, Node Orders and Python Ticket Desk. Failure data goes to AI to draft spec-driven fixes, and a human reviews every one. It was built with Kiro and Kiro Crew."
     },
     {

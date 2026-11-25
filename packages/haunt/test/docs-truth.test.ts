@@ -1,7 +1,7 @@
 // covers: docs-truth-pass/R1 docs-truth-pass/R1.1 docs-truth-pass/R1.2 docs-truth-pass/R2 docs-truth-pass/R2.1 docs-truth-pass/R3 docs-truth-pass/R3.1 docs-truth-pass/R3.2 docs-truth-pass/R3.3 docs-truth-pass/R3.4 docs-truth-pass/R4 docs-truth-pass/R4.1 docs-truth-pass/R5 docs-truth-pass/R5.1 DT-D1 DT-D2 DT-D3 DT-D4 DT-T1 haunted-house/R8.2 PK-C3 stream-pack-app/R6 stream-pack-app/R6.1 stream-pack-app/R6.2 SP-D1
 // The docs say one true thing about the Ticket Desk (11 stages) and README links the Kiro write-up.
 import { describe, expect, it } from 'vitest';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { INBOX_STAGES } from '../src/shared/catalog';
@@ -82,7 +82,7 @@ describe('Docs truth pass (docs-truth-pass R1 to R5)', () => {
   });
   it('the story spec and campaign counts match the repo', () => {
     const specs = readdirSync(join(root, '.kiro/specs'), { withFileTypes: true }).filter((e) => e.isDirectory()).length;
-    const words: Record<number, string> = { 15: 'Fifteen', 16: 'Sixteen', 17: 'Seventeen' };
+    const words: Record<number, string> = { 15: 'Fifteen', 16: 'Sixteen', 17: 'Seventeen', 18: 'Eighteen' };
     expect(read('submission/project-story.md')).toContain(`${words[specs] ?? specs} specs live`);
     const nights = Object.keys(JSON.parse(read('packages/core/campaign/nights.json'))).length;
     expect(nights).toBe(7);
@@ -94,5 +94,15 @@ describe('Docs truth pass (docs-truth-pass R1 to R5)', () => {
     }
     const hook = JSON.parse(read('.kiro/hooks/fixtures-on-contract-save.kiro.hook'));
     expect(hook.then.command).toBe('npm run validate:events');
+  });
+});
+
+// covers: readme-gif/R1 readme-gif/R1.1 readme-gif/R1.2 readme-gif/R1.3 readme-gif/R4 readme-gif/R4.1 RG-T4
+describe('README demo clip (readme-gif R1, R4)', () => {
+  it('README embeds docs/img/demo.gif, the file exists and is under 3 MB', () => {
+    expect(read('README.md')).toContain('](docs/img/demo.gif)');
+    const f = join(root, 'docs/img/demo.gif');
+    expect(existsSync(f)).toBe(true);
+    expect(statSync(f).size).toBeLessThan(3 * 1024 * 1024);
   });
 });

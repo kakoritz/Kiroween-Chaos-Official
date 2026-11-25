@@ -5,6 +5,8 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Kiroween 2026: Skeleton Crew](https://img.shields.io/badge/Kiroween%202026-Skeleton%20Crew-6c5aa8.svg)](#skeleton-crew-fit)
 
+![Kiroween Chaos demo, 9 seconds looping: five bots race through an order pipeline while ghosts and zombies crash their stages](docs/img/demo.gif)
+
 ![Kiroween Chaos: five bots race through an order pipeline while chaos creatures attack](packages/arena-ui/docs/screens/demo-autoplay-25s.png)
 
 Chaos engineering for AI agents, played as a haunted house. Kiroween Chaos crashes and curses your bots, grades how they survive, and shows the exact fix. One engine, three apps: Node and Python. **Break your bots before the world does.** Five bots take the same crashes in a tournament, the worst one dies each round and leaves a corpse, and what is left is a Casebook of every edge case plus a fix spec that Kiro can apply.
