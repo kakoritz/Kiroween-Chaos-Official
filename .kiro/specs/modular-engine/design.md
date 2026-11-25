@@ -62,6 +62,13 @@ Reuse `packs` generic-bot builder. Input is a manifest, output is a runnable pro
 ### 2.7 UI
 Arena reads `stages` and `vocab` from `/api/state`. Icon and work animation fall back by role (`input`: inbox, `work`: gear, `effect`: bolt, `poll`: hourglass). Lane popups, review card, Casebook and fix spec use stage labels from state, not constants.
 
+## 2.8 Block-alone and chain testing
+- **Alone:** `runBlock(blockId, tier, seed)` makes a one-stage manifest, runs the standard wave with all role-matching faults, and returns a `BlockCard { blockId, tier, survived, repeats, recoveryMs, failedFaults[] }`. Cards are written to `blocks/results/<block>.<tier>.json`.
+- **Chain:** the wizard produces a manifest. A chain run is a normal wave. `chainReport` splits failures by stage id back to the block that produced it (`stage.useBlock`), giving per-block blame.
+- **Chain checks:** pure functions over the manifest and the cards: unkeyed effect pairs, poll without timeout, effect after a failed-alone block, long chain with no input. They return warnings, never errors.
+- **Wizard UI:** a new panel next to the Workflow Lab. Left: block library with its cards. Middle: ordered chain. Right: options and warnings. A Test chain button starts a wave. The Workflow Lab keeps its model view and shares the same manifest store.
+- **Unknown blocks:** an inline stage with no `use:` is already legal (R4.3). Marked `custom: true`; the fuzz pool applies by role. `block:add` writes it to `blocks/` after validation.
+
 ## 3. Stream on the new engine
 Eleven blocks: `login` (effect: session), `profile_pick` (work), `browse` (input), `title_select` (work), `entitlement` (effect: purchase), `license` (effect: license/DRM), `start_stream` (effect: playback), `buffering` (poll), `render` (work), `ads` (effect: ad_impression), `finish` (effect: history). Creatures map by role and effect kind: Buffer Wraith to `buffering` (stall), CDN Kraken to `start_stream` (timeout), DRM Gatekeeper to `license` (status), Render Gremlin to `render` (crash), Cloud Banshee any effect (outage), Region Warden to `entitlement` (status), Doppelganger to `start_stream` (duplicate), Poltergeist to `finish` (duplicate), Reaper any (expire/crash). Ledger tables: sessions, entitlements, playbacks, history. Bots: generic builder at five tiers, plus real Node tier files kept for the `custom` command example.
 

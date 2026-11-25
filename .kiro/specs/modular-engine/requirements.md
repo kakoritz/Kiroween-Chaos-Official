@@ -81,8 +81,22 @@ The pitch is "any app or service plugs in and gets attacked." Today that is only
 2. Main stays green after every phase PR. No phase merges with a failing `npm run verify`.
 3. Overnight checks run on every phase branch; a regression in Orders, Ticket Desk or the tournament blocks the next phase.
 
+## R12. Test blocks alone, then chain them (wizard flow)
+1. Any block can be tested alone: the harness runs a one-block app, attacks it with every fault that fits its role, and gives it a block score card (survived, repeats, recovery time, faults it failed).
+2. Block score cards are saved per block and tier in `blocks/results/`, so a block carries its record into every flow that uses it.
+3. A chain wizard in the arena: pick blocks from the library, order them, rename them, set options, then press Test chain. It builds the manifest (R4) and runs the same arena, tournament and Casebook on it.
+4. A chain score shows each block's share of the failures, so the player sees which block broke the chain.
+5. Chain checks warn when a chain is weak although its blocks passed alone (for example two effects with no shared key, or a poll after an effect with no timeout).
+6. The wizard and the manifest file are two views of the same data; saving in one updates the other.
+
+## R13. Unknown blocks (bring your own, unseen)
+1. A player can add a custom block with any id, role and effects, with no library entry, and test it alone or in a chain.
+2. Unknown-fault fuzzing (the existing fuzz pool) runs against custom blocks the same as library blocks; the Casebook records the unknown shapes by fingerprint.
+3. A custom block can be promoted to the library file with one command (`npm run block:add`).
+4. A block may be backed by a real process (your code) or by the generic model; the score card says which.
+
 ## Out of scope
-- Chaining blocks with a drag-and-drop UI beyond what the Workflow Lab does today.
+- A visual graph editor with branches and loops (chains are ordered lists).
 - A fourth language runtime. Real bots remain Node, Python, or any process speaking the event format.
 - Changes to the fake provider's wire format.
 - Video, TTS, screenshots, Devpost media (last phase, on the owner's word).
