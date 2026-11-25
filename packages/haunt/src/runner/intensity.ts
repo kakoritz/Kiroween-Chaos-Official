@@ -118,6 +118,8 @@ export interface DialPress {
 /** The show rate: faults per order per lane = base + table rate * scale, so level 1 is already a haunted house and the dial still adds to it. */
 export const SHOW_BASE_RATE = 1.0;
 export const SHOW_RATE_SCALE = 0.8;
+/** Show floor: no live lane goes this long (real ms) without a creature once it is working, and its first one arrives within it. */
+export const SHOW_MAX_GAP_MS = 6000;
 
 /** Ticks per order at any speed: an order is ORDER_MS long and a tick is TICK_MS, both divided by speed. */
 const TICKS_PER_ORDER = ORDER_MS / TICK_MS;
@@ -131,6 +133,7 @@ export class DialChaos {
   private readonly rng: () => number;
   private readonly last = new Map<string, number>();
   private readonly seen = new Map<string, Set<string>>();
+  private readonly since = new Map<string, number>();
 
   /**
    * `show` is the live default: the plan runs at SHOW_BASE_RATE plus the table rate, and each pick prefers a creature
@@ -142,13 +145,16 @@ export class DialChaos {
 
   /** `depth` is the chaos stack depth of the lane now. */
   tick(lane: string, stage: string | null, nowMs: number, level: number, depth = 0): DialPress[] {
+    if (this.show && !this.since.has(lane)) this.since.set(lane, nowMs);
     if (stage === null) return [];
     const row = intensityRow(level);
     const prev = this.last.get(lane);
     if (!row.continuous && prev !== undefined && nowMs - prev < COOLDOWN_MS) return [];
-    const p = row.continuous ? 1 : Math.min(1, this.show ? (SHOW_BASE_RATE + row.rate * SHOW_RATE_SCALE) / (TICKS_PER_ORDER * SHOW_PACE) : row.rate / TICKS_PER_ORDER);
-    if (this.rng() >= p) return [];
-    const room = Math.max(0, Math.min(row.depth, MAX_DEPTH) - depth);
+    const overdue = this.show && nowMs - (prev ?? this.since.get(lane) ?? nowMs) >= SHOW_MAX_GAP_MS;
+    const p = overdue ? 1 : row.continuous ? 1 : Math.min(1, this.show ? (SHOW_BASE_RATE + row.rate * SHOW_RATE_SCALE) / (TICKS_PER_ORDER * SHOW_PACE) : row.rate / TICKS_PER_ORDER);
+    if (!overdue && this.rng() >= p) return [];
+    // An overdue lane may nest past the dial's depth cap (up to the director's MAX_DEPTH): an armed fault that never fired would otherwise hold a depth-1 lane creature-free until its order ends.
+    const room = Math.max(0, Math.min(overdue ? MAX_DEPTH : row.depth, MAX_DEPTH) - depth);
     const applicable = FAULTS.filter((f) => f.stages.includes(stage) && f.id !== 'order_typo');
     const n = Math.min(row.continuous ? applicable.length : row.simultaneous, room, applicable.length);
     if (n <= 0) return [];

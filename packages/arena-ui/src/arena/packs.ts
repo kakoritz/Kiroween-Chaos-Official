@@ -78,6 +78,13 @@ export async function loadPackChoices(getPacks?: () => Promise<unknown>): Promis
 
 export const packTitle = (c: PackChoice): string => c.title;
 
+/** Labels of the built-in app tabs. A pack tab with the same name gets a " pack" suffix so the header never shows two "Stream" tabs. */
+export const APP_TAB_LABELS: readonly string[] = ['Orders', 'Inbox', 'Stream'];
+export const packTabLabel = (c: PackChoice, appLabels: readonly string[] = APP_TAB_LABELS): string => {
+  const name = packTitle(c).replace(/^haunted\s+/i, '');
+  return appLabels.some((a) => a.toLowerCase() === name.toLowerCase()) ? `${name} pack` : name;
+};
+
 /** Tooltip: the words the arena will use for this pack. */
 export function packTip(c: PackChoice): string {
   const lines = [`${c.title}${c.modelBased ? ` (${MODEL_TAG})` : ''}`];
@@ -160,7 +167,7 @@ export class PackSwitcher {
         seg.appendChild(b); this.btns.set(key, b);
       };
       add('', 'Default', 'The built-in apps', () => { void this.choose(null); });
-      for (const c of this.choices) add(c.id, packTitle(c).replace(/^haunted\s+/i, ''), packTip(c), () => { void this.choose(c.id); });
+      for (const c of this.choices) add(c.id, packTabLabel(c), packTip(c), () => { void this.choose(c.id); });
     }
     for (const [key, b] of this.btns) {
       const on = (key || null) === this.active;

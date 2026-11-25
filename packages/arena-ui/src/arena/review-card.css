@@ -11,7 +11,7 @@
 .rc--gold .rc-stars { color: #ffd86b; }
 .rc--amber .rc-stars { color: #ff9a3c; }
 .rc--red .rc-stars { color: #ff4d5e; }
-.rc-bars { display: none; grid; grid-template-columns: 1fr 1fr; gap: 2px 12px; margin-top: 6px; font-size: 12px; }
+.rc-bars { display: none; grid-template-columns: 1fr 1fr; gap: 2px 12px; margin-top: 6px; font-size: 12px; }
 .rc-bar { display: flex; align-items: center; gap: 6px; }
 .rc-bar span { flex: none; width: 70px; }
 .rc-bar i { flex: 1 1 auto; height: 6px; background: rgba(255, 255, 255, 0.15); border-radius: 3px; overflow: hidden; }

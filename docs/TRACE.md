@@ -6,9 +6,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 184. With a PR: 29 (16%). With a test: 165 (90%).
-- Tasks: 152. Done: 150. With a PR: 48 (32%). With a test: 39 (26%).
-- Test files scanned: 216.
+- Requirements: 199. With a PR: 29 (15%). With a test: 169 (85%).
+- Tasks: 158. Done: 156. With a PR: 48 (30%). With a test: 39 (25%).
+- Test files scanned: 218.
 
 ## Tasks
 
@@ -47,6 +47,12 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | DT-D3 | docs-truth-pass | Names and counts. Three apps, Orders / Ticket Desk / Stream, in README, JUDGE... | done | - | `packages/haunt/test/docs-truth.test.ts` |
 | DT-D4 | docs-truth-pass | Start page. Add docs/START-HERE.md and link it from the README top. (R4) | done | - | `packages/haunt/test/docs-truth.test.ts` |
 | DT-T1 | docs-truth-pass | Test. Extend docs-truth.test.ts; run npm run trace. (R5) | done | - | `packages/haunt/test/docs-truth.test.ts` |
+| LL-1 | lively-lanes-ui | Write requirements, design and tasks. | done | - | - |
+| LL-2 | lively-lanes-ui | Show-director floor in DialChaos (R1) with the per-lane gap test. | done | - | - |
+| LL-3 | lively-lanes-ui | Header: Next round never clipped (R2). | done | - | - |
+| LL-4 | lively-lanes-ui | Header: unambiguous pack tab label (R3). | done | - | - |
+| LL-5 | lively-lanes-ui | Valid .rc-bars declaration, no build warning (R4). | done | - | - |
+| LL-6 | lively-lanes-ui | npm run trace, story spec count. | done | - | - |
 | ON-C1 | onboarding | Hosted demo. Finish harness H6.3 (browser target) and the Pages workflow; fal... | done | [#156](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/156) | - |
 | ON-C2 | onboarding | Captions data. packages/core/demo/hero/full/loop.captions.json and the captio... | done | [#160](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/160) | - |
 | ON-D1 | onboarding | README front page. Per spec section 7; architecture diagram (mermaid and SVG)... | done | [#172](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/172) | - |
@@ -249,6 +255,21 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R8 | haunted-house | Kiro showcase | n/a | - | `packages/haunt/test/docs-truth.test.ts`, `packages/haunt/test/hooks.test.ts` |
 | R8.1 | haunted-house | THE REPO SHALL include specs, steering files and agent hooks used to build it. | n/a | - | `packages/haunt/test/hooks.test.ts` |
 | R8.2 | haunted-house | THE README SHALL explain how Kiro was used, with links to those files. | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R1 | lively-lanes-ui | Every live lane gets creatures on a plain wave | n/a | - | `packages/core/test/lively-lanes-ui.test.ts` |
+| R1.1 | lively-lanes-ui | In a plain wave (random chaos mode, default dial, no demo, no campaign night,... | n/a | - | - |
+| R1.2 | lively-lanes-ui | No live lane that is working goes longer than 8 seconds without a new creature. | n/a | - | - |
+| R1.3 | lively-lanes-ui | The guarantee is part of the seeded show director (DialChaos with show on). I... | n/a | - | - |
+| R1.4 | lively-lanes-ui | The dial still scales the plan: a higher level gives at least as many creatur... | n/a | - | - |
+| R1.5 | lively-lanes-ui | Demo scripts, campaign nights, tournament rounds, manual mode and the non-sho... | n/a | - | - |
+| R2 | lively-lanes-ui | Next round is never clipped | n/a | - | `packages/arena-ui/test/lively-lanes-ui.test.ts` |
+| R2.1 | lively-lanes-ui | In the tournament round-review state the header keeps every control inside th... | n/a | - | - |
+| R2.2 | lively-lanes-ui | The tagline and the Play demo button give way while a tournament is on. Nothi... | n/a | - | - |
+| R3 | lively-lanes-ui | One "Stream" in the header | n/a | - | `packages/arena-ui/test/lively-lanes-ui.test.ts` |
+| R3.1 | lively-lanes-ui | The app tab keeps Stream. A pack tab whose name equals an app tab gets the su... | n/a | - | - |
+| R3.2 | lively-lanes-ui | Pack tabs with no matching app tab (Default, Desk) keep their names. | n/a | - | - |
+| R4 | lively-lanes-ui | Valid review-card CSS | n/a | - | `packages/arena-ui/test/lively-lanes-ui.test.ts` |
+| R4.1 | lively-lanes-ui | .rc-bars in review-card.css has a valid declaration list. The bars stay hidde... | n/a | - | - |
+| R4.2 | lively-lanes-ui | npm run ui:build prints no CSS warning. | n/a | - | - |
 | R1 | own-bot-quickstart | A copy-paste template | n/a | - | `packages/core/test/own-bot.test.ts` |
 | R1.1 | own-bot-quickstart | templates/own-bot/ holds a Node (bot.mjs) and a Python (bot.py) variant. Each... | n/a | - | `packages/core/test/own-bot.test.ts` |
 | R1.2 | own-bot-quickstart | Each variant runs three stages (fetch, draft, reply) against the fake provide... | n/a | - | `packages/core/test/own-bot.test.ts` |
