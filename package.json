@@ -34,6 +34,7 @@
     "packs:embed": "node tools/embed-packs.mjs",
     "haunt": "node tools/run-ts.mjs packages/core/src/bin/haunt.ts",
     "own-bot": "node tools/run-ts.mjs packages/core/src/bin/own-bot.ts",
+    "block:add": "node tools/run-ts.mjs packages/core/src/bin/block-add.ts",
     "fresh-clone": "node tools/fresh-clone.mjs",
     "e2e": "node tools/e2e.mjs"
   },

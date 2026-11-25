@@ -38,11 +38,11 @@ Rule: one PR per phase, spec ticks only when done, `npm run verify` green before
 - [x] 5.5 Block-alone mode: `blockAsApp` runs any block as a one-stage app (R4.6).
 
 ## M5b. Alone, then chained (2 d)
-- [ ] 5b.1 `runBlock` and `BlockCard`; results files (R12.1, R12.2).
-- [ ] 5b.2 Chain wizard panel: library, order, options, Test chain (R12.3, R12.6).
-- [ ] 5b.3 Chain blame report and chain checks (R12.4, R12.5).
-- [ ] 5b.4 Custom blocks, fuzz on custom blocks, `npm run block:add` (R13).
-- [ ] 5b.5 Tests for each, including a chain that passes its blocks alone and still gets a warning.
+- [x] 5b.1 `runBlock` and `BlockCard`; results files (R12.1, R12.2).
+- [x] 5b.2 Chain wizard page `chain.html` (library with alone cards, order, rename, YAML both ways, Test chain). Checked once in headless Chrome (rookie chain gives a grade and a blame table); the overnight e2e gets a check in M7 (R12.3, R12.6).
+- [x] 5b.3 Chain blame report and chain checks (R12.4, R12.5).
+- [x] 5b.4 Custom blocks (inline stages), `npm run block:add -- <haunt.yaml> <stage>` writes `blocks/user.yaml`; the unknown-fault fuzz pool lands by role, so it hits custom blocks too (R13). Casebook fingerprints of unknown shapes on custom blocks are checked in M7.
+- [x] 5b.5 Tests for each, including a chain that passes its blocks alone and still gets a warning.
 
 ## M6. Stream and the example app (1.5 d)
 - [ ] 6.1 Stream manifest from blocks (11 stages), ledger tables.

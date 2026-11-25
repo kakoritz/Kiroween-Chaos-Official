@@ -6,9 +6,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 270. With a PR: 29 (11%). With a test: 200 (74%).
+- Requirements: 270. With a PR: 29 (11%). With a test: 210 (78%).
 - Tasks: 158. Done: 156. With a PR: 48 (30%). With a test: 39 (25%).
-- Test files scanned: 225.
+- Test files scanned: 227.
 
 ## Tasks
 
@@ -329,17 +329,17 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R11.1 | modular-engine | Rollback tag v1-fixed-stages exists on the old product. | n/a | - | - |
 | R11.2 | modular-engine | Main stays green after every phase PR. No phase merges with a failing npm run... | n/a | - | - |
 | R11.3 | modular-engine | Overnight checks run on every phase branch; a regression in Orders, Ticket De... | n/a | - | - |
-| R12 | modular-engine | Test blocks alone, then chain them (wizard flow) | n/a | - | - |
-| R12.1 | modular-engine | Any block can be tested alone: the harness runs a one-block app, attacks it w... | n/a | - | - |
-| R12.2 | modular-engine | Block score cards are saved per block and tier in blocks/results/, so a block... | n/a | - | - |
-| R12.3 | modular-engine | A chain wizard in the arena: pick blocks from the library, order them, rename... | n/a | - | - |
-| R12.4 | modular-engine | A chain score shows each block's share of the failures, so the player sees wh... | n/a | - | - |
-| R12.5 | modular-engine | Chain checks warn when a chain is weak although its blocks passed alone (for ... | n/a | - | - |
-| R12.6 | modular-engine | The wizard and the manifest file are two views of the same data; saving in on... | n/a | - | - |
-| R13 | modular-engine | Unknown blocks (bring your own, unseen) | n/a | - | - |
-| R13.1 | modular-engine | A player can add a custom block with any id, role and effects, with no librar... | n/a | - | - |
+| R12 | modular-engine | Test blocks alone, then chain them (wizard flow) | n/a | - | `packages/arena-ui/test/chain-model.test.ts`, `packages/haunt/test/block-cards.test.ts` |
+| R12.1 | modular-engine | Any block can be tested alone: the harness runs a one-block app, attacks it w... | n/a | - | `packages/haunt/test/block-cards.test.ts` |
+| R12.2 | modular-engine | Block score cards are saved per block and tier in blocks/results/, so a block... | n/a | - | `packages/haunt/test/block-cards.test.ts` |
+| R12.3 | modular-engine | A chain wizard in the arena: pick blocks from the library, order them, rename... | n/a | - | `packages/arena-ui/test/chain-model.test.ts` |
+| R12.4 | modular-engine | A chain score shows each block's share of the failures, so the player sees wh... | n/a | - | `packages/haunt/test/block-cards.test.ts` |
+| R12.5 | modular-engine | Chain checks warn when a chain is weak although its blocks passed alone (for ... | n/a | - | `packages/haunt/test/block-cards.test.ts` |
+| R12.6 | modular-engine | The wizard and the manifest file are two views of the same data; saving in on... | n/a | - | `packages/arena-ui/test/chain-model.test.ts` |
+| R13 | modular-engine | Unknown blocks (bring your own, unseen) | n/a | - | `packages/haunt/test/block-cards.test.ts` |
+| R13.1 | modular-engine | A player can add a custom block with any id, role and effects, with no librar... | n/a | - | `packages/haunt/test/block-cards.test.ts` |
 | R13.2 | modular-engine | Unknown-fault fuzzing (the existing fuzz pool) runs against custom blocks the... | n/a | - | - |
-| R13.3 | modular-engine | A custom block can be promoted to the library file with one command (npm run ... | n/a | - | - |
+| R13.3 | modular-engine | A custom block can be promoted to the library file with one command (npm run ... | n/a | - | `packages/haunt/test/block-cards.test.ts` |
 | R13.4 | modular-engine | A block may be backed by a real process (your code) or by the generic model; ... | n/a | - | - |
 | R1 | own-bot-quickstart | A copy-paste template | n/a | - | `packages/core/test/own-bot.test.ts` |
 | R1.1 | own-bot-quickstart | templates/own-bot/ holds a Node (bot.mjs) and a Python (bot.py) variant. Each... | n/a | - | `packages/core/test/own-bot.test.ts` |

@@ -16,7 +16,7 @@ export interface Block {
 
 const eff = (kind: string, key: string, idempotent: 'required' | 'preferred' = 'required'): BlockEffect => ({ kind, key, idempotent });
 
-export const BLOCKS: readonly Block[] = [
+export const BLOCKS: Block[] = [
   // input: read something from the outside
   { id: 'read_request', label: 'Read request', role: 'input', about: 'Read a job file or request that starts the work.', effects: [], duration: [300, 600] },
   { id: 'read_message', label: 'Read message', role: 'input', about: 'Take the next message from a queue or inbox.', effects: [], duration: [300, 600] },
@@ -46,7 +46,31 @@ export const BLOCKS: readonly Block[] = [
   { id: 'archive', label: 'Archive', role: 'effect', about: 'Keep a copy for later.', effects: [eff('store', 'archive:1')], duration: [300, 600] },
 ];
 
-const BY_ID = new Map(BLOCKS.map((b) => [b.id, b]));
-export const blockById = (id: string): Block | undefined => BY_ID.get(id);
+export const BUILTIN_BLOCK_COUNT = BLOCKS.length;
+export const blockById = (id: string): Block | undefined => BLOCKS.find((b) => b.id === id);
+
+/** Problems with a block definition; an empty list means it is valid. */
+export function validateBlock(b: unknown): string[] {
+  const errs: string[] = [];
+  const o = b as Partial<Block> | null;
+  if (typeof o !== 'object' || o === null) return ['block: expected a map'];
+  if (typeof o.id !== 'string' || !/^[a-z][a-z0-9_]{1,31}$/.test(o.id)) errs.push('id: 2 to 32 lowercase letters, digits or underscore, starting with a letter');
+  if (typeof o.label !== 'string' || !o.label.trim()) errs.push('label: required text');
+  if (!['input', 'work', 'effect', 'poll', 'final'].includes(String(o.role))) errs.push('role: one of input | work | effect | poll | final');
+  const effects = Array.isArray(o.effects) ? o.effects : [];
+  if (o.role === 'effect' && effects.length === 0) errs.push('effects: an effect block needs at least one effect');
+  if (o.role !== 'effect' && effects.length > 0) errs.push('effects: only an effect block can have effects');
+  effects.forEach((e, i) => { if (!e || typeof e.kind !== 'string' || typeof e.key !== 'string' || !['required', 'preferred'].includes(String(e.idempotent))) errs.push(`effects[${i}]: needs kind, key and idempotent (required | preferred)`); });
+  if (!Array.isArray(o.duration) || o.duration.length !== 2 || !(o.duration[0] >= 0) || !(o.duration[1] >= o.duration[0])) errs.push('duration: [min, max] in ms with 0 <= min <= max');
+  return errs;
+}
+
+/** Adds a custom block to the library for this process (a promoted custom block, modular-engine R13.3). Throws with the problems. */
+export function registerBlock(b: Block): void {
+  const errs = validateBlock(b);
+  if (blockById(b.id)) errs.push(`id: "${b.id}" is already a block`);
+  if (errs.length > 0) throw new Error(`block "${(b as { id?: string }).id}" is not valid:\n- ${errs.join('\n- ')}`);
+  BLOCKS.push({ ...b, effects: b.effects.map((e) => ({ ...e })), duration: [b.duration[0], b.duration[1]] });
+}
 /** Provider kinds the fake provider can record. A block or manifest effect kind outside this list is stored as `store`. */
 export const PROVIDER_KINDS: readonly string[] = ['account_create', 'order', 'charge', 'email', 'store', 'dispatch', 'notify', 'ticket', 'refund', 'discount'];
