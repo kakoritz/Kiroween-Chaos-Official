@@ -110,7 +110,7 @@ kiro-power/, kiro-crew-app/   the MCP server packaged for Kiro
 .kiro/                specs, steering, hooks, agents
 ```
 
-More docs: [DEV-SETUP](docs/DEV-SETUP.md), [JUDGES](docs/JUDGES.md), [SPEC-MAP](docs/SPEC-MAP.md), [HOW-KIRO-BUILT-THIS](docs/HOW-KIRO-BUILT-THIS.md).
+More docs: [OWN-BOT](docs/OWN-BOT.md) (point it at your own bot, 5 minutes), [DEV-SETUP](docs/DEV-SETUP.md), [JUDGES](docs/JUDGES.md), [SPEC-MAP](docs/SPEC-MAP.md), [HOW-KIRO-BUILT-THIS](docs/HOW-KIRO-BUILT-THIS.md).
 ## Known limits
 
 - **Sweep is slow.** About 5 minutes with `--orders 1 --speed 16`, longer with defaults. For a quick look use `ramp`, `demo -- --check` or `validate:live`.

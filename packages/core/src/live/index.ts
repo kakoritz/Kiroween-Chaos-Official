@@ -5,3 +5,4 @@ export * from './loopfix';
 export * from './report';
 export * from './server';
 export * from './runtime';
+export * from './own-bot';
