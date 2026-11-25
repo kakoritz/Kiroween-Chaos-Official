@@ -12,6 +12,10 @@ export interface LaneLoopOptions {
   sleep?: (ms: number) => Promise<void>;
   /** Hard stop on restarts so a bot that always dies cannot loop forever. */
   maxStarts?: number;
+  /** How long a bot may stay alive after `shutdown` before the runner kills it (default 5000). A bot that never exits would keep the wave from ending. */
+  shutdownGraceMs?: number;
+  /** How long a started bot may take to say `ready` before the runner kills it (default 5000). */
+  readyTimeoutMs?: number;
   /** Aborting kills the current bot and ends the loop without a restart. */
   signal?: AbortSignal;
   onStart?: (n: number, pid: number) => void;
@@ -60,7 +64,12 @@ export async function runLane(o: LaneLoopOptions): Promise<LaneLoopResult> {
     proc.onMessage((m) => {
       const msg = m as Record<string, unknown>;
       if (typeof msg.type === 'string') o.onEvent?.(msg);
-      else if (msg.k === 'idle') proc.send({ k: 'shutdown' });
+      else if (msg.k === 'idle') {
+        proc.send({ k: 'shutdown' });
+        const t = setTimeout(() => { if (proc.alive) proc.kill(); }, o.shutdownGraceMs ?? 5000);
+        (t as { unref?: () => void }).unref?.();
+        void proc.exited.then(() => clearTimeout(t));
+      }
       else if (msg.k === 'decision_needed') {
         const ask = parseAsk(msg);
         if (!ask) return;
@@ -70,7 +79,13 @@ export async function runLane(o: LaneLoopOptions): Promise<LaneLoopResult> {
         void answer.then((a) => proc.send({ k: 'decision', order: ask.order, choice: a.choice, source: a.source }));
       }
     });
-    await proc.waitFor('ready');
+    try {
+      await proc.waitFor('ready', o.readyTimeoutMs ?? 5000);
+    } catch (e) {
+      proc.kill();
+      o.signal?.removeEventListener('abort', onAbort);
+      throw e;
+    }
     proc.send({ k: 'go', arms: o.director.pendingArms(o.lane) });
     o.onProcess?.((m) => proc.send(m as never));
     const exit = await proc.exited;

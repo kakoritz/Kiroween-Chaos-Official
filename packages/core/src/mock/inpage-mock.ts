@@ -6,7 +6,7 @@ import { FIXTURES } from '../sim/fixtures';
 import { Hub } from './hub';
 import { CAPTION_SCRIPTS, loadCaptions } from '../live/captions';
 import { OutcomeTable } from './outcomes';
-import { ChaosSim, DEMO_SCRIPTS, MockError, Player, fixtureFor, scaledWave } from './play';
+import { ChaosSim, DEMO_SCRIPTS, MockError, Player, demoFillerTimes, fixtureFor, scaledWave } from './play';
 import { hardening, laneLaps, laneLog, laneOrderRecord, laneOrders, ledger, postmortem, stageDetail, waveCompare, waveLaps, waveReport, waveStars, wavesList } from './queries';
 
 export const INPAGE_SPEEDS = [0.5, 1, 2, 4];
@@ -41,7 +41,21 @@ export function createInPageMock(outcomeRows: ConstructorParameters<typeof Outco
     const events = FIXTURES[name]();
     const app = events.find((e) => e.type === 'hello')?.app as AppId | undefined;
     if (app && app !== hub.app) { hub.app = app; hub.reset(); }
-    startWave(events, speed, script);
+    const n = startWave(events, speed, script);
+    // Recorded demos go quiet for long stretches: press a creature on the next active lane wherever the recording owes one.
+    let next = 0;
+    for (const t of demoFillerTimes(events)) {
+      player.after(t / speed, () => {
+        if (!hub.running || hub.wave?.n !== n) return;
+        for (let k = 0; k < 5; k++) {
+          const lane = ((next + k) % 5) + 1;
+          // The recording never lowers a lane's depth, and ChaosSim refuses at 5: a creature from many seconds ago is long gone, so the filler counts that lane as recovered.
+          const l = hub.laneAt(lane);
+          if (l && l.depth >= 3) l.depth = 0;
+          try { chaos.inject({ lane }, 'random'); next = lane; return; } catch { /* lane not active here: try the next one */ }
+        }
+      });
+    }
   };
 
   const summarize = (): Record<string, unknown> => {

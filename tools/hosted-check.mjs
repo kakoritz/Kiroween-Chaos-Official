@@ -2,8 +2,8 @@
 //   node tools/hosted-check.mjs [--shots=docs/proof/hosted] [--base=/Kiroween-Chaos/]
 // Serves dist/hosted over http (like Pages), loads it, and fails unless a populated arena shows within 10 s
 // (lanes with orders in the in-page engine state, a canvas, the hosted banner). Then it starts the recorded tournament
-// and checks a round card or a fallen lane appears. Writes two screenshots when --shots is given.
-// Chrome: CHROME env or the usual install paths. Binds 127.0.0.1 only.
+// and checks a round card or a fallen lane appears. Also samples frames of a full demo pass: no creature-free stretch over 5 s. Writes screenshots when --shots is given.
+// Chrome: CHROME env or the usual install paths (CHROME_NO_SANDBOX=1 adds --no-sandbox for hosts without user namespaces). Binds 127.0.0.1 only.
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -23,7 +23,7 @@ const cPort = 19300 + Math.floor(Math.random() * 500);
 
 const server = spawn(process.execPath, [resolve(root, 'tools/serve-hosted.mjs'), String(sPort), `--base=${base}`], { stdio: 'ignore', windowsHide: true });
 const prof = mkdtempSync(join(tmpdir(), 'haunt-hosted-'));
-const proc = spawn(chrome, ['--headless=new', '--disable-gpu', '--no-first-run', `--remote-debugging-port=${cPort}`, '--window-size=1600,900', `--user-data-dir=${prof}`, 'about:blank'], { stdio: 'ignore', windowsHide: true });
+const proc = spawn(chrome, [...(process.env.CHROME_NO_SANDBOX ? ['--no-sandbox'] : []), '--headless=new', '--disable-gpu', '--no-first-run', `--remote-debugging-port=${cPort}`, '--window-size=1600,900', `--user-data-dir=${prof}`, 'about:blank'], { stdio: 'ignore', windowsHide: true });
 const cleanup = () => { try { proc.kill(); } catch { /* gone */ } try { server.kill(); } catch { /* gone */ } setTimeout(() => { try { rmSync(prof, { recursive: true, force: true }); } catch { /* locked */ } }, 800); };
 let failed = false;
 const fail = (m) => { failed = true; console.error('FAIL: ' + m); };
@@ -72,11 +72,38 @@ try {
   await sleep(1200);
   await shot('hosted-arena.png');
   const banner = await ev(`document.getElementById('hosted-badge')?.textContent ?? ''`);
-  if (!/Hosted demo/.test(banner)) fail('hosted banner missing');
+  if (!/hosted demo/i.test(banner)) fail('hosted banner missing');
   const mode = await ev(`(async()=>(await window.__haunt.getHealth()).mode)()`);
   if (mode !== 'browser') fail('mode is ' + mode);
   const text = await ev(`document.body.innerText`);
   if (/Wave 4|\\bMOCK\\b/.test(text)) fail('old MOCK / Wave 4 state visible');
+
+  // 1b. Frame sampling: a demo pass at 2x (first 60 s) must never leave the lanes without a creature for more than 5 s (a recorded run can sit quiet for a minute).
+  {
+    await ev(`window.__haunt.stopDemo()`);
+    await sleep(500);
+    await ev(`window.__haunt.startDemo('full', 2)`);
+    const MAX_QUIET_MS = 5000;
+    const SAMPLE_MS = 60_000;
+    const tS = Date.now();
+    let quietFrom = null, worst = 0, worstAt = 0, frames = 0, seen = 0, ended = false;
+    while (Date.now() - tS < SAMPLE_MS) {
+      const r = await ev(`(()=>{const a=window.__arena;if(!a)return null;const vm=a.vm;return {run:vm.running,n:vm.lanes.reduce((s,l)=>s+(l.creatures||[]).length,0)}})()`);
+      const now = Date.now();
+      if (r) {
+        frames++;
+        if (!r.run) { ended = true; break; }
+        if (r.n > 0) { seen++; quietFrom = null; } else { quietFrom ??= now; if (now - quietFrom > worst) { worst = now - quietFrom; worstAt = Math.round((quietFrom - tS) / 1000); } }
+      }
+      await sleep(250);
+    }
+    console.log(`demo=full frames: ${frames} sampled, ${seen} with creatures, longest creature-free stretch ${worst} ms (from ${worstAt} s)${ended ? ' (pass ended)' : ''}`);
+    if (frames < 20) fail('frame sampling saw too few frames');
+    else if (seen === 0) fail('no creature in any sampled frame of the full demo');
+    else if (worst > MAX_QUIET_MS) fail(`creature-free stretch of ${worst} ms in the full demo (limit ${MAX_QUIET_MS} ms)`);
+    await ev(`window.__haunt.stopDemo()`);
+    for (let i = 0; i < 20 && await ev(`(async()=>(await window.__haunt.getState()).wave?.running===true)()`); i++) { await ev(`window.__haunt.stopDemo()`); await sleep(500); }
+  }
 
   // 2. The recorded tournament plays (round card, standings or a fallen lane) without a server.
   // Through the real button, as a visitor would (a direct stopWave would let the page chain the next demo over it).

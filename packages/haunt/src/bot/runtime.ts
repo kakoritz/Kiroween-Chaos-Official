@@ -153,7 +153,7 @@ export async function runBot(def: BotDef): Promise<void> {
       anchorVirtual = now();
       anchorReal = Date.now();
       speed = m.speed;
-    } else if (m.k === 'proceed') onProceed?.();
+    } else if (m.k === 'proceed') { onProceed?.(); host.release(); }
     else if (m.k === 'decision') {
       const choice = DECISION_CHOICES.find((c) => c === m.choice);
       if (choice && pendingDecision && (m.order === undefined || m.order === pendingDecision.order)) {
