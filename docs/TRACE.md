@@ -6,8 +6,8 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 171. With a PR: 29 (17%). With a test: 159 (93%).
-- Tasks: 148. Done: 146. With a PR: 48 (32%). With a test: 38 (26%).
+- Requirements: 184. With a PR: 29 (16%). With a test: 165 (90%).
+- Tasks: 152. Done: 150. With a PR: 48 (32%). With a test: 39 (26%).
 - Test files scanned: 216.
 
 ## Tasks
@@ -103,6 +103,10 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | PT-U13 | playtest-v2 | UI tests. Reducers unit tests, one smoke e2e (ui.md section 16). Done: packag... | done | - | `packages/arena-ui/test/ui-smoke.test.ts` |
 | PT-X1 | playtest-v2 | Regression. (done for the loop proof: docs/proof re-recorded with scoring v2,... | done | [#196](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/196), [#199](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/199) | - |
 | PT-X2 | playtest-v2 | Docs. docs/SPEC-MAP.md row, docs/DEMO-SCRIPT.md timings (3 min video is edite... | done | [#198](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/198) | - |
+| RG-T1 | readme-gif | Capture tool. tools/make-readme-gif.mjs and tools/make-readme-gif.py. (R2) | done | - | - |
+| RG-T2 | readme-gif | The GIF. Build docs/img/demo.gif, embed it under the README title. (R1) | done | - | - |
+| RG-T3 | readme-gif | Image 06. tools/make-gallery-06.py, regenerate the image, fix the captions an... | done | - | - |
+| RG-T4 | readme-gif | Test. Add the README clip guard to docs-truth.test.ts; run npm run trace. (R4) | done | - | `packages/haunt/test/docs-truth.test.ts` |
 | SH-C1 | share | Badge and scorecard. haunt badge, SVG and HTML generators (deterministic), MC... | done | [#183](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/183) | - |
 | SH-C2 | share | GitHub Action. Composite action, example workflow, optional demo repo; PR com... | done | [#186](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/186) | - |
 | SH-C3 | share | Workflow Lab engine. Generic bot built from declared stages and parts; in-pag... | done | [#189](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/189) | - |
@@ -302,6 +306,19 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R9.1 | playtest-v2 | All new scoring and review functions SHALL be pure and covered by properties ... | n/a | - | `packages/haunt/test/pbt-playtest.test.ts` |
 | R9.2 | playtest-v2 | All new fixtures SHALL validate against the schema and the ordering rules 40 ... | n/a | - | `packages/haunt/test/validate-v1-1.test.ts` |
 | R9.3 | playtest-v2 | THE SYSTEM SHALL keep npm run demo and npm run fresh-clone working. (PT-X1) | n/a | [#196](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/196), [#199](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/199) | `packages/core/test/requirement-gaps-ui.test.ts` |
+| R1 | readme-gif | A looping demo clip at the top of the README | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R1.1 | readme-gif | docs/img/demo.gif exists, loops, is about 9 s long and 960 px wide, and shows... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R1.2 | readme-gif | README.md embeds it directly under the title, with alt text that says what it... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R1.3 | readme-gif | The GIF is under 3 MB so the README loads fast. | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R2 | readme-gif | The clip is reproducible | n/a | - | - |
+| R2.1 | readme-gif | tools/make-readme-gif.mjs rebuilds the GIF from dist/hosted (serve, record he... | n/a | - | - |
+| R2.2 | readme-gif | Its options (--demo, --start, --len, --fps, --colors, --width) are documented... | n/a | - | - |
+| R3 | readme-gif | Gallery image 06 shows three apps | n/a | - | - |
+| R3.1 | readme-gif | submission/gallery/06-skeleton-crew.png is 1500x1000 (3:2), under 5 MB, and r... | n/a | - | - |
+| R3.2 | readme-gif | tools/make-gallery-06.py regenerates it. | n/a | - | - |
+| R3.3 | readme-gif | submission/README.md and submission/gallery-captions.md say three apps. | n/a | - | - |
+| R4 | readme-gif | A test guards the README clip | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R4.1 | readme-gif | A docs-truth test fails if README.md does not reference docs/img/demo.gif, th... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
 | R1 | stream-pack-app | A runnable Stream app | n/a | - | `apps/haunted-stream/test/stream.test.ts`, `packages/core/test/stream-live.test.ts` |
 | R1.1 | stream-pack-app | apps/haunted-stream holds a Node/TypeScript pipeline of five stages: ingest u... | n/a | - | `apps/haunted-stream/test/stream.test.ts`, `packages/core/test/stream-live.test.ts` |
 | R1.2 | stream-pack-app | apps/haunted-stream/haunt.yaml declares the same five stages and loads with l... | n/a | - | `apps/haunted-stream/test/stream.test.ts`, `packages/core/test/stream-live.test.ts` |
