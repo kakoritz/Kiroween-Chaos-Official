@@ -178,43 +178,11 @@
     },
     "orderId": {
       "type": "string",
-      "pattern": "^(ord|msg)-[0-9]{4}$"
+      "pattern": "^[a-z]{2,6}-[0-9]{4}$"
     },
     "stageId": {
       "type": "string",
-      "enum": [
-        "intake",
-        "account",
-        "create",
-        "submit",
-        "payment",
-        "confirmation",
-        "receive",
-        "process",
-        "dispatch",
-        "updates",
-        "ship",
-        "tracking",
-        "transit",
-        "handoff",
-        "fetch",
-        "classify",
-        "ticket",
-        "draft",
-        "reply",
-        "archive",
-        "login",
-        "ingest",
-        "validate",
-        "dedupe",
-        "triage",
-        "assign",
-        "sla",
-        "notify",
-        "escalate",
-        "resolve",
-        "close"
-      ]
+      "pattern": "^[a-z][a-z0-9_]{1,31}$"
     },
     "envelope": {
       "description": "Fields every event carries. Unknown fields are allowed (the contract is additive).",
@@ -280,16 +248,73 @@
               ]
             },
             "app": {
-              "enum": [
-                "orders",
-                "inbox",
-                "stream"
-              ]
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_-]{1,31}$"
             },
             "lane": false,
             "contractMinor": {
               "type": "integer",
               "minimum": 0
+            },
+            "stages": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 24,
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "label"
+                ],
+                "properties": {
+                  "id": {
+                    "$ref": "#/$defs/stageId"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "enum": [
+                      "effect",
+                      "read",
+                      "poll",
+                      "final"
+                    ]
+                  },
+                  "role": {
+                    "enum": [
+                      "input",
+                      "work",
+                      "effect",
+                      "poll",
+                      "final"
+                    ]
+                  },
+                  "icon": {
+                    "type": "string"
+                  },
+                  "workAnimation": {
+                    "type": "string"
+                  },
+                  "effects": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "kind"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "type": "string"
+                        },
+                        "key": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
             }
           }
         }
@@ -371,11 +396,8 @@
                   "exclusiveMinimum": 0
                 },
                 "app": {
-                  "enum": [
-                    "orders",
-                    "inbox",
-                    "stream"
-                  ]
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_-]{1,31}$"
                 },
                 "pace": {
                   "enum": [

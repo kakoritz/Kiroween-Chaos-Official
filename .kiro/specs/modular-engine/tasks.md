@@ -21,9 +21,9 @@ Rule: one PR per phase, spec ticks only when done, `npm run verify` green before
 - [x] 2.4 A fresh test app gets faults by role only (R2.4).
 
 ## M3. Contract (0.5 d) , OWNER APPROVAL GATE
-- [ ] 3.1 Schema: `stageId` pattern, `orderId` pattern, `hello.stages` documented.
-- [ ] 3.2 Version bump; PROTOCOL.md; validator; fixtures old and new.
-- [ ] 3.3 Owner approves the PR before merge.
+- [x] 3.1 Schema: `stageId` pattern, `orderId` pattern, `hello.stages` documented.
+- [x] 3.2 Version bump; PROTOCOL.md; validator; fixtures old and new.
+- [x] 3.3 Owner approved the contract change (2026-11-25).
 
 ## M4. UI follows the manifest (1 d)
 - [ ] 4.1 Stage labels, icons, animations, verbs from state with role fallbacks.

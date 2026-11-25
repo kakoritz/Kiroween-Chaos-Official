@@ -6,9 +6,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 270. With a PR: 29 (11%). With a test: 182 (67%).
+- Requirements: 270. With a PR: 29 (11%). With a test: 187 (69%).
 - Tasks: 158. Done: 156. With a PR: 48 (30%). With a test: 39 (25%).
-- Test files scanned: 221.
+- Test files scanned: 222.
 
 ## Tasks
 
@@ -188,9 +188,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R3.2 | a11y-mobile | A polite live region says the wave state (wave number, lane count, leader, ac... | n/a | - | - |
 | R4 | a11y-mobile | Contrast | n/a | - | `packages/arena-ui/test/a11y-mobile.test.ts` |
 | R4.1 | a11y-mobile | Every text colour token used on the stone and stone-2 panel backgrounds meets... | n/a | - | - |
-| R5 | a11y-mobile | Reduced motion | n/a | - | `packages/arena-ui/test/a11y-mobile.test.ts` |
+| R5 | a11y-mobile | Reduced motion | n/a | - | `packages/arena-ui/test/a11y-mobile.test.ts`, `packages/haunt/test/contract-v13.test.ts` |
 | R5.1 | a11y-mobile | With prefers-reduced-motion: reduce, all CSS animation and transition is off ... | n/a | - | - |
-| R5.2 | a11y-mobile | The in-app motion setting adds the same reduced-motion body class. | n/a | - | - |
+| R5.2 | a11y-mobile | The in-app motion setting adds the same reduced-motion body class. | n/a | - | `packages/haunt/test/contract-v13.test.ts` |
 | R6 | a11y-mobile | Narrow screens | n/a | - | `packages/arena-ui/test/a11y-mobile.test.ts` |
 | R6.1 | a11y-mobile | At 360 to 430 px wide (phone) and 768 px wide (tablet), the layout is the nar... | n/a | - | - |
 | R6.2 | a11y-mobile | Header children can shrink (min-width: 0) and the logo wraps rather than push... | n/a | - | - |
@@ -239,9 +239,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R4.2 | haunted-house | THE REPORT SHALL show side-effect counts from the provider's ledger, not from... | n/a | - | `packages/haunt/test/report-write.test.ts` |
 | R4.3 | haunted-house | THE REPORT SHALL state "resumed from step N, skipped M completed steps, repea... | n/a | - | `packages/haunt/test/requirement-gaps.test.ts` |
 | R4.4 | haunted-house | THE REPORT SHALL be a single self-contained HTML file and a JSON file. | n/a | - | `packages/haunt/test/report-write.test.ts` |
-| R5 | haunted-house | Haunted house UI | n/a | - | `packages/arena-ui/test/arena.test.ts`, `packages/arena-ui/test/hosted.test.ts`, `packages/arena-ui/test/keys.test.ts`, `packages/core/test/requirement-gaps-ui.test.ts` |
+| R5 | haunted-house | Haunted house UI | n/a | - | `packages/arena-ui/test/arena.test.ts`, `packages/arena-ui/test/hosted.test.ts`, `packages/arena-ui/test/keys.test.ts`, `packages/core/test/requirement-gaps-ui.test.ts`, `packages/haunt/test/contract-v13.test.ts` |
 | R5.1 | haunted-house | THE UI SHALL show a floor plan with one door per room and a ghost for each bot. | n/a | - | `packages/arena-ui/test/arena.test.ts` |
-| R5.2 | haunted-house | WHEN a bot crashes, THE UI SHALL show the ghost dying and the crash point hig... | n/a | - | `packages/core/test/requirement-gaps-ui.test.ts` |
+| R5.2 | haunted-house | WHEN a bot crashes, THE UI SHALL show the ghost dying and the crash point hig... | n/a | - | `packages/core/test/requirement-gaps-ui.test.ts`, `packages/haunt/test/contract-v13.test.ts` |
 | R5.3 | haunted-house | WHEN a bot resumes, THE UI SHALL show the ghost rising and replaying complete... | n/a | - | `packages/core/test/requirement-gaps-ui.test.ts` |
 | R5.4 | haunted-house | THE UI SHALL show a live provider ledger beside both bots. | n/a | - | `packages/arena-ui/test/arena.test.ts` |
 | R5.5 | haunted-house | THE UI SHALL have a "Kill it now" button for live, audience-driven crashes. | n/a | - | `packages/arena-ui/test/keys.test.ts` |
@@ -270,10 +270,10 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R4 | lively-lanes-ui | Valid review-card CSS | n/a | - | `packages/arena-ui/test/lively-lanes-ui.test.ts` |
 | R4.1 | lively-lanes-ui | .rc-bars in review-card.css has a valid declaration list. The bars stay hidde... | n/a | - | - |
 | R4.2 | lively-lanes-ui | npm run ui:build prints no CSS warning. | n/a | - | - |
-| R1 | modular-engine | Apps declare their own stages | n/a | - | `packages/haunt/test/golden-apps.test.ts`, `packages/haunt/test/registry.test.ts` |
+| R1 | modular-engine | Apps declare their own stages | n/a | - | `packages/haunt/test/contract-v13.test.ts`, `packages/haunt/test/golden-apps.test.ts`, `packages/haunt/test/registry.test.ts` |
 | R1.1 | modular-engine | An app manifest declares any number of stages (1 to 24), each with an id matc... | n/a | - | `packages/haunt/test/registry.test.ts` |
-| R1.2 | modular-engine | The hello event carries the declared stages (id, label, role, effects). The a... | n/a | - | - |
-| R1.3 | modular-engine | contract/events.schema.json: stageId becomes the pattern above instead of a f... | n/a | - | - |
+| R1.2 | modular-engine | The hello event carries the declared stages (id, label, role, effects). The a... | n/a | - | `packages/haunt/test/contract-v13.test.ts` |
+| R1.3 | modular-engine | contract/events.schema.json: stageId becomes the pattern above instead of a f... | n/a | - | `packages/haunt/test/contract-v13.test.ts` |
 | R1.4 | modular-engine | A contract version bump (1.x to 1.y) is advertised in hello; contract/PROTOCO... | n/a | - | - |
 | R1.5 | modular-engine | The three built-in apps keep their current stage ids; their wave results do n... | n/a | - | `packages/haunt/test/golden-apps.test.ts` |
 | R2 | modular-engine | Faults attach by role, not by name | n/a | - | `packages/haunt/test/fault-roles.test.ts`, `packages/haunt/test/golden-apps.test.ts` |
@@ -294,9 +294,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R4.4 | modular-engine | Composition is checked: ids unique, at least one input-or-effect stage, effec... | n/a | - | - |
 | R4.5 | modular-engine | The Workflow Lab exports and imports the same manifest, so a flow built in th... | n/a | - | - |
 | R4.6 | modular-engine | Block-alone mode: one block can be run as a one-stage app, to test it in isol... | n/a | - | - |
-| R5 | modular-engine | Generic bot from a manifest | n/a | - | - |
+| R5 | modular-engine | Generic bot from a manifest | n/a | - | `packages/haunt/test/contract-v13.test.ts` |
 | R5.1 | modular-engine | For any manifest, the engine can build a runnable generic bot at the five tie... | n/a | - | - |
-| R5.2 | modular-engine | The generic bot passes the contract validator with zero violations for every ... | n/a | - | - |
+| R5.2 | modular-engine | The generic bot passes the contract validator with zero violations for every ... | n/a | - | `packages/haunt/test/contract-v13.test.ts` |
 | R5.3 | modular-engine | Real bots (Node, Python, own bot) keep working with no change if they use the... | n/a | - | - |
 | R6 | modular-engine | Stream, finished, on the new engine | n/a | - | - |
 | R6.1 | modular-engine | Stream is rebuilt as a composition of blocks, telling one story: a viewer wat... | n/a | - | - |
@@ -378,9 +378,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R4.2 | playtest-v2 | Recovering the order that was in flight at a boss SHALL give +150 and refund ... | n/a | [#158](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/158) | `packages/haunt/test/score.test.ts` |
 | R4.3 | playtest-v2 | A cancelled order SHALL cost 300 and a halted lane 400 plus 150 per abandoned... | n/a | [#158](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/158) | `packages/haunt/test/score.test.ts` |
 | R4.4 | playtest-v2 | THE UI SHALL explain scores (score popover) and show downtime and cancel anim... | n/a | [#208](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/208) | `packages/arena-ui/test/score-visuals.test.ts` |
-| R5 | playtest-v2 | Reviews and stars | n/a | [#161](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/161), [#201](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/201), [#204](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/204) | `packages/arena-ui/test/handoff.test.ts`, `packages/arena-ui/test/laps.test.ts`, `packages/arena-ui/test/review-card.test.ts`, `packages/haunt/test/review.test.ts` |
+| R5 | playtest-v2 | Reviews and stars | n/a | [#161](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/161), [#201](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/201), [#204](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/204) | `packages/arena-ui/test/handoff.test.ts`, `packages/arena-ui/test/laps.test.ts`, `packages/arena-ui/test/review-card.test.ts`, `packages/haunt/test/contract-v13.test.ts`, `packages/haunt/test/review.test.ts` |
 | R5.1 | playtest-v2 | THE SYSTEM SHALL emit a review for every finished order with five sub-scores ... | n/a | [#161](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/161) | `packages/haunt/test/review.test.ts` |
-| R5.2 | playtest-v2 | THE UI SHALL show the stars at the door, a review card, a live tracker (8/15)... | n/a | [#201](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/201), [#204](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/204) | `packages/arena-ui/test/handoff.test.ts`, `packages/arena-ui/test/laps.test.ts`, `packages/arena-ui/test/review-card.test.ts` |
+| R5.2 | playtest-v2 | THE UI SHALL show the stars at the door, a review card, a live tracker (8/15)... | n/a | [#201](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/201), [#204](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/204) | `packages/arena-ui/test/handoff.test.ts`, `packages/arena-ui/test/laps.test.ts`, `packages/arena-ui/test/review-card.test.ts`, `packages/haunt/test/contract-v13.test.ts` |
 | R5.3 | playtest-v2 | Reviews SHALL feed the score as (stars - 3) x 40. (PT-C6) | n/a | [#161](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/161) | `packages/haunt/test/review.test.ts` |
 | R6 | playtest-v2 | World events | n/a | [#213](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/213) | `packages/arena-ui/test/world-events.test.ts`, `packages/core/test/world-events-a.test.ts`, `packages/core/test/world-events-b.test.ts`, `packages/core/test/world-events-c.test.ts` |
 | R6.1 | playtest-v2 | THE SYSTEM SHALL support smsdown, appdown, updatesdown, wrongaddress, noanswe... | n/a | - | `packages/core/test/world-events-a.test.ts`, `packages/core/test/world-events-b.test.ts`, `packages/core/test/world-events-c.test.ts` |
@@ -426,9 +426,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R4 | stream-pack-app | Contract | n/a | - | `packages/core/test/stream-live.test.ts` |
 | R4.1 | stream-pack-app | A Stream wave passes the contract validator with zero violations. | n/a | - | `packages/core/test/stream-live.test.ts` |
 | R4.2 | stream-pack-app | Stream events carry only Stream stage ids; the hello event lists the five sta... | n/a | - | `packages/core/test/stream-live.test.ts` |
-| R5 | stream-pack-app | Pack creatures and curses | n/a | - | `packages/core/test/stream-live.test.ts` |
+| R5 | stream-pack-app | Pack creatures and curses | n/a | - | `packages/core/test/stream-live.test.ts`, `packages/haunt/test/contract-v13.test.ts` |
 | R5.1 | stream-pack-app | Faults land only on Stream stages. The Streaming pack's creatures (Buffer Wra... | n/a | - | `packages/core/test/stream-live.test.ts` |
-| R5.2 | stream-pack-app | Curses (cursed catalog, cursed manifest) land on the Stream endpoints; curse ... | n/a | - | `packages/core/test/stream-live.test.ts` |
+| R5.2 | stream-pack-app | Curses (cursed catalog, cursed manifest) land on the Stream endpoints; curse ... | n/a | - | `packages/core/test/stream-live.test.ts`, `packages/haunt/test/contract-v13.test.ts` |
 | R5.3 | stream-pack-app | Creatures that exist only for orders (delivery world faults) are not offered ... | n/a | - | `packages/core/test/stream-live.test.ts` |
 | R6 | stream-pack-app | Docs say what is true | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
 | R6.1 | stream-pack-app | README and docs/PACKS.md say the Streaming pack now has a real app; the other... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |

@@ -69,7 +69,7 @@ export const INBOX_STAGES: StageDef[] = [
   { id: 'close', label: 'Close and survey', icon: 'archive', workAnimation: 'archive_box', role: 'final', min: 300, max: 500, effects: [], verb: 'Closing' },
 ];
 // The Stream app (stream-pack-app SP-C1): a five-stage video pipeline on the existing fake provider (store, dispatch, notify).
-// Stage ids come from the contract's closed stage enum (contract/events.schema.json stageId), so no contract change is needed: fetch, classify, draft, reply and archive are enum members no other app uses. The labels carry the meaning; apps/haunted-stream/haunt.yaml has the same five.
+// Stage ids are open since contract v1.3 (contract/V1_3.md): a stage id is any lowercase name; a registered app declares its own in hello.stages. The built-in Stream app keeps these five ids: fetch, classify, draft, reply and archive.
 export const STREAM_STAGES: StageDef[] = [
   { id: 'fetch', label: 'Ingest upload', icon: 'box', workAnimation: 'archive_box', role: 'effect', min: 400, max: 800, effects: [{ kind: 'store', key: 'store:1', service: 'store' }], verb: 'Ingesting upload' },
   { id: 'classify', label: 'Transcode', icon: 'brain', workAnimation: 'think', role: 'work', min: 800, max: 1400, effects: [], verb: 'Transcoding' },

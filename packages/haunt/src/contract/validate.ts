@@ -15,7 +15,7 @@ function stageIdsFor(events: readonly HauntEvent[], app: AppId): string[] {
   const hello = events.find((e) => e.type === 'hello' && ((e as { app?: unknown }).app === undefined || (e as { app?: unknown }).app === app)) as (HauntEvent & { stages?: unknown }) | undefined;
   if (Array.isArray(hello?.stages) && hello!.stages.length > 0) return hello!.stages.map((s: { id?: unknown }) => String(s?.id));
   if (app === 'orders' && events.some((e) => e.stage === 'intake')) return [...LEGACY_ORDERS_STAGE_IDS];
-  return APPS[app].stages.map((s) => s.id);
+  return (APPS[app] ?? APPS.orders!).stages.map((s) => s.id);
 }
 
 export interface Violation {
@@ -286,7 +286,9 @@ export function validateEvents(events: HauntEvent[], opts: ValidateOptions = {})
         if (waveOpen) bad('R1', ev, 'wave_start while the previous wave has not ended');
         waveOpen = true; sawWaveStart = true; awaiting = false;
         waveNo = ev.wave ?? waveNo + 1;
-        app = (d.app as AppId) in APPS ? (d.app as AppId) : 'orders';
+        // An app that is not registered here still validates when its hello declares its stages (contract v1.3).
+        const declared = typeof d.app === 'string' ? d.app : 'orders';
+        app = declared in APPS || events.some((e) => e.type === 'hello' && (e as { app?: unknown }).app === declared && Array.isArray((e as { stages?: unknown }).stages)) ? declared : 'orders';
         stageIds = stageIdsFor(events, app);
         lanes = new Map();
         boss = null;
