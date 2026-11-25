@@ -12,7 +12,7 @@ npm ci
 npm run demo
 ```
 
-The tour is in [`JUDGES.md`](JUDGES.md).
+The tour is in [`JUDGES.md`](JUDGES.md). To run your own bot instead: [`OWN-BOT.md`](OWN-BOT.md), five minutes.
 
 ## The three apps
 

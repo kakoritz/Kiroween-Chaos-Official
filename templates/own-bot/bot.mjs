@@ -1,0 +1,97 @@
+// Own-bot template (Node 20+, no dependencies). Run: npm run own-bot -- templates/own-bot/bot.mjs
+// It is naive on purpose: no retry, no idempotency key, no journal. Chaos will break it. docs/OWN-BOT.md shows how to harden it.
+import { createInterface } from 'node:readline';
+import { mkdirSync, readdirSync, readFileSync, renameSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+
+const env = process.env;
+const lane = env.HAUNT_LANE ?? '1';
+const provider = env.HAUNT_PROVIDER ?? 'http://127.0.0.1:7071';
+const ordersDir = env.HAUNT_ORDERS_DIR;
+const speed = Number(env.HAUNT_SPEED ?? '1') || 1;
+if (!ordersDir) throw new Error('HAUNT_ORDERS_DIR is not set: start this bot with npm run own-bot');
+const laneRoot = join(ordersDir, '..');
+for (const d of ['done', 'failed']) mkdirSync(join(laneRoot, d), { recursive: true });
+
+const send = (m) => process.stdout.write(`${JSON.stringify(m)}\n`);
+const sleep = (ms) => new Promise((r) => setTimeout(r, Math.max(1, ms / speed)));
+
+// The stages of this bot. `path` is the provider call the stage makes (the provider is fake, nothing leaves your machine).
+// The arena's Stream app has these five stage ids, in this order; `classify` is pure work and calls nothing.
+const STAGES = [
+  { id: 'fetch', path: '/store', body: { index: 1 } },
+  { id: 'classify', path: null, body: {} },
+  { id: 'draft', path: '/shipments', body: {} },
+  { id: 'reply', path: '/notifications', body: { index: 1 } },
+  { id: 'archive', path: '/store', body: { index: 2 } },
+];
+
+class StageError extends Error {}
+
+async function callProvider(path, body, key) {
+  const headers = { 'content-type': 'application/json' };
+  // HARDEN (idempotency): send a stable key per effect, for example `${order}:${stage}`, so a retry does not charge twice.
+  if (key) headers['idempotency-key'] = key;
+  // HARDEN (timeout): a slow provider stalls the whole lane. 1500 ms mirrors the built-in bots.
+  const res = await fetch(`${provider}${path}`, { method: 'POST', headers, body: JSON.stringify(body), signal: AbortSignal.timeout(1500) });
+  if (res.status >= 300) throw new StageError(`provider answered ${res.status}`);
+  return res.json();
+}
+
+async function runStage(order, stage) {
+  send({ type: 'stage_start', order, stage: stage.id });
+  // The progress heartbeat keeps the arena animated while the stage works.
+  for (let pct = 20; pct < 100; pct += 20) {
+    send({ type: 'stage_progress', order, stage: stage.id, detail: { pct, label: stage.id } });
+    await sleep(120);
+  }
+  const t0 = Date.now();
+  try {
+    // HARDEN (retry): wrap this call in a loop with backoff for 429, 500 and timeouts.
+    if (stage.path) await callProvider(stage.path, { lane, order, ...stage.body }, null);
+  } catch (e) {
+    send({ type: 'stage_fail', order, stage: stage.id, detail: { error: String(e.message ?? e), retryable: true, attempt: 1 } });
+    throw e;
+  }
+  send({ type: 'stage_done', order, stage: stage.id, detail: { ms: Date.now() - t0, skipped: false } });
+}
+
+async function runOrder(file) {
+  const order = file.replace(/\.json$/, '');
+  // HARDEN (input): the file may be missing or corrupt. Read and validate it before the first stage.
+  send({ type: 'order_start', order, detail: {} });
+  const t0 = Date.now();
+  try {
+    for (const stage of STAGES) await runStage(order, stage);
+  } catch (e) {
+    send({ type: 'order_failed', order, detail: { stage: 'unknown', error: String(e.message ?? e) } });
+    return 'failed';
+  }
+  send({ type: 'order_done', order, detail: { clean: true, ms: Date.now() - t0, repeats: 0 } });
+  return 'done';
+}
+
+let onGo;
+let onShutdown;
+const rl = createInterface({ input: process.stdin });
+rl.on('line', (line) => {
+  let m;
+  try { m = JSON.parse(line); } catch { return; }
+  if (m.k === 'go') onGo?.();
+  else if (m.k === 'shutdown') onShutdown?.();
+});
+rl.on('close', () => onShutdown?.());
+
+send({ k: 'ready' });
+await new Promise((r) => { onGo = r; setTimeout(r, 2000); });
+
+// After a crash the runner starts this file again. Orders still in the folder run again from stage 1: that is what a bot with no journal does.
+for (;;) {
+  const next = readdirSync(ordersDir).filter((f) => /^ord-\d{4}\.json$/.test(f)).sort()[0];
+  if (!next) break;
+  const result = await runOrder(next);
+  if (existsSync(join(ordersDir, next))) renameSync(join(ordersDir, next), join(laneRoot, result, next));
+}
+send({ k: 'idle' });
+await new Promise((r) => { onShutdown = r; });
+process.exit(0);
