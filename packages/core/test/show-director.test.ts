@@ -74,8 +74,10 @@ describe('default plain wave (random mode, dial-driven, show director)', () => {
     const n = [1, 5, 9, 11].map((l) => chaosOf(byLevel.get(l)!).length);
     expect(n[0]).toBeGreaterThan(LANES * 3);
     expect(n[1]).toBeGreaterThan(n[0]!);
-    expect(n[2]).toBeGreaterThan(n[1]!);
-    expect(n[3]).toBeGreaterThan(n[2]!);
+    // Levels 5 and above can saturate the director's depth limit here: no bot ever fires a fault, so every armed creature stays on the stack until its order ends. lively-lanes-ui/R1.4: the dial is never lower.
+    expect(n[2]).toBeGreaterThanOrEqual(n[1]!);
+    expect(n[3]).toBeGreaterThanOrEqual(n[2]!);
+    expect(n[3]).toBeGreaterThan(n[0]!);
   });
 
   it('the chaos depth limit still holds', () => {

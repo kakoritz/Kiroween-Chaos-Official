@@ -11,6 +11,8 @@
 body.present .rnd { display: none; }
 /* The round pill replaces the wave label while a tournament is on (header space). */
 body.tour-on #wave, body.tour-on #app-switch { display: none; }
+/* Round review keeps the header inside its 1920 design px: the tagline and Play demo give way so Next round is never clipped at the right edge. */
+body.tour-on .hdr > .tagline, body.tour-on #demo-open { display: none; }
 
 .tv-dim { position: absolute; inset: 0; z-index: 62; display: flex; align-items: center; justify-content: center; background: rgba(8,6,16,0.74); }
 .tv-card { position: relative; width: 1040px; max-height: 960px; display: flex; flex-direction: column; background: var(--stone); border: 3px solid var(--stone-2); border-radius: 16px; box-shadow: 0 18px 60px rgba(0,0,0,0.6); color: var(--text); overflow: hidden; }
