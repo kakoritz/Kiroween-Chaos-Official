@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Chaos engineering for AI agents, played as a haunted house. Kiroween Chaos crashes and curses your bots, grades how they survive, and shows the exact fix. One engine, two apps: Node and Python.",
+  "description": "Chaos engineering for AI agents, played as a haunted house. Kiroween Chaos crashes and curses your bots, grades how they survive, and shows the exact fix. One engine, three apps: Node and Python.",
   "license": "MIT",
   "repository": { "type": "git", "url": "git+https://github.com/kakoritz/Kiroween-Chaos.git" },
   "engines": { "node": ">=20" },

@@ -1,6 +1,6 @@
 # Kiroween Chaos as a Kiro Crew app
 
-Chaos engineering for AI agents, played as a haunted house. Kiroween Chaos crashes and curses your bots, grades how they survive, and shows the exact fix. One engine, two apps: Node and Python.
+Chaos engineering for AI agents, played as a haunted house. Kiroween Chaos crashes and curses your bots, grades how they survive, and shows the exact fix. One engine, three apps: Node and Python.
 
 Manifest (`app.json`), reviewer agent, skill `stress-test-my-workflow`, MCP server (`packages/core/src/bin/haunt-mcp.ts`, tools `haunt_define`, `haunt_sweep`, `haunt_ramp`, `haunt_report`) and a page that hosts the arena UI from 127.0.0.1.
 

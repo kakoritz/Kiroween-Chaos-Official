@@ -145,7 +145,7 @@ What it does not give: a side-by-side build of one feature both ways, so no spee
 
 Five hooks, three kinds of trigger:
 
-- **Guard on save (`runCommand`):** `pbt-on-sdk-save` and `fixtures-on-contract-save` run a test or `npm run validate:events` when SDK or contract files change. These guard the two seams that broke most: replay after a crash, and the core/visuals contract.
+- **Check on save (`runCommand`):** `pbt-on-sdk-save` runs the crash-point property test when an SDK file is saved, and `fixtures-on-contract-save` runs `npm run validate:events` when a file under `contract/` or `fixtures/` is saved. They report a failure at save time on the two seams that broke most (replay after a crash, event fixtures against the contract schema). They do not block an edit or a merge, and they do not check the contract rules beyond the schema and fixtures.
 - **Bookkeeping on save (`runCommand`):** `trace-on-merge` runs `npm run trace` when a spec or test file changes, so `docs/TRACE.md` stays current. Its name says merge, its trigger is a file save.
 - **Agent on save or demand (`askAgent`):** `lint-hardening-spec` has the agent run `spec-lint` on an edited hardening spec and fix the spec only; `reviewer-on-wave-end` (`userTriggered`) has the agent write the postmortem and hardening spec for the newest run. Together with the `reviewer` agent's path-limited `fs_write` and the rule that a spec is never auto-applied (`.kiro/steering/contract.md`), this is the loop in section 5.
 

@@ -1,8 +1,8 @@
 # Demo script: a 3-minute live walkthrough
 
-Story: **the same bug in three outfits.** A process crashes, restarts and repeats a side effect: a duplicate charge, a duplicate ticket, a double stream. The third outfit (streaming) is a model-based pack only.
+Story: **the same bug in three outfits.** A process crashes, restarts and repeats a side effect: a duplicate charge, a duplicate ticket, a double stream. The third outfit (Stream) is a runnable Node app (`apps/haunted-stream`, 5 stages); the 11-stage streaming pack in the Workflow Lab stays model-based.
 
-Rules: say exactly what the screen shows. Do not say "Kiro applied the fix" unless it happens live; the recorded fix is `docs/proof/live-fix.md`. Do not claim a runnable streaming app, or the Power and Crew app installed in a Kiro window. Numbers come from the screen, not from this file. Known true: after the same crash, Rookie ends with 2 charges and Phoenix with 1 (`packages/haunt/test/hero-crash.test.ts`).
+Rules: say exactly what the screen shows. Do not say "Kiro applied the fix" unless it happens live; the recorded fix is `docs/proof/live-fix.md`. Do not call the Lab streaming preset a real run, and do not claim the Power and Crew app installed in a Kiro window. Numbers come from the screen, not from this file. Known true: after the same crash, Rookie ends with 2 charges and Phoenix with 1 (`packages/haunt/test/hero-crash.test.ts`).
 
 Start: `npm run demo -- --no-open` (live server on 7070; with `HAUNT_PORT` and `HAUNT_PROVIDER_PORT` for other ports), then open `http://127.0.0.1:7070/` for the splash or `http://127.0.0.1:7070/?splash=0` to land on the arena. Labels below are the real UI labels in `packages/arena-ui/app/main.ts` and `packages/arena-ui/src/arena/`.
 
@@ -14,7 +14,7 @@ Start: `npm run demo -- --no-open` (live server on 7070; with `HAUNT_PORT` and `
 | 1:15-1:35 | Final screen: podium, awards, **Casebook** (edge case, who solved it, how, cost) | "The prize is the Casebook: every edge case, who solved it, and what it cost." |
 | 1:35-2:05 | **Patterns** in the header, list sorted by cost. **Write fix spec**. **Improve**: Run, Mine, Apply, Rerun, Compare, Closed. Hold on the compare report | "The miner clusters what keeps happening and writes a fix spec: evidence, the smallest patch, a test for each. The improve loop reruns the same seed. It is a projection with simulated parts, not patched code running." |
 | 2:05-2:25 | Open `.kiro/specs/hardening-<run>/` in Kiro. If the fix is live, run the tasks and rerun; otherwise show `docs/proof/live-fix.md` and say "recorded" | "Kiro applies the spec, with the review step. This one is recorded." (or "live" if it is) |
-| 2:25-2:45 | Header app switcher: **Haunted Inbox**. Run a wave. Show a ticket and reply row in the ledger and a lane crash with no duplicate for Phoenix | "A second app, in Python: an inbox that files tickets and sends replies. Same harness, no engine change." |
+| 2:25-2:45 | Header app switcher: **Haunted Inbox** (the Ticket Desk). Run a wave. Show a ticket and reply row in the ledger and a lane crash with no duplicate for Phoenix | "A second app, in Python: an inbox that files tickets and sends replies. Same harness, no engine change." |
 | 2:45-3:00 | Open `/workflow-lab.html`, pick the streaming preset, run it. Then `docs/img/architecture.svg` | "A double stream is the third outfit. Here it is a model-based what-if, not a running app. Kiroween Chaos: break your bots before the world does." |
 
 ## Optional extras (each is a separate minute)
