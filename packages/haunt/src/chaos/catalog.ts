@@ -107,7 +107,7 @@ export function restartDelay(base: number, nested: number): number {
 }
 
 /** First stage at or after `from` (wrapping into the next order) where the fault applies. `app` picks the stage list when `from` is unknown. */
-export function nextApplicableStage(f: FaultDef, from: string | null, app: 'orders' | 'inbox' | 'stream' = 'orders'): { stage: string; nextOrder: boolean } {
+export function nextApplicableStage(f: FaultDef, from: string | null, app: string = 'orders'): { stage: string; nextOrder: boolean } {
   const order = from !== null && STREAM_ORDER.includes(from) ? STREAM_ORDER : from !== null && INBOX_ORDER.includes(from) && !ORDERS_ORDER.includes(from) ? INBOX_ORDER : from === null && app === 'stream' ? STREAM_ORDER : from === null && app === 'inbox' ? INBOX_ORDER : ORDERS_ORDER;
   const i = from === null ? 0 : Math.max(0, order.indexOf(from));
   for (let j = i; j < order.length; j++) if (f.stages.includes(order[j]!)) return { stage: order[j]!, nextOrder: false };

@@ -5,7 +5,7 @@ import type { DemoScript } from './demo';
 
 const orderId = (n: number): string => `ord-${String(n).padStart(4, '0')}`;
 
-export function roundScript(seed: string | number, round: number, cfg: RoundCfg, lanes: readonly number[], waveSeed: number, app: 'orders' | 'inbox' | 'stream' = 'orders'): DemoScript {
+export function roundScript(seed: string | number, round: number, cfg: RoundCfg, lanes: readonly number[], waveSeed: number, app: string = 'orders'): DemoScript {
   const plan = roundPlan(seed, round, cfg, app);
   const presses: DemoScript['presses'] = [];
   for (const lane of lanes) {

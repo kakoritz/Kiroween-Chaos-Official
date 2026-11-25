@@ -20,6 +20,10 @@ export interface Targets {
 }
 export interface HauntConfig {
   name: string;
+  /** Display name for switchers (defaults to `name`). */
+  label?: string;
+  /** 2 to 6 lowercase letters used in order ids, `cof-0001` (defaults to `job`). */
+  idPrefix?: string;
   start: string;
   adapter: Adapter[];
   stages: StageDef[];
@@ -44,7 +48,7 @@ function checkUnknown(o: Record<string, unknown>, known: string[], path: string,
 export function validateHauntConfig(raw: unknown): LoadResult {
   const errors: string[] = [];
   if (!isObj(raw)) return { ok: false, errors: ['root: expected a mapping'] };
-  checkUnknown(raw, ['name', 'start', 'adapter', 'stages', 'inputs', 'truth', 'targets'], '', errors);
+  checkUnknown(raw, ['name', 'label', 'idPrefix', 'start', 'adapter', 'stages', 'inputs', 'truth', 'targets'], '', errors);
 
   if (!isNonEmptyStr(raw.name)) errors.push('name: required non-empty string');
   if (!isNonEmptyStr(raw.start)) errors.push('start: required non-empty string');
@@ -137,6 +141,8 @@ export function validateHauntConfig(raw: unknown): LoadResult {
     errors: [],
     config: {
       name: raw.name as string,
+      ...(isNonEmptyStr(raw.label) ? { label: raw.label } : {}),
+      ...(isNonEmptyStr(raw.idPrefix) ? { idPrefix: raw.idPrefix } : {}),
       start: raw.start as string,
       adapter,
       stages,

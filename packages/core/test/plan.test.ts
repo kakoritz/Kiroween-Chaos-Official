@@ -12,11 +12,11 @@ function runOne(app: AppId, tier: TierId, fault: string, stage: string, point?: 
   return planLane({ lane: 1, tier, app, seed: 7, orders, pace: 1 }, [arm]);
 }
 
-function classify(plan: LanePlan): { outcome: Code; extraRows: Partial<Record<EffectKind, number>> } {
+function classify(plan: LanePlan): { outcome: Code; extraRows: Record<string, number> } {
   const types = plan.events.map((e) => e.type);
-  const extraRows: Partial<Record<EffectKind, number>> = {};
+  const extraRows: Record<string, number> = {};
   for (const e of plan.events) if (e.type === 'repeat') extraRows[e.detail.kind as EffectKind] = (extraRows[e.detail.kind as EffectKind] ?? 0) + 1;
-  const total = Object.values(extraRows).reduce((a, b) => a + (b ?? 0), 0);
+  const total = Object.values(extraRows).reduce((a: number, b: number) => a + b, 0);
   let outcome: Code;
   if (types.includes('lane_halted')) outcome = 'HALT';
   else if (types.includes('order_quarantined')) outcome = 'QUAR';

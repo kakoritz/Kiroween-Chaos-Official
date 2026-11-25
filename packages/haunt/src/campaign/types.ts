@@ -31,7 +31,7 @@ export interface CampaignNight {
   orders: number;
   pace: 'slow';
   seed: number;
-  app?: 'orders' | 'inbox' | 'stream';
+  app?: string;
   finale?: boolean;
   plan: CampaignPlanEntry[];
   rivals: ['retrier', 'journaler', 'reconciler', 'phoenix'];

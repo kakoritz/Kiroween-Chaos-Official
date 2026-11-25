@@ -1,10 +1,14 @@
 // Shared catalogs: apps and stages, tiers, parts, faults, creatures. Source of truth for the
 // IDs in contract/CONTRACT.md and the numbers in .kiro/specs/engine/design.md and runtime.md.
 
-export type AppId = 'orders' | 'inbox' | 'stream';
+/** Built-in apps. Any other id is an app registered at run time (shared/registry.ts). */
+export type BuiltinAppId = 'orders' | 'inbox' | 'stream';
+export type AppId = string;
 export type TierId = 'rookie' | 'retrier' | 'journaler' | 'reconciler' | 'phoenix';
 export type PartId = 'retry' | 'journal' | 'idempotency' | 'breaker' | 'offline_queue';
-export type EffectKind = 'account_create' | 'order' | 'charge' | 'email' | 'store' | 'dispatch' | 'notify' | 'ticket';
+export type KnownEffectKind = 'account_create' | 'order' | 'charge' | 'email' | 'store' | 'dispatch' | 'notify' | 'ticket';
+/** Effect kinds are open: a registered app may declare its own (session, playback, ...). */
+export type EffectKind = KnownEffectKind | (string & {});
 export type StageRole = 'input' | 'work' | 'effect' | 'poll' | 'final';
 
 /** Stage kind carried in the contract's `stages` list (V1_2.md section 1). */
@@ -71,11 +75,21 @@ export const STREAM_STAGES: StageDef[] = [
   { id: 'reply', label: 'Notify subscribers', icon: 'bubbles', workAnimation: 'send_bubbles', role: 'effect', min: 300, max: 600, effects: [{ kind: 'notify', key: 'notify:1', service: 'notify' }], verb: 'Notifying subscribers' },
   { id: 'archive', label: 'Archive', icon: 'archive', workAnimation: 'archive_box', role: 'effect', min: 300, max: 600, effects: [{ kind: 'store', key: 'store:2', service: 'store' }], verb: 'Archiving' },
 ];
-export const APPS: Record<AppId, { id: AppId; label: string; stages: StageDef[]; orderPrefix: string }> = {
-  orders: { id: 'orders', label: 'Haunted Orders', stages: ORDERS_STAGES, orderPrefix: 'ord' },
-  inbox: { id: 'inbox', label: 'Haunted Inbox', stages: INBOX_STAGES, orderPrefix: 'msg' },
-  stream: { id: 'stream', label: 'Haunted Stream', stages: STREAM_STAGES, orderPrefix: 'ord' },
+export interface AppDef {
+  id: AppId;
+  label: string;
+  /** Short name for switchers and lists ("Orders"). Defaults to `label`. */
+  shortLabel?: string;
+  stages: StageDef[];
+  orderPrefix: string;
+}
+/** The live app table. Built-ins are here at load; `registerApp` (shared/registry.ts) adds more. Do not assign to it directly. */
+export const APPS: Record<AppId, AppDef> = {
+  orders: { id: 'orders', label: 'Haunted Orders', shortLabel: 'Orders', stages: ORDERS_STAGES, orderPrefix: 'ord' },
+  inbox: { id: 'inbox', label: 'Haunted Inbox', shortLabel: 'Inbox', stages: INBOX_STAGES, orderPrefix: 'msg' },
+  stream: { id: 'stream', label: 'Haunted Stream', shortLabel: 'Stream', stages: STREAM_STAGES, orderPrefix: 'ord' },
 };
+export const BUILTIN_APP_IDS: readonly BuiltinAppId[] = ['orders', 'inbox', 'stream'];
 
 /** Wording of one app, so UI lines and review text read right (a ticket desk talks about tickets and replies, not orders and charges). */
 export interface AppVocab {
@@ -101,6 +115,11 @@ export interface AppVocab {
   /** Lane-line text of a cancelled unit. */
   cancelled: string;
 }
+export const GENERIC_VOCAB: AppVocab = {
+  unit: 'job', idPrefix: 'job', start: 'picked up', done: 'finished', dupKind: 'effect', dupReason: 'Did it twice!', wrong: 'Wrong result', never: 'Never finished', cancelled: 'JOB CANCELLED',
+  low: { timeliness: 'Took forever', delays: 'Kept me waiting', issues: 'So many hiccups', delivery: 'Wrong result', ease: 'Hard to use' },
+  high: { timeliness: 'Lightning fast', delays: 'No waiting around', issues: 'Smooth as a ghost', delivery: 'Got it right', ease: 'Easy to use' },
+};
 export const APP_VOCAB: Record<AppId, AppVocab> = {
   orders: {
     unit: 'order', idPrefix: 'ord', start: 'grabbed', done: 'delivered', dupKind: 'charge', dupReason: 'Charged twice!', wrong: 'Wrong order', never: 'Never arrived', cancelled: 'ORDER CANCELLED',
@@ -118,7 +137,8 @@ export const APP_VOCAB: Record<AppId, AppVocab> = {
     high: { timeliness: 'Live in a flash', delays: 'No buffering', issues: 'Smooth as a ghost', delivery: 'Plays perfectly', ease: 'Easy to watch' },
   },
 };
-export const vocabOf = (app: string | undefined): AppVocab => APP_VOCAB[app === 'inbox' || app === 'stream' ? app : 'orders'];
+/** Wording for an app. A registered app without its own wording gets the generic one; an unknown id falls back to Orders. */
+export const vocabOf = (app: string | undefined): AppVocab => (app !== undefined && app in APPS ? APP_VOCAB[app] ?? GENERIC_VOCAB : APP_VOCAB.orders!);
 
 /** Contract stage list for an app (V1_2.md section 1): `[{id, label, kind}]`. */
 export function stageList(app: AppId): { id: string; label: string; kind: StageKind }[] {

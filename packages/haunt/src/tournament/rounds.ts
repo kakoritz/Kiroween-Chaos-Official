@@ -60,7 +60,7 @@ const POINTS = ['before_effect', 'after_effect_before_journal', 'after_journal']
  * two or three), at random effect stages. One plan for the whole round: every live lane meets the same presses at the same orders and
  * stages, so ranking is fair. Seeded by (seed, round).
  */
-export function roundPlan(seed: string | number, round: number, cfg: RoundCfg, app: 'orders' | 'inbox' | 'stream' = 'orders'): PlanPress[] {
+export function roundPlan(seed: string | number, round: number, cfg: RoundCfg, app: string = 'orders'): PlanPress[] {
   const stages = app === 'stream' ? STREAM_PLAN_STAGES : app === 'inbox' ? INBOX_PLAN_STAGES : STAGES;
   const basePool = app === 'inbox' ? INBOX_POOL : POOL;
   const rng = mulberry32(fnv1a32(`${seed}|plan|${round}`));
