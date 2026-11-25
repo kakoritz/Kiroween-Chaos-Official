@@ -48,13 +48,13 @@ Measured benefit: in the loop proof the reviewer's hardening spec for wave 1 lis
 | `lint-hardening-spec` | save of a hardening spec file | asks the agent to run `haunt spec-lint` and fix the spec only |
 | `reviewer-on-wave-end` | manual | asks the reviewer agent for a postmortem and hardening spec |
 
-The five hooks form three workflows: guards on save (`pbt-on-sdk-save`, `fixtures-on-contract-save`), bookkeeping on save (`trace-on-merge`), and agent steps (`lint-hardening-spec`, `reviewer-on-wave-end`). Details in `HOW-KIRO-BUILT-THIS.md` section 7b.
+The five hooks form three workflows: checks on save (`pbt-on-sdk-save`, `fixtures-on-contract-save`), bookkeeping on save (`trace-on-merge`), and agent steps (`lint-hardening-spec`, `reviewer-on-wave-end`). Details in `HOW-KIRO-BUILT-THIS.md` section 7b.
 
 Measured benefit: the property test and the event validator are the two checks that found real bugs (sections 9 and 11). **Owner:** add a count of times each hook caught something.
 
 ## 6. Spec-driven development vs vibe coding
 
-What the repo shows: 12 spec folders, 174 ticked tasks, and every PR title names the task ID it implements (for example `TV3-C7: tournament engine`), so behaviour traces to a requirement. `docs/TRACE.md` is generated from the specs and the git log.
+What the repo shows: 16 spec folders, 250 ticked tasks, and every PR title names the task ID it implements (for example `TV3-C7: tournament engine`), so behaviour traces to a requirement. `docs/TRACE.md` is generated from the specs and the git log.
 Drift is also on record: `haunted-house` (21 open boxes) was superseded, `tournament-v3/tasks.md` lags merged work, and requirement IDs have 0% PR or test links in `docs/TRACE.md`. Several bugs (section 11) were fixed in unplanned PRs without a spec. The table by area is in `HOW-KIRO-BUILT-THIS.md` section 7a.
 What it does not show: a side-by-side build of one feature both ways. **TODO(owner):** pick one feature, describe a vibe-coded version, and fill in tasks, tests and defects for both. Until then this section makes no comparison claim.
 

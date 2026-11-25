@@ -16,7 +16,7 @@ Later phases add the video script and the voice-over here.
 | 3 | 03-arena-mid-wave.png | The arena mid-wave |
 | 4 | 04-orders-lanes.png | Orders app, 11-stage job |
 | 5 | 05-ticket-desk-lanes.png | Python Ticket Desk |
-| 6 | 06-skeleton-crew.png | One skeleton, two apps |
+| 6 | 06-skeleton-crew.png | One skeleton, swappable apps (image text says two; Stream is the third) |
 | 7 | 07-tournament.png | Tournament knockouts |
 | 8 | 08-boss-curse.png | Boss and curse moment |
 | 9 | 09-intensity-dial.png | Intensity dial 1 to 11 |

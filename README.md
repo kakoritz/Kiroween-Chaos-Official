@@ -1,17 +1,19 @@
 # Kiroween Chaos
 
+**Judges: start at [`docs/START-HERE.md`](docs/START-HERE.md).** Hosted build: https://kakoritz.github.io/Kiroween-Chaos-Official/
+
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Kiroween 2026: Skeleton Crew](https://img.shields.io/badge/Kiroween%202026-Skeleton%20Crew-6c5aa8.svg)](#skeleton-crew-fit)
 
 ![Kiroween Chaos: five bots race through an order pipeline while chaos creatures attack](packages/arena-ui/docs/screens/demo-autoplay-25s.png)
 
-Chaos engineering for AI agents, played as a haunted house. Kiroween Chaos crashes and curses your bots, grades how they survive, and shows the exact fix. One engine, two apps: Node and Python. **Break your bots before the world does.** Five bots take the same crashes in a tournament, the worst one dies each round and leaves a corpse, and what is left is a Casebook of every edge case plus a fix spec that Kiro can apply.
+Chaos engineering for AI agents, played as a haunted house. Kiroween Chaos crashes and curses your bots, grades how they survive, and shows the exact fix. One engine, three apps: Node and Python. **Break your bots before the world does.** Five bots take the same crashes in a tournament, the worst one dies each round and leaves a corpse, and what is left is a Casebook of every edge case plus a fix spec that Kiro can apply.
 
 **The hero moment:** a process crashes right after charging a customer, restarts, and charges again. The provider's own ledger decides who is right: **Rookie: 2 charges. Phoenix: 1** ([`hero-crash.test.ts`](packages/haunt/test/hero-crash.test.ts)). The same bug shows up as a duplicate ticket in the second app.
 
 ## Try it
 
-**No install (hosted build).** The arena, Workflow Lab and campaign run in your browser. The tournament, Casebook and improve loop replay recorded runs of the real engine, and a banner says so. The public URL is in [`docs/JUDGES.md`](docs/JUDGES.md). To serve the same build yourself: `npm ci && npm run build:hosted && npm run serve:hosted` (http://127.0.0.1:8080/; `npm run serve:hosted -- 18080` picks another port).
+**No install (hosted build).** The arena, Workflow Lab and campaign run in your browser. The tournament, Casebook and improve loop replay recorded runs of the real engine, and a banner says so. Open https://kakoritz.github.io/Kiroween-Chaos-Official/ . To serve the same build yourself: `npm ci && npm run build:hosted && npm run serve:hosted` (http://127.0.0.1:8080/; `npm run serve:hosted -- 18080` picks another port).
 
 **Local, real engine** (Node 20+; Python 3.12 only for the Ticket Desk, standard library only):
 
@@ -22,9 +24,9 @@ npm run demo
 
 `npm run demo` builds the bots and arena if needed, starts the live server on `127.0.0.1:7070` (provider on 7071) and opens the 60-second hero demo. Other ports: `HAUNT_PORT=17070 HAUNT_PROVIDER_PORT=17071 npm run demo`. `-- --script=loop` plays the fix-and-rerun story, `-- --no-open` only prints the URL. Everything binds to `127.0.0.1`. Stop with Ctrl+C.
 
-In the arena: **Start tournament**, press **Next** between rounds, drag **INTENSITY**, open **Patterns**, switch the app to **Haunted Inbox**. Full tour: [`docs/JUDGES.md`](docs/JUDGES.md).
+In the arena: **Start tournament**, press **Next** between rounds, drag **INTENSITY**, open **Patterns**, switch the app (the switcher labels read Haunted Orders, Haunted Inbox for the Ticket Desk, and Haunted Stream). Full tour: [`docs/JUDGES.md`](docs/JUDGES.md).
 
-## The two apps
+## The three apps
 
 | App | Language | What it does |
 |---|---|---|
@@ -45,7 +47,7 @@ The Streaming pack is no longer label-only: its 11-stage model stays in [`packs/
 | Casebook | Every edge case, who solved it, how, what it cost. Awards: Champion, Battle-Tested, Iron Skeleton, Fastest Recovery, Wooden Spoon |
 | Fix specs | The miner clusters recurring problems into `.haunt/patterns.json` and writes `.kiro/specs/hardening-<run>/` ([sample](docs/proof/sample-hardening-spec/index.md)). Nothing is applied automatically |
 | Live Chaos (guarded) | `haunt monkey` injects faults through a proxy. `observe` injects nothing, `staging` is capped, `prod-guarded` needs a config with a schedule window and an allowlist, `haunt stop` is the kill switch ([`docs/PRODUCTION-MODE.md`](docs/PRODUCTION-MODE.md)) |
-| Workflow Lab and packs | Model your own workflow in the browser (`/workflow-lab.html`) and get a graded what-if. Presets: Orders, Inbox, Payments, Report generator, Streaming pack. Always labelled model-based |
+| Workflow Lab and packs | Model your own workflow in the browser (`/workflow-lab.html`) and get a graded what-if. Presets: Orders, Ticket Desk, Payments, Report generator, Streaming pack. Always labelled model-based |
 | Reports | Graded JSON, Markdown, offline HTML, SVG badge (`haunt badge`) |
 | MCP server and Power | `haunt_define`, `haunt_sweep`, `haunt_ramp`, `haunt_report`, `haunt_specs`, `haunt_badge` ([`kiro-power/`](kiro-power/)) |
 
@@ -74,8 +76,9 @@ The loop runs the plan, mines patterns, applies the cheap fixes as policy overla
 
 ```mermaid
 flowchart LR
-  Orders["Haunted Orders (Node)"] --> Skel
-  Inbox["Haunted Inbox (Python)"] --> Skel
+  Orders["Orders (Node)"] --> Skel
+  Inbox["Ticket Desk (Python)"] --> Skel
+  Stream["Stream (Node)"] --> Skel
   subgraph Skel["Haunt skeleton (packages/haunt)"]
     SDK["SDK: retry, journal, idempotency, breaker, queue"]
     Chaos["Chaos engine, creatures, curses, dial"]
@@ -98,7 +101,7 @@ packages/haunt/       the skeleton: engine, SDK, CLI, reports, miner, monkey, MC
 packages/core/        live server, mock server, provider, campaign data
 packages/arena-ui/    the arena, Workflow Lab, hosted build
 apps/haunted-orders/  app 1, Node
-apps/haunted-inbox/   app 2, Python
+apps/haunted-inbox/   app 2, the Ticket Desk, Python
 apps/haunted-stream/  app 3, Node (the Streaming pack, runnable)
 packs/                scenario packs (ticketing, streaming), data only
 contract/             events schema, fixtures, protocol
@@ -119,7 +122,7 @@ More docs: [DEV-SETUP](docs/DEV-SETUP.md), [JUDGES](docs/JUDGES.md), [SPEC-MAP](
 
 ## Skeleton Crew fit
 
-The skeleton is the harness. An app is a process definition (`haunt.yaml`: stages, effects, start command, truth endpoint, targets) plus a bot. Orders is Node, Inbox is Python with a small SDK (`apps/haunted-inbox/bot/haunt_py.py`) writing the same journal format. Neither needed an engine change. Honest check: [`docs/FIT-CHECK.md`](docs/FIT-CHECK.md).
+The skeleton is the harness. An app is a process definition (`haunt.yaml`: stages, effects, start command, truth endpoint, targets) plus a bot. Orders and Stream are Node, the Ticket Desk is Python with a small SDK (`apps/haunted-inbox/bot/haunt_py.py`) writing the same journal format. None needed an engine change. Honest check: [`docs/FIT-CHECK.md`](docs/FIT-CHECK.md).
 
 ## How Kiro built this
 

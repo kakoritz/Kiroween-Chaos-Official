@@ -6,8 +6,8 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 107. With a PR: 29 (27%). With a test: 107 (100%).
-- Tasks: 121. Done: 119. With a PR: 48 (40%). With a test: 28 (23%).
+- Requirements: 121. With a PR: 29 (24%). With a test: 121 (100%).
+- Tasks: 126. Done: 124. With a PR: 48 (38%). With a test: 33 (26%).
 - Test files scanned: 210.
 
 ## Tasks
@@ -34,6 +34,11 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | CC-3 | campaign-credits | Tests. Unit tests in campaign-hub.test.ts and campaign-results.test.ts. (R1, ... | done | - | `packages/arena-ui/test/campaign-results.test.ts` |
 | CC-4 | campaign-credits | End to end. tools/e2e.mjs campaign section: reset the dial, check the start g... | done | - | `packages/arena-ui/test/campaign-results.test.ts` |
 | CC-5 | campaign-credits | Docs. docs/TRACE.md regenerated. (R1 to R4) | done | - | `packages/arena-ui/test/campaign-results.test.ts` |
+| DT-D1 | docs-truth-pass | Hook claims. Reword the "guards the contract" claims in docs/HOW-KIRO-BUILT-T... | done | - | `packages/haunt/test/docs-truth.test.ts` |
+| DT-D2 | docs-truth-pass | Hosted link. Add the Pages URL to README.md, docs/JUDGES.md and the story's T... | done | - | `packages/haunt/test/docs-truth.test.ts` |
+| DT-D3 | docs-truth-pass | Names and counts. Three apps, Orders / Ticket Desk / Stream, in README, JUDGE... | done | - | `packages/haunt/test/docs-truth.test.ts` |
+| DT-D4 | docs-truth-pass | Start page. Add docs/START-HERE.md and link it from the README top. (R4) | done | - | `packages/haunt/test/docs-truth.test.ts` |
+| DT-T1 | docs-truth-pass | Test. Extend docs-truth.test.ts; run npm run trace. (R5) | done | - | `packages/haunt/test/docs-truth.test.ts` |
 | ON-C1 | onboarding | Hosted demo. Finish harness H6.3 (browser target) and the Pages workflow; fal... | done | [#156](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/156) | - |
 | ON-C2 | onboarding | Captions data. packages/core/demo/hero/full/loop.captions.json and the captio... | done | [#160](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/160) | - |
 | ON-D1 | onboarding | README front page. Per spec section 7; architecture diagram (mermaid and SVG)... | done | [#172](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/172) | - |
@@ -150,6 +155,20 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R3.1 | campaign-credits | The hub, the shop and the results share one freshness check and one grant rul... | n/a | - | `packages/arena-ui/test/campaign-hub.test.ts`, `packages/arena-ui/test/campaign-results.test.ts` |
 | R4 | campaign-credits | End to end | n/a | - | `packages/arena-ui/test/campaign-results.test.ts` |
 | R4.1 | campaign-credits | GET /api/campaign serves a start grant of 300 credits, the value the hub show... | n/a | - | `packages/arena-ui/test/campaign-results.test.ts` |
+| R1 | docs-truth-pass | Hook claims match the hooks | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R1.1 | docs-truth-pass | No doc says the hooks "guard the contract" or "guard the seams". The only con... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R1.2 | docs-truth-pass | Docs that describe hooks say what each one runs and when. | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R2 | docs-truth-pass | The hosted link is present | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R2.1 | docs-truth-pass | The hosted build URL (https://kakoritz.github.io/Kiroween-Chaos-Official/) is... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R3 | docs-truth-pass | One name per app, one count | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R3.1 | docs-truth-pass | The product is Kiroween Chaos. The three apps are Orders, Ticket Desk and Str... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R3.2 | docs-truth-pass | The docs say three apps (Node, Python, Node), not two. The Ticket Desk has 11... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R3.3 | docs-truth-pass | Chaos Haunt, Chaos Monkey and haunt-crew-app appear nowhere in the live docs ... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R3.4 | docs-truth-pass | The story and gallery captions match the repo (spec count, task count, number... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R4 | docs-truth-pass | A judges start page | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R4.1 | docs-truth-pass | docs/START-HERE.md exists, is linked from the top of README.md, and says in o... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R5 | docs-truth-pass | The truth test guards the fixes | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R5.1 | docs-truth-pass | packages/haunt/test/docs-truth.test.ts fails if a linked doc file is missing,... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
 | R1 | haunted-house | Rooms | n/a | - | `packages/haunt/test/core-creatures.test.ts`, `packages/haunt/test/requirement-gaps.test.ts` |
 | R1.1 | haunted-house | THE SYSTEM SHALL ship three core rooms: Cellar (missing file), Mirror Hall (d... | n/a | - | `packages/haunt/test/core-creatures.test.ts` |
 | R1.2 | haunted-house | THE SYSTEM SHALL ship two bonus rooms: Poltergeist (timeouts and 429s that cl... | n/a | - | `packages/haunt/test/requirement-gaps.test.ts` |
