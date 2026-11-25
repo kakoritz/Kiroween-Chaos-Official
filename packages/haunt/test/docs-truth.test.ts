@@ -82,7 +82,7 @@ describe('Docs truth pass (docs-truth-pass R1 to R5)', () => {
   });
   it('the story spec and campaign counts match the repo', () => {
     const specs = readdirSync(join(root, '.kiro/specs'), { withFileTypes: true }).filter((e) => e.isDirectory()).length;
-    const words: Record<number, string> = { 15: 'Fifteen', 16: 'Sixteen', 17: 'Seventeen', 18: 'Eighteen' };
+    const words: Record<number, string> = { 15: 'Fifteen', 16: 'Sixteen', 17: 'Seventeen', 18: 'Eighteen', 19: 'Nineteen', 20: 'Twenty', 21: 'Twenty-one', 22: 'Twenty-two' };
     expect(read('submission/project-story.md')).toContain(`${words[specs] ?? specs} specs live`);
     const nights = Object.keys(JSON.parse(read('packages/core/campaign/nights.json'))).length;
     expect(nights).toBe(7);
@@ -114,5 +114,20 @@ describe('README demo clip (readme-gif R1, R4)', () => {
     const f = join(root, 'docs/img/demo.gif');
     expect(existsSync(f)).toBe(true);
     expect(statSync(f).size).toBeLessThan(3 * 1024 * 1024);
+  });
+});
+
+// covers: gallery-refresh/R1 gallery-refresh/R1.1 gallery-refresh/R3 gallery-refresh/R3.1 GR-T1 GR-T2 GR-T4
+describe('Gallery images (gallery-refresh R1.1, R3)', () => {
+  it('all 15 gallery PNGs exist, are 1500x1000 and under 5 MB, and 06 says three apps in the captions', () => {
+    const dir = join(root, 'submission/gallery');
+    const files = readdirSync(dir).filter((n) => n.endsWith('.png'));
+    expect(files.length).toBe(15);
+    for (const f of files) {
+      const buf = readFileSync(join(dir, f));
+      expect(statSync(join(dir, f)).size, f).toBeLessThan(5 * 1024 * 1024);
+      expect([buf.readUInt32BE(16), buf.readUInt32BE(20)], f).toEqual([1500, 1000]);
+    }
+    expect(read('submission/gallery-captions.md')).toMatch(/06-skeleton-crew\.png\*\*:.*Stream/);
   });
 });

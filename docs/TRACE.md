@@ -6,8 +6,8 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 184. With a PR: 29 (16%). With a test: 165 (90%).
-- Tasks: 152. Done: 150. With a PR: 48 (32%). With a test: 39 (26%).
+- Requirements: 196. With a PR: 29 (15%). With a test: 172 (88%).
+- Tasks: 157. Done: 155. With a PR: 48 (31%). With a test: 42 (27%).
 - Test files scanned: 216.
 
 ## Tasks
@@ -47,6 +47,11 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | DT-D3 | docs-truth-pass | Names and counts. Three apps, Orders / Ticket Desk / Stream, in README, JUDGE... | done | - | `packages/haunt/test/docs-truth.test.ts` |
 | DT-D4 | docs-truth-pass | Start page. Add docs/START-HERE.md and link it from the README top. (R4) | done | - | `packages/haunt/test/docs-truth.test.ts` |
 | DT-T1 | docs-truth-pass | Test. Extend docs-truth.test.ts; run npm run trace. (R5) | done | - | `packages/haunt/test/docs-truth.test.ts` |
+| GR-T1 | gallery-refresh | Capture. Retake 03, 04, 05, 07, 08, 09, 10, 11, 14 from the current build. (R1) | done | - | `packages/haunt/test/docs-truth.test.ts` |
+| GR-T2 | gallery-refresh | Review. View each image; reject empty arenas and clipped headers. (R1.3, R1.4) | done | - | `packages/haunt/test/docs-truth.test.ts` |
+| GR-T3 | gallery-refresh | Captions. Re-read 4 and 9; edit only what is wrong. (R2) | done | - | - |
+| GR-T4 | gallery-refresh | Image 06. Confirm it is the three-apps image. (R3) | done | - | `packages/haunt/test/docs-truth.test.ts` |
+| GR-T5 | gallery-refresh | Counts and trace. Spec count in the story, npm run trace. (R4) | done | - | - |
 | ON-C1 | onboarding | Hosted demo. Finish harness H6.3 (browser target) and the Pages workflow; fal... | done | [#156](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/156) | - |
 | ON-C2 | onboarding | Captions data. packages/core/demo/hero/full/loop.captions.json and the captio... | done | [#160](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/160) | - |
 | ON-D1 | onboarding | README front page. Per spec section 7; architecture diagram (mermaid and SVG)... | done | [#172](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/172) | - |
@@ -214,6 +219,18 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R4.1 | docs-truth-pass | docs/START-HERE.md exists, is linked from the top of README.md, and says in o... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
 | R5 | docs-truth-pass | The truth test guards the fixes | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
 | R5.1 | docs-truth-pass | packages/haunt/test/docs-truth.test.ts fails if a linked doc file is missing,... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R1 | gallery-refresh | Retaken screenshots | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R1.1 | gallery-refresh | The nine images keep their filenames in submission/gallery/, are 1500x1000 (3... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R1.2 | gallery-refresh | Each is captured from the current build (live server, headless Chromium, 127.... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R1.3 | gallery-refresh | Arena shots (03, 04, 05, 08, 09) show creatures on every lane or the named mo... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R1.4 | gallery-refresh | Every image is looked at before it is kept. | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R2 | gallery-refresh | Captions stay true | n/a | - | - |
+| R2.1 | gallery-refresh | submission/gallery-captions.md is edited only where a caption no longer match... | n/a | - | - |
+| R3 | gallery-refresh | Image 06 is the three-apps image | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R3.1 | gallery-refresh | submission/gallery/06-skeleton-crew.png is the image from tools/make-gallery-... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R4 | gallery-refresh | Counts and trace | n/a | - | - |
+| R4.1 | gallery-refresh | The spec count in submission/project-story.md equals the number of folders un... | n/a | - | - |
+| R4.2 | gallery-refresh | npm run trace leaves docs/TRACE.md at 100%. | n/a | - | - |
 | R1 | haunted-house | Rooms | n/a | - | `packages/haunt/test/core-creatures.test.ts`, `packages/haunt/test/requirement-gaps.test.ts` |
 | R1.1 | haunted-house | THE SYSTEM SHALL ship three core rooms: Cellar (missing file), Mirror Hall (d... | n/a | - | `packages/haunt/test/core-creatures.test.ts` |
 | R1.2 | haunted-house | THE SYSTEM SHALL ship two bonus rooms: Poltergeist (timeouts and 429s that cl... | n/a | - | `packages/haunt/test/requirement-gaps.test.ts` |
