@@ -6,14 +6,22 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 152. With a PR: 29 (19%). With a test: 152 (100%).
-- Tasks: 140. Done: 138. With a PR: 48 (34%). With a test: 38 (27%).
+- Requirements: 152. With a PR: 29 (19%). With a test: 140 (92%).
+- Tasks: 141. Done: 139. With a PR: 48 (34%). With a test: 33 (23%).
 - Test files scanned: 215.
 
 ## Tasks
 
 | ID | Spec | Text | Status | PRs | Tests |
 |---|---|---|---|---|---|
+| AM-D1 | a11y-mobile | Three apps text. HOWCAPTION and architecture.svg. (R7) | done | - | - |
+| AM-T1 | a11y-mobile | Tests and trace. // covers: comments, npm run trace. (R1 to R7) | done | - | - |
+| AM-U1 | a11y-mobile | Contrast tokens. Lighten --muted and --fail, add --hex-text and --hex-bg. (R4) | done | - | - |
+| AM-U2 | a11y-mobile | Focus and tab order. Global focus ring; no positive tabindex. (R1) | done | - | - |
+| AM-U3 | a11y-mobile | Names and roles. Labels on symbol buttons. (R2) | done | - | - |
+| AM-U4 | a11y-mobile | Canvas fallback and live region. #wave-state and canvas fallback text. (R3) | done | - | - |
+| AM-U5 | a11y-mobile | Reduced motion pinned. Test the global rule and the body class. (R5) | done | - | - |
+| AM-U6 | a11y-mobile | Narrow header. Shrinkable header children at 360 to 430 px. (R6) | done | - | - |
 | CP-ART | campaign | Art. Tombstone-door map, medals, shop background, paper-doll gear icons (reus... | done | [#185](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/185) | - |
 | CP-C1 | campaign | Campaign data and endpoint. packages/core/campaign/nights.json (seven entries... | done | [#155](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/155), [#157](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/157) | `packages/core/test/campaign-nights.test.ts` |
 | CP-C2 | campaign | Crew bot and wave config. bots/crew.ts and bot/crew.py driven by HAUNTPARTS; ... | done | [#165](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/165) | - |
@@ -48,13 +56,6 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | ON-U2 | onboarding | Captions and callouts. Subtitle line in the safe strip, CC toggle, callout ar... | done | [#166](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/166) | - |
 | ON-U3 | onboarding | Guided tour. Six steps with spotlight, ?tour=1, button, Esc. (Lane B) (done: ... | done | [#168](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/168) | - |
 | ON-U4 | onboarding | First-impression polish. No MOCK or "Wave 4" noise on first load (quiet state... | done | [#169](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/169) | - |
-| OB-C1 | own-bot-quickstart | Command resolver. packages/core/src/live/own-bot.ts: resolveOwnBot, ownBotCom... | done | - | `packages/core/test/own-bot.test.ts` |
-| OB-C2 | own-bot-quickstart | CLI. packages/core/src/bin/own-bot.ts and npm run own-bot. (R2) | done | - | `packages/core/test/own-bot.test.ts` |
-| OB-D1 | own-bot-quickstart | Spec. This folder. (R1 to R4) | done | - | - |
-| OB-D2 | own-bot-quickstart | Doc. docs/OWN-BOT.md, linked from README and START-HERE. (R3) | done | - | `packages/haunt/test/docs-truth.test.ts` |
-| OB-T1 | own-bot-quickstart | Template. templates/own-bot/bot.mjs, bot.py, README.md. (R1) | done | - | `packages/core/test/own-bot.test.ts` |
-| OB-X1 | own-bot-quickstart | Tests. packages/core/test/own-bot.test.ts, docs-truth extension. (R4) | done | - | `packages/core/test/own-bot.test.ts`, `packages/haunt/test/docs-truth.test.ts` |
-| OB-X2 | own-bot-quickstart | Trace. npm run trace. (R4) | done | - | - |
 | PK-C1 | packs | Pack format and loader. packs/<id>/pack.yaml schema, validator, generic bot f... | done | - | `packages/haunt/test/packs-endpoint.test.ts` |
 | PK-C2 | packs | Streaming pack. Stages, faults, tiers, bosses, reviews; fixtures; sweep grade... | done | - | - |
 | PK-C3 | packs | Ticketing mode (Python). Extend apps/haunted-inbox with the 11 stages, fake j... | done | - | `apps/haunted-inbox/test/desk.test.ts`, `apps/haunted-inbox/test/inbox.test.ts`, `packages/haunt/test/docs-truth.test.ts` |
@@ -159,6 +160,25 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 | ID | Spec | Text | Status | PRs | Tests |
 |---|---|---|---|---|---|
+| R1 | a11y-mobile | Keyboard focus | n/a | - | `packages/arena-ui/test/a11y-mobile.test.ts` |
+| R1.1 | a11y-mobile | Every interactive control (button, input, select, link, summary, [tabindex]) ... | n/a | - | - |
+| R1.2 | a11y-mobile | Tab order follows the visual order: header controls, then the arena, then ran... | n/a | - | - |
+| R2 | a11y-mobile | Names and roles | n/a | - | `packages/arena-ui/test/a11y-mobile.test.ts` |
+| R2.1 | a11y-mobile | Every icon-only or symbol-only button (?, the keys glyph, the gear, the speak... | n/a | - | - |
+| R2.2 | a11y-mobile | The stage has role="main", the canvas role="img", and each bottom panel is a ... | n/a | - | - |
+| R3 | a11y-mobile | Canvas fallback and live summary | n/a | - | `packages/arena-ui/test/a11y-mobile.test.ts` |
+| R3.1 | a11y-mobile | The canvas carries fallback text inside the element for browsers that do not ... | n/a | - | - |
+| R3.2 | a11y-mobile | A polite live region says the wave state (wave number, lane count, leader, ac... | n/a | - | - |
+| R4 | a11y-mobile | Contrast | n/a | - | `packages/arena-ui/test/a11y-mobile.test.ts` |
+| R4.1 | a11y-mobile | Every text colour token used on the stone and stone-2 panel backgrounds meets... | n/a | - | - |
+| R5 | a11y-mobile | Reduced motion | n/a | - | `packages/arena-ui/test/a11y-mobile.test.ts` |
+| R5.1 | a11y-mobile | With prefers-reduced-motion: reduce, all CSS animation and transition is off ... | n/a | - | - |
+| R5.2 | a11y-mobile | The in-app motion setting adds the same reduced-motion body class. | n/a | - | - |
+| R6 | a11y-mobile | Narrow screens | n/a | - | `packages/arena-ui/test/a11y-mobile.test.ts` |
+| R6.1 | a11y-mobile | At 360 to 430 px wide (phone) and 768 px wide (tablet), the layout is the nar... | n/a | - | - |
+| R6.2 | a11y-mobile | Header children can shrink (min-width: 0) and the logo wraps rather than push... | n/a | - | - |
+| R7 | a11y-mobile | Stale text | n/a | - | `packages/arena-ui/test/a11y-mobile.test.ts` |
+| R7.1 | a11y-mobile | "How it works" says three apps (Orders, Ticket Desk, Stream) and docs/img/arc... | n/a | - | - |
 | R1 | campaign-credits | Hub shows the true total on first open | n/a | - | `packages/arena-ui/test/campaign-hub.test.ts`, `packages/arena-ui/test/campaign-results.test.ts` |
 | R1.1 | campaign-credits | A save with no credits, gear, medals or bests is fresh. The hub shows the sta... | n/a | - | `packages/arena-ui/test/campaign-results.test.ts` |
 | R1.2 | campaign-credits | A save that has any progress shows its stored credits unchanged. | n/a | - | `packages/arena-ui/test/campaign-results.test.ts` |
@@ -218,25 +238,6 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R8 | haunted-house | Kiro showcase | n/a | - | `packages/haunt/test/docs-truth.test.ts`, `packages/haunt/test/hooks.test.ts` |
 | R8.1 | haunted-house | THE REPO SHALL include specs, steering files and agent hooks used to build it. | n/a | - | `packages/haunt/test/hooks.test.ts` |
 | R8.2 | haunted-house | THE README SHALL explain how Kiro was used, with links to those files. | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
-| R1 | own-bot-quickstart | A copy-paste template | n/a | - | `packages/core/test/own-bot.test.ts` |
-| R1.1 | own-bot-quickstart | templates/own-bot/ holds a Node (bot.mjs) and a Python (bot.py) variant. Each... | n/a | - | `packages/core/test/own-bot.test.ts` |
-| R1.2 | own-bot-quickstart | Each variant runs three stages (fetch, draft, reply) against the fake provide... | n/a | - | `packages/core/test/own-bot.test.ts` |
-| R1.3 | own-bot-quickstart | The template is deliberately naive: no retry, no idempotency key, no journal.... | n/a | - | `packages/core/test/own-bot.test.ts` |
-| R1.4 | own-bot-quickstart | Each variant has a one-line comment per hardening step marking where a fix goes. | n/a | - | `packages/core/test/own-bot.test.ts` |
-| R2 | own-bot-quickstart | A command that runs it | n/a | - | `packages/core/test/own-bot.test.ts` |
-| R2.1 | own-bot-quickstart | npm run own-bot -- <path-or-command> starts the live server and the fake prov... | n/a | - | `packages/core/test/own-bot.test.ts` |
-| R2.2 | own-bot-quickstart | The argument is a file path (.mjs, .js, .py) or a quoted command line. A miss... | n/a | - | `packages/core/test/own-bot.test.ts` |
-| R2.3 | own-bot-quickstart | The bot runs on every lane; the fake provider is the only network target. No ... | n/a | - | `packages/core/test/own-bot.test.ts` |
-| R2.4 | own-bot-quickstart | HAUNTPORT and HAUNTPROVIDERPORT override the ports, as for npm run live. | n/a | - | `packages/core/test/own-bot.test.ts` |
-| R2.5 | own-bot-quickstart | Fixes are never applied automatically: the command reads the bot, it never ed... | n/a | - | `packages/core/test/own-bot.test.ts` |
-| R3 | own-bot-quickstart | A five-minute doc | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
-| R3.1 | own-bot-quickstart | docs/OWN-BOT.md walks through: copy the template, run it, see it fail under c... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
-| R3.2 | own-bot-quickstart | It is linked from README.md and docs/START-HERE.md. | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
-| R3.3 | own-bot-quickstart | It names the bot environment variables and the line protocol in one table each. | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
-| R4 | own-bot-quickstart | Tests | n/a | - | `packages/core/test/own-bot.test.ts`, `packages/haunt/test/docs-truth.test.ts` |
-| R4.1 | own-bot-quickstart | The command line builder is a pure function with unit tests: path to command,... | n/a | - | `packages/core/test/own-bot.test.ts`, `packages/haunt/test/docs-truth.test.ts` |
-| R4.2 | own-bot-quickstart | The Node template passes the contract validator on a short in-process wave (u... | n/a | - | `packages/core/test/own-bot.test.ts`, `packages/haunt/test/docs-truth.test.ts` |
-| R4.3 | own-bot-quickstart | The docs-truth test fails if docs/OWN-BOT.md or the template files are missin... | n/a | - | `packages/core/test/own-bot.test.ts`, `packages/haunt/test/docs-truth.test.ts` |
 | R1 | playtest-v2 | Motion and pacing | n/a | [#154](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/154), [#159](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/159), [#164](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/164), [#194](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/194), [#211](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/211) | `packages/arena-ui/test/gearmenu.test.ts`, `packages/arena-ui/test/handoff.test.ts`, `packages/haunt/test/travel.test.ts` |
 | R1.1 | playtest-v2 | WHEN an order starts, THE SYSTEM SHALL NOT emit the first stagestart until gr... | n/a | [#154](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/154), [#159](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/159) | `packages/haunt/test/travel.test.ts` |
 | R1.2 | playtest-v2 | WHEN a stage completes, THE SYSTEM SHALL NOT emit the next stagestart until w... | n/a | [#154](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/154), [#159](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/159) | `packages/haunt/test/travel.test.ts` |

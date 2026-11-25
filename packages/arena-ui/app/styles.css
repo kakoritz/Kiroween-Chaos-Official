@@ -1,7 +1,7 @@
 :root {
   --bg: #0d0b14; --stone: #1c1830; --stone-2: #2a2446; --torch: #ff9a3c; --bone: #efe6d2;
-  --text: #f3ecff; --muted: #8f86a8; --ok: #5ee08a; --fail: #ff4d5e; --warn: #ffc247;
-  --ghost: #7ab8ff; --hex: #9b6bff;
+  --text: #f3ecff; --muted: #a89fc2; --ok: #5ee08a; --fail: #ff6673; --warn: #ffc247;
+  --ghost: #7ab8ff; --hex: #9b6bff; --hex-text: #b794ff; --hex-bg: #7a4fe0;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-family: system-ui, "Segoe UI", sans-serif; }
@@ -29,7 +29,7 @@ html, body { overflow: hidden; }
 .btn:focus-visible { outline: 3px solid var(--bone); outline-offset: 2px; }
 .btn[disabled] { opacity: 0.5; cursor: default; }
 .btn--ghost { background: transparent; color: var(--torch); }
-.pill { padding: 4px 10px; border-radius: 6px; background: var(--hex); color: #fff; font-weight: 700; font-size: 14px; letter-spacing: 0.1em; }
+.pill { padding: 4px 10px; border-radius: 6px; background: var(--hex-bg); color: #fff; font-weight: 700; font-size: 14px; letter-spacing: 0.1em; }
 .hidden { display: none !important; }
 
 .stage { flex: 1; display: grid; place-items: center; text-align: center; padding: 32px; }
@@ -51,7 +51,7 @@ html, body { overflow: hidden; }
 .tk-row:first-child { color: var(--bone); }
 .tk-i { width: 22px; text-align: center; }
 .tk-ok .tk-i { color: var(--ok); } .tk-bad .tk-i { color: var(--fail); } .tk-warn .tk-i { color: var(--warn); }
-.tk-info .tk-i { color: var(--ghost); } .tk-boss .tk-i { color: var(--hex); }
+.tk-info .tk-i { color: var(--ghost); } .tk-boss .tk-i { color: var(--hex-text); }
 .tk-empty { margin: 12px 0; color: var(--muted); font-size: 16px; }
 .panel h2 { margin: 0; height: 30px; line-height: 30px; padding: 0 14px; font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--torch); background: var(--stone-2); }
 .rb-body { position: relative; height: 200px; }
@@ -166,7 +166,7 @@ kbd { display: inline-block; min-width: 28px; padding: 0 6px; margin-right: 6px;
 .lg-i span { display: inline-block; width: 22px; font-weight: 700; }
 .lg-done span, .lg-replayed span { color: var(--ok); } .lg-failed span, .lg-dead span { color: var(--fail); }
 .lg-retrying span { color: var(--warn); } .lg-active span { color: var(--torch); } .lg-parked span { color: var(--ghost); }
-.lg-quarantined span { color: var(--hex); } .lg-pending span { color: var(--muted); }
+.lg-quarantined span { color: var(--hex-text); } .lg-pending span { color: var(--muted); }
 
 /* Present mode (UI-W8): hides controls and the cursor, keeps the scene, scores and badge. */
 body.present, body.present * { cursor: none !important; }
