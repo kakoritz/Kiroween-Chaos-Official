@@ -6,9 +6,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 199. With a PR: 29 (15%). With a test: 169 (85%).
+- Requirements: 270. With a PR: 29 (11%). With a test: 173 (64%).
 - Tasks: 158. Done: 156. With a PR: 48 (30%). With a test: 39 (25%).
-- Test files scanned: 218.
+- Test files scanned: 219.
 
 ## Tasks
 
@@ -270,6 +270,77 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R4 | lively-lanes-ui | Valid review-card CSS | n/a | - | `packages/arena-ui/test/lively-lanes-ui.test.ts` |
 | R4.1 | lively-lanes-ui | .rc-bars in review-card.css has a valid declaration list. The bars stay hidde... | n/a | - | - |
 | R4.2 | lively-lanes-ui | npm run ui:build prints no CSS warning. | n/a | - | - |
+| R1 | modular-engine | Apps declare their own stages | n/a | - | `packages/haunt/test/golden-apps.test.ts` |
+| R1.1 | modular-engine | An app manifest declares any number of stages (1 to 24), each with an id matc... | n/a | - | - |
+| R1.2 | modular-engine | The hello event carries the declared stages (id, label, role, effects). The a... | n/a | - | - |
+| R1.3 | modular-engine | contract/events.schema.json: stageId becomes the pattern above instead of a f... | n/a | - | - |
+| R1.4 | modular-engine | A contract version bump (1.x to 1.y) is advertised in hello; contract/PROTOCO... | n/a | - | - |
+| R1.5 | modular-engine | The three built-in apps keep their current stage ids; their wave results do n... | n/a | - | `packages/haunt/test/golden-apps.test.ts` |
+| R2 | modular-engine | Faults attach by role, not by name | n/a | - | `packages/haunt/test/golden-apps.test.ts` |
+| R2.1 | modular-engine | Each fault in the catalog declares applies: roles and/or effect kinds (for ex... | n/a | - | - |
+| R2.2 | modular-engine | An app may add per-stage allow or deny lists in its manifest (for example a s... | n/a | - | - |
+| R2.3 | modular-engine | The built-in apps get the same fault set on the same stages as today (golden ... | n/a | - | `packages/haunt/test/golden-apps.test.ts` |
+| R2.4 | modular-engine | A new app gets a sensible fault set from its roles alone, with no catalog edit. | n/a | - | - |
+| R2.5 | modular-engine | Creatures shown for a fault are chosen from the fault, so a new app inherits ... | n/a | - | - |
+| R3 | modular-engine | Registry and discovery | n/a | - | - |
+| R3.1 | modular-engine | APPS, APPSTAGES, vocab and the app switcher read from the registry. | n/a | - | - |
+| R3.2 | modular-engine | npm run live -- --app ./path (and the custom bot command) registers an app fr... | n/a | - | - |
+| R3.3 | modular-engine | An invalid manifest fails at start with a plain message naming the file, the ... | n/a | - | - |
+| R3.4 | modular-engine | GET /api/apps lists every registered app with its stages. The arena switcher ... | n/a | - | - |
+| R4 | modular-engine | Blocks and composition | n/a | - | - |
+| R4.1 | modular-engine | A block library (YAML, data only) ships at least 16 blocks covering the four ... | n/a | - | - |
+| R4.2 | modular-engine | A manifest may reference a block (use: charge) and override label, duration, ... | n/a | - | - |
+| R4.3 | modular-engine | An app may also define a stage inline with no block (no lock-in). | n/a | - | - |
+| R4.4 | modular-engine | Composition is checked: ids unique, at least one input-or-effect stage, effec... | n/a | - | - |
+| R4.5 | modular-engine | The Workflow Lab exports and imports the same manifest, so a flow built in th... | n/a | - | - |
+| R4.6 | modular-engine | Block-alone mode: one block can be run as a one-stage app, to test it in isol... | n/a | - | - |
+| R5 | modular-engine | Generic bot from a manifest | n/a | - | - |
+| R5.1 | modular-engine | For any manifest, the engine can build a runnable generic bot at the five tie... | n/a | - | - |
+| R5.2 | modular-engine | The generic bot passes the contract validator with zero violations for every ... | n/a | - | - |
+| R5.3 | modular-engine | Real bots (Node, Python, own bot) keep working with no change if they use the... | n/a | - | - |
+| R6 | modular-engine | Stream, finished, on the new engine | n/a | - | - |
+| R6.1 | modular-engine | Stream is rebuilt as a composition of blocks, telling one story: a viewer wat... | n/a | - | - |
+| R6.2 | modular-engine | All nine pack creatures land on stages they belong to; each creature has a re... | n/a | - | - |
+| R6.3 | modular-engine | Two curses (catalog 404, manifest 500) work on Stream endpoints. | n/a | - | - |
+| R6.4 | modular-engine | Five tier bots plus the campaign Crew run Stream; Rookie shows a duplicate pl... | n/a | - | - |
+| R6.5 | modular-engine | The old 5-stage upload app is kept as a second example (haunted-upload) or re... | n/a | - | - |
+| R6.6 | modular-engine | A fourth, tiny app (examples/coffee-shop, 5 blocks, config file only, no engi... | n/a | - | - |
+| R7 | modular-engine | UI and vocab follow the manifest | n/a | - | - |
+| R7.1 | modular-engine | Stage names, icons, work animations and verbs come from the manifest (with ro... | n/a | - | - |
+| R7.2 | modular-engine | App wording (unit, id prefix, review labels) comes from the manifest vocab wi... | n/a | - | - |
+| R7.3 | modular-engine | A new app shows a lively lane, tournament, Casebook and improve loop with no ... | n/a | - | - |
+| R7.4 | modular-engine | No stage-name string literal remains in packages/arena-ui/src outside the thr... | n/a | - | - |
+| R8 | modular-engine | Scoring, Casebook, improve loop, tournament | n/a | - | - |
+| R8.1 | modular-engine | Scoring, tournament rounds, Casebook entries and fix specs work for any app. | n/a | - | - |
+| R8.2 | modular-engine | Fix specs name the app's own stage ids and effect kinds. | n/a | - | - |
+| R8.3 | modular-engine | Review labels for a new app default to generic ones (Reliability, Speed, Data... | n/a | - | - |
+| R9 | modular-engine | Documentation | n/a | - | - |
+| R9.1 | modular-engine | docs/MODULAR.md: what a block, a manifest and the registry are; how a fault f... | n/a | - | - |
+| R9.2 | modular-engine | docs/INTEGRATE.md: five steps to plug in your own service (manifest, bot, run... | n/a | - | - |
+| R9.3 | modular-engine | docs/BLOCKS.md: the block library, generated from the YAML (one source of tru... | n/a | - | - |
+| R9.4 | modular-engine | docs/STREAM.md: the Stream story, stages, creatures, curses, tiers. | n/a | - | - |
+| R9.5 | modular-engine | docs/JUDGE-QA.md: the questions a judge is likely to ask and where the answer... | n/a | - | - |
+| R9.6 | modular-engine | README, START-HERE, OWN-BOT and PACKS no longer say names are fixed; a docs-t... | n/a | - | - |
+| R10 | modular-engine | Self-evaluation against the judges | n/a | - | - |
+| R10.1 | modular-engine | A checklist file docs/JUDGE-CHECK.md scores the project on each Kiroween scor... | n/a | - | - |
+| R10.2 | modular-engine | A script npm run judge:check verifies every evidence link exists and every cl... | n/a | - | - |
+| R10.3 | modular-engine | Every gap the check finds becomes a task or a written, accepted limit. | n/a | - | - |
+| R11 | modular-engine | Safety net | n/a | - | - |
+| R11.1 | modular-engine | Rollback tag v1-fixed-stages exists on the old product. | n/a | - | - |
+| R11.2 | modular-engine | Main stays green after every phase PR. No phase merges with a failing npm run... | n/a | - | - |
+| R11.3 | modular-engine | Overnight checks run on every phase branch; a regression in Orders, Ticket De... | n/a | - | - |
+| R12 | modular-engine | Test blocks alone, then chain them (wizard flow) | n/a | - | - |
+| R12.1 | modular-engine | Any block can be tested alone: the harness runs a one-block app, attacks it w... | n/a | - | - |
+| R12.2 | modular-engine | Block score cards are saved per block and tier in blocks/results/, so a block... | n/a | - | - |
+| R12.3 | modular-engine | A chain wizard in the arena: pick blocks from the library, order them, rename... | n/a | - | - |
+| R12.4 | modular-engine | A chain score shows each block's share of the failures, so the player sees wh... | n/a | - | - |
+| R12.5 | modular-engine | Chain checks warn when a chain is weak although its blocks passed alone (for ... | n/a | - | - |
+| R12.6 | modular-engine | The wizard and the manifest file are two views of the same data; saving in on... | n/a | - | - |
+| R13 | modular-engine | Unknown blocks (bring your own, unseen) | n/a | - | - |
+| R13.1 | modular-engine | A player can add a custom block with any id, role and effects, with no librar... | n/a | - | - |
+| R13.2 | modular-engine | Unknown-fault fuzzing (the existing fuzz pool) runs against custom blocks the... | n/a | - | - |
+| R13.3 | modular-engine | A custom block can be promoted to the library file with one command (npm run ... | n/a | - | - |
+| R13.4 | modular-engine | A block may be backed by a real process (your code) or by the generic model; ... | n/a | - | - |
 | R1 | own-bot-quickstart | A copy-paste template | n/a | - | `packages/core/test/own-bot.test.ts` |
 | R1.1 | own-bot-quickstart | templates/own-bot/ holds a Node (bot.mjs) and a Python (bot.py) variant. Each... | n/a | - | `packages/core/test/own-bot.test.ts` |
 | R1.2 | own-bot-quickstart | Each variant runs three stages (fetch, draft, reply) against the fake provide... | n/a | - | `packages/core/test/own-bot.test.ts` |

@@ -1,0 +1,386 @@
+{
+ "orders": {
+  "crash": [
+   "account",
+   "create",
+   "submit",
+   "payment",
+   "confirmation",
+   "receive",
+   "process",
+   "updates",
+   "ship",
+   "transit",
+   "handoff"
+  ],
+  "out_of_memory": [
+   "account",
+   "create",
+   "submit",
+   "payment",
+   "confirmation",
+   "receive",
+   "process",
+   "updates",
+   "ship",
+   "transit",
+   "handoff"
+  ],
+  "power_outage": [
+   "account",
+   "create",
+   "submit",
+   "payment",
+   "confirmation",
+   "receive",
+   "process",
+   "updates",
+   "ship",
+   "transit",
+   "handoff"
+  ],
+  "internet_outage": [
+   "account",
+   "submit",
+   "payment",
+   "confirmation",
+   "receive",
+   "process",
+   "updates",
+   "ship",
+   "transit"
+  ],
+  "endpoint_down": [
+   "account",
+   "submit",
+   "payment",
+   "confirmation",
+   "receive",
+   "process",
+   "updates",
+   "ship",
+   "transit"
+  ],
+  "timeout": [
+   "account",
+   "submit",
+   "payment",
+   "confirmation",
+   "receive",
+   "process",
+   "ship"
+  ],
+  "comm_timeout": [
+   "account",
+   "submit",
+   "payment",
+   "confirmation",
+   "receive",
+   "process",
+   "ship"
+  ],
+  "slow_link": [
+   "account",
+   "submit",
+   "payment",
+   "confirmation",
+   "receive",
+   "process",
+   "updates",
+   "ship",
+   "transit"
+  ],
+  "http_404": [
+   "account",
+   "submit",
+   "payment",
+   "confirmation",
+   "receive",
+   "process",
+   "ship"
+  ],
+  "http_429": [
+   "payment",
+   "confirmation",
+   "ship"
+  ],
+  "http_500": [
+   "account",
+   "submit",
+   "payment",
+   "confirmation",
+   "receive",
+   "process",
+   "updates",
+   "ship",
+   "transit"
+  ],
+  "missing_file": [
+   "create"
+  ],
+  "duplicate_request": [
+   "create"
+  ],
+  "malformed_payload": [
+   "create"
+  ],
+  "disk_full": [
+   "account",
+   "create",
+   "submit",
+   "payment",
+   "confirmation",
+   "receive",
+   "process",
+   "updates",
+   "ship",
+   "transit",
+   "handoff"
+  ],
+  "hazard_event": [
+   "transit"
+  ],
+  "sms_down": [
+   "confirmation"
+  ],
+  "app_down": [
+   "ship"
+  ],
+  "updates_down": [
+   "updates"
+  ],
+  "wrong_address": [
+   "transit"
+  ],
+  "no_answer": [
+   "handoff"
+  ],
+  "gated_house": [
+   "handoff"
+  ],
+  "order_typo": [
+   "create"
+  ],
+  "car_accident": [
+   "handoff"
+  ],
+  "weather": [
+   "transit"
+  ],
+  "road_hazard": [
+   "transit"
+  ],
+  "delay": [
+   "transit"
+  ],
+  "out_of_gas": [
+   "transit"
+  ],
+  "not_on_truck": [
+   "transit"
+  ],
+  "driver_unreachable": [
+   "transit"
+  ]
+ },
+ "inbox": {
+  "crash": [
+   "login",
+   "ingest",
+   "validate",
+   "dedupe",
+   "triage",
+   "assign",
+   "sla",
+   "notify",
+   "escalate",
+   "resolve",
+   "close"
+  ],
+  "out_of_memory": [
+   "login",
+   "ingest",
+   "validate",
+   "dedupe",
+   "triage",
+   "assign",
+   "sla",
+   "notify",
+   "escalate",
+   "resolve",
+   "close"
+  ],
+  "power_outage": [
+   "login",
+   "ingest",
+   "validate",
+   "dedupe",
+   "triage",
+   "assign",
+   "sla",
+   "notify",
+   "escalate",
+   "resolve",
+   "close"
+  ],
+  "internet_outage": [
+   "login",
+   "assign",
+   "notify",
+   "escalate"
+  ],
+  "endpoint_down": [
+   "login",
+   "assign",
+   "notify",
+   "escalate"
+  ],
+  "timeout": [
+   "login",
+   "assign",
+   "notify",
+   "escalate"
+  ],
+  "comm_timeout": [
+   "login",
+   "assign",
+   "notify",
+   "escalate"
+  ],
+  "slow_link": [
+   "login",
+   "assign",
+   "notify",
+   "escalate"
+  ],
+  "http_404": [
+   "login",
+   "assign",
+   "notify",
+   "escalate"
+  ],
+  "http_429": [
+   "assign",
+   "notify"
+  ],
+  "http_500": [
+   "login",
+   "assign",
+   "notify",
+   "escalate"
+  ],
+  "disk_full": [
+   "login",
+   "ingest",
+   "validate",
+   "dedupe",
+   "triage",
+   "assign",
+   "sla",
+   "notify",
+   "escalate",
+   "resolve",
+   "close"
+  ],
+  "sla_breach": [
+   "sla"
+  ],
+  "wrong_queue": [
+   "triage"
+  ],
+  "duplicate_storm": [
+   "dedupe"
+  ],
+  "sso_expired": [
+   "login"
+  ],
+  "field_mapping_error": [
+   "validate"
+  ],
+  "webhook_retry_storm": [
+   "ingest"
+  ],
+  "assignee_deleted": [
+   "assign"
+  ],
+  "rate_limited": [
+   "assign"
+  ]
+ },
+ "stream": {
+  "crash": [
+   "fetch",
+   "classify",
+   "draft",
+   "reply",
+   "archive"
+  ],
+  "out_of_memory": [
+   "fetch",
+   "classify",
+   "draft",
+   "reply",
+   "archive"
+  ],
+  "power_outage": [
+   "fetch",
+   "classify",
+   "draft",
+   "reply",
+   "archive"
+  ],
+  "internet_outage": [
+   "fetch",
+   "draft",
+   "reply",
+   "archive"
+  ],
+  "endpoint_down": [
+   "fetch",
+   "draft",
+   "reply",
+   "archive"
+  ],
+  "timeout": [
+   "fetch",
+   "draft",
+   "reply",
+   "archive"
+  ],
+  "comm_timeout": [
+   "fetch",
+   "draft",
+   "reply",
+   "archive"
+  ],
+  "slow_link": [
+   "fetch",
+   "draft",
+   "reply",
+   "archive"
+  ],
+  "http_404": [
+   "fetch",
+   "draft",
+   "reply",
+   "archive"
+  ],
+  "http_429": [
+   "draft",
+   "reply"
+  ],
+  "http_500": [
+   "fetch",
+   "draft",
+   "reply",
+   "archive"
+  ],
+  "disk_full": [
+   "fetch",
+   "classify",
+   "draft",
+   "reply",
+   "archive"
+  ]
+ }
+}
