@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" width="960" height="520" font-family="Segoe UI, Arial, sans-serif" font-size="14" role="img" aria-label="Kiroween Chaos architecture: two apps on one skeleton, core server, arena UI, Kiro loop">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" width="960" height="520" font-family="Segoe UI, Arial, sans-serif" font-size="14" role="img" aria-label="Kiroween Chaos architecture: three apps on one skeleton, core server, arena UI, Kiro loop">
   <title>Kiroween Chaos architecture</title>
   <rect width="960" height="520" fill="#14101f"/>
   <defs>
@@ -7,7 +7,8 @@
   </defs>
   <g fill="#231a3a" stroke="#6c5aa8" stroke-width="1.5">
     <rect x="20" y="30" width="190" height="80" rx="8"/>
-    <rect x="20" y="130" width="190" height="80" rx="8"/>
+    <rect x="20" y="120" width="190" height="80" rx="8"/>
+    <rect x="20" y="210" width="190" height="80" rx="8"/>
     <rect x="270" y="30" width="300" height="270" rx="8"/>
     <rect x="630" y="30" width="310" height="110" rx="8"/>
     <rect x="630" y="190" width="310" height="110" rx="8"/>
@@ -16,17 +17,20 @@
   </g>
   <g fill="none" stroke="#9b8cc4" stroke-width="2" marker-end="url(#a)">
     <path d="M210 70 H270"/>
-    <path d="M210 170 H270"/>
+    <path d="M210 160 H270"/>
+    <path d="M210 250 H270"/>
     <path d="M570 85 H630"/>
     <path d="M785 140 V190"/>
   </g>
   <path d="M480 340 V300" fill="none" stroke="#e0a84a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#k)"/>
   <path d="M480 440 V420" fill="none" stroke="#e0a84a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#k)"/>
   <g fill="#efe9ff" text-anchor="middle">
-    <text x="115" y="64" font-weight="bold">Haunted Orders (Node)</text>
+    <text x="115" y="64" font-weight="bold">Orders (Node)</text>
     <text x="115" y="88" fill="#b9acdc">app 1: 11-step order pipeline</text>
-    <text x="115" y="164" font-weight="bold">Haunted Inbox (Python)</text>
-    <text x="115" y="188" fill="#b9acdc">app 2: mail to ticket and reply</text>
+    <text x="115" y="154" font-weight="bold">Ticket Desk (Python)</text>
+    <text x="115" y="178" fill="#b9acdc">app 2: mail to ticket and reply</text>
+    <text x="115" y="244" font-weight="bold">Stream (Node)</text>
+    <text x="115" y="268" fill="#b9acdc">app 3: 5-stage event stream</text>
     <text x="420" y="60" font-weight="bold">Kiroween Chaos skeleton (packages/haunt)</text>
     <text x="420" y="90" fill="#b9acdc">SDK: retry, journal, idempotency, breaker, queue</text>
     <text x="420" y="112" fill="#b9acdc">adapters: SDK, Proxy, Process</text>

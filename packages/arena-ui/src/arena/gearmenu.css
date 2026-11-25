@@ -20,7 +20,7 @@ body.present .gear-pop, body.present .lgm { display: none !important; }
 .lgm-card { width: 760px; max-height: 760px; }
 .lgm-tabs { display: flex; gap: 8px; margin: 0 40px 8px 0; }
 .lgm-tab { font: inherit; font-weight: 700; font-size: 16px; padding: 6px 16px; border-radius: 999px; border: 2px solid var(--stone-2); background: transparent; color: var(--muted); cursor: pointer; }
-.lgm-tab--on { background: var(--hex); border-color: var(--hex); color: #fff; }
+.lgm-tab--on { background: var(--hex-bg); border-color: var(--hex-bg); color: #fff; }
 .lgm-tab:focus-visible { outline: 3px solid var(--bone); outline-offset: 2px; }
 .lgm-cr { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; font-size: 15px; }
 .lgm-pane.hidden { display: none; }

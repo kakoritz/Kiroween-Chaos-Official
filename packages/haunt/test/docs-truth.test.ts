@@ -82,7 +82,7 @@ describe('Docs truth pass (docs-truth-pass R1 to R5)', () => {
   });
   it('the story spec and campaign counts match the repo', () => {
     const specs = readdirSync(join(root, '.kiro/specs'), { withFileTypes: true }).filter((e) => e.isDirectory()).length;
-    const words: Record<number, string> = { 15: 'Fifteen', 16: 'Sixteen', 17: 'Seventeen' };
+    const words: Record<number, string> = { 15: 'Fifteen', 16: 'Sixteen', 17: 'Seventeen', 18: 'Eighteen' };
     expect(read('submission/project-story.md')).toContain(`${words[specs] ?? specs} specs live`);
     const nights = Object.keys(JSON.parse(read('packages/core/campaign/nights.json'))).length;
     expect(nights).toBe(7);

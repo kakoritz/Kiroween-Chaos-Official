@@ -57,6 +57,7 @@ import { mountCampaignResults } from '../src/campaign/results';
 import '../src/campaign/results.css';
 import { mountCampaignSandbox } from '../src/campaign/sandbox';
 import '../src/campaign/sandbox.css';
+import { waveStateText } from '../src/a11y';
 import { ApiError, createApi, resolveHttpBase, type ArenaApi, type ArenaEvent, type ConnectionStatus, type HauntInPage } from '../src/api';
 
 // W1/W2 shell plus the A3 canvas arena: the client connects the same way for mock, live and\n// browser. Events feed a pure reducer; the canvas redraws every animation frame from that state.
@@ -64,7 +65,7 @@ import { ApiError, createApi, resolveHttpBase, type ArenaApi, type ArenaEvent, t
 const root = document.getElementById('app')!;
 root.innerHTML = `
   <div class="stage-root" id="stage" role="main" aria-label="Kiroween Chaos arena">
-    <canvas id="arena" width="1920" height="1080" aria-label="The haunted arena" role="img"></canvas>
+    <canvas id="arena" width="1920" height="1080" aria-label="The haunted arena" role="img">The haunted arena. Your browser cannot draw the canvas; wave state is read out in the live region.</canvas>
     <header class="hdr">
       <span class="logo">KIROWEEN CHAOS</span>
       <span class="tagline">${SPLASH_TAGLINE}</span>
@@ -80,7 +81,7 @@ root.innerHTML = `
       <button class="btn btn--ghost" id="keys-btn" type="button" aria-expanded="false" aria-controls="keys-pop" aria-label="Keys" title="Keyboard shortcuts and state legend">&#9000;</button>
       <button class="btn btn--ghost" id="patterns-btn" type="button" title="Recurring trouble, fix specs and the improve loop">Patterns<span class="pt-badge hidden" id="patterns-badge"></span></button>
       <button class="btn btn--ghost" id="monkey-btn" type="button" title="Live Chaos: modes, guard rails and the kill switch">Chaos<span class="mk-badge hidden" id="monkey-badge">ON</span></button>
-      <button class="btn btn--ghost" id="legend-btn" type="button" aria-expanded="false" title="What do R J I B Q mean?">?</button>
+      <button class="btn btn--ghost" id="legend-btn" type="button" aria-expanded="false" aria-label="State legend" title="What do R J I B Q mean?">?</button>
       <span class="gear-wrap" id="gear-wrap"><button class="btn btn--ghost" id="gear-btn" type="button" title="Settings: chaos, pace, speed, sound, motion" aria-label="Settings">&#9881;</button></span>
       <span class="pace-tag" id="pace-tag" title="Slow pace is on"></span>
       <button class="btn btn--ghost" id="mute" type="button" aria-pressed="false" aria-label="Sound" title="Sound is off. Click to turn it on.">&#128263;</button>
@@ -95,6 +96,7 @@ root.innerHTML = `
     <div class="keys-pop hidden" id="keys-pop" role="dialog" aria-label="Keyboard and state legend"><h2>Keyboard</h2><ul class="keys-list" id="keys-list"></ul><h2>States</h2><ul class="lg-list" id="legend-list"></ul></div>
     <div class="sr-only" id="live-assertive" aria-live="assertive" role="alert"></div>
     <div class="sr-only" id="live-polite" aria-live="polite" role="status"></div>
+    <div class="sr-only" id="wave-state" aria-live="polite" role="status"></div>
     <div class="present-hint" id="present-hint" aria-hidden="true">Present mode. Press P or Esc to exit.</div>
     <section class="panel panel--rank hidden" id="rank" aria-label="Rank board"><h2>Rank board</h2><div class="rb-body" id="rank-body"></div></section>
     <section class="panel panel--ledger hidden" id="ledger" aria-label="Ledger"><h2>Ledger</h2><div id="ledger-body"></div></section>
@@ -189,7 +191,8 @@ const ticker = new LaneTickerView($('ticker-body'), tickerModel, {
 const bossBar = new BossBar($('boss'));
 const liveAssertive = $('live-assertive');
 const announcer = new Announcer($('live-polite'), liveAssertive);
-setInterval(() => { const t = arenaSummary(vm.lanes); if (canvas.getAttribute('aria-label') !== t) canvas.setAttribute('aria-label', t); }, 2000);
+const waveStateEl = $('wave-state');
+setInterval(() => { const t = arenaSummary(vm.lanes); if (canvas.getAttribute('aria-label') !== t) canvas.setAttribute('aria-label', t); const w = waveStateText(vm.wave, vm.lanes); if (waveStateEl.textContent !== w) waveStateEl.textContent = w; }, 2000);
 const inspector = new LanePopup($('insp'), {
   stageIds: () => vm.stages.map((s) => s.id),
   stageLabel: (id) => vm.stages.find((s) => s.id === id)?.label ?? id,

@@ -6,14 +6,22 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 133. With a PR: 29 (22%). With a test: 133 (100%).
-- Tasks: 133. Done: 131. With a PR: 48 (36%). With a test: 33 (25%).
-- Test files scanned: 214.
+- Requirements: 152. With a PR: 29 (19%). With a test: 140 (92%).
+- Tasks: 141. Done: 139. With a PR: 48 (34%). With a test: 33 (23%).
+- Test files scanned: 215.
 
 ## Tasks
 
 | ID | Spec | Text | Status | PRs | Tests |
 |---|---|---|---|---|---|
+| AM-D1 | a11y-mobile | Three apps text. HOWCAPTION and architecture.svg. (R7) | done | - | - |
+| AM-T1 | a11y-mobile | Tests and trace. // covers: comments, npm run trace. (R1 to R7) | done | - | - |
+| AM-U1 | a11y-mobile | Contrast tokens. Lighten --muted and --fail, add --hex-text and --hex-bg. (R4) | done | - | - |
+| AM-U2 | a11y-mobile | Focus and tab order. Global focus ring; no positive tabindex. (R1) | done | - | - |
+| AM-U3 | a11y-mobile | Names and roles. Labels on symbol buttons. (R2) | done | - | - |
+| AM-U4 | a11y-mobile | Canvas fallback and live region. #wave-state and canvas fallback text. (R3) | done | - | - |
+| AM-U5 | a11y-mobile | Reduced motion pinned. Test the global rule and the body class. (R5) | done | - | - |
+| AM-U6 | a11y-mobile | Narrow header. Shrinkable header children at 360 to 430 px. (R6) | done | - | - |
 | CP-ART | campaign | Art. Tombstone-door map, medals, shop background, paper-doll gear icons (reus... | done | [#185](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/185) | - |
 | CP-C1 | campaign | Campaign data and endpoint. packages/core/campaign/nights.json (seven entries... | done | [#155](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/155), [#157](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/157) | `packages/core/test/campaign-nights.test.ts` |
 | CP-C2 | campaign | Crew bot and wave config. bots/crew.ts and bot/crew.py driven by HAUNTPARTS; ... | done | [#165](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/165) | - |
@@ -152,6 +160,25 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 | ID | Spec | Text | Status | PRs | Tests |
 |---|---|---|---|---|---|
+| R1 | a11y-mobile | Keyboard focus | n/a | - | `packages/arena-ui/test/a11y-mobile.test.ts` |
+| R1.1 | a11y-mobile | Every interactive control (button, input, select, link, summary, [tabindex]) ... | n/a | - | - |
+| R1.2 | a11y-mobile | Tab order follows the visual order: header controls, then the arena, then ran... | n/a | - | - |
+| R2 | a11y-mobile | Names and roles | n/a | - | `packages/arena-ui/test/a11y-mobile.test.ts` |
+| R2.1 | a11y-mobile | Every icon-only or symbol-only button (?, the keys glyph, the gear, the speak... | n/a | - | - |
+| R2.2 | a11y-mobile | The stage has role="main", the canvas role="img", and each bottom panel is a ... | n/a | - | - |
+| R3 | a11y-mobile | Canvas fallback and live summary | n/a | - | `packages/arena-ui/test/a11y-mobile.test.ts` |
+| R3.1 | a11y-mobile | The canvas carries fallback text inside the element for browsers that do not ... | n/a | - | - |
+| R3.2 | a11y-mobile | A polite live region says the wave state (wave number, lane count, leader, ac... | n/a | - | - |
+| R4 | a11y-mobile | Contrast | n/a | - | `packages/arena-ui/test/a11y-mobile.test.ts` |
+| R4.1 | a11y-mobile | Every text colour token used on the stone and stone-2 panel backgrounds meets... | n/a | - | - |
+| R5 | a11y-mobile | Reduced motion | n/a | - | `packages/arena-ui/test/a11y-mobile.test.ts` |
+| R5.1 | a11y-mobile | With prefers-reduced-motion: reduce, all CSS animation and transition is off ... | n/a | - | - |
+| R5.2 | a11y-mobile | The in-app motion setting adds the same reduced-motion body class. | n/a | - | - |
+| R6 | a11y-mobile | Narrow screens | n/a | - | `packages/arena-ui/test/a11y-mobile.test.ts` |
+| R6.1 | a11y-mobile | At 360 to 430 px wide (phone) and 768 px wide (tablet), the layout is the nar... | n/a | - | - |
+| R6.2 | a11y-mobile | Header children can shrink (min-width: 0) and the logo wraps rather than push... | n/a | - | - |
+| R7 | a11y-mobile | Stale text | n/a | - | `packages/arena-ui/test/a11y-mobile.test.ts` |
+| R7.1 | a11y-mobile | "How it works" says three apps (Orders, Ticket Desk, Stream) and docs/img/arc... | n/a | - | - |
 | R1 | campaign-credits | Hub shows the true total on first open | n/a | - | `packages/arena-ui/test/campaign-hub.test.ts`, `packages/arena-ui/test/campaign-results.test.ts` |
 | R1.1 | campaign-credits | A save with no credits, gear, medals or bests is fresh. The hub shows the sta... | n/a | - | `packages/arena-ui/test/campaign-results.test.ts` |
 | R1.2 | campaign-credits | A save that has any progress shows its stored credits unchanged. | n/a | - | `packages/arena-ui/test/campaign-results.test.ts` |
