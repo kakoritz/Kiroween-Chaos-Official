@@ -34,8 +34,8 @@ Rule: one PR per phase, spec ticks only when done, `npm run verify` green before
 - [x] 5.1 Block library (22 blocks) in `packages/haunt/src/blocks/library.ts`, the one source of truth (data, browser-safe); docs/BLOCKS.md is generated from it in M7.
 - [x] 5.2 `use:` composition with overrides; composition checks (R4.4).
 - [x] 5.3 Generic bot for any manifest at the five tiers plus Crew (`apps/generic`, `dist/generic-bots`), run as real processes in tests. Contract check of a live generic wave runs in `validate:live` (overnight).
-- [ ] 5.4 Workflow Lab import and export of manifests (R4.5).
-- [ ] 5.5 Block-alone mode (R4.6).
+- [x] 5.4 Workflow Lab and manifest are two views: `labToYaml` exports, `configToLab` imports (tested on every preset and on a block flow) (R4.5).
+- [x] 5.5 Block-alone mode: `blockAsApp` runs any block as a one-stage app (R4.6).
 
 ## M5b. Alone, then chained (2 d)
 - [ ] 5b.1 `runBlock` and `BlockCard`; results files (R12.1, R12.2).

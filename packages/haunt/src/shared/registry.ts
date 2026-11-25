@@ -17,7 +17,7 @@ export const getApp = (id: string): AppDef | undefined => (isRegisteredApp(id) ?
 export const listApps = (): AppDef[] => Object.values(APPS);
 
 /** Problems with an app definition; an empty list means it is valid. Messages say what to change. */
-export function validateAppDef(def: AppDef): string[] {
+export function validateAppDef(def: AppDef, opts: { alone?: boolean } = {}): string[] {
   const errs: string[] = [];
   if (!APP_ID_RE.test(def.id)) errs.push(`app id "${def.id}": use 2 to 32 lowercase letters, digits, dash or underscore, starting with a letter`);
   if (!/^[a-z]{2,6}$/.test(def.orderPrefix)) errs.push(`idPrefix "${def.orderPrefix}": use 2 to 6 lowercase letters`);
@@ -29,7 +29,7 @@ export function validateAppDef(def: AppDef): string[] {
     if (seen.has(s.id)) errs.push(`stage "${s.id}": duplicate id`);
     seen.add(s.id);
   }
-  if (def.stages.length > 0 && !def.stages.some((s) => s.role === 'input' || s.role === 'effect')) errs.push('stages: need at least one input or effect stage');
+  if (!opts.alone && def.stages.length > 0 && !def.stages.some((s) => s.role === 'input' || s.role === 'effect')) errs.push('stages: need at least one input or effect stage');
   const keys = new Set<string>();
   for (const s of def.stages) for (const e of s.effects) {
     if (keys.has(e.key)) errs.push(`stage "${s.id}": effect key "${e.key}" is used twice; keys must be unique per order`);
@@ -39,9 +39,9 @@ export function validateAppDef(def: AppDef): string[] {
 }
 
 /** Adds an app. Built-in ids cannot be replaced. Registering the same id again replaces a registered (non built-in) app. */
-export function registerApp(def: AppDef, vocab: AppVocab = GENERIC_VOCAB): void {
+export function registerApp(def: AppDef, vocab: AppVocab = GENERIC_VOCAB, opts: { alone?: boolean } = {}): void {
   if (isBuiltinApp(def.id)) throw new Error(`app "${def.id}" is built in and cannot be replaced`);
-  const errs = validateAppDef(def);
+  const errs = validateAppDef(def, opts);
   if (errs.length > 0) throw new Error(`app "${def.id}" is not valid:\n- ${errs.join('\n- ')}`);
   APPS[def.id] = { ...def, shortLabel: def.shortLabel ?? def.label };
   APP_VOCAB[def.id] = { ...vocab, idPrefix: def.orderPrefix };

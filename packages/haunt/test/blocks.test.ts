@@ -67,3 +67,53 @@ describe('use: composition in haunt.yaml', () => {
 
   it('blockById finds a block', () => { expect(blockById('charge')?.role).toBe('effect'); expect(blockById('nope')).toBeUndefined(); });
 });
+
+import { LAB_PRESETS, configToLab, labToYaml, validateLabModel } from '../src/lab/model';
+
+describe('the Lab and the manifest are two views of one thing', () => {
+  // covers: modular-engine/R4.5
+  it('every preset exports to a manifest that loads, and loads back into the same Lab model', () => {
+    for (const [id, model] of Object.entries(LAB_PRESETS)) {
+      const r = parseHauntConfig(labToYaml(model));
+      expect(r.ok, `${id}: ${!r.ok ? r.errors.join() : ''}`).toBe(true);
+      if (!r.ok) continue;
+      const back = configToLab(r.config);
+      expect(validateLabModel(back), id).toEqual([]);
+      expect(back.stages.map((s) => [s.id, s.role])).toEqual(model.stages.map((s) => [s.id, s.role]));
+      expect(back.stages.map((s) => (s.effects ?? []).map((e) => [e.kind, e.keyed]))).toEqual(model.stages.map((s) => (s.role === 'effect' ? s.effects ?? [] : []).map((e) => [e.kind, e.keyed])));
+    }
+  });
+
+  // covers: modular-engine/R4.5
+  it('a flow made of blocks opens in the Lab', () => {
+    const r = parseHauntConfig(yaml('  - { use: read_request }\n  - { use: charge }\n  - { use: confirm }\n'));
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(validateLabModel(configToLab(r.config))).toEqual([]);
+  });
+});
+
+import { BLOCKS as ALL_BLOCKS } from '../src/blocks/library';
+import { aloneId, blockAsApp, blockAsConfig } from '../src/blocks/alone';
+import { registerApp, unregisterApp } from '../src/shared/registry';
+import { FAULTS, faultFacesStage } from '../src/chaos/catalog';
+
+describe('block-alone mode', () => {
+  // covers: modular-engine/R4.6
+  it('every block runs alone as a one-stage app that takes the faults of its role', () => {
+    for (const b of ALL_BLOCKS) {
+      const app = blockAsApp(b.id)!;
+      expect(app.stages.map((s) => s.id)).toEqual([b.id]);
+      expect(validateAppDef(app, { alone: true }), b.id).toEqual([]);
+      registerApp(app, undefined, { alone: true });
+      const faults = FAULTS.filter((f) => faultFacesStage(f, b.id, app.id)).map((f) => f.id);
+      expect(faults, `${b.id} (${b.role})`).toEqual(expect.arrayContaining(['crash', 'disk_full']));
+      if (b.role === 'effect') expect(faults).toEqual(expect.arrayContaining(['http_500', 'timeout']));
+      if (b.role === 'input') expect(faults).toContain('missing_file');
+      unregisterApp(app.id);
+    }
+  });
+  it('knows its ids and refuses an unknown block', () => {
+    expect(aloneId('read_request')).toBe('block-read-request');
+    expect(blockAsConfig('teleport')).toBeNull();
+  });
+});

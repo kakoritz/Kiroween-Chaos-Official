@@ -134,6 +134,14 @@ export function labToYaml(m: LabModel): string {
   return out.join('\n') + '\n';
 }
 
+/** The Lab model of a haunt config (modular-engine R4.5): the same manifest read in the form. `block` stages come back as plain stages. */
+export function configToLab(c: HauntConfig): LabModel {
+  return {
+    name: c.name,
+    stages: c.stages.map((s) => ({ id: s.id, label: s.label, role: s.role, ...(s.role === 'effect' ? { effects: s.effects.map((e) => ({ kind: e.kind, keyed: e.idempotent === 'required' })) } : {}) })),
+  };
+}
+
 const eff = (kind: string, keyed = false): LabEffect => ({ kind, keyed });
 
 /** Starting points for the form. Parts start empty: "none (my bot today)". */

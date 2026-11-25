@@ -6,7 +6,7 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 270. With a PR: 29 (11%). With a test: 198 (73%).
+- Requirements: 270. With a PR: 29 (11%). With a test: 200 (74%).
 - Tasks: 158. Done: 156. With a PR: 48 (30%). With a test: 39 (25%).
 - Test files scanned: 225.
 
@@ -292,8 +292,8 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R4.2 | modular-engine | A manifest may reference a block (use: charge) and override label, duration, ... | n/a | - | `packages/haunt/test/blocks.test.ts` |
 | R4.3 | modular-engine | An app may also define a stage inline with no block (no lock-in). | n/a | - | `packages/haunt/test/blocks.test.ts` |
 | R4.4 | modular-engine | Composition is checked: ids unique, at least one input-or-effect stage, effec... | n/a | - | - |
-| R4.5 | modular-engine | The Workflow Lab exports and imports the same manifest, so a flow built in th... | n/a | - | - |
-| R4.6 | modular-engine | Block-alone mode: one block can be run as a one-stage app, to test it in isol... | n/a | - | - |
+| R4.5 | modular-engine | The Workflow Lab exports and imports the same manifest, so a flow built in th... | n/a | - | `packages/haunt/test/blocks.test.ts` |
+| R4.6 | modular-engine | Block-alone mode: one block can be run as a one-stage app, to test it in isol... | n/a | - | `packages/haunt/test/blocks.test.ts` |
 | R5 | modular-engine | Generic bot from a manifest | n/a | - | `apps/generic/test/generic.test.ts`, `packages/haunt/test/contract-v13.test.ts` |
 | R5.1 | modular-engine | For any manifest, the engine can build a runnable generic bot at the five tie... | n/a | - | `apps/generic/test/generic.test.ts` |
 | R5.2 | modular-engine | The generic bot passes the contract validator with zero violations for every ... | n/a | - | `packages/haunt/test/contract-v13.test.ts` |
