@@ -5,7 +5,8 @@ import outcomes from '../../../core/mock/outcomes.json';
 import type { HauntInPage } from '../api';
 import { addRecordedRuns, type Loader } from './recorded';
 import { mountHowItWorks } from './how-it-works';
-import { registerEmbeddedApps } from '../../../haunt/src/config/embedded-register';
+import { registerEmbeddedApps, registerManifestText } from '../../../haunt/src/config/embedded-register';
+import { CHAIN_HANDOFF_KEY } from '../chain/run';
 
 export const RECORDED_LABEL = 'Recorded run';
 
@@ -13,7 +14,18 @@ export const RECORDED_LABEL = 'Recorded run';
 export function installHosted(win: Window & { __haunt?: unknown }, load?: Loader): HauntInPage {
   // Haunted Playback and the Coffee Shop are config only: the hosted page registers them from their embedded files.
   registerEmbeddedApps();
+  // A chain sent from the Chain Wizard ("Run in the arena") arrives as haunt.yaml text in sessionStorage: register it and switch to it.
+  let chainApp: string | undefined;
+  try {
+    const pending = win.sessionStorage?.getItem(CHAIN_HANDOFF_KEY);
+    if (pending) {
+      win.sessionStorage.removeItem(CHAIN_HANDOFF_KEY);
+      const r = registerManifestText(pending);
+      if (r.ok) chainApp = r.app.id;
+    }
+  } catch { /* storage blocked: the chain simply does not arrive */ }
   const { api, hub } = createInPageMock(outcomes as never);
+  if (chainApp) void api.setApp(chainApp);
   const facade = addRecordedRuns(api as unknown as HauntInPage, hub as never, load);
   win.__haunt = facade;
   return facade;

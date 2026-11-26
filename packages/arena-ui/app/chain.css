@@ -33,6 +33,7 @@ input, select { background: #100e1a; color: #e8e6f5; border: 1px solid #3a3560; 
 .ch-custom { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .ch-custom h3 { flex-basis: 100%; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+.ch-status { color: #ffd98a; font-size: 13px; min-height: 1.2em; }
 .ch-prot { margin: 10px 0; padding: 8px 10px; border: 1px solid #3a3560; border-radius: 8px; }
 .ch-toggle { display: block; margin: 4px 0; cursor: pointer; }
 .ch-delta { color: #ffd98a; font-size: 13px; }

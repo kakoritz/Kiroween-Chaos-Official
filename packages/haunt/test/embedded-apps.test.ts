@@ -35,3 +35,20 @@ describe('embedded apps', () => {
     expect(st.stages.map((s: { id: string }) => s.id)).toEqual(['read_request', 'pay', 'brew', 'ready']);
   });
 });
+
+import { registerManifestText } from '../src/config/embedded-register';
+
+describe('registerManifestText (a chain from the Chain Wizard on the hosted page)', () => {
+  // covers: chain-wizard-v2/R2.3
+  it('registers a chain and the in-page mock then plays it; a bad one is refused with the fix', async () => {
+    const r = registerManifestText('name: wiz-chain\nstart: x\ntruth: http://127.0.0.1:7071\nstages:\n  - { use: read_request }\n  - { use: charge }\n');
+    expect(r.ok).toBe(true);
+    const { api } = createInPageMock(outcomes as never);
+    await api.setApp('wiz-chain');
+    expect((await api.getState()).stages.map((s: { id: string }) => s.id)).toEqual(['read_request', 'charge']);
+    unregisterApp('wiz-chain');
+    const bad = registerManifestText('name: orders\nstart: x\nstages:\n  - { id: aa, label: A, role: input }\n');
+    expect(!bad.ok && bad.errors.join()).toMatch(/built in/);
+    expect(registerManifestText('x'.repeat(40_000)).ok).toBe(false);
+  });
+});

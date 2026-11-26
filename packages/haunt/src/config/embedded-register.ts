@@ -19,3 +19,17 @@ export function registerEmbeddedApps(): { apps: AppDef[]; errors: string[] } {
   }
   return { apps, errors };
 }
+
+export type RegisterTextResult = { ok: true; app: AppDef } | { ok: false; errors: string[] };
+
+/** Registers an app from haunt.yaml text (the Chain Wizard's "run in the arena"). Same checks as a folder. A built-in id is refused. Pure. */
+export function registerManifestText(text: string, opts: { source?: string } = {}): RegisterTextResult {
+  if (text.length > 32_000) return { ok: false, errors: ['manifest: too large (32 KB at most)'] };
+  const r = parseHauntConfig(text);
+  if (!r.ok) return { ok: false, errors: r.errors };
+  const app = appFromConfig(r.config, opts.source ? { source: opts.source } : {});
+  const errs = validateAppDef(app);
+  if (errs.length > 0) return { ok: false, errors: errs };
+  try { registerApp(app); } catch (e) { return { ok: false, errors: [(e as Error).message] }; }
+  return { ok: true, app };
+}

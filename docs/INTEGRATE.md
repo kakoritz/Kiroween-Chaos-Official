@@ -24,7 +24,7 @@ stages:
 
 ## 2. See what the harness will attack
 
-Open the Chain Wizard: `npm run ui:build`, `npm run live`, then http://127.0.0.1:7070/chain.html (the hosted build has it at `/chain.html` too). Paste your `haunt.yaml` into its text box. Each stage shows its role. Test chain gives a grade and the blame table. This is a model, so it is quick and needs no bot.
+Open the Chain Wizard: `npm run ui:build`, `npm run live`, then http://127.0.0.1:7070/chain.html (the hosted build has it at `/chain.html` too). Paste your `haunt.yaml` into its text box, or build the chain with the buttons. The five switches (Retry, Journal, Idempotency keys, Circuit breaker, Offline queue) show what each protection buys. **Run in the arena** sends the chain to the real arena: real bots on a local server, the browser engine on the hosted page. Each stage shows its role. Test chain gives a grade and the blame table. This is a model, so it is quick and needs no bot.
 
 ## 3. Run it with the built-in generic bot
 

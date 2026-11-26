@@ -2,6 +2,7 @@
 // Everything runs in this page; nothing is sent anywhere.
 import { CARD_TIERS, PROTECTIONS, chainChecks, chainReport, protectionsOf, runBlock, tierOfProtections, type BlockCard, type CardTier, type ChainReport, type Protections } from '../../../haunt/src/blocks/cards';
 import { PART_LABEL } from '../workflow-lab/model';
+import { sendToArena } from './run';
 import { addBlock, addCustom, chainProblems, emptyChain, fromConfig, libraryByRole, move, removeAt, rename, toConfig, toYaml, type ChainModel } from './model';
 import { parseHauntConfig } from '../../../haunt/src/config/haunt-config';
 
@@ -118,6 +119,11 @@ export function mountChain(root: HTMLElement): { getModel(): ChainModel; setMode
     const btn = el('button', 'ch-btn ch-btn--go', 'Test chain'); btn.type = 'button'; btn.disabled = problems.length > 0;
     btn.onclick = () => { void test(); };
     side.append(btn);
+    const go = el('button', 'ch-btn', 'Run in the arena'); go.type = 'button'; go.disabled = problems.length > 0;
+    go.title = 'Send this chain to the arena: real bots and creatures on a local server, the browser engine on the hosted page.';
+    const status = el('p', 'ch-status'); status.setAttribute('role', 'status');
+    go.onclick = () => { status.textContent = 'Sending...'; void sendToArena(toYaml(model)).then((r) => { if (r.ok) { status.textContent = r.where === 'live' ? 'Opening the arena...' : 'Opening the hosted arena...'; window.location.assign(r.url); } else status.textContent = r.error; }); };
+    side.append(go, status);
     side.append(protectionPanel());
     for (const p of problems) side.append(el('p', 'ch-problem', p));
     const cfg = toConfig(model);

@@ -2,13 +2,16 @@
 // Spec: contract/PROTOCOL.md. Binds to loopback only. The engine (runner process loop) plugs in through `LiveEngine`;
 // without one the server still serves every read endpoint and validates every write.
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { extname, join, normalize, resolve, sep } from 'node:path';
 import { EventLog } from '../../../haunt/src/events/eventlog';
 import { WaveManager } from '../../../haunt/src/score/wave';
 import type { HauntEvent } from '../../../haunt/src/score/score';
 import { tiersForLanes, type CrewSpec, type TierMode } from '../../../haunt/src/runner/lanes';
 import { MAX_DEPTH } from '../../../haunt/src/chaos/catalog';
+import { parseHauntConfig } from '../../../haunt/src/config/haunt-config';
+import { registerManifestText } from '../../../haunt/src/config/embedded-register';
+import { isBuiltinApp } from '../../../haunt/src/shared/registry';
 import type { PartId } from '../../../haunt/src/shared/catalog';
 import { fnv1a32, mulberry32 } from '../../../haunt/src/shared/rng';
 import { loadCampaign } from '../../../haunt/src/campaign/load';
@@ -872,6 +875,21 @@ export class LiveServer {
         this.engine.stopDemo?.();
         this.demoRunning = null;
         return { json: {} };
+      case '/api/apps/register': {
+        // The Chain Wizard's "run in the arena": a haunt.yaml in the body becomes a registered app. It is written under the run folder so the generic bots can read it.
+        if (typeof body.manifest !== 'string' || !body.manifest.trim()) fail(400, 'bad_request', 'manifest (haunt.yaml text) required');
+        if (this.waves.active) fail(409, 'wave_running', 'a wave is running');
+        const parsed = parseHauntConfig(body.manifest);
+        if (!parsed.ok) return fail(400, 'bad_manifest', parsed.errors.join('; '));
+        const id = parsed.config.name;
+        if (isBuiltinApp(id)) fail(409, 'builtin_app', `"${id}" is a built-in app; pick another name`);
+        const dir = joinPath(this.runDir, 'apps', id.replace(/[^a-z0-9_-]/gi, '_'));
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(joinPath(dir, 'haunt.yaml'), body.manifest);
+        const reg = registerManifestText(body.manifest, { source: dir });
+        if (!reg.ok) return fail(400, 'bad_manifest', reg.errors.join('; '));
+        return { json: { id: reg.app.id, label: reg.app.label, stages: reg.app.stages.map((s) => ({ id: s.id, label: s.label, role: s.role })) } };
+      }
       case '/api/app':
         if (!isAppId(body.app)) fail(400, 'bad_request', 'bad app');
         this.switchApp(body.app);

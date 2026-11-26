@@ -6,9 +6,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 310. With a PR: 29 (9%). With a test: 235 (76%).
+- Requirements: 310. With a PR: 29 (9%). With a test: 245 (79%).
 - Tasks: 158. Done: 156. With a PR: 48 (30%). With a test: 39 (25%).
-- Test files scanned: 232.
+- Test files scanned: 234.
 
 ## Tasks
 
@@ -180,9 +180,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R1 | a11y-mobile | Keyboard focus | n/a | - | `packages/arena-ui/test/a11y-mobile.test.ts` |
 | R1.1 | a11y-mobile | Every interactive control (button, input, select, link, summary, [tabindex]) ... | n/a | - | - |
 | R1.2 | a11y-mobile | Tab order follows the visual order: header controls, then the arena, then ran... | n/a | - | - |
-| R2 | a11y-mobile | Names and roles | n/a | - | `packages/arena-ui/test/a11y-mobile.test.ts` |
+| R2 | a11y-mobile | Names and roles | n/a | - | `packages/arena-ui/test/a11y-mobile.test.ts`, `packages/core/test/chain-register.test.ts` |
 | R2.1 | a11y-mobile | Every icon-only or symbol-only button (?, the keys glyph, the gear, the speak... | n/a | - | - |
-| R2.2 | a11y-mobile | The stage has role="main", the canvas role="img", and each bottom panel is a ... | n/a | - | - |
+| R2.2 | a11y-mobile | The stage has role="main", the canvas role="img", and each bottom panel is a ... | n/a | - | `packages/core/test/chain-register.test.ts` |
 | R3 | a11y-mobile | Canvas fallback and live summary | n/a | - | `packages/arena-ui/test/a11y-mobile.test.ts` |
 | R3.1 | a11y-mobile | The canvas carries fallback text inside the element for browsers that do not ... | n/a | - | - |
 | R3.2 | a11y-mobile | A polite live region says the wave state (wave number, lane count, leader, ac... | n/a | - | - |
@@ -199,9 +199,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R1 | campaign-credits | Hub shows the true total on first open | n/a | - | `packages/arena-ui/test/campaign-hub.test.ts`, `packages/arena-ui/test/campaign-results.test.ts` |
 | R1.1 | campaign-credits | A save with no credits, gear, medals or bests is fresh. The hub shows the sta... | n/a | - | `packages/arena-ui/test/campaign-results.test.ts` |
 | R1.2 | campaign-credits | A save that has any progress shows its stored credits unchanged. | n/a | - | `packages/arena-ui/test/campaign-results.test.ts` |
-| R2 | campaign-credits | Results build on the true total | n/a | - | `packages/arena-ui/test/campaign-results.test.ts` |
+| R2 | campaign-credits | Results build on the true total | n/a | - | `packages/arena-ui/test/campaign-results.test.ts`, `packages/core/test/chain-register.test.ts` |
 | R2.1 | campaign-credits | Finishing a night adds the earned credits to the true total, so the start gra... | n/a | - | `packages/arena-ui/test/campaign-results.test.ts` |
-| R2.2 | campaign-credits | After a night the hub shows start grant plus earned credits. | n/a | - | `packages/arena-ui/test/campaign-results.test.ts` |
+| R2.2 | campaign-credits | After a night the hub shows start grant plus earned credits. | n/a | - | `packages/arena-ui/test/campaign-results.test.ts`, `packages/core/test/chain-register.test.ts` |
 | R3 | campaign-credits | One rule for "fresh" | n/a | - | `packages/arena-ui/test/campaign-hub.test.ts`, `packages/arena-ui/test/campaign-results.test.ts` |
 | R3.1 | campaign-credits | The hub, the shop and the results share one freshness check and one grant rul... | n/a | - | `packages/arena-ui/test/campaign-hub.test.ts`, `packages/arena-ui/test/campaign-results.test.ts` |
 | R4 | campaign-credits | End to end | n/a | - | `packages/arena-ui/test/campaign-results.test.ts` |
@@ -211,10 +211,10 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R1.2 | chain-wizard-v2 | Block cards and the chain test use the switched protections, not only a named... | n/a | - | `packages/haunt/test/block-cards.test.ts` |
 | R1.3 | chain-wizard-v2 | When a result is showing and a switch changes, the chain is tested again at o... | n/a | - | `packages/haunt/test/block-cards.test.ts` |
 | R1.4 | chain-wizard-v2 | chainReport, runBlock accept either a tier name or a set of protections. | n/a | - | `packages/haunt/test/block-cards.test.ts` |
-| R2 | chain-wizard-v2 | Run my chain in the arena | n/a | - | - |
-| R2.1 | chain-wizard-v2 | A button on the Chain Wizard saves the chain as an app and opens the live are... | n/a | - | - |
-| R2.2 | chain-wizard-v2 | The server registers an app posted by the page (POST /api/apps/register with ... | n/a | - | - |
-| R2.3 | chain-wizard-v2 | On the hosted page the same button registers the app in the browser engine. | n/a | - | - |
+| R2 | chain-wizard-v2 | Run my chain in the arena | n/a | - | `packages/arena-ui/test/chain-run.test.ts`, `packages/core/test/chain-register.test.ts`, `packages/haunt/test/embedded-apps.test.ts` |
+| R2.1 | chain-wizard-v2 | A button on the Chain Wizard saves the chain as an app and opens the live are... | n/a | - | `packages/arena-ui/test/chain-run.test.ts`, `packages/core/test/chain-register.test.ts` |
+| R2.2 | chain-wizard-v2 | The server registers an app posted by the page (POST /api/apps/register with ... | n/a | - | `packages/core/test/chain-register.test.ts` |
+| R2.3 | chain-wizard-v2 | On the hosted page the same button registers the app in the browser engine. | n/a | - | `packages/arena-ui/test/chain-run.test.ts`, `packages/haunt/test/embedded-apps.test.ts` |
 | R3 | chain-wizard-v2 | Bot starter for any app | n/a | - | - |
 | R3.1 | chain-wizard-v2 | npm run bot:new -- <haunt.yaml> [--lang node/python] writes a runnable naive ... | n/a | - | - |
 | R3.2 | chain-wizard-v2 | Each effect has a HARDEN comment saying which protection fixes it. | n/a | - | - |
@@ -233,9 +233,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R1.1 | crew-app-bonus | kiro-crew-app/server/haunt-mcp.mjs is one bundled file built by npm run build... | n/a | - | `packages/haunt/test/kiro-crew-app.test.ts` |
 | R1.2 | crew-app-bonus | hauntdefine, hauntblocks, hauntchain and hauntlab need no repository checkout. | n/a | - | - |
 | R1.3 | crew-app-bonus | hauntsweep and hauntramp without a checkout say how to get one (HAUNTROOT) an... | n/a | - | - |
-| R2 | crew-app-bonus | Shows the new engine | n/a | - | - |
+| R2 | crew-app-bonus | Shows the new engine | n/a | - | `packages/core/test/chain-register.test.ts` |
 | R2.1 | crew-app-bonus | hauntblocks lists the library and, with a tier, each block's alone-card. | n/a | - | - |
-| R2.2 | crew-app-bonus | hauntchain takes block ids or a haunt.yaml and returns grade, blame by stage ... | n/a | - | - |
+| R2.2 | crew-app-bonus | hauntchain takes block ids or a haunt.yaml and returns grade, blame by stage ... | n/a | - | `packages/core/test/chain-register.test.ts` |
 | R2.3 | crew-app-bonus | hauntlab returns a model-based what-if of any haunt.yaml. | n/a | - | - |
 | R2.4 | crew-app-bonus | Every result of 1 to 3 says it is model-based. | n/a | - | - |
 | R3 | crew-app-bonus | The app package | n/a | - | `packages/haunt/test/kiro-crew-app.test.ts`, `packages/haunt/test/registry.test.ts` |
@@ -264,9 +264,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R1.1 | haunted-house | THE SYSTEM SHALL ship three core rooms: Cellar (missing file), Mirror Hall (d... | n/a | - | `packages/haunt/test/core-creatures.test.ts` |
 | R1.2 | haunted-house | THE SYSTEM SHALL ship two bonus rooms: Poltergeist (timeouts and 429s that cl... | n/a | - | `packages/haunt/test/requirement-gaps.test.ts` |
 | R1.3 | haunted-house | WHEN a room is selected, THE SYSTEM SHALL run both bots through it with the s... | n/a | - | `packages/haunt/test/requirement-gaps.test.ts` |
-| R2 | haunted-house | Chaos injection | n/a | - | `packages/haunt/test/chaos.test.ts` |
+| R2 | haunted-house | Chaos injection | n/a | - | `packages/core/test/chain-register.test.ts`, `packages/haunt/test/chaos.test.ts` |
 | R2.1 | haunted-house | THE SYSTEM SHALL inject faults at named crash points: beforecharge, afterchar... | n/a | - | `packages/haunt/test/chaos.test.ts` |
-| R2.2 | haunted-house | THE SYSTEM SHALL make every run reproducible from a seed and a fault plan (JS... | n/a | - | `packages/haunt/test/chaos.test.ts` |
+| R2.2 | haunted-house | THE SYSTEM SHALL make every run reproducible from a seed and a fault plan (JS... | n/a | - | `packages/core/test/chain-register.test.ts`, `packages/haunt/test/chaos.test.ts` |
 | R2.3 | haunted-house | WHEN a crash point fires, THE SYSTEM SHALL kill the bot process for real (not... | n/a | - | `packages/haunt/test/chaos.test.ts` |
 | R3 | haunted-house | Survival behavior (Survivor bot) | n/a | - | `packages/haunt/test/pipeline.test.ts`, `packages/haunt/test/registry.test.ts`, `packages/haunt/test/sdk.test.ts` |
 | R3.1 | haunted-house | WHEN the bot is about to cause a side effect, IT SHALL first write an intent ... | n/a | - | `packages/haunt/test/sdk.test.ts` |
@@ -301,9 +301,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R1.3 | lively-lanes-ui | The guarantee is part of the seeded show director (DialChaos with show on). I... | n/a | - | - |
 | R1.4 | lively-lanes-ui | The dial still scales the plan: a higher level gives at least as many creatur... | n/a | - | `packages/haunt/test/block-cards.test.ts` |
 | R1.5 | lively-lanes-ui | Demo scripts, campaign nights, tournament rounds, manual mode and the non-sho... | n/a | - | - |
-| R2 | lively-lanes-ui | Next round is never clipped | n/a | - | `packages/arena-ui/test/lively-lanes-ui.test.ts` |
+| R2 | lively-lanes-ui | Next round is never clipped | n/a | - | `packages/arena-ui/test/lively-lanes-ui.test.ts`, `packages/core/test/chain-register.test.ts` |
 | R2.1 | lively-lanes-ui | In the tournament round-review state the header keeps every control inside th... | n/a | - | - |
-| R2.2 | lively-lanes-ui | The tagline and the Play demo button give way while a tournament is on. Nothi... | n/a | - | - |
+| R2.2 | lively-lanes-ui | The tagline and the Play demo button give way while a tournament is on. Nothi... | n/a | - | `packages/core/test/chain-register.test.ts` |
 | R3 | lively-lanes-ui | One "Stream" in the header | n/a | - | `packages/arena-ui/test/lively-lanes-ui.test.ts` |
 | R3.1 | lively-lanes-ui | The app tab keeps Stream. A pack tab whose name equals an app tab gets the su... | n/a | - | - |
 | R3.2 | lively-lanes-ui | Pack tabs with no matching app tab (Default, Desk) keep their names. | n/a | - | - |
@@ -316,9 +316,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R1.3 | modular-engine | contract/events.schema.json: stageId becomes the pattern above instead of a f... | n/a | - | `packages/haunt/test/contract-v13.test.ts` |
 | R1.4 | modular-engine | A contract version bump (1.x to 1.y) is advertised in hello; contract/PROTOCO... | n/a | - | `packages/haunt/test/block-cards.test.ts` |
 | R1.5 | modular-engine | The three built-in apps keep their current stage ids; their wave results do n... | n/a | - | `packages/haunt/test/golden-apps.test.ts` |
-| R2 | modular-engine | Faults attach by role, not by name | n/a | - | `packages/haunt/test/fault-roles.test.ts`, `packages/haunt/test/golden-apps.test.ts` |
+| R2 | modular-engine | Faults attach by role, not by name | n/a | - | `packages/core/test/chain-register.test.ts`, `packages/haunt/test/fault-roles.test.ts`, `packages/haunt/test/golden-apps.test.ts` |
 | R2.1 | modular-engine | Each fault in the catalog declares applies: roles and/or effect kinds (for ex... | n/a | - | - |
-| R2.2 | modular-engine | An app may add per-stage allow or deny lists in its manifest (for example a s... | n/a | - | `packages/haunt/test/fault-roles.test.ts` |
+| R2.2 | modular-engine | An app may add per-stage allow or deny lists in its manifest (for example a s... | n/a | - | `packages/core/test/chain-register.test.ts`, `packages/haunt/test/fault-roles.test.ts` |
 | R2.3 | modular-engine | The built-in apps get the same fault set on the same stages as today (golden ... | n/a | - | `packages/haunt/test/golden-apps.test.ts` |
 | R2.4 | modular-engine | A new app gets a sensible fault set from its roles alone, with no catalog edit. | n/a | - | `packages/haunt/test/fault-roles.test.ts` |
 | R2.5 | modular-engine | Creatures shown for a fault are chosen from the fault, so a new app inherits ... | n/a | - | `packages/haunt/test/fault-roles.test.ts` |
@@ -386,9 +386,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R1.2 | own-bot-quickstart | Each variant runs three stages (fetch, draft, reply) against the fake provide... | n/a | - | `packages/core/test/own-bot.test.ts` |
 | R1.3 | own-bot-quickstart | The template is deliberately naive: no retry, no idempotency key, no journal.... | n/a | - | `packages/core/test/own-bot.test.ts` |
 | R1.4 | own-bot-quickstart | Each variant has a one-line comment per hardening step marking where a fix goes. | n/a | - | `packages/core/test/own-bot.test.ts`, `packages/haunt/test/block-cards.test.ts` |
-| R2 | own-bot-quickstart | A command that runs it | n/a | - | `packages/core/test/own-bot.test.ts` |
+| R2 | own-bot-quickstart | A command that runs it | n/a | - | `packages/core/test/chain-register.test.ts`, `packages/core/test/own-bot.test.ts` |
 | R2.1 | own-bot-quickstart | npm run own-bot -- <path-or-command> starts the live server and the fake prov... | n/a | - | `packages/core/test/own-bot.test.ts` |
-| R2.2 | own-bot-quickstart | The argument is a file path (.mjs, .js, .py) or a quoted command line. A miss... | n/a | - | `packages/core/test/own-bot.test.ts` |
+| R2.2 | own-bot-quickstart | The argument is a file path (.mjs, .js, .py) or a quoted command line. A miss... | n/a | - | `packages/core/test/chain-register.test.ts`, `packages/core/test/own-bot.test.ts` |
 | R2.3 | own-bot-quickstart | The bot runs on every lane; the fake provider is the only network target. No ... | n/a | - | `packages/core/test/own-bot.test.ts` |
 | R2.4 | own-bot-quickstart | HAUNTPORT and HAUNTPROVIDERPORT override the ports, as for npm run live. | n/a | - | `packages/core/test/own-bot.test.ts` |
 | R2.5 | own-bot-quickstart | Fixes are never applied automatically: the command reads the bot, it never ed... | n/a | - | `packages/core/test/own-bot.test.ts` |
@@ -405,9 +405,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R1.2 | playtest-v2 | WHEN a stage completes, THE SYSTEM SHALL NOT emit the next stagestart until w... | n/a | [#154](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/154), [#159](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/159) | `packages/haunt/test/travel.test.ts` |
 | R1.3 | playtest-v2 | WHEN an order is handed off, THE UI SHALL show the door opening, the scroll h... | n/a | [#154](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/154), [#164](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/164) | `packages/arena-ui/test/handoff.test.ts` |
 | R1.4 | playtest-v2 | THE SYSTEM SHALL offer pace slow (factor 3) and SHALL make it the default for... | n/a | [#194](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/194), [#211](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/211) | `packages/arena-ui/test/gearmenu.test.ts`, `packages/haunt/test/block-cards.test.ts`, `packages/haunt/test/travel.test.ts` |
-| R2 | playtest-v2 | Lane logs | n/a | [#182](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/182), [#191](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/191) | `packages/arena-ui/test/lane-popup.test.ts`, `packages/arena-ui/test/lanes-ticker.test.ts`, `packages/core/test/lap-tracker.test.ts` |
+| R2 | playtest-v2 | Lane logs | n/a | [#182](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/182), [#191](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/191) | `packages/arena-ui/test/lane-popup.test.ts`, `packages/arena-ui/test/lanes-ticker.test.ts`, `packages/core/test/chain-register.test.ts`, `packages/core/test/lap-tracker.test.ts` |
 | R2.1 | playtest-v2 | THE UI SHALL show one ticker row per lane with only the current message, slid... | n/a | [#182](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/182) | `packages/arena-ui/test/lanes-ticker.test.ts` |
-| R2.2 | playtest-v2 | WHEN a ticker row, lane label, chip, or flag is clicked, THE UI SHALL open a ... | n/a | [#191](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/191) | `packages/arena-ui/test/lane-popup.test.ts` |
+| R2.2 | playtest-v2 | WHEN a ticker row, lane label, chip, or flag is clicked, THE UI SHALL open a ... | n/a | [#191](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/191) | `packages/arena-ui/test/lane-popup.test.ts`, `packages/core/test/chain-register.test.ts` |
 | R2.3 | playtest-v2 | THE SYSTEM SHALL provide per-order and per-stage records (attempts, recoverie... | n/a | - | `packages/arena-ui/test/lane-popup.test.ts`, `packages/core/test/lap-tracker.test.ts` |
 | R3 | playtest-v2 | Status, issues, laps | n/a | [#170](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/170), [#184](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/184), [#201](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/201), [#207](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/207) | `packages/arena-ui/test/chips.test.ts`, `packages/arena-ui/test/laps.test.ts`, `packages/core/test/lap-tracker.test.ts` |
 | R3.1 | playtest-v2 | THE UI SHALL colour stage chips green (passed), red (failed), yellow (in trou... | n/a | [#170](https://github.com/kakoritz/Kiroween-Chaos-Official/pull/170) | `packages/arena-ui/test/chips.test.ts` |
@@ -442,9 +442,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R1.1 | readme-gif | docs/img/demo.gif exists, loops, is about 9 s long and 960 px wide, and shows... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
 | R1.2 | readme-gif | README.md embeds it directly under the title, with alt text that says what it... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
 | R1.3 | readme-gif | The GIF is under 3 MB so the README loads fast. | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
-| R2 | readme-gif | The clip is reproducible | n/a | - | - |
+| R2 | readme-gif | The clip is reproducible | n/a | - | `packages/core/test/chain-register.test.ts` |
 | R2.1 | readme-gif | tools/make-readme-gif.mjs rebuilds the GIF from dist/hosted (serve, record he... | n/a | - | - |
-| R2.2 | readme-gif | Its options (--demo, --start, --len, --fps, --colors, --width) are documented... | n/a | - | - |
+| R2.2 | readme-gif | Its options (--demo, --start, --len, --fps, --colors, --width) are documented... | n/a | - | `packages/core/test/chain-register.test.ts` |
 | R3 | readme-gif | Gallery image 06 shows three apps | n/a | - | - |
 | R3.1 | readme-gif | submission/gallery/06-skeleton-crew.png is 1500x1000 (3:2), under 5 MB, and r... | n/a | - | - |
 | R3.2 | readme-gif | tools/make-gallery-06.py regenerates it. | n/a | - | - |
@@ -455,9 +455,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R1.1 | stream-pack-app | apps/haunted-stream holds a Node/TypeScript pipeline of five stages: ingest u... | n/a | - | `apps/haunted-stream/test/stream.test.ts`, `packages/core/test/stream-live.test.ts` |
 | R1.2 | stream-pack-app | apps/haunted-stream/haunt.yaml declares the same five stages and loads with l... | n/a | - | `apps/haunted-stream/test/stream.test.ts`, `packages/core/test/stream-live.test.ts` |
 | R1.3 | stream-pack-app | The stage table in packages/haunt/src/shared/catalog.ts (STREAMSTAGES) and th... | n/a | - | `apps/haunted-stream/test/stream.test.ts`, `packages/core/test/stream-live.test.ts` |
-| R2 | stream-pack-app | Same harness, no engine fork | n/a | - | `packages/core/test/stream-live.test.ts` |
+| R2 | stream-pack-app | Same harness, no engine fork | n/a | - | `packages/core/test/chain-register.test.ts`, `packages/core/test/stream-live.test.ts` |
 | R2.1 | stream-pack-app | The app plugs in as app id stream: POST /api/app {app: "stream"} works, /api/... | n/a | - | `packages/core/test/stream-live.test.ts` |
-| R2.2 | stream-pack-app | A wave on the Stream app uses the same lanes, tiers, intensity dial, chaos di... | n/a | - | `packages/core/test/stream-live.test.ts` |
+| R2.2 | stream-pack-app | A wave on the Stream app uses the same lanes, tiers, intensity dial, chaos di... | n/a | - | `packages/core/test/chain-register.test.ts`, `packages/core/test/stream-live.test.ts` |
 | R2.3 | stream-pack-app | Side effects go to the existing fake provider (store, dispatch, notify); no p... | n/a | - | `packages/core/test/stream-live.test.ts` |
 | R3 | stream-pack-app | Tiers and parts | n/a | - | `apps/haunted-stream/test/stream.test.ts` |
 | R3.1 | stream-pack-app | Five bots (Rookie, Retrier, Journaler, Reconciler, Phoenix) plus the campaign... | n/a | - | `apps/haunted-stream/test/stream.test.ts` |
@@ -480,9 +480,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R1.2 | tournament-stall | After the runner sends shutdown to a bot (idle), the bot has a grace period t... | n/a | - | `packages/haunt/test/runner-shutdown-grace.test.ts` |
 | R1.3 | tournament-stall | A bot that never reports ready (or dies before it) is killed, not left runnin... | n/a | - | `packages/haunt/test/runner-shutdown-grace.test.ts` |
 | R1.4 | tournament-stall | A bot that exits on its own inside the grace period is not killed. | n/a | - | `packages/haunt/test/block-cards.test.ts`, `packages/haunt/test/runner-shutdown-grace.test.ts` |
-| R2 | tournament-stall | A stuck tournament says where | n/a | - | `packages/haunt/test/tournament-stall-tools.test.ts` |
+| R2 | tournament-stall | A stuck tournament says where | n/a | - | `packages/core/test/chain-register.test.ts`, `packages/haunt/test/tournament-stall-tools.test.ts` |
 | R2.1 | tournament-stall | When npm run e2e gives up on the tournament it prints the tournament phase an... | n/a | - | `packages/haunt/test/tournament-stall-tools.test.ts` |
-| R2.2 | tournament-stall | The wait is HAUNTE2ETOURNEYMS (default 20 minutes). Raising it is not the fix. | n/a | - | `packages/haunt/test/tournament-stall-tools.test.ts` |
+| R2.2 | tournament-stall | The wait is HAUNTE2ETOURNEYMS (default 20 minutes). Raising it is not the fix. | n/a | - | `packages/core/test/chain-register.test.ts`, `packages/haunt/test/tournament-stall-tools.test.ts` |
 | R3 | tournament-stall | Hosted demo has no long empty stretches | n/a | - | `packages/core/test/inpage-demo-filler.test.ts`, `packages/haunt/test/tournament-stall-tools.test.ts` |
 | R3.1 | tournament-stall | While a demo script plays in the hosted page, no stretch longer than 5 s at 1... | n/a | - | `packages/core/test/inpage-demo-filler.test.ts` |
 | R3.2 | tournament-stall | Filler chaos uses the same ChaosSim a user press uses, only on active lanes, ... | n/a | - | `packages/core/test/inpage-demo-filler.test.ts` |

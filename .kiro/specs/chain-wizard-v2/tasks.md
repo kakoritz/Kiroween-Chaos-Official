@@ -1,6 +1,6 @@
 # Tasks
 - [x] 1. Protection switches (R1): `Protections` in `packages/haunt/src/blocks/cards.ts`, switches and before/after line in `packages/arena-ui/src/chain/panel.ts`.
-- [ ] 2. Run my chain in the arena (R2).
+- [x] 2. Run my chain in the arena (R2): `POST /api/apps/register`, `packages/arena-ui/src/chain/run.ts`, hosted hand-off through sessionStorage.
 - [ ] 3. Bot starter for any app (R3).
 - [ ] 4. Example chains (R4).
 - [ ] 5. Save and share a chain (R5).
