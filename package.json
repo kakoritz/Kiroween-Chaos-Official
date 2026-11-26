@@ -36,6 +36,7 @@
     "haunt": "node tools/run-ts.mjs packages/core/src/bin/haunt.ts",
     "own-bot": "node tools/run-ts.mjs packages/core/src/bin/own-bot.ts",
     "block:add": "node tools/run-ts.mjs packages/core/src/bin/block-add.ts",
+    "chain:grade": "node tools/run-ts.mjs packages/core/src/bin/chain-grade.ts",
     "bot:new": "node tools/run-ts.mjs packages/core/src/bin/bot-new.ts",
     "build:crew-app": "node tools/build-crew-app.mjs",
     "blocks:doc": "node tools/run-ts.mjs packages/core/src/bin/block-doc.ts",

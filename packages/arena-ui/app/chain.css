@@ -42,3 +42,8 @@ input, select { background: #100e1a; color: #e8e6f5; border: 1px solid #3a3560; 
 .ch-tour { position: sticky; bottom: 8px; margin: 12px 0; padding: 10px 14px; background: #2b2750; border: 2px solid #ff9a3c; border-radius: 10px; max-width: 640px; }
 .ch-tour p { margin: 6px 0; }
 .ch-tour-hl { outline: 3px solid #ff9a3c; outline-offset: 3px; }
+
+.ch-export { display: flex; flex-wrap: wrap; gap: .4rem; margin: .6rem 0; }
+.ch-compare { border: 1px solid var(--ch-line, #555); border-radius: .4rem; padding: .5rem; margin-top: .6rem; }
+.ch-delta--better { color: #2e9e5b; }
+.ch-delta--worse { color: #d64545; }

@@ -54,6 +54,20 @@ try {
   for (let i = 0; i < 5; i++) { await ev(`(()=>{const c=document.querySelectorAll('.ch-toggle input')[${i}];c.checked=true;c.dispatchEvent(new Event('change'))})()`); await sleep(1500); }
   const g1 = await grade();
   check('all five protections on: the grade goes up', g0 !== g1 && g1 <= g0, `${g0} -> ${g1}`);
+  // pin, change, compare, export
+  await go('chain.html?blocks=read_request,charge,wait_for_callback,notify&run=1');
+  await click('Pin this result');
+  await sleep(500);
+  check('Pin this result says it pinned', /Pinned grade/.test(await ev(`document.querySelector('.ch-status')?.textContent ?? ''`)));
+  await ev(`(()=>{const c=document.querySelectorAll('.ch-toggle input')[0];c.checked=true;c.dispatchEvent(new Event('change'))})()`);
+  await sleep(2000);
+  const cmp = await ev(`document.querySelector('.ch-compare')?.innerText ?? ''`);
+  check('compare shows pinned against now, row by row', /compare/i.test(cmp) && /pinned/i.test(cmp) && /charge/.test(cmp), cmp.replace(/\s+/g, ' '));
+  check('download report and badge buttons are there', (await ev(`!!document.querySelector('.ch-btn--report') && !!document.querySelector('.ch-btn--badge')`)) === true);
+  await ev(`window.__dl=[];const oc=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){window.__dl.push(this.download);}`);
+  await click('Download report'); await click('Download badge');
+  const dl = await ev(`window.__dl.join()`);
+  check('the two downloads are named', /chaos-report\.html/.test(dl) && /chaos-badge\.svg/.test(dl), dl);
   check('page errors', errors.length === 0, errors.join(' | '));
 } catch (e) { failed++; console.log('FAIL  check crashed', e); } finally {
   proc.kill(); server.kill(); setTimeout(() => { try { rmSync(prof, { recursive: true, force: true }); } catch { /* locked */ } }, 800);

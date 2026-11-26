@@ -5,7 +5,7 @@ The hosted demo is a static site: no server, no login, no install. It is the pub
 ## What it is (and is not)
 
 - The arena, Workflow Lab, campaign hub and the Play demo scripts run **in your browser** on the in-page engine (`window.__haunt`, mode `browser`).
-- The tournament, Casebook, lessons, Patterns and the improve loop need the real engine. On the hosted page they replay **recorded runs** of the real live server (`site/recorded/*.json`, made by `npm run record:hosted`). The page says so: the banner reads "Hosted demo: runs in your browser. Tournament, Casebook and improve loop are a Recorded run. The real engine runs locally: npm run demo".
+- The tournament, Casebook, lessons, Patterns and the improve loop need the real engine. On the hosted page they replay **recorded runs** of the real live server (`site/recorded/*.json`, made by `npm run record:hosted`; Playback has its own, made by `node tools/record-app.mjs playback`). The page says so: the banner reads "Hosted demo: runs in your browser. Tournament, Casebook and improve loop are a Recorded run. The real engine runs locally: npm run demo".
 - Campaign nights play the scripted night fixtures from the recorded campaign data.
 - Real bots, real chaos and the real provider run only locally: `npm run demo`.
 

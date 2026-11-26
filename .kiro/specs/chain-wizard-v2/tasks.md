@@ -13,4 +13,7 @@
 - [x] 2. Save as block in the Chain Wizard (`packages/arena-ui/src/chain/my-blocks.ts`).
 - [x] 3. Guided tour in the Chain Wizard (`packages/arena-ui/src/chain/tour.ts`); `node tools/chain-check.mjs` runs the page in headless Chrome.
 - [x] 4. Zero to graded: `docs/ZERO-TO-GRADED.md` with `examples/pizza-shop/`.
-- [ ] 5. Compare two chains. [ ] 6. Export a chain result. [ ] 7. GitHub Action for your own app. [ ] 8. Recorded Playback tournament on the hosted page.
+- [x] 5. Compare two chains: Pin this result, then test again (`packages/arena-ui/src/chain/compare.ts`).
+- [x] 6. Export a chain result: report page and badge (`packages/arena-ui/src/chain/export.ts`).
+- [x] 7. GitHub Action for your own app: `npm run chain:grade`, `docs/GITHUB-ACTION.md`, `docs/github-action/haunt-chaos.yml`.
+- [x] 8. Recorded Playback tournament on the hosted page: `tools/record-app.mjs`, `site/recorded/tournament-playback.json`, `RECORDED_TOURNAMENT_APPS` in `onboarding/recorded.ts`.

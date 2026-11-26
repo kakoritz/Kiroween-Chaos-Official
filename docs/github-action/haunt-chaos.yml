@@ -1,0 +1,32 @@
+# Copy this file to .github/workflows/haunt-chaos.yml in YOUR repository.
+# It grades the chain in your haunt.yaml on every pull request and fails when the grade is below MIN_GRADE.
+# The grade is model-based (the same rules as the Chain Wizard). It does not run your bot; see docs/GITHUB-ACTION.md for the real-bot step.
+name: Chaos grade
+on:
+  pull_request:
+  workflow_dispatch:
+env:
+  HAUNT_YAML: haunt.yaml        # path to your manifest
+  TIER: rookie                  # protections your bot is claimed to have: rookie|retrier|journaler|reconciler|phoenix
+  MIN_GRADE: C                  # A, B, C or D; the job fails below this
+jobs:
+  chaos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: kakoritz/Kiroween-Chaos-Official
+          path: .haunt-tool
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm ci --ignore-scripts
+        working-directory: .haunt-tool
+      - name: Grade the chain
+        run: node .haunt-tool/tools/run-ts.mjs .haunt-tool/packages/core/src/bin/chain-grade.ts "$HAUNT_YAML" --tier "$TIER" --min "$MIN_GRADE" --out chaos-out
+      - name: Keep the report and badge
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chaos-report
+          path: chaos-out

@@ -8,6 +8,8 @@ import { isMine, loadMyBlocks, saveMyBlock } from './my-blocks';
 import { mountTour } from './tour';
 import { CHAIN_EXAMPLES, exampleChain } from './examples';
 import { shareUrl, yamlFileName } from './save';
+import { compareChains, type Pinned } from './compare';
+import { chainBadge, chainReportHtml, exportFileName } from './export';
 import { addBlock, addCustom, chainProblems, emptyChain, fromConfig, libraryByRole, move, removeAt, rename, toConfig, toYaml, type ChainModel } from './model';
 import { parseHauntConfig } from '../../../haunt/src/config/haunt-config';
 
@@ -28,6 +30,7 @@ export function mountChain(root: HTMLElement): { getModel(): ChainModel; setMode
   const protLabel = (): string => { const t = tierOfProtections(prot); return t === 'custom' ? `custom (${PROTECTIONS.filter((k) => prot[k]).map((k) => PART_LABEL[k]).join(', ') || 'none'})` : t; };
   const cards = new Map<string, BlockCard>();
   let report: ChainReport | null = null;
+  let pinned: Pinned | null = null;
   try { loadMyBlocks(localStorage); } catch { /* storage blocked */ }
   const notice = el('p', 'ch-status'); notice.setAttribute('role', 'status');
   const lib = el('section', 'ch-card'); lib.setAttribute('aria-label', 'Block library');
@@ -51,6 +54,9 @@ export function mountChain(root: HTMLElement): { getModel(): ChainModel; setMode
     report = null;
     if (had) await test(); else await render();
   }
+  const download = (name: string, text: string, type: string): void => {
+    const a = el('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); URL.revokeObjectURL(a.href);
+  };
   const protectionPanel = (): HTMLElement => {
     const box = el('div', 'ch-prot'); box.setAttribute('role', 'group'); box.setAttribute('aria-label', 'Protections your bot has');
     box.append(el('h3', undefined, 'Protections your bot has'));
@@ -180,6 +186,29 @@ export function mountChain(root: HTMLElement): { getModel(): ChainModel; setMode
         t.append(tr);
       }
       side.append(t);
+    }
+    if (report) {
+      const row = el('div', 'ch-export'); row.setAttribute('role', 'group'); row.setAttribute('aria-label', 'Keep this result');
+      const pin = el('button', 'ch-btn ch-btn--pin', 'Pin this result'); pin.type = 'button'; pin.title = 'Keep this result, change the chain, test again, and see both side by side';
+      pin.onclick = () => { pinned = { name: model.name, protections: protLabel(), report: report! }; notice.textContent = `Pinned grade ${report!.grade}. Change the chain or the protections, then test again.`; void render(); };
+      const rep = el('button', 'ch-btn ch-btn--report', 'Download report'); rep.type = 'button'; rep.title = 'One page you can send or open anywhere';
+      rep.onclick = () => { download(exportFileName(model, 'report'), chainReportHtml({ model, report: report!, protections: protLabel(), date: new Date().toISOString().slice(0, 10) }), 'text/html'); };
+      const bdg = el('button', 'ch-btn ch-btn--badge', 'Download badge'); bdg.type = 'button'; bdg.title = 'A small SVG with the grade, for a README';
+      bdg.onclick = () => { download(exportFileName(model, 'badge'), chainBadge(report!), 'image/svg+xml'); };
+      row.append(pin, rep, bdg);
+      side.append(row);
+      if (pinned) {
+        const c = compareChains(pinned, { name: model.name, protections: protLabel(), report });
+        const box = el('div', 'ch-compare'); box.setAttribute('aria-label', 'Compare with the pinned result');
+        box.append(el('h3', undefined, 'Compare'), el('p', `ch-delta ch-delta--${c.verdict}`, `${c.summary} (pinned: ${pinned.name}, ${pinned.protections}. Now: ${model.name}, ${protLabel()}.)`));
+        const ct = el('table', 'ch-blame');
+        ct.append(Object.assign(el('tr'), { innerHTML: '<th>Stage</th><th>Pinned</th><th>Now</th><th></th>' }));
+        const cell = (x?: { failed: number; tried: number }): string => (x ? `${x.failed}/${x.tried}` : '-');
+        for (const r of c.rows) { const tr = el('tr'); tr.append(el('td', undefined, r.stage), el('td', undefined, cell(r.a)), el('td', undefined, cell(r.b)), el('td', undefined, r.change === 'same' ? '' : r.change.replace('only-a', 'removed').replace('only-b', 'new'))); ct.append(tr); }
+        const clr = el('button', 'ch-btn', 'Clear pin'); clr.type = 'button'; clr.onclick = () => { pinned = null; void render(); };
+        box.append(ct, clr);
+        side.append(box);
+      }
     }
   }
 

@@ -10,10 +10,13 @@ import { campaignFixture } from '../../../core/mock/campaign-fixtures-core';
 import type { HauntInPage } from '../api';
 
 type Ev = { type: string; ts: number; wave?: number; lane?: number; detail?: any; [k: string]: any };
-interface TournamentRec { events: Ev[]; tournament: any; casebook: any; patterns: any; lessons: Record<string, any> }
+interface TournamentRec { app?: string; events: Ev[]; tournament: any; casebook: any; patterns: any; lessons: Record<string, any> }
 interface ImproveRec { events: Ev[]; phases: { atMs: number; state: any }[]; final: any; patterns: any }
 
-export type Loader = (name: 'tournament' | 'improve' | 'campaign') => Promise<any>;
+export type Loader = (name: string) => Promise<any>;
+
+/** Apps that have their own recorded tournament (site/recorded/tournament-<app>.json, made by tools/record-app.mjs). Others replay the Orders run. */
+export const RECORDED_TOURNAMENT_APPS: readonly string[] = ['playback'];
 
 /** Default loader: the JSON sits beside the page (./recorded/NAME.json), so it works under any base path such as /Kiroween-Chaos/. */
 export const fetchRecorded: Loader = async (name) => {
@@ -60,7 +63,7 @@ export function addRecordedRuns(facade: HauntInPage, hub: Hub, load: Loader = fe
   const f = facade as any;
   const player = new Player(hub);
   const cache = new Map<string, Promise<any>>();
-  const rec = <T>(name: 'tournament' | 'improve' | 'campaign'): Promise<T> => {
+  const rec = <T>(name: string): Promise<T> => {
     if (!cache.has(name)) cache.set(name, load(name).catch((e) => { cache.delete(name); throw e; }));
     return cache.get(name)!;
   };
@@ -101,9 +104,10 @@ export function addRecordedRuns(facade: HauntInPage, hub: Hub, load: Loader = fe
 
   f.startTournament = async () => {
     if (hub.running && player.active) return reject('wave_running', 'a wave is already running');
-    const r = await rec<TournamentRec>('tournament');
+    const own = RECORDED_TOURNAMENT_APPS.includes(hub.app) ? `tournament-${hub.app}` : 'tournament';
+    const r = await rec<TournamentRec>(own).catch(() => rec<TournamentRec>('tournament'));
     token++; player.clear();
-    useOrders();
+    hub.app = r.app ?? 'orders';
     hub.reset();
     tour = { segs: segmentsByRound(compressTs(r.events)), idx: 0, rec: r };
     playRound();

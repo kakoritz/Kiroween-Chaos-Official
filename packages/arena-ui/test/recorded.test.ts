@@ -55,6 +55,24 @@ describe('recorded runs (hosted demo)', () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
+  it('Playback has its own recorded tournament: its stages, not Orders stages', async () => {
+    vi.useFakeTimers();
+    const t = rec('tournament-playback');
+    expect(t.app).toBe('playback');
+    expect(t.events.filter((e: any) => e.type === 'round_start')).toHaveLength(4);
+    const fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
+    const h = installHosted({} as any, loader as never) as any;
+    await h.setApp('playback');
+    const stages = new Set<string>();
+    h.subscribe((e: any) => { if (e.stage) stages.add(e.stage); });
+    await h.startTournament({});
+    await vi.advanceTimersByTimeAsync(400_000);
+    expect(stages.has('title_select')).toBe(true);
+    expect([...stages].filter((s) => ['order', 'kitchen', 'payment'].includes(s))).toEqual([]);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
   it('replays the improve loop and reports done with the compare report', async () => {
     vi.useFakeTimers();
     const h = installHosted({} as any, loader as never) as any;
