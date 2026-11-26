@@ -1,7 +1,61 @@
-# Kiroween Chaos as a Kiro Crew app
+# Kiroween Chaos for Kiro Crew
 
-Chaos engineering for AI agents, played as a haunted house. Kiroween Chaos crashes and curses your bots, grades how they survive, and shows the exact fix. One engine, three apps: Node and Python.
+Chaos engineering for AI agents, as a Kiro Crew app. Describe a workflow from reusable blocks, test each block alone, test the chain, and see **which block broke it**. Then hand the result to a reviewer agent that writes a fix spec. It never edits your code.
 
-Manifest (`app.json`), reviewer agent, skill `stress-test-my-workflow`, MCP server (`packages/core/src/bin/haunt-mcp.ts`, tools `haunt_define`, `haunt_sweep`, `haunt_ramp`, `haunt_report`) and a page that hosts the arena UI from 127.0.0.1.
+The full game has three apps built in (Orders, Ticket Desk, Stream) and takes any app from a config file. Part of [Kiroween Chaos](https://github.com/kakoritz/Kiroween-Chaos-Official), a Kiroween 2026 entry (Skeleton Crew). This app was made during the hackathon period and runs **on its own**: one bundled server, no checkout, no `npm install`.
 
-Nothing here installs or enables itself. To try it, the user runs `kirocrew app install ./kiro-crew-app`, then enables it. A directory install is third-party, so Kiro Crew asks for trust first. The MCP command is relative to the repo root.
+## What you get
+
+| Part | What it does |
+|---|---|
+| MCP server `haunt` (`server/haunt-mcp.mjs`) | `haunt_blocks`, `haunt_chain`, `haunt_lab`, `haunt_define`, `haunt_report`, `haunt_specs`, `haunt_badge`, and `haunt_sweep` and `haunt_ramp` (real runs, need a checkout) |
+| Skill `build-and-test-a-chain` | Pick blocks, test each alone at a tier, test the chain, read the blame table and the warnings |
+| Skill `stress-test-my-workflow` | Grade a `haunt.yaml`, find the failing stage, hand it to the reviewer |
+| Agent `reviewer` | Reads a result, writes a postmortem and `.kiro/specs/hardening-<run>/`. It can write only to those paths |
+| Page `/apps/haunt` | The Chain Wizard, a static page: add blocks, order them, edit the `haunt.yaml`, press Test chain |
+
+Results from `haunt_blocks`, `haunt_chain`, `haunt_lab` and the page are **model-based what-ifs**: the same rules as the full game applied to the protections a tier has. They do not run your code. They say so.
+
+## Install
+
+```bash
+kirocrew app install ./kiro-crew-app     # asks you to trust the folder (it is third-party code)
+kirocrew app enable haunt
+```
+
+Run those yourself in your own terminal. Nothing installs or enables itself, and the network permission is off.
+
+## Try it
+
+Ask Kiro Crew:
+
+> Build a chain for a coffee shop (read the order, take payment, brew, tell the customer), test each block alone, test the chain, and tell me which block is the weak one.
+
+Or call the tools directly:
+
+```json
+{ "name": "haunt_chain", "arguments": { "blocks": ["read_request", "charge", "wait_for_callback", "notify"], "tier": "rookie" } }
+```
+
+Result: a grade, a table of which stage and block caused which share of the failures, and warnings such as "`wait_for_callback` waits right after the effect in `charge`; a crash while waiting must not redo that effect".
+
+## Real runs
+
+`haunt_sweep` and `haunt_ramp` run bots against a fake provider and need the full project. Clone it, run `npm ci`, and set `HAUNT_ROOT` to that folder. Without it they say so and stop.
+
+## Layout
+
+```
+app.json
+LICENSE
+server/haunt-mcp.mjs        the MCP server, one file (built from the main repo: npm run build:crew-app)
+agents/reviewer.json
+skills/build-and-test-a-chain/SKILL.md
+skills/stress-test-my-workflow/SKILL.md
+page/                        the Chain Wizard (static)
+WRITEUP.md
+```
+
+## License
+
+MIT, see [LICENSE](LICENSE).

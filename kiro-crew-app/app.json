@@ -1,26 +1,50 @@
 {
   "name": "haunt",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "displayName": "Kiroween Chaos",
-  "description": "Stress-test an agent workflow with creature faults and load ramps, watch it in a haunted arena, and get a graded report plus a hardening spec from a reviewer agent.",
+  "description": "Stress-test any agent workflow with chaos engineering: test one reusable block alone, chain blocks, see which block broke the chain, and get a graded what-if or a hardening spec. Runs on its own: one bundled MCP server, no checkout needed.",
   "author": "kakoritz",
   "minKiroCrewVersion": "0.1.0",
-  "tags": ["testing", "resilience", "chaos", "agents"],
+  "tags": [
+    "testing",
+    "resilience",
+    "chaos",
+    "agents"
+  ],
   "highlights": [
-    "Graded fault sweeps and load ramps against any workflow with a haunt.yaml",
-    "Reviewer agent turns a run log into a postmortem and a hardening spec",
-    "Arena page replays the run as a haunted scene",
-    "Runs offline against local mock servers bound to 127.0.0.1"
+    "Test a block alone, then chain blocks and see which block broke the chain (haunt_blocks, haunt_chain)",
+    "Model-based what-if of any haunt.yaml with a grade and the parts to add (haunt_lab)",
+    "Reviewer agent turns a run into a postmortem and a hardening spec; nothing is applied for you",
+    "Runs offline: one bundled server, network off, local files only"
   ],
   "defaultEnabled": false,
-  "platform": { "os": ["macos", "linux", "windows"] },
-  "skills": ["skills/stress-test-my-workflow"],
-  "agents": ["agents/reviewer.json"],
+  "platform": {
+    "os": [
+      "macos",
+      "linux",
+      "windows"
+    ]
+  },
+  "skills": [
+    "skills/stress-test-my-workflow",
+    "skills/build-and-test-a-chain"
+  ],
+  "agents": [
+    "agents/reviewer.json"
+  ],
   "mcpServers": {
     "haunt": {
       "command": "node",
-      "args": ["tools/run-ts.mjs", "packages/core/src/bin/haunt-mcp.ts"],
-      "autoApprove": ["haunt_define", "haunt_report"]
+      "args": [
+        "server/haunt-mcp.mjs"
+      ],
+      "autoApprove": [
+        "haunt_define",
+        "haunt_blocks",
+        "haunt_chain",
+        "haunt_lab",
+        "haunt_report"
+      ]
     }
   },
   "permissions": {
@@ -30,7 +54,9 @@
     "storage": true
   },
   "dependencies": {
-    "commands": ["node"]
+    "commands": [
+      "node"
+    ]
   },
   "ui": {
     "pages": [
@@ -43,9 +69,11 @@
     ]
   },
   "useCases": [
-    "Find the stage where your workflow double-charges, drops or repeats work, then get a spec that fixes it."
+    "Find which step of your workflow double-charges, drops or repeats work, before the world does.",
+    "Compose a workflow from reusable blocks and see which block breaks it.",
+    "Get a hardening spec for the failing stage and re-run to compare grades."
   ],
   "configuration": [
-    "Run from a checkout of this repository: the MCP server starts with node and needs npm install done once. Nothing is installed or enabled automatically."
+    "Nothing to set up. The server runs from the app folder with node. For haunt_sweep and haunt_ramp (real bot runs), set HAUNT_ROOT to a Kiroween Chaos checkout. Nothing is installed or enabled automatically."
   ]
 }

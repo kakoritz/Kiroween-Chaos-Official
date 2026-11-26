@@ -10,8 +10,9 @@ describe('docs/proof/installed/mcp-handshake.json', () => {
     expect(proof.tools).toEqual(TOOLS.map((t) => t.name));
     expect(proof.tools).toContain('haunt_specs');
   });
-  it('says the Power and the Crew app start the same server', () => {
+  it('says the Crew app starts its own bundled copy of the same server, from an empty folder', () => {
     expect(proof.server.name).toBe('haunt-mcp');
-    expect(proof.powerAndAppUseSameServerArgs).toBe(true);
+    expect(proof.crewAppRunsAlone).toBe(true);
+    expect(proof.crewAppToolsMatchServer).toBe(true);
   });
 });

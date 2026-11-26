@@ -6,11 +6,15 @@
   "protocolVersion": "2024-11-05",
   "tools": [
     "haunt_define",
+    "haunt_blocks",
+    "haunt_chain",
+    "haunt_lab",
     "haunt_sweep",
     "haunt_ramp",
     "haunt_report",
     "haunt_specs",
     "haunt_badge"
   ],
-  "powerAndAppUseSameServerArgs": true
+  "crewAppRunsAlone": true,
+  "crewAppToolsMatchServer": true
 }

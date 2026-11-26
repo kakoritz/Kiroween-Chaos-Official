@@ -6,9 +6,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 270. With a PR: 29 (11%). With a test: 221 (82%).
+- Requirements: 287. With a PR: 29 (10%). With a test: 229 (80%).
 - Tasks: 158. Done: 156. With a PR: 48 (30%). With a test: 39 (25%).
-- Test files scanned: 229.
+- Test files scanned: 230.
 
 ## Tasks
 
@@ -206,6 +206,23 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R3.1 | campaign-credits | The hub, the shop and the results share one freshness check and one grant rul... | n/a | - | `packages/arena-ui/test/campaign-hub.test.ts`, `packages/arena-ui/test/campaign-results.test.ts` |
 | R4 | campaign-credits | End to end | n/a | - | `packages/arena-ui/test/campaign-results.test.ts` |
 | R4.1 | campaign-credits | GET /api/campaign serves a start grant of 300 credits, the value the hub show... | n/a | - | `packages/arena-ui/test/campaign-results.test.ts` |
+| R1 | crew-app-bonus | Runs on its own | n/a | - | `packages/haunt/test/kiro-crew-app.test.ts` |
+| R1.1 | crew-app-bonus | kiro-crew-app/server/haunt-mcp.mjs is one bundled file built by npm run build... | n/a | - | `packages/haunt/test/kiro-crew-app.test.ts` |
+| R1.2 | crew-app-bonus | hauntdefine, hauntblocks, hauntchain and hauntlab need no repository checkout. | n/a | - | - |
+| R1.3 | crew-app-bonus | hauntsweep and hauntramp without a checkout say how to get one (HAUNTROOT) an... | n/a | - | - |
+| R2 | crew-app-bonus | Shows the new engine | n/a | - | - |
+| R2.1 | crew-app-bonus | hauntblocks lists the library and, with a tier, each block's alone-card. | n/a | - | - |
+| R2.2 | crew-app-bonus | hauntchain takes block ids or a haunt.yaml and returns grade, blame by stage ... | n/a | - | - |
+| R2.3 | crew-app-bonus | hauntlab returns a model-based what-if of any haunt.yaml. | n/a | - | - |
+| R2.4 | crew-app-bonus | Every result of 1 to 3 says it is model-based. | n/a | - | - |
+| R3 | crew-app-bonus | The app package | n/a | - | `packages/haunt/test/kiro-crew-app.test.ts`, `packages/haunt/test/registry.test.ts` |
+| R3.1 | crew-app-bonus | app.json starts the bundled server, auto-approves only read-only tools, keeps... | n/a | - | `packages/haunt/test/kiro-crew-app.test.ts` |
+| R3.2 | crew-app-bonus | Two skills (build-and-test-a-chain, stress-test-my-workflow) and the reviewer... | n/a | - | - |
+| R3.3 | crew-app-bonus | The page is the Chain Wizard as a static page (no server), copied by the same... | n/a | - | `packages/haunt/test/kiro-crew-app.test.ts` |
+| R3.4 | crew-app-bonus | README and WRITEUP are honest: what is model-based, what needs a checkout, wh... | n/a | - | `packages/haunt/test/registry.test.ts` |
+| R4 | crew-app-bonus | Publishing | n/a | - | `packages/haunt/test/kiro-crew-app.test.ts` |
+| R4.1 | crew-app-bonus | The package folder is the repo: no personal info, MIT license, noreply identi... | n/a | - | `packages/haunt/test/kiro-crew-app.test.ts` |
+| R4.2 | crew-app-bonus | A test starts the bundle from an empty folder and compares its tool list with... | n/a | - | - |
 | R1 | docs-truth-pass | Hook claims match the hooks | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
 | R1.1 | docs-truth-pass | No doc says the hooks "guard the contract" or "guard the seams". The only con... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
 | R1.2 | docs-truth-pass | Docs that describe hooks say what each one runs and when. | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
