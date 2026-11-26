@@ -7,3 +7,10 @@
 - [x] 6. Fix specs and Casebook for registered apps (R6): `SpecContext` in `packages/haunt/src/miner/specs.ts`, filled by the live server; the Casebook already reads stage labels from the running app.
 - [x] 7. Block hints (R7): `hintOf` in `packages/haunt/src/blocks/library.ts`, shown in the wizard and `docs/BLOCKS.md`.
 - [x] 8. Phone-friendly arena (R8): `packages/arena-ui/src/arena/lane-cards.ts` (cards under the small canvas in narrow mode).
+
+## Second build list (2026-11-26)
+- [x] 1. Kiro Power: new tools, chain skill, real repository link (`kiro-power/`, `packages/haunt/test/kiro-power.test.ts`).
+- [x] 2. Save as block in the Chain Wizard (`packages/arena-ui/src/chain/my-blocks.ts`).
+- [x] 3. Guided tour in the Chain Wizard (`packages/arena-ui/src/chain/tour.ts`); `node tools/chain-check.mjs` runs the page in headless Chrome.
+- [x] 4. Zero to graded: `docs/ZERO-TO-GRADED.md` with `examples/pizza-shop/`.
+- [ ] 5. Compare two chains. [ ] 6. Export a chain result. [ ] 7. GitHub Action for your own app. [ ] 8. Recorded Playback tournament on the hosted page.

@@ -39,3 +39,6 @@ input, select { background: #100e1a; color: #e8e6f5; border: 1px solid #3a3560; 
 .ch-delta { color: #ffd98a; font-size: 13px; }
 .ch-note { color: #a9a4d6; font-size: 12px; margin: 0 0 6px; }
 .ch-hint { margin: 2px 0 8px; font-size: 0.8rem; opacity: 0.8; }
+.ch-tour { position: sticky; bottom: 8px; margin: 12px 0; padding: 10px 14px; background: #2b2750; border: 2px solid #ff9a3c; border-radius: 10px; max-width: 640px; }
+.ch-tour p { margin: 6px 0; }
+.ch-tour-hl { outline: 3px solid #ff9a3c; outline-offset: 3px; }

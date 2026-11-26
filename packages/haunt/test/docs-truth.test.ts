@@ -140,3 +140,17 @@ describe('modular-engine docs (M7)', () => {
     }
   });
 });
+
+describe('zero to graded (second build list, item 4)', () => {
+  // covers: chain-wizard-v2/second-build-list-4
+  it('the worked example points at files that exist and the example app loads', async () => {
+    const doc = read('docs/ZERO-TO-GRADED.md');
+    for (const f of ['examples/pizza-shop/haunt.yaml', 'examples/pizza-shop/bot/bot.mjs']) { expect(doc, f).toContain(f); expect(existsSync(join(root, f)), f).toBe(true); }
+    const { loadHauntConfig } = await import('../src/config/load');
+    const r = loadHauntConfig(join(root, 'examples/pizza-shop/haunt.yaml'));
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.config.stages.map((s) => s.id)).toEqual(['read_request', 'pay', 'bake', 'deliver', 'tell_customer']);
+    expect(read('docs/INTEGRATE.md')).toContain('ZERO-TO-GRADED.md');
+    expect(read('examples/pizza-shop/bot/bot.mjs')).toContain('"tell_customer"');
+  });
+});

@@ -4,6 +4,8 @@ import { CARD_TIERS, PROTECTIONS, chainChecks, chainReport, protectionsOf, runBl
 import { hintOf } from '../../../haunt/src/blocks/library';
 import { PART_LABEL } from '../workflow-lab/model';
 import { sendToArena } from './run';
+import { isMine, loadMyBlocks, saveMyBlock } from './my-blocks';
+import { mountTour } from './tour';
 import { CHAIN_EXAMPLES, exampleChain } from './examples';
 import { shareUrl, yamlFileName } from './save';
 import { addBlock, addCustom, chainProblems, emptyChain, fromConfig, libraryByRole, move, removeAt, rename, toConfig, toYaml, type ChainModel } from './model';
@@ -26,11 +28,16 @@ export function mountChain(root: HTMLElement): { getModel(): ChainModel; setMode
   const protLabel = (): string => { const t = tierOfProtections(prot); return t === 'custom' ? `custom (${PROTECTIONS.filter((k) => prot[k]).map((k) => PART_LABEL[k]).join(', ') || 'none'})` : t; };
   const cards = new Map<string, BlockCard>();
   let report: ChainReport | null = null;
+  try { loadMyBlocks(localStorage); } catch { /* storage blocked */ }
+  const notice = el('p', 'ch-status'); notice.setAttribute('role', 'status');
   const lib = el('section', 'ch-card'); lib.setAttribute('aria-label', 'Block library');
   const chain = el('section', 'ch-card'); chain.setAttribute('aria-label', 'Your chain');
   const side = el('section', 'ch-card'); side.setAttribute('aria-label', 'Warnings and test');
   const grid = el('div', 'ch-grid'); grid.append(lib, chain, side);
-  root.append(el('p', 'ch-honest', HONEST), grid);
+  const tourBtn = el('button', 'ch-btn', 'Take the tour'); tourBtn.type = 'button';
+  const tour = mountTour(document, root);
+  tourBtn.onclick = () => tour.open();
+  root.append(el('p', 'ch-honest', HONEST), tourBtn, grid);
 
   async function cardFor(blockId: string): Promise<BlockCard | undefined> {
     const k = `${blockId}@${protKey()}`;
@@ -79,7 +86,7 @@ export function mountChain(root: HTMLElement): { getModel(): ChainModel; setMode
       for (const b of list) {
         const li = el('li');
         const c = await cardFor(b.id);
-        const btn = el('button', 'ch-btn', `+ ${b.label}`); btn.type = 'button'; btn.title = `${b.about} ${hintOf(b)}`; btn.setAttribute('aria-label', `Add ${b.label}`);
+        const btn = el('button', 'ch-btn', `+ ${b.label}${isMine(b.id) ? ' (mine)' : ''}`); btn.type = 'button'; btn.title = `${b.about} ${hintOf(b)}`; btn.setAttribute('aria-label', `Add ${b.label}`);
         btn.onclick = () => { model = addBlock(model, b.id); report = null; void render(); };
         const badge = el('span', 'ch-badge', c ? `${c.survived}/${c.tried} ${c.grade}` : '');
         badge.title = c ? `Alone with ${protLabel()}: survived ${c.survived} of ${c.tried} attacks, grade ${c.grade}` : '';
@@ -103,6 +110,7 @@ export function mountChain(root: HTMLElement): { getModel(): ChainModel; setMode
     const name = el('input'); name.value = model.name; name.setAttribute('aria-label', 'Chain name');
     name.oninput = () => { model = { ...model, name: name.value }; };
     chain.append(name);
+    chain.append(notice);
     if (model.stages.length === 0) chain.append(el('p', 'ch-empty', 'Empty. Pick blocks on the left.'));
     const ol = el('ol', 'ch-stages');
     model.stages.forEach((s, i) => {
@@ -114,8 +122,9 @@ export function mountChain(root: HTMLElement): { getModel(): ChainModel; setMode
       const share = el('span', 'ch-share', blame && report!.failed > 0 ? `${Math.round(blame.share * 100)}% of failures` : '');
       const up = el('button', 'ch-btn', 'Up'); up.type = 'button'; up.disabled = i === 0; up.onclick = () => { model = move(model, i, i - 1); report = null; void render(); };
       const dn = el('button', 'ch-btn', 'Down'); dn.type = 'button'; dn.disabled = i === model.stages.length - 1; dn.onclick = () => { model = move(model, i, i + 1); report = null; void render(); };
+      const keep = s.use ? null : el('button', 'ch-btn', 'Save as block'); if (keep) { keep.type = 'button'; keep.title = 'Keep this stage in your own block library (this browser)'; keep.onclick = () => { const r = saveMyBlock(s, localStorage); notice.textContent = r.ok ? `Saved "${s.id}" to your blocks.` : r.errors.join(' '); void render(); }; }
       const rm = el('button', 'ch-btn', 'Remove'); rm.type = 'button'; rm.setAttribute('aria-label', `Remove stage ${i + 1}`); rm.onclick = () => { model = removeAt(model, i); report = null; void render(); };
-      li.append(id, tag, share, up, dn, rm);
+      li.append(id, tag, share, up, dn, ...(keep ? [keep] : []), rm);
       ol.append(li);
     });
     chain.append(ol);

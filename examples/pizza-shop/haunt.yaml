@@ -1,0 +1,13 @@
+# Pizza Shop: the example of docs/ZERO-TO-GRADED.md. Five stages, config only.
+#   npm run live -- --app examples/pizza-shop
+name: pizza
+label: Pizza Shop
+idPrefix: piz
+start: node bot/bot.mjs
+truth: http://127.0.0.1:7071
+stages:
+  - { use: read_request, label: Take the order }
+  - { use: charge, id: pay }
+  - { id: bake, label: Bake, role: work, duration: [800, 1500] }
+  - { use: dispatch_job, id: deliver, label: Send the rider }
+  - { use: notify, id: tell_customer }

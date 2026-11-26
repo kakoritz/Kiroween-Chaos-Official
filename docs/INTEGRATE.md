@@ -1,6 +1,6 @@
 # Plug in your own service
 
-Five steps. You need Node 20+ and this repo (`npm ci`).
+Five steps. You need Node 20+ and this repo (`npm ci`). A worked example with real output: [`ZERO-TO-GRADED.md`](ZERO-TO-GRADED.md).
 
 ## 1. Describe your steps in `haunt.yaml`
 
