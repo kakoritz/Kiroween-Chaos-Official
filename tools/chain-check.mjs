@@ -54,6 +54,25 @@ try {
   for (let i = 0; i < 5; i++) { await ev(`(()=>{const c=document.querySelectorAll('.ch-toggle input')[${i}];c.checked=true;c.dispatchEvent(new Event('change'))})()`); await sleep(1500); }
   const g1 = await grade();
   check('all five protections on: the grade goes up', g0 !== g1 && g1 <= g0, `${g0} -> ${g1}`);
+  // example chains, share link, yaml edit, download haunt.yaml
+  await go('chain.html');
+  await ev(`document.querySelector('button[aria-label="Load example: Checkout"]').click()`);
+  await sleep(1500);
+  const ids = () => ev(`[...document.querySelectorAll('.ch-stages input')].map(i=>i.value).join()`);
+  check('example Checkout loads 5 blocks in order', (await ids()) === 'browse,validate,charge,send_email,confirm', await ids());
+  await ev(`document.querySelector('button[aria-label="Load example: Video playback"]').click()`); await sleep(1200);
+  check('another example replaces the chain', (await ids()).startsWith('read_request,transcode'), await ids());
+  await ev(`window.__dl=[];HTMLAnchorElement.prototype.click=function(){window.__dl.push(this.download);}`);
+  await click('Download haunt.yaml'); await sleep(300);
+  check('Download haunt.yaml is named after the chain', /\.haunt\.yaml$/.test(await ev(`window.__dl.join()`)), await ev(`window.__dl.join()`));
+  await click('Copy share link'); await sleep(800);
+  const hash = await ev(`location.hash`);
+  check('Copy share link puts the chain in the address', /^#c=/.test(hash), hash.slice(0, 40));
+  check('share link status shown', /Link copied|Copy this link/.test(await ev(`[...document.querySelectorAll('.ch-status')].map(e=>e.textContent).join(' ')`)));
+  await send('Page.reload'); await sleep(3500);
+  check('opening the share link restores the chain', (await ids()).startsWith('read_request,transcode'), await ids());
+  await ev(`(()=>{const t=document.querySelector('.ch-yaml');t.value=t.value.split(String.fromCharCode(10)).filter(l=>!l.includes('use: archive')).join(String.fromCharCode(10));t.dispatchEvent(new Event('change'))})()`); await sleep(1500);
+  check('editing the yaml changes the chain', !(await ids()).includes('archive'), await ids());
   // pin, change, compare, export
   await go('chain.html?blocks=read_request,charge,wait_for_callback,notify&run=1');
   await click('Pin this result');
