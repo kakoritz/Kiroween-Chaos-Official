@@ -35,7 +35,7 @@ The arena's app switcher labels them Haunted Orders, Haunted Inbox (the Ticket D
 | Hooks (five; each runs a command or asks an agent on save or on demand, none blocks an edit) | `.kiro/hooks/` |
 | Custom agents | `.kiro/agents/` |
 | Kiro Power | `kiro-power/` |
-| Kiro Crew app | `kiro-crew-app/` |
+| Kiro Crew app | `kiro-crew-app/` (published alone at https://github.com/kakoritz/kiroween-chaos-crew) |
 
 Both manifests start the same MCP server. They are not yet installed into a Kiro window; see the README known limits. How Kiro was used, with the gaps: [`HOW-KIRO-BUILT-THIS.md`](HOW-KIRO-BUILT-THIS.md).
 

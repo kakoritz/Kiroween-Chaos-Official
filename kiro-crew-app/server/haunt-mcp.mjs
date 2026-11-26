@@ -982,8 +982,8 @@ var bot = (lane) => `apps/haunted-orders/src/bots/${tierOfLane(lane)}.ts`;
 var botsOf = (p) => [...new Set(p.lanes.map(bot))];
 var tiersOf = (p) => [...new Set(p.lanes.map((l) => TIERS[tierOfLane(l)].label))].join(", ") || "the bot";
 var faultText = (f) => f.replace(/_/g, " ");
-function patchFor(p) {
-  const patch = rawPatchFor(p);
+function patchFor(p, ctx) {
+  const patch = ownPatch(rawPatchFor(p, ctx), p, ctx);
   if (patch?.action && p.lanes.length > 0) {
     const act = patch.action;
     const has = p.lanes.every((l) => actionsFor(TIERS[tierOfLane(l)].parts).includes(act));
@@ -991,14 +991,20 @@ function patchFor(p) {
   }
   return patch;
 }
+function ownPatch(patch, p, ctx) {
+  if (!patch || !ctx?.botFile) return patch;
+  const files = [...new Set(patch.files.map((f) => f.startsWith("apps/haunted-orders/") || f.startsWith("packages/haunt/src/") ? ctx.botFile : f))];
+  return { ...patch, files, test: { ...patch.test, file: `tests/hardening-${p.id}.test.ts` } };
+}
 function lacking(p, parts) {
   const ls = p.lanes.filter((l) => !parts.every((x) => TIERS[tierOfLane(l)].parts.includes(x)));
   return ls.length ? ls : p.lanes;
 }
 var botsOfLanes = (ls) => [...new Set(ls.map(bot))];
 var tiersOfLanes = (ls) => [...new Set(ls.map((l) => TIERS[tierOfLane(l)].label))].join(", ") || "the bot";
-function rawPatchFor(p) {
-  const stage = p.stage;
+function rawPatchFor(p, ctx) {
+  const label = ctx?.stageLabels?.[p.stage];
+  const stage = label && label !== p.stage ? `${label} (\`${p.stage}\`)` : p.stage;
   const when = `WHEN ${faultText(p.fault)} hits the ${stage} stage`;
   let bots = botsOf(p);
   let tiers = tiersOf(p);
@@ -1144,7 +1150,7 @@ function renderFixSpec(input) {
   const refused = [];
   const patches = /* @__PURE__ */ new Map();
   for (const p of ranked) {
-    const patch = patchFor(p);
+    const patch = patchFor(p, input.context);
     if (!patch) refused.push({ pattern: p, reason: "no small patch is known for this shape; it needs a design discussion before any change" });
     else if (patch.budgetLines > DIFF_BUDGET_MAX) refused.push({ pattern: p, reason: `the smallest known patch is ${patch.budgetLines} lines, over the budget of ${DIFF_BUDGET_MAX}` });
     else {
@@ -2056,9 +2062,18 @@ function blockAsConfig(blockId) {
 }
 
 // packages/haunt/src/blocks/cards.ts
+var PROTECTIONS = ["retry", "journal", "idempotency", "breaker", "offline_queue"];
+var protectionsOf = (tier) => ({ ...PACK_TIERS[tier] });
+function tierOfProtections(p) {
+  const on = (x) => PROTECTIONS.filter((k) => x[k]).join();
+  return CARD_TIERS.find((t) => on(PACK_TIERS[t]) === on(p)) ?? "custom";
+}
 var CARD_TIERS = ["rookie", "retrier", "journaler", "reconciler", "phoenix"];
 var BAD = /* @__PURE__ */ new Set(["fail", "halt", "repeat"]);
-var withTier = (m, tier) => ({ ...m, parts: { ...PACK_TIERS[tier] } });
+var withTier = (m, tier) => {
+  const parts = typeof tier === "string" ? protectionsOf(tier) : { ...tier };
+  return { ...m, parts, stages: m.stages.map((s) => s.effects ? { ...s, effects: s.effects.map((e) => ({ ...e, keyed: parts.idempotency === true })) } : s) };
+};
 function cardOf(blockId, tier, role, rep) {
   const cells = rep.cells;
   return {
@@ -2077,7 +2092,7 @@ function cardOf(blockId, tier, role, rep) {
 async function runBlock(blockId, tier, seed = 1) {
   const cfg = blockAsConfig(blockId);
   if (!cfg) return null;
-  return cardOf(blockId, tier, blockById(blockId).role, await labRun({ ...withTier(configToLab(cfg), tier), seed }));
+  return cardOf(blockId, typeof tier === "string" ? tier : tierOfProtections(tier), blockById(blockId).role, await labRun({ ...withTier(configToLab(cfg), tier), seed }));
 }
 async function allBlockCards(seed = 1) {
   const out = [];
@@ -2103,7 +2118,7 @@ async function chainReport(cfg, tier, seed = 1) {
     const b = blockOf.get(s.id);
     return { stage: s.id, ...b ? { block: b } : {}, tried: p.tried, failed: p.failed, share: failed === 0 ? 0 : p.failed / failed };
   });
-  return { grade: String(rep.grade), reliability: rep.reliability, tier, tried: rep.cells.length, failed, blame, modelBased: true };
+  return { grade: String(rep.grade), reliability: rep.reliability, tier: typeof tier === "string" ? tier : tierOfProtections(tier), tried: rep.cells.length, failed, blame, modelBased: true };
 }
 function chainChecks(cfg, cards = []) {
   const out = [];

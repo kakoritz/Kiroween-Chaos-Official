@@ -2,7 +2,7 @@
 
 Chaos engineering for AI agents, as a Kiro Crew app. Describe a workflow from reusable blocks, test each block alone, test the chain, and see **which block broke it**. Then hand the result to a reviewer agent that writes a fix spec. It never edits your code.
 
-The full game has three apps built in (Orders, Ticket Desk, Stream) and takes any app from a config file. Part of [Kiroween Chaos](https://github.com/kakoritz/Kiroween-Chaos-Official), a Kiroween 2026 entry (Skeleton Crew). This app was made during the hackathon period and runs **on its own**: one bundled server, no checkout, no `npm install`.
+The full game has three apps built in (Orders, Ticket Desk, Stream) and takes any app from a config file. Published on its own at [kakoritz/kiroween-chaos-crew](https://github.com/kakoritz/kiroween-chaos-crew). Part of [Kiroween Chaos](https://github.com/kakoritz/Kiroween-Chaos-Official), a Kiroween 2026 entry (Skeleton Crew). This app was made during the hackathon period and runs **on its own**: one bundled server, no checkout, no `npm install`.
 
 ## What you get
 
