@@ -27,3 +27,4 @@ Run `npm run judge:check`. It reads this table and fails if any evidence path do
 | Skeleton Crew fit | An app names its own creatures; the nine pack names show in the live arena | `docs/STREAM.md`, `packages/haunt/test/creature-names.test.ts`, `apps/haunted-playback/haunt.yaml` | Met | Names are display only (sprite and rules are the engine's) |
 | Usefulness | Build a chain, flip the protections, and run it in the arena | `packages/arena-ui/src/chain/panel.ts`, `packages/arena-ui/src/chain/run.ts`, `packages/core/test/chain-register.test.ts` | Met | |
 | Usefulness | A bot starter for any app, with HARDEN comments | `packages/haunt/src/scaffold/bot-starter.ts`, `apps/generic/test/bot-new.test.ts`, `docs/INTEGRATE.md` | Met | |
+| Usefulness | Example chains in one click; save a chain to a link or a haunt.yaml and open it again | `packages/arena-ui/src/chain/examples.ts`, `packages/arena-ui/src/chain/save.ts`, `packages/arena-ui/test/chain-save.test.ts` | Met | |

@@ -11,8 +11,8 @@ import { vocabOf } from '../src/arena/vocab';
 const SRC = resolve(__dirname, '../src');
 const STAGES = ['intake', 'account', 'create', 'submit', 'payment', 'confirmation', 'receive', 'process', 'dispatch', 'updates', 'ship', 'tracking', 'transit', 'handoff', 'fetch', 'classify', 'ticket', 'draft', 'reply', 'archive', 'login', 'ingest', 'validate', 'dedupe', 'triage', 'assign', 'sla', 'notify', 'escalate', 'resolve'];
 const RE = new RegExp(`['"\`](${STAGES.join('|')})['"\`]`);
-/** model.ts keeps the recorded-run legacy stage list (v1.0 streams carry no stage list). panels.ts names effect kinds (ticket, notify, dispatch): they share a word with some stages but are not stages. */
-const ALLOWED = new Set(['arena/model.ts', 'arena/panels.ts']);
+/** model.ts keeps the recorded-run legacy stage list (v1.0 streams carry no stage list). panels.ts names effect kinds (ticket, notify, dispatch): they share a word with some stages but are not stages. chain/examples.ts lists block library ids (validate, notify, archive), not app stages. */
+const ALLOWED = new Set(['arena/model.ts', 'arena/panels.ts', 'chain/examples.ts']);
 
 function files(dir: string): string[] {
   return readdirSync(dir).flatMap((n) => { const p = join(dir, n); return statSync(p).isDirectory() ? files(p) : p.endsWith('.ts') ? [p] : []; });

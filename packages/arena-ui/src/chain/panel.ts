@@ -3,6 +3,8 @@
 import { CARD_TIERS, PROTECTIONS, chainChecks, chainReport, protectionsOf, runBlock, tierOfProtections, type BlockCard, type CardTier, type ChainReport, type Protections } from '../../../haunt/src/blocks/cards';
 import { PART_LABEL } from '../workflow-lab/model';
 import { sendToArena } from './run';
+import { CHAIN_EXAMPLES, exampleChain } from './examples';
+import { shareUrl, yamlFileName } from './save';
 import { addBlock, addCustom, chainProblems, emptyChain, fromConfig, libraryByRole, move, removeAt, rename, toConfig, toYaml, type ChainModel } from './model';
 import { parseHauntConfig } from '../../../haunt/src/config/haunt-config';
 
@@ -61,6 +63,14 @@ export function mountChain(root: HTMLElement): { getModel(): ChainModel; setMode
 
   async function renderLib(): Promise<void> {
     lib.replaceChildren(el('h2', undefined, '1. Pick blocks'));
+    const ex = el('div', 'ch-examples'); ex.setAttribute('role', 'group'); ex.setAttribute('aria-label', 'Example chains');
+    ex.append(el('h3', undefined, 'Start from an example'));
+    for (const e of CHAIN_EXAMPLES) {
+      const b = el('button', 'ch-btn', e.title); b.type = 'button'; b.title = e.about; b.setAttribute('aria-label', `Load example: ${e.title}`);
+      b.onclick = () => { const m = exampleChain(e.id); if (m) { model = m; report = null; before = null; void render(); } };
+      ex.append(b);
+    }
+    lib.append(ex);
     lib.append(el('p', 'ch-note', `Cards: each block alone with: ${protLabel()}.`));
     for (const [role, list] of Object.entries(libraryByRole())) {
       lib.append(el('h3', undefined, role));
@@ -123,7 +133,20 @@ export function mountChain(root: HTMLElement): { getModel(): ChainModel; setMode
     go.title = 'Send this chain to the arena: real bots and creatures on a local server, the browser engine on the hosted page.';
     const status = el('p', 'ch-status'); status.setAttribute('role', 'status');
     go.onclick = () => { status.textContent = 'Sending...'; void sendToArena(toYaml(model)).then((r) => { if (r.ok) { status.textContent = r.where === 'live' ? 'Opening the arena...' : 'Opening the hosted arena...'; window.location.assign(r.url); } else status.textContent = r.error; }); };
-    side.append(go, status);
+    const link = el('button', 'ch-btn', 'Copy share link'); link.type = 'button'; link.disabled = problems.length > 0;
+    link.onclick = () => {
+      const url = shareUrl(location.href, model);
+      history.replaceState(null, '', url);
+      const done = (): void => { status.textContent = 'Link copied. Opening it restores this chain.'; };
+      if (navigator.clipboard) void navigator.clipboard.writeText(url).then(done, () => { status.textContent = `Copy this link: ${url}`; });
+      else status.textContent = `Copy this link: ${url}`;
+    };
+    const dl = el('button', 'ch-btn', 'Download haunt.yaml'); dl.type = 'button'; dl.disabled = problems.length > 0;
+    dl.onclick = () => {
+      const a = el('a'); a.href = URL.createObjectURL(new Blob([toYaml(model)], { type: 'text/yaml' })); a.download = yamlFileName(model);
+      a.click(); URL.revokeObjectURL(a.href); status.textContent = `Saved ${a.download}.`;
+    };
+    side.append(go, link, dl, status);
     side.append(protectionPanel());
     for (const p of problems) side.append(el('p', 'ch-problem', p));
     const cfg = toConfig(model);
