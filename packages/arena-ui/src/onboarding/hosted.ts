@@ -5,11 +5,14 @@ import outcomes from '../../../core/mock/outcomes.json';
 import type { HauntInPage } from '../api';
 import { addRecordedRuns, type Loader } from './recorded';
 import { mountHowItWorks } from './how-it-works';
+import { registerEmbeddedApps } from '../../../haunt/src/config/embedded-register';
 
 export const RECORDED_LABEL = 'Recorded run';
 
 /** Install the in-page host on `win`. Returns the facade (used by tests). */
 export function installHosted(win: Window & { __haunt?: unknown }, load?: Loader): HauntInPage {
+  // Haunted Playback and the Coffee Shop are config only: the hosted page registers them from their embedded files.
+  registerEmbeddedApps();
   const { api, hub } = createInPageMock(outcomes as never);
   const facade = addRecordedRuns(api as unknown as HauntInPage, hub as never, load);
   win.__haunt = facade;

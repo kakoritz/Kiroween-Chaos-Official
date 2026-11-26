@@ -20,7 +20,7 @@ Short answers with the place to check. Honest limits are marked **Limit**.
 
 - Effect kinds are the fake provider's fixed set. Another kind is recorded as `store`.
 - Chain Wizard and Workflow Lab scores are model-based. A real run in the arena is the proof.
-- Playback and Coffee Shop run locally. The hosted page lists the three built-in apps.
+- Playback and Coffee Shop run on the hosted page in the browser engine (a recorded-style what-if, no real bots). Real bots run locally.
 - Pack creature names (Buffer Wraith...) are display names on the engine's creatures. The sprite and rules are the engine's.
 - Chains are ordered lists: no branches or loops.
 - The three built-in apps' faults are fixed lists (kept exact on purpose, so recorded runs stay valid). New apps get faults by role.

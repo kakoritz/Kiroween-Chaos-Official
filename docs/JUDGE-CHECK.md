@@ -19,7 +19,7 @@ Run `npm run judge:check`. It reads this table and fails if any evidence path do
 | Originality | Unknown-fault fuzzing | `packages/haunt/src/runner/intensity.ts` | Met | |
 | Polish | Accessibility and mobile pass | `.kiro/specs/a11y-mobile/requirements.md`, `packages/arena-ui/src/a11y.ts` | Partly | Arena canvas is fixed 1280x720 on a phone |
 | Polish | Honest labels on model-based results | `packages/arena-ui/src/chain/panel.ts`, `packages/arena-ui/src/workflow-lab/panel.ts` | Met | |
-| Polish | Hosted build | `tools/hosted-check.mjs`, `docs/HOSTING.md` | Partly | Playback and Coffee Shop are not on the hosted page |
+| Polish | Hosted build, with Playback and the Coffee Shop in the app switcher | `tools/hosted-check.mjs`, `docs/HOSTING.md`, `packages/haunt/src/config/embedded-apps.ts` | Met | The hosted tournament check is slow on this machine (round 1 took over 65 s); see HAUNT-RESUME |
 | Usefulness | Run your own bot in minutes | `docs/OWN-BOT.md`, `templates/own-bot/bot.mjs`, `docs/INTEGRATE.md` | Met | |
 | Usefulness | Fix specs, never auto-applied | `docs/proof/sample-hardening-spec/index.md` | Met | |
 | Usefulness | CI use | `docs/examples/haunt-ci.yml`, `docs/PRODUCTION-MODE.md` | Met | |

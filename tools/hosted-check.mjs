@@ -78,6 +78,30 @@ try {
   const text = await ev(`document.body.innerText`);
   if (/Wave 4|\\bMOCK\\b/.test(text)) fail('old MOCK / Wave 4 state visible');
 
+  // 1a. Config-only apps on the hosted page (modular engine): Playback and the Coffee Shop are in the app list and a wave of the Coffee Shop runs on its own stages.
+  {
+    const ids = await ev(`(async()=>(await window.__haunt.getApps()).map(a=>a.id).join())()`);
+    if (ids !== 'orders,inbox,stream,playback,coffee-shop') fail('hosted app list is ' + ids);
+    await ev(`window.__haunt.stopDemo()`);
+    await sleep(400);
+    await ev(`window.__haunt.setApp('coffee-shop')`);
+    await ev(`window.__haunt.startWave({ app: 'coffee-shop', orders: 3, lanes: 3, speed: 4 })`);
+    let seenStages = new Set(), ok = false;
+    const tM = Date.now();
+    while (Date.now() - tM < 20_000) {
+      const r = await ev(`(async()=>{const s=await window.__haunt.getState();return {app:s.app,stages:s.stages.map(x=>x.id).join(),at:s.lanes.map(l=>l.stage).filter(Boolean)}})()`);
+      if (r) { r.at.forEach((x) => seenStages.add(x)); ok = r.app === 'coffee-shop' && r.stages === 'read_request,pay,brew,ready' && seenStages.size >= 2; }
+      if (ok) break;
+      await sleep(300);
+    }
+    if (!ok) fail('Coffee Shop wave did not run on its own stages on the hosted page (saw: ' + [...seenStages].join() + ')');
+    else console.log('hosted Coffee Shop wave ran on its own stages: ' + [...seenStages].join());
+    await ev(`window.__haunt.stopWave()`);
+    await sleep(400);
+    await ev(`window.__haunt.setApp('orders')`);
+    await sleep(400);
+  }
+
   // 1b. Frame sampling: a demo pass at 2x (first 60 s) must never leave the lanes without a creature for more than 5 s (a recorded run can sit quiet for a minute).
   {
     await ev(`window.__haunt.stopDemo()`);

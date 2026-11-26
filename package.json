@@ -32,6 +32,7 @@
     "typecheck": "tsc --noEmit",
     "verify": "node tools/verify.mjs",
     "packs:embed": "node tools/embed-packs.mjs",
+    "apps:embed": "node tools/embed-apps.mjs",
     "haunt": "node tools/run-ts.mjs packages/core/src/bin/haunt.ts",
     "own-bot": "node tools/run-ts.mjs packages/core/src/bin/own-bot.ts",
     "block:add": "node tools/run-ts.mjs packages/core/src/bin/block-add.ts",

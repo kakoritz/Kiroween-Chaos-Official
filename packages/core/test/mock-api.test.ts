@@ -93,7 +93,7 @@ describe('mock server waves (H0.3)', () => {
       await waitFor(async () => (await get(base, '/api/state')).wave.running === false);
       const cmp = await get(base, '/api/waves/1/compare/2');
       expect(cmp.cells.length).toBe(1);
-      expect((await get(base, '/api/apps')).length).toBe(2);
+      expect((await get(base, '/api/apps')).length).toBe(3);
     });
   });
 });

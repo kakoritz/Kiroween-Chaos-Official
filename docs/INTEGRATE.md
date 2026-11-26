@@ -67,5 +67,5 @@ Use an inline stage a few times, then keep it: `npm run block:add -- path/to/hau
 ## Limits
 
 - Effect kinds map to the fake provider's kinds (see [`MODULAR.md`](MODULAR.md)).
-- Hosted page: your app does not appear. Run locally.
+- Hosted page: only the apps shipped in this repo (Playback, Coffee Shop) appear. Your own app runs locally.
 - The Chain Wizard scores are model-based.

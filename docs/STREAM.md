@@ -8,7 +8,7 @@
 | Stages | 5: ingest upload, transcode, publish, notify subscribers, archive (`fetch`, `classify`, `draft`, `reply`, `archive`) | 11: account or login, profile pick, browse, title select, entitlement, license or DRM, start stream, buffering and bitrate, render, ads, finish and history |
 | Code | `apps/haunted-stream/` (Node, five bots) | `apps/haunted-playback/haunt.yaml` only, library blocks |
 | Run | arena app switcher, **Stream** | `npm run live -- --app apps/haunted-playback` |
-| Hosted page | yes | no, run locally |
+| Hosted page | yes | yes (browser engine, no real bots) |
 
 Playback matches the Streaming pack in `packs/streaming/pack.yaml` (the same 11 stages, the same story). The pack is a model for the Workflow Lab. Playback is the runnable version.
 
