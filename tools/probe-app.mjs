@@ -1,7 +1,7 @@
 // Deep probe of a registered app on the live engine: a tournament with Next between rounds, then checks of the stream, the creatures,
 // the Casebook and the contract. Usage: node tools/probe-app.mjs <app-id> [seed]   (private ports 17751/17752; run by hand, not part of verify)
 import { spawn } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { client } from './lib/haunt-client.mjs';
@@ -10,6 +10,10 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const appId = process.argv[2];
 const seed = Number(process.argv[3] ?? 7);
 if (!appId) { console.error('usage: node tools/probe-app.mjs <app-id> [seed]'); process.exit(2); }
+// A tournament makes the pattern miner write hardening specs under .kiro/specs. They are probe output, never applied: remove the ones this run made.
+const specsDir = resolve(root, '.kiro/specs');
+const specsBefore = new Set(existsSync(specsDir) ? readdirSync(specsDir) : []);
+const dropNewSpecs = () => { if (existsSync(specsDir)) for (const d of readdirSync(specsDir)) if (d.startsWith('hardening-') && !specsBefore.has(d)) rmSync(resolve(specsDir, d), { recursive: true, force: true }); };
 const PORT = process.env.HAUNT_PORT || '17751', PROVIDER = process.env.HAUNT_PROVIDER_PORT || '17752';
 const base = `http://127.0.0.1:${PORT}`;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -70,7 +74,7 @@ try {
   const v = await new Promise((done) => { const p = spawn(process.execPath, [resolve(root, 'tools/run-ts.mjs'), resolve(root, 'tools/validate-events.ts'), f], { cwd: root }); let o = ''; p.stdout.on('data', (d) => { o += d; }); p.stderr.on('data', (d) => { o += d; }); p.on('exit', (code) => done({ code, o })); });
   check(`${appId}: contract validator over the tournament (${evs.length} events)`, v.code === 0, v.code === 0 ? 'no violations' : v.o.split('\n').slice(0, 5).join(' | '));
 } catch (e) { if (!/stuck/.test(String(e))) console.log('probe error:', e); } finally {
-  c?.close?.(); server.kill();
+  c?.close?.(); server.kill(); setTimeout(dropNewSpecs, 500);
 }
 const bad = rows.filter((r) => !r.ok);
 console.log(`${rows.length - bad.length} of ${rows.length} checks passed`);
