@@ -1,0 +1,15 @@
+/* Phone lane cards: only in narrow mode, big text, big tap targets. */
+#lane-cards { display: none; }
+body.narrow #lane-cards { display: flex; flex-direction: column; gap: 8px; margin: 8px; }
+body.narrow #lane-cards:empty { display: none; }
+.lc { text-align: left; width: 100%; min-height: 44px; padding: 10px 12px; border-radius: 10px; border: 2px solid var(--stone-2, #444); background: var(--stone, #222); color: inherit; font: inherit; font-size: 15px; }
+.lc-head { display: flex; justify-content: space-between; gap: 8px; }
+.lc-now { margin: 4px 0; }
+.lc-bar { height: 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.15); overflow: hidden; }
+.lc-bar i { display: block; height: 100%; background: currentColor; }
+.lc-chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
+.lc-chip { padding: 2px 8px; border-radius: 10px; border: 1px solid currentColor; font-size: 13px; opacity: 0.6; }
+.lc-chip--active, .lc-chip--retrying { opacity: 1; font-weight: bold; }
+.lc-chip--done, .lc-chip--replayed { opacity: 1; text-decoration: line-through; }
+.lc-line { font-size: 13px; opacity: 0.85; }
+.lc--dead, .lc--halted { border-color: #e05252; }

@@ -4,6 +4,8 @@ import { ArenaScene, BOSS_INSET, STAGE_H, STAGE_W, laneBoxes } from '../src/aren
 import { applyEvent, emptyVM, loadSnapshot, reconcileLedger, totalScore } from '../src/arena/model';
 import { LedgerPanel, RankBoard } from '../src/arena/panels';
 import { LaneTickerModel, LaneTickerView } from '../src/arena/lanes-ticker';
+import { LaneCardsView } from '../src/arena/lane-cards';
+import '../src/arena/lane-cards.css';
 import { chipAt } from '../src/arena/inspector';
 import { computeFit } from '../src/arena/layout';
 import { LanePopup } from '../src/arena/lane-popup';
@@ -664,6 +666,10 @@ mountCampaignHub(stageEl, { getCampaign: () => api.getCampaign() }, { onStart: s
 const NARROW_IDS = ['rank', 'ledger', 'ticker', 'quiet', 'insp', 'keys-pop'];
 const flowEl = document.createElement('div');
 flowEl.id = 'flow';
+const laneCardsEl = document.createElement('div');
+laneCardsEl.id = 'lane-cards';
+laneCardsEl.setAttribute('aria-label', 'Lanes');
+const laneCards = new LaneCardsView(laneCardsEl, (lane) => { const l = vm.lanes.find((x) => x.lane === lane); if (l) inspector.open(l.lane, null, null, l.order); });
 const bandEl = document.createElement('div');
 bandEl.id = 'arena-band';
 const moved = new Map<HTMLElement, Comment>();
@@ -685,7 +691,7 @@ function setNarrow(on: boolean) {
     stageEl.replaceWith(bandEl);
     bandEl.appendChild(stageEl);
     root.appendChild(flowEl);
-    flowEl.append(hdr, bandEl, els['quiet']!, els['rank']!, els['ledger']!, els['ticker']!, els['insp']!, els['keys-pop']!);
+    flowEl.append(hdr, bandEl, laneCardsEl, els['quiet']!, els['rank']!, els['ledger']!, els['ticker']!, els['insp']!, els['keys-pop']!);
   } else {
     for (const [el, ph] of moved) ph.replaceWith(el);
     moved.clear();
@@ -744,6 +750,7 @@ function frame(now: number) {
   tickerEl.classList.toggle('hidden', vm.lanes.length === 0);
   ticker.ensure(vm.lanes.map((l) => l.lane));
   ticker.render(performance.now());
+  if (document.body.classList.contains('narrow')) laneCards.update(vm);
   if (pendingInspect) {
     const [ln, sid] = pendingInspect.split(':');
     const lane = vm.lanes.find((l) => l.lane === Number(ln));

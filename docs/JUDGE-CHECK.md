@@ -17,7 +17,7 @@ Run `npm run judge:check`. It reads this table and fails if any evidence path do
 | Completeness | Real crash proof | `packages/haunt/test/hero-crash.test.ts`, `apps/generic/test/generic.test.ts` | Met | |
 | Originality | Chaos as a game: tournament, corpses, Casebook | `docs/JUDGES.md`, `packages/haunt/src/tournament/rounds.ts` | Met | |
 | Originality | Unknown-fault fuzzing | `packages/haunt/src/runner/intensity.ts` | Met | |
-| Polish | Accessibility and mobile pass | `.kiro/specs/a11y-mobile/requirements.md`, `packages/arena-ui/src/a11y.ts` | Partly | Arena canvas is fixed 1280x720 on a phone |
+| Polish | Accessibility and mobile pass | `.kiro/specs/a11y-mobile/requirements.md`, `packages/arena-ui/src/a11y.ts`, `packages/arena-ui/src/arena/lane-cards.ts`, `packages/arena-ui/test/lane-cards.test.ts` | Partly | Phone shows readable lane cards under a small canvas; not checked on a real phone |
 | Polish | Honest labels on model-based results | `packages/arena-ui/src/chain/panel.ts`, `packages/arena-ui/src/workflow-lab/panel.ts` | Met | |
 | Polish | Hosted build, with Playback and the Coffee Shop in the app switcher | `tools/hosted-check.mjs`, `docs/HOSTING.md`, `packages/haunt/src/config/embedded-apps.ts` | Met | |
 | Usefulness | Run your own bot in minutes | `docs/OWN-BOT.md`, `templates/own-bot/bot.mjs`, `docs/INTEGRATE.md` | Met | |
