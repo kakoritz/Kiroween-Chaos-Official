@@ -6,9 +6,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 310. With a PR: 29 (9%). With a test: 245 (79%).
+- Requirements: 310. With a PR: 29 (9%). With a test: 249 (80%).
 - Tasks: 158. Done: 156. With a PR: 48 (30%). With a test: 39 (25%).
-- Test files scanned: 234.
+- Test files scanned: 235.
 
 ## Tasks
 
@@ -215,10 +215,10 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R2.1 | chain-wizard-v2 | A button on the Chain Wizard saves the chain as an app and opens the live are... | n/a | - | `packages/arena-ui/test/chain-run.test.ts`, `packages/core/test/chain-register.test.ts` |
 | R2.2 | chain-wizard-v2 | The server registers an app posted by the page (POST /api/apps/register with ... | n/a | - | `packages/core/test/chain-register.test.ts` |
 | R2.3 | chain-wizard-v2 | On the hosted page the same button registers the app in the browser engine. | n/a | - | `packages/arena-ui/test/chain-run.test.ts`, `packages/haunt/test/embedded-apps.test.ts` |
-| R3 | chain-wizard-v2 | Bot starter for any app | n/a | - | - |
-| R3.1 | chain-wizard-v2 | npm run bot:new -- <haunt.yaml> [--lang node/python] writes a runnable naive ... | n/a | - | - |
-| R3.2 | chain-wizard-v2 | Each effect has a HARDEN comment saying which protection fixes it. | n/a | - | - |
-| R3.3 | chain-wizard-v2 | The written bot passes the contract validator when run by own-bot --app. | n/a | - | - |
+| R3 | chain-wizard-v2 | Bot starter for any app | n/a | - | `apps/generic/test/bot-new.test.ts` |
+| R3.1 | chain-wizard-v2 | npm run bot:new -- <haunt.yaml> [--lang node/python] writes a runnable naive ... | n/a | - | `apps/generic/test/bot-new.test.ts` |
+| R3.2 | chain-wizard-v2 | Each effect has a HARDEN comment saying which protection fixes it. | n/a | - | `apps/generic/test/bot-new.test.ts` |
+| R3.3 | chain-wizard-v2 | The written bot passes the contract validator when run by own-bot --app. | n/a | - | `apps/generic/test/bot-new.test.ts` |
 | R4 | chain-wizard-v2 | Example chains | n/a | - | - |
 | R4.1 | chain-wizard-v2 | The wizard offers at least four example chains (checkout, sign-up, video play... | n/a | - | - |
 | R5 | chain-wizard-v2 | Save and share | n/a | - | - |

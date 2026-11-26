@@ -37,6 +37,8 @@ Open the arena, pick your app in the switcher, start a wave. Five tiers run your
 
 ## 4. Run your own bot on it
 
+No bot yet? `npm run bot:new -- path/to/your-folder/haunt.yaml` (add `--lang python` for Python) writes a runnable, deliberately naive bot with your own stage ids. A `HARDEN` comment sits at each effect and says which protection fixes it. Then:
+
 ```
 npm run own-bot -- path/to/your-bot.mjs --app path/to/your-folder
 ```
