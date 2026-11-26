@@ -47,6 +47,10 @@ Your bot speaks the event format in [`OWN-BOT.md`](OWN-BOT.md) and uses **your o
 
 The arena shows the ledger, the grade and the Casebook. `.kiro/specs/hardening-<run>/` holds a fix spec with your stage ids and effect kinds. Nothing is applied for you. Change your bot, run again, compare.
 
+## Name your creatures (optional)
+
+Give the engine's faults your own names in the arena: `creatures: [{ name: Till Troll, stage: pay, faults: [http_500] }]`. See [`STREAM.md`](STREAM.md).
+
 ## Own your block
 
 Use an inline stage a few times, then keep it: `npm run block:add -- path/to/haunt.yaml bake`. It goes to `blocks/user.yaml`; use it as `- { use: bake }`.

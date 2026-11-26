@@ -21,3 +21,14 @@ stages:
   - { use: render, label: Render }
   - { use: notify, id: ads, label: Ads and pause or resume }
   - { use: store_record, id: finish, label: Finish and history }
+# The names of the Streaming pack (packs/streaming/pack.yaml), shown in the arena on the engine fault underneath.
+creatures:
+  - { name: Buffer Wraith, stage: buffering, faults: [slow_link, internet_outage, endpoint_down] }
+  - { name: CDN Kraken, stage: start_stream, faults: [timeout, comm_timeout, endpoint_down, http_500] }
+  - { name: Doppelganger, stage: start_stream, faults: [crash, out_of_memory, power_outage] }
+  - { name: DRM Gatekeeper, stage: license, faults: [http_404, http_429, http_500, timeout, comm_timeout] }
+  - { name: Region Warden, stage: entitlement, faults: [http_404, http_429, http_500] }
+  - { name: Render Gremlin, stage: render, faults: [crash, out_of_memory, power_outage, disk_full] }
+  - { name: Poltergeist, stage: finish, faults: [crash, out_of_memory, power_outage] }
+  - { name: Cloud Banshee, faults: [internet_outage, endpoint_down] }
+  - { name: Reaper, faults: [crash, out_of_memory, power_outage] }

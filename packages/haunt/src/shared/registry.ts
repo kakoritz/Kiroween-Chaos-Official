@@ -71,5 +71,11 @@ export function appFromConfig(config: HauntConfig, opts: { id?: string; label?: 
     const effects: EffectDef[] = s.effects.map((e) => ({ kind: e.kind, key: e.key, service: e.kind }));
     return { id: s.id, label: s.label, icon, workAnimation, role: s.role, min, max, effects, verb: s.label, ...(s.deny ? { deny: s.deny } : {}), ...(s.block ? { block: s.block } : {}) };
   });
-  return { id, label: opts.label ?? config.label ?? id, stages, orderPrefix: opts.idPrefix ?? config.idPrefix ?? 'job', ...(opts.source ? { source: opts.source } : {}) };
+  return { id, label: opts.label ?? config.label ?? id, stages, orderPrefix: opts.idPrefix ?? config.idPrefix ?? 'job', ...(opts.source ? { source: opts.source } : {}), ...(config.creatures ? { creatureNames: config.creatures.map((c) => ({ ...c, faults: [...c.faults] })) } : {}) };
+}
+
+/** The name an app gives the creature for `fault` at `stage` (the first matching entry), or undefined: the engine's own name shows. */
+export function creatureNameFor(app: string | undefined, stage: string | undefined, fault: string): string | undefined {
+  const defs = app !== undefined ? APPS[app]?.creatureNames : undefined;
+  return defs?.find((c) => c.faults.includes(fault) && (c.stage === undefined || c.stage === stage))?.name;
 }

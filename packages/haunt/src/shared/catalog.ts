@@ -88,6 +88,8 @@ export interface AppDef {
   orderPrefix: string;
   /** Folder of the app's haunt.yaml for a registered app (the generic bot reads it). */
   source?: string;
+  /** Names this app gives to faults on a stage (arena display only). */
+  creatureNames?: { name: string; stage?: string; faults: string[] }[];
 }
 /** The live app table. Built-ins are here at load; `registerApp` (shared/registry.ts) adds more. Do not assign to it directly. */
 export const APPS: Record<AppId, AppDef> = {

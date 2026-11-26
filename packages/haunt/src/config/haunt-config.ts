@@ -23,12 +23,15 @@ export interface Targets {
   throughputPerMin?: number;
   concurrency: number;
 }
+/** A creature name an app gives to faults on a stage, shown in the arena instead of the engine's name (modular-engine R6.2). */
+export interface CreatureName { name: string; stage?: string; faults: string[] }
 export interface HauntConfig {
   name: string;
   /** Display name for switchers (defaults to `name`). */
   label?: string;
   /** 2 to 6 lowercase letters used in order ids, `cof-0001` (defaults to `job`). */
   idPrefix?: string;
+  creatures?: CreatureName[];
   start: string;
   adapter: Adapter[];
   stages: StageDef[];
@@ -83,7 +86,7 @@ function expandUses(list: unknown[], errors: string[]): unknown[] {
 export function validateHauntConfig(raw: unknown): LoadResult {
   const errors: string[] = [];
   if (!isObj(raw)) return { ok: false, errors: ['root: expected a mapping'] };
-  checkUnknown(raw, ['name', 'label', 'idPrefix', 'start', 'adapter', 'stages', 'inputs', 'truth', 'targets'], '', errors);
+  checkUnknown(raw, ['name', 'label', 'idPrefix', 'creatures', 'start', 'adapter', 'stages', 'inputs', 'truth', 'targets'], '', errors);
 
   if (!isNonEmptyStr(raw.name)) errors.push('name: required non-empty string');
   if (!isNonEmptyStr(raw.start)) errors.push('start: required non-empty string');
@@ -146,6 +149,20 @@ export function validateHauntConfig(raw: unknown): LoadResult {
     });
   }
 
+  const creatures: CreatureName[] = [];
+  if (raw.creatures !== undefined && raw.creatures !== null) {
+    if (!Array.isArray(raw.creatures)) errors.push('creatures: expected a list');
+    else raw.creatures.forEach((c, i) => {
+      const cp = `creatures[${i}].`;
+      if (!isObj(c)) { errors.push(`creatures[${i}]: expected a mapping`); return; }
+      checkUnknown(c, ['name', 'stage', 'faults'], cp, errors);
+      if (!isNonEmptyStr(c.name)) errors.push(`${cp}name: required non-empty string`);
+      if (!Array.isArray(c.faults) || c.faults.length === 0 || !c.faults.every(isNonEmptyStr)) errors.push(`${cp}faults: required list of fault ids`);
+      if (c.stage !== undefined && !stages.some((s) => s.id === c.stage)) errors.push(`${cp}stage: "${String(c.stage)}" is not a stage of this app`);
+      if (isNonEmptyStr(c.name) && Array.isArray(c.faults)) creatures.push({ name: c.name, ...(isNonEmptyStr(c.stage) ? { stage: c.stage } : {}), faults: c.faults as string[] });
+    });
+  }
+
   if (raw.inputs !== undefined && raw.inputs !== null && !isNonEmptyStr(raw.inputs)) errors.push('inputs: must be a non-empty string');
   if (raw.truth !== undefined && raw.truth !== null) {
     if (!isNonEmptyStr(raw.truth)) errors.push('truth: must be a URL string');
@@ -183,6 +200,7 @@ export function validateHauntConfig(raw: unknown): LoadResult {
       name: raw.name as string,
       ...(isNonEmptyStr(raw.label) ? { label: raw.label } : {}),
       ...(isNonEmptyStr(raw.idPrefix) ? { idPrefix: raw.idPrefix } : {}),
+      ...(creatures.length > 0 ? { creatures } : {}),
       start: raw.start as string,
       adapter,
       stages,

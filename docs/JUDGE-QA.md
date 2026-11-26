@@ -14,13 +14,13 @@ Short answers with the place to check. Honest limits are marked **Limit**.
 | Is it safe to run on production? | `observe` injects nothing, `staging` is capped, `prod-guarded` needs a window and an allowlist, `haunt stop` is the kill switch. | [`PRODUCTION-MODE.md`](PRODUCTION-MODE.md) |
 | Does it work without a mouse or on a phone? | Keyboard focus, contrast and reduced motion are handled. **Limit:** the arena canvas is fixed 1280x720; on a phone use the Workflow Lab or Chain Wizard. | `.kiro/specs/a11y-mobile/requirements.md` |
 | What are the limits? | See below. | this page |
-| What would you build next? | Real provider kinds beyond the fixed set; the pack creature names in the live arena; Playback and Coffee Shop on the hosted page; a branching chain editor. | [`MODULAR.md`](MODULAR.md) |
+| What would you build next? | Real provider kinds beyond the fixed set; Playback and Coffee Shop on the hosted page; a branching chain editor. | [`MODULAR.md`](MODULAR.md) |
 
 ## Limits, plainly
 
 - Effect kinds are the fake provider's fixed set. Another kind is recorded as `store`.
 - Chain Wizard and Workflow Lab scores are model-based. A real run in the arena is the proof.
 - Playback and Coffee Shop run locally. The hosted page lists the three built-in apps.
-- The pack creature names (Buffer Wraith...) are in the Lab and Casebook model; the live arena draws the engine's creatures.
+- Pack creature names (Buffer Wraith...) are display names on the engine's creatures. The sprite and rules are the engine's.
 - Chains are ordered lists: no branches or loops.
 - The three built-in apps' faults are fixed lists (kept exact on purpose, so recorded runs stay valid). New apps get faults by role.

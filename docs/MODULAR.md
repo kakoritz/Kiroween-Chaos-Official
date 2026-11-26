@@ -61,5 +61,5 @@ The wizard and the Lab are model-based: they apply the same rules to the protect
 
 ## Limits
 
-- The pack creature names (Buffer Wraith, CDN Kraken...) are in the Lab and the Casebook model. The live arena draws the engine's creatures on a Playback stage.
+- A pack creature name is display only: the sprite and the rules are the engine's. An app gives names with a `creatures:` list (see [`STREAM.md`](STREAM.md)).
 - The hosted page does not list Playback or Coffee Shop. Run them locally.

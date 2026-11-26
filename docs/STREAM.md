@@ -32,7 +32,28 @@ Every stage takes crash, memory, power and disk faults. Effect stages also take 
 
 ## The pack's creature names
 
-The pack names nine creatures (Buffer Wraith, CDN Kraken, DRM Gatekeeper, Render Gremlin, Cloud Banshee, Region Warden, Doppelganger, Poltergeist, Reaper). They show in the Workflow Lab and the Casebook model. In the live arena a Playback stage is attacked by the engine's creatures (zombie, imp, ghost, reaper...) for the same fault. The behavior is what the pack names mean: a stalled buffer is a slow link, a CDN timeout is a timeout, a DRM denial is an HTTP status.
+The pack names nine creatures. Playback's `haunt.yaml` has a `creatures:` list that gives those names to the engine faults at the stage where they belong. The arena shows the name in the ticker, the lane log, the caption under the creature and its tooltip. The sprite and the rules stay the engine's.
+
+| Pack creature | Where | Engine faults underneath | Sprite |
+|---|---|---|---|
+| Buffer Wraith | buffering | slow link, internet outage, endpoint down | zombie, banshee, gargoyle |
+| CDN Kraken | start_stream | timeout, comm timeout, endpoint down, 500 | zombie, gargoyle, imp |
+| DRM Gatekeeper | license | 404, 429, 500, timeout | ghost, goblin, imp, zombie |
+| Render Gremlin | render | crash, memory, power, disk full | reaper, wraith, mummy |
+| Region Warden | entitlement | 404, 429, 500 | ghost, goblin, imp |
+| Doppelganger | start_stream | crash, memory, power (a crash after the effect plays it twice) | reaper, wraith |
+| Poltergeist | finish | crash, memory, power (a second history row) | reaper, wraith |
+| Cloud Banshee | any stage | internet outage, endpoint down | banshee, gargoyle |
+| Reaper | any stage | crash, memory, power | reaper, wraith |
+
+Any other fault on a stage shows its engine name, as in every app. Your app can do the same:
+
+```yaml
+creatures:
+  - { name: Till Troll, stage: pay, faults: [http_500, http_429] }
+```
+
+A fault id the engine does not know fails at start with the line to fix. Test: `packages/haunt/test/creature-names.test.ts`.
 
 ## What the test proves
 

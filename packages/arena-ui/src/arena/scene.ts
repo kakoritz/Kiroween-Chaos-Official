@@ -931,7 +931,7 @@ export class ArenaScene {
     ctx.globalAlpha = Math.max(0, 1 - exit);
     ctx.font = '700 11px ' + MONO;
     // Creatures stand 56 px apart: a long word (NOT ON TRUCK, RUNNING LATE) is cut so it never runs into the next tag; the chip's ring carries the full word.
-    const cap = fit(ctx, captionOf(c.fault || c.id), 64);
+    const cap = fit(ctx, c.name ? c.name.toUpperCase() : captionOf(c.fault || c.id), 64);
     const w = Math.ceil(ctx.measureText(cap).width) + 10;
     rr(ctx, x - w / 2, y + size / 2 + 6, w, 15, 4); ctx.fillStyle = 'rgba(10,8,18,0.82)'; ctx.fill();
     ctx.lineWidth = 1.5; ctx.strokeStyle = C.out; ctx.stroke();

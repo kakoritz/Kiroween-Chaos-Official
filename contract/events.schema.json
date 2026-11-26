@@ -944,6 +944,10 @@
                     "transit",
                     "handoff"
                   ]
+                },
+                "creatureName": {
+                  "type": "string",
+                  "minLength": 1
                 }
               }
             }

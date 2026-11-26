@@ -23,6 +23,8 @@ export interface CreatureVM {
   /** When the exit starts (null: still here). May lie in the future. */
   exitAt: number | null;
   exitDur: number;
+  /** The app's own name for this creature (for example Buffer Wraith), from the chaos event; empty when the app has none. */
+  name?: string;
   /** Where the fault came from (contract v1.2 rule 52): plan, gremlin, curse or fuzz. */
   source: string;
   /** A fuzz fault nobody has seen: shown with an UNKNOWN tag and its fingerprint (TV3-U7). */
@@ -83,16 +85,18 @@ export function chaosPhrase(d: Record<string, unknown>, stageLabel = ''): string
     const v = typeof d.variant === 'string' && d.variant ? `: ${words(d.variant)}` : '';
     return `gremlin${v}${at}`;
   }
+  if (typeof d.creatureName === 'string' && d.creatureName) return `${d.creatureName} (${words(fault || 'chaos')}) hits ${stageLabel || 'a stage'}`;
   return `${fault || 'chaos'} hits ${stageLabel || 'a stage'}`;
 }
 
 /** Tooltip for the UNKNOWN tag and the gremlin. Empty for every other creature. */
-export function creatureTip(c: Pick<CreatureVM, 'unknown' | 'fingerprint' | 'base' | 'fault' | 'variant' | 'source'>): string {
+export function creatureTip(c: Pick<CreatureVM, 'unknown' | 'fingerprint' | 'base' | 'fault' | 'variant' | 'source'> & { name?: string }): string {
   if (c.unknown) {
     const fp = c.fingerprint ? ` Fingerprint ${c.fingerprint}: the same shape gets the same id.` : '';
     return `UNKNOWN fault: a shape from the fuzz pool that nobody has seen${c.base ? `, built on ${words(c.base)}` : ''}.${fp} It goes in the Casebook as a new signature.`;
   }
   if (c.source === 'gremlin' || c.fault === 'gremlin') return `Gremlin${c.variant ? ` (${words(c.variant)})` : ''}: a small prank so no lane gets a perfect run. It costs little.`;
+  if (c.name) return `${c.name}: ${words(c.fault || 'chaos')}. This app names its creatures; the engine fault underneath is ${words(c.fault || 'chaos')}.`;
   return '';
 }
 
@@ -108,6 +112,7 @@ export function addCreature(l: CreatureHost, now: number, d: Record<string, unkn
     killer: KILLERS.has(id), born: now, actAt: !deferred && QUIET_FAULTS.has(fault) ? now + 300 : null,
     shrug: false, exitAt: null, exitDur: EXIT_MS,
     source: typeof d.source === 'string' ? d.source : '', unknown: d.unknown === true,
+    ...(typeof d.creatureName === 'string' && d.creatureName ? { name: d.creatureName } : {}),
     fingerprint: typeof d.fingerprint === 'string' ? d.fingerprint : '', variant: typeof d.variant === 'string' ? d.variant : '',
     base: typeof (d.fuzz as { fault?: unknown } | undefined)?.fault === 'string' ? String((d.fuzz as { fault: string }).fault) : '',
   };
