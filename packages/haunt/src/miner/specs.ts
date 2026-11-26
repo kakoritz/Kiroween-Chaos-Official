@@ -31,9 +31,17 @@ const botsOf = (p: Pattern): string[] => [...new Set(p.lanes.map(bot))];
 const tiersOf = (p: Pattern): string => [...new Set(p.lanes.map((l) => TIERS[tierOfLane(l)].label))].join(', ') || 'the bot';
 const faultText = (f: string): string => f.replace(/_/g, ' ');
 
+/** What a registered app adds (chain-wizard-v2 R6): its own stage names and its own bot file, instead of the Orders app's. */
+export interface SpecContext {
+  /** Stage id to the label the app shows, for example `pay` to `Take payment`. */
+  stageLabels?: Record<string, string>;
+  /** The app's bot, in place of `apps/haunted-orders/src/bots/<tier>.ts`; engine files are left out of the patch. */
+  botFile?: string;
+}
+
 /** The smallest patch for a pattern, or null when no small patch is known (the pattern is refused, never "rewritten"). */
-export function patchFor(p: Pattern): Patch | null {
-  const patch = rawPatchFor(p);
+export function patchFor(p: Pattern, ctx?: SpecContext): Patch | null {
+  const patch = ownPatch(rawPatchFor(p, ctx), p, ctx);
   // If every lane that met it already has the parts for the action and the SDK does not enforce it as policy, adding the part changes nothing:
   // the cause is tuning, which needs a design discussion, so no patch is proposed.
   if (patch?.action && p.lanes.length > 0) {
@@ -44,6 +52,12 @@ export function patchFor(p: Pattern): Patch | null {
   return patch;
 }
 
+function ownPatch(patch: Patch | null, p: Pattern, ctx?: SpecContext): Patch | null {
+  if (!patch || !ctx?.botFile) return patch;
+  const files = [...new Set(patch.files.map((f) => (f.startsWith('apps/haunted-orders/') || f.startsWith('packages/haunt/src/') ? ctx.botFile! : f)))];
+  return { ...patch, files, test: { ...patch.test, file: `tests/hardening-${p.id}.test.ts` } };
+}
+
 /** The lanes of the pattern whose tier lacks any of these parts (all of them when none lacks: the change is then tuning). */
 function lacking(p: Pattern, parts: readonly string[]): number[] {
   const ls = p.lanes.filter((l) => !parts.every((x) => (TIERS[tierOfLane(l)].parts as readonly string[]).includes(x)));
@@ -52,8 +66,9 @@ function lacking(p: Pattern, parts: readonly string[]): number[] {
 const botsOfLanes = (ls: readonly number[]): string[] => [...new Set(ls.map(bot))];
 const tiersOfLanes = (ls: readonly number[]): string => [...new Set(ls.map((l) => TIERS[tierOfLane(l)].label))].join(', ') || 'the bot';
 
-function rawPatchFor(p: Pattern): Patch | null {
-  const stage = p.stage;
+function rawPatchFor(p: Pattern, ctx?: SpecContext): Patch | null {
+  const label = ctx?.stageLabels?.[p.stage];
+  const stage = label && label !== p.stage ? `${label} (\`${p.stage}\`)` : p.stage;
   const when = `WHEN ${faultText(p.fault)} hits the ${stage} stage`;
   let bots = botsOf(p);
   let tiers = tiersOf(p);
@@ -171,6 +186,8 @@ export interface FixSpecInput {
   totals?: { orders: number };
   /** Report links, e.g. `/api/waves/3/report`. */
   reports?: string[];
+  /** A registered app's own names and bot file. */
+  context?: SpecContext;
 }
 
 export interface FixSpec {
@@ -196,7 +213,7 @@ export function renderFixSpec(input: FixSpecInput): FixSpec {
   const refused: FixSpec['refused'] = [];
   const patches = new Map<string, Patch>();
   for (const p of ranked) {
-    const patch = patchFor(p);
+    const patch = patchFor(p, input.context);
     if (!patch) refused.push({ pattern: p, reason: 'no small patch is known for this shape; it needs a design discussion before any change' });
     else if (patch.budgetLines > DIFF_BUDGET_MAX) refused.push({ pattern: p, reason: `the smallest known patch is ${patch.budgetLines} lines, over the budget of ${DIFF_BUDGET_MAX}` });
     else { included.push(p); patches.set(p.id, patch); }

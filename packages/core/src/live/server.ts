@@ -487,7 +487,7 @@ export class LiveServer {
     const todo = this.patterns.list().filter((p) => qualifies(p) && p.status === 'new');
     if (todo.length === 0) fail(409, 'not_ready', 'no qualifying pattern is waiting for a spec');
     const w = wave ?? this.waves.n;
-    const out = writeFixSpec(this.specsDir!, { runId, patterns: todo, plan: this.tourney ? 'the tournament with seed ' + this.tourney.t.seed + ' and the same rounds' : 'the same plan and seed', reports: [...new Set(todo.flatMap((p) => p.evidence.map((e) => e.report).filter(Boolean) as string[]))] });
+    const out = writeFixSpec(this.specsDir!, { runId, patterns: todo, plan: this.tourney ? 'the tournament with seed ' + this.tourney.t.seed + ' and the same rounds' : 'the same plan and seed', reports: [...new Set(todo.flatMap((p) => p.evidence.map((e) => e.report).filter(Boolean) as string[]))], ...(isBuiltinApp(this.app) ? {} : { context: { stageLabels: Object.fromEntries(this.stages.map((s) => [s.id, s.label])), botFile: 'your bot (the `start` file in haunt.yaml)' } }) });
     const ids = out.included.map((p) => p.id);
     for (const p of this.patterns.setStatuses(ids, 'suggested')) this.log.emit({ ...(patternEvent(p, 'updated') as unknown as HauntEvent), wave: w });
     const result = { runId, path: '.kiro/specs/hardening-' + runId, patterns: ids, refused: out.refused.map((r) => r.pattern.signature), lint: { ok: out.lint.ok, issues: out.lint.issues } };
