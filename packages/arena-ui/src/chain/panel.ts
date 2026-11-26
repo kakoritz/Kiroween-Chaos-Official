@@ -1,6 +1,7 @@
 // Chain wizard DOM (modular-engine R12.3): library on the left, the chain in the middle, warnings and the test on the right.
 // Everything runs in this page; nothing is sent anywhere.
 import { CARD_TIERS, PROTECTIONS, chainChecks, chainReport, protectionsOf, runBlock, tierOfProtections, type BlockCard, type CardTier, type ChainReport, type Protections } from '../../../haunt/src/blocks/cards';
+import { hintOf } from '../../../haunt/src/blocks/library';
 import { PART_LABEL } from '../workflow-lab/model';
 import { sendToArena } from './run';
 import { CHAIN_EXAMPLES, exampleChain } from './examples';
@@ -78,11 +79,11 @@ export function mountChain(root: HTMLElement): { getModel(): ChainModel; setMode
       for (const b of list) {
         const li = el('li');
         const c = await cardFor(b.id);
-        const btn = el('button', 'ch-btn', `+ ${b.label}`); btn.type = 'button'; btn.title = b.about; btn.setAttribute('aria-label', `Add ${b.label}`);
+        const btn = el('button', 'ch-btn', `+ ${b.label}`); btn.type = 'button'; btn.title = `${b.about} ${hintOf(b)}`; btn.setAttribute('aria-label', `Add ${b.label}`);
         btn.onclick = () => { model = addBlock(model, b.id); report = null; void render(); };
         const badge = el('span', 'ch-badge', c ? `${c.survived}/${c.tried} ${c.grade}` : '');
         badge.title = c ? `Alone with ${protLabel()}: survived ${c.survived} of ${c.tried} attacks, grade ${c.grade}` : '';
-        li.append(btn, badge);
+        li.append(btn, badge, el('p', 'ch-hint', hintOf(b)));
         ul.append(li);
       }
       lib.append(ul);

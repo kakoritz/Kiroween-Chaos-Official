@@ -6,49 +6,49 @@
 
 ## input (reads something from the outside)
 
-| Block | Label | What it is for | Effect (kind, key) | Time at 1x |
-|---|---|---|---|---|
-| `read_request` | Read request | Read a job file or request that starts the work. | none | 300 to 600 ms |
-| `read_message` | Read message | Take the next message from a queue or inbox. | none | 300 to 600 ms |
-| `browse` | Browse | Look something up in a catalog before choosing. | none | 300 to 700 ms |
+| Block | Label | What it is for | Effect (kind, key) | Time at 1x | How it breaks, what protects it |
+|---|---|---|---|---|---|
+| `read_request` | Read request | Read a job file or request that starts the work. | none | 300 to 600 ms | Breaks when the request is missing or half written. A journal lets a restart pick the same request up again. |
+| `read_message` | Read message | Take the next message from a queue or inbox. | none | 300 to 600 ms | Breaks when the same message is delivered twice. Idempotency keys make a repeat harmless. |
+| `browse` | Browse | Look something up in a catalog before choosing. | none | 300 to 700 ms | Breaks when the catalog is slow or down. Retry with a short wait, and a circuit breaker so you stop hammering it. |
 
 ## work (thinks or computes, changes nothing outside)
 
-| Block | Label | What it is for | Effect (kind, key) | Time at 1x |
-|---|---|---|---|---|
-| `validate` | Validate | Check the input is complete and well formed. | none | 400 to 900 ms |
-| `transform` | Transform | Convert or enrich the data. | none | 600 to 1200 ms |
-| `decide` | Decide | Pick a route or answer. | none | 500 to 1000 ms |
-| `render` | Render | Produce the output the user sees. | none | 600 to 1300 ms |
-| `transcode` | Transcode | Heavy conversion that takes a while. | none | 800 to 1400 ms |
+| Block | Label | What it is for | Effect (kind, key) | Time at 1x | How it breaks, what protects it |
+|---|---|---|---|---|---|
+| `validate` | Validate | Check the input is complete and well formed. | none | 400 to 900 ms | Rarely breaks on its own; bad data passes through it. A clear error beats a silent skip. |
+| `transform` | Transform | Convert or enrich the data. | none | 600 to 1200 ms | Breaks on odd input or a crash halfway. A journal keeps the finished part. |
+| `decide` | Decide | Pick a route or answer. | none | 500 to 1000 ms | Breaks when it picks a route on stale data. Keep the decision the same on a replay. |
+| `render` | Render | Produce the output the user sees. | none | 600 to 1300 ms | Breaks when it is slow and the user gives up. Cap how long it can take. |
+| `transcode` | Transcode | Heavy conversion that takes a while. | none | 800 to 1400 ms | Breaks by hanging or by a crash after a long run. A journal and a time cap protect it. |
 
 ## effect (changes the outside world; every call is a row the provider counts, so a repeat is a bug)
 
-| Block | Label | What it is for | Effect (kind, key) | Time at 1x |
-|---|---|---|---|---|
-| `create_account` | Create account | Sign someone up or log them in. | `account_create`, `account:1` (required) | 400 to 800 ms |
-| `charge` | Take payment | Charge money. A repeat is a double charge. | `charge`, `charge:1` (required) | 500 to 1000 ms |
-| `refund` | Refund | Give money back. | `refund`, `refund:1` (required) | 400 to 800 ms |
-| `store_record` | Store record | Write a record to the database or storage. | `store`, `store:1` (required) | 300 to 700 ms |
-| `send_email` | Send email | Send a message to a person. | `email`, `email:1` (preferred) | 300 to 700 ms |
-| `notify` | Notify | Push a notification. | `notify`, `notify:1` (preferred) | 300 to 600 ms |
-| `dispatch_job` | Dispatch | Hand work to another service or a courier. | `dispatch`, `dispatch:1` (required) | 400 to 800 ms |
-| `file_ticket` | File ticket | Open a ticket. A repeat is a duplicate ticket. | `ticket`, `ticket:1` (required) | 400 to 800 ms |
-| `place_order` | Place order | Place an order with another party. | `order`, `order:1` (required) | 400 to 800 ms |
-| `archive` | Archive | Keep a copy for later. | `store`, `archive:1` (required) | 300 to 600 ms |
+| Block | Label | What it is for | Effect (kind, key) | Time at 1x | How it breaks, what protects it |
+|---|---|---|---|---|---|
+| `create_account` | Create account | Sign someone up or log them in. | `account_create`, `account:1` (required) | 400 to 800 ms | Breaks by making two accounts after a retry. Idempotency keys and a journal. |
+| `charge` | Take payment | Charge money. A repeat is a double charge. | `charge`, `charge:1` (required) | 500 to 1000 ms | Breaks by charging twice after a timeout. Idempotency keys are a must; retry only with the same key. |
+| `refund` | Refund | Give money back. | `refund`, `refund:1` (required) | 400 to 800 ms | Breaks by refunding twice. Idempotency keys; check the first refund before a second. |
+| `store_record` | Store record | Write a record to the database or storage. | `store`, `store:1` (required) | 300 to 700 ms | Breaks by writing a duplicate row on retry. Idempotency keys; a journal after a crash. |
+| `send_email` | Send email | Send a message to a person. | `email`, `email:1` (preferred) | 300 to 700 ms | Breaks by sending the same email twice. An idempotency key helps; an offline queue holds mail while the service is down. |
+| `notify` | Notify | Push a notification. | `notify`, `notify:1` (preferred) | 300 to 600 ms | Breaks by a double push or a lost one. An offline queue keeps it until the service is back. |
+| `dispatch_job` | Dispatch | Hand work to another service or a courier. | `dispatch`, `dispatch:1` (required) | 400 to 800 ms | Breaks by handing the same job out twice. Idempotency keys and a journal. |
+| `file_ticket` | File ticket | Open a ticket. A repeat is a duplicate ticket. | `ticket`, `ticket:1` (required) | 400 to 800 ms | Breaks by opening a duplicate ticket on retry. Idempotency keys. |
+| `place_order` | Place order | Place an order with another party. | `order`, `order:1` (required) | 400 to 800 ms | Breaks by placing the order twice after a timeout. Idempotency keys, then retry. |
+| `archive` | Archive | Keep a copy for later. | `store`, `archive:1` (required) | 300 to 600 ms | Breaks by storing the copy twice. Idempotency keys. |
 
 ## poll (waits on something outside)
 
-| Block | Label | What it is for | Effect (kind, key) | Time at 1x |
-|---|---|---|---|---|
-| `wait_for_callback` | Wait for callback | Wait for the other side to answer. | none | 800 to 1600 ms |
-| `check_status` | Check status | Ask again until a job is done. | none | 600 to 1400 ms |
-| `buffer_wait` | Buffering | Wait for data to arrive at a steady rate. | none | 800 to 1600 ms |
+| Block | Label | What it is for | Effect (kind, key) | Time at 1x | How it breaks, what protects it |
+|---|---|---|---|---|---|
+| `wait_for_callback` | Wait for callback | Wait for the other side to answer. | none | 800 to 1600 ms | Breaks when the callback never comes. Set a time limit and ask again with a back-off. |
+| `check_status` | Check status | Ask again until a job is done. | none | 600 to 1400 ms | Breaks by polling too fast and making a retry storm. Back off, and let a circuit breaker open. |
+| `buffer_wait` | Buffering | Wait for data to arrive at a steady rate. | none | 800 to 1600 ms | Breaks when data stalls and the wait never ends. A time cap and a retry. |
 
 ## final (closes the loop)
 
-| Block | Label | What it is for | Effect (kind, key) | Time at 1x |
-|---|---|---|---|---|
-| `confirm` | Confirm | Tell the user it is done. | none | 300 to 600 ms |
+| Block | Label | What it is for | Effect (kind, key) | Time at 1x | How it breaks, what protects it |
+|---|---|---|---|---|---|
+| `confirm` | Confirm | Tell the user it is done. | none | 300 to 600 ms | Breaks when the work is done but the user is never told. An offline queue holds the message. |
 
 Effect kinds are the fake provider's kinds: `account_create`, `order`, `charge`, `email`, `store`, `dispatch`, `notify`, `ticket`, `refund`, `discount`. A kind outside that list is recorded as `store`.

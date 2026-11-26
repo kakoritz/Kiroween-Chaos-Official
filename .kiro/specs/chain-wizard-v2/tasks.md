@@ -5,5 +5,5 @@
 - [x] 4. Example chains (R4): `packages/arena-ui/src/chain/examples.ts`.
 - [x] 5. Save and share a chain (R5): `packages/arena-ui/src/chain/save.ts`, link `#c=...`, haunt.yaml download.
 - [x] 6. Fix specs and Casebook for registered apps (R6): `SpecContext` in `packages/haunt/src/miner/specs.ts`, filled by the live server; the Casebook already reads stage labels from the running app.
-- [ ] 7. Block hints (R7).
+- [x] 7. Block hints (R7): `hintOf` in `packages/haunt/src/blocks/library.ts`, shown in the wizard and `docs/BLOCKS.md`.
 - [ ] 8. Phone-friendly arena (R8).

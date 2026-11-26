@@ -38,3 +38,4 @@ input, select { background: #100e1a; color: #e8e6f5; border: 1px solid #3a3560; 
 .ch-toggle { display: block; margin: 4px 0; cursor: pointer; }
 .ch-delta { color: #ffd98a; font-size: 13px; }
 .ch-note { color: #a9a4d6; font-size: 12px; margin: 0 0 6px; }
+.ch-hint { margin: 2px 0 8px; font-size: 0.8rem; opacity: 0.8; }

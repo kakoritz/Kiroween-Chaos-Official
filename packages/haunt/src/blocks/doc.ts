@@ -1,5 +1,5 @@
 // docs/BLOCKS.md is generated from the block library (modular-engine R9.3): one source of truth. `npm run blocks:doc` writes it; a test checks it is current.
-import { BLOCKS, BUILTIN_BLOCK_COUNT } from './library';
+import { BLOCKS, BUILTIN_BLOCK_COUNT, hintOf } from './library';
 
 const ROLE_ORDER = ['input', 'work', 'effect', 'poll', 'final'] as const;
 const ROLE_WORDS: Record<string, string> = {
@@ -23,8 +23,8 @@ export function blocksMarkdown(): string {
   for (const role of ROLE_ORDER) {
     const list = lib.filter((b) => b.role === role);
     if (list.length === 0) continue;
-    out.push(`## ${role} (${ROLE_WORDS[role]})`, '', '| Block | Label | What it is for | Effect (kind, key) | Time at 1x |', '|---|---|---|---|---|');
-    for (const b of list) out.push(`| \`${b.id}\` | ${b.label} | ${b.about} | ${b.effects.length ? b.effects.map((e) => `\`${e.kind}\`, \`${e.key}\` (${e.idempotent})`).join('; ') : 'none'} | ${b.duration[0]} to ${b.duration[1]} ms |`);
+    out.push(`## ${role} (${ROLE_WORDS[role]})`, '', '| Block | Label | What it is for | Effect (kind, key) | Time at 1x | How it breaks, what protects it |', '|---|---|---|---|---|---|');
+    for (const b of list) out.push(`| \`${b.id}\` | ${b.label} | ${b.about} | ${b.effects.length ? b.effects.map((e) => `\`${e.kind}\`, \`${e.key}\` (${e.idempotent})`).join('; ') : 'none'} | ${b.duration[0]} to ${b.duration[1]} ms | ${hintOf(b)} |`);
     out.push('');
   }
   out.push('Effect kinds are the fake provider\'s kinds: `account_create`, `order`, `charge`, `email`, `store`, `dispatch`, `notify`, `ticket`, `refund`, `discount`. A kind outside that list is recorded as `store`.', '');
