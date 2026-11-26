@@ -6,7 +6,7 @@ export const SPLASH_PROBLEM = 'Bots and AI agents crash halfway, then repeat the
 export const SPLASH_AUTO_MS = 4000;
 const TYPE_MS_PER_CHAR = 55;
 
-export type SplashAction = 'demo' | 'campaign' | 'tour' | 'lab';
+export type SplashAction = 'demo' | 'campaign' | 'tour' | 'lab' | 'chain';
 
 export interface SplashButton { action: SplashAction; label: string; hero: boolean }
 
@@ -15,6 +15,7 @@ export const SPLASH_BUTTONS: readonly SplashButton[] = [
   { action: 'campaign', label: 'Play the Campaign', hero: false },
   { action: 'tour', label: 'Take the tour', hero: false },
   { action: 'lab', label: 'Test your own workflow', hero: false },
+  { action: 'chain', label: 'Build and test a chain', hero: false },
 ];
 
 export interface SplashDecision {
@@ -45,7 +46,8 @@ export function typedHook(elapsedMs: number, reduced: boolean, text: string = SP
 
 /** Where a button goes. `demo` and `tour` stay in the arena; the others are links. */
 export function splashTarget(action: SplashAction): string | null {
-  if (action === 'lab') return './lab.html';
+  if (action === 'lab') return './workflow-lab.html';
+  if (action === 'chain') return './chain.html';
   return null;
 }
 

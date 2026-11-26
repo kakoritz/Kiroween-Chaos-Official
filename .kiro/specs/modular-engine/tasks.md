@@ -62,3 +62,7 @@ Last in, first out: 6.4, 5b.4, 5.5, 5.4, 7.4 partial. The wizard (5b.2) and bloc
 
 ## Dates (planning, today is Nov 25)
 M0 to M2 by Nov 27, M3 PR Nov 28, M4 and M5 by Nov 30, M5b Dec 1, M6 Dec 2, M7 Dec 2 to 3, buffer and demo work Dec 2 to 3. Submit Dec 3.
+
+## Found by the first live run (2026-11-25)
+- The overnight-style e2e `modular` section ran once by hand: 42 of 43 passed. The one failure was real: two `store` effects in one Playback order (license and finish) read as a repeat, because the provider's repeat identity is (order, kind, index) and the generic bot gave both index 1. Fixed: the generic bot numbers each kind per order, and the provider records an index for any kind. Test: `apps/generic/test/playback.test.ts`.
+- The splash button "Test your own workflow" opened the hidden sprite lab; it now opens the Workflow Lab, and a new button opens the Chain Wizard.

@@ -22,9 +22,11 @@ describe('title splash', () => {
     expect(typedHook(0, true)).toBe(SPLASH_HOOK);
   });
   it('has four buttons with the demo as hero', () => {
-    expect(SPLASH_BUTTONS.map((b) => b.action)).toEqual(['demo', 'campaign', 'tour', 'lab']);
+    expect(SPLASH_BUTTONS.map((b) => b.action)).toEqual(['demo', 'campaign', 'tour', 'lab', 'chain']);
     expect(SPLASH_BUTTONS.filter((b) => b.hero).map((b) => b.action)).toEqual(['demo']);
-    expect(splashTarget('lab')).toBe('./lab.html');
+    // "Test your own workflow" opens the Workflow Lab (it used to open the hidden sprite lab by mistake).
+    expect(splashTarget('lab')).toBe('./workflow-lab.html');
+    expect(splashTarget('chain')).toBe('./chain.html');
     expect(splashTarget('demo')).toBeNull();
   });
 });

@@ -6,6 +6,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { registerBundledApps } from '../../../packages/haunt/src/config/bundled-apps';
 import { FAULTS, faultFacesStage } from '../../../packages/haunt/src/chaos/catalog';
 import { APPS } from '../../../packages/haunt/src/shared/catalog';
+import { RepeatDetector } from '../../../packages/haunt/src/runner/provider';
 import { bundle, root, run } from './helpers';
 
 const PLAY = { HAUNT_APP: 'playback', HAUNT_APP_DIR: join(root, 'apps/haunted-playback') };
@@ -61,4 +62,16 @@ describe('Coffee Shop, config only', () => {
     expect(r.rows.filter((x) => x.kind === 'charge').length).toBe(1);
     expect(bundle('phoenix')).toContain('generic-bots');
   }, 60000);
+});
+
+describe('two effects of one kind in one order (Playback has two store writes)', () => {
+  it('a clean Rookie run writes both and the harness sees no repeat', async () => {
+    const r = await run(PLAY, 'rookie', 1, false);
+    expect(r.rows.filter((x) => x.kind === 'store').length).toBe(2);
+    const d = new RepeatDetector();
+    expect(r.rows.map((x) => d.add(x)).filter(Boolean)).toEqual([]);
+    const crashed = await run(PLAY, 'rookie', 1, true);
+    const d2 = new RepeatDetector();
+    expect(crashed.rows.map((x) => d2.add(x)).filter(Boolean).length).toBeGreaterThan(0);
+  }, 90000);
 });

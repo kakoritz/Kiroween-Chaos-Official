@@ -236,7 +236,8 @@ export class Provider {
       } else {
         const id = `${ID_PREFIX[kind]}_${this.next(`${lane}|${kind}`)}`;
         const amount = (kind === 'charge' || kind === 'refund' || kind === 'discount') && typeof body.amount === 'number' ? body.amount : null;
-        const index = (kind === 'notify' || kind === 'store') && typeof body.index === 'number' ? body.index : null;
+        // Any kind may carry an index (a generic app can take two payments in one order); Orders, Stream and the desk send one only for store and notify.
+        const index = typeof body.index === 'number' ? body.index : null;
         const payload: Record<string, unknown> = { id };
         if (kind === 'charge' || kind === 'refund' || kind === 'discount') payload.amount = amount;
         if (kind === 'notify' || kind === 'store') payload.index = index;

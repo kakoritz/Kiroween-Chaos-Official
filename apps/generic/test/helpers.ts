@@ -2,7 +2,7 @@
 import { mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { startProvider } from '../../../packages/core/src/provider';
+import { startProvider, type LedgerRow } from '../../../packages/core/src/provider';
 import { BotProcess, type BotMessage } from '../../../packages/haunt/src/chaos';
 import { prepareLane } from '../../../packages/haunt/src/runner/lanes';
 import { writeGenericJobs } from '../src/jobs';
@@ -10,7 +10,7 @@ import { writeGenericJobs } from '../src/jobs';
 export const root = resolve(__dirname, '../../..');
 export const bundle = (t: string): string => join(root, 'dist/generic-bots', `${t}.js`);
 
-export interface RunResult { msgs: BotMessage[]; rows: { kind: string; order: string }[]; done: string[]; kills: number }
+export interface RunResult { msgs: BotMessage[]; rows: { kind: LedgerRow['kind']; order: string; index: number | null; lane: string }[]; done: string[]; kills: number }
 
 export async function run(env: Record<string, string>, tier: string, orders: number, crashOnce: boolean): Promise<RunResult> {
   const prov = await startProvider({ port: 0 });
@@ -38,7 +38,7 @@ export async function run(env: Record<string, string>, tier: string, orders: num
       proc.send({ k: 'go', arms: crashOnce && attempt === 1 ? [{ fault: 'crash', point: 'after_effect_before_journal' }] : [] });
       if ((await idle) === 'idle') { proc.send({ k: 'shutdown' }); await proc.exited; break; }
     }
-    return { msgs, rows: prov.provider.ledger('1').map((r) => ({ kind: r.kind, order: r.order })), done: readdirSync(paths.done), kills };
+    return { msgs, rows: prov.provider.ledger('1').map((r) => ({ kind: r.kind, order: r.order, index: r.index, lane: '1' })), done: readdirSync(paths.done), kills };
   } finally {
     await prov.close();
     rmSync(runDir, { recursive: true, force: true });

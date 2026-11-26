@@ -44,13 +44,16 @@ export class GenericPipeline {
 
   private async stages(id: string): Promise<void> {
     const { sdk } = this.d;
+    // The provider counts a repeat per (order, kind, index): each use of a kind in one order gets the next index, so two payments in one order are two rows, and a crash that redoes one is the repeat.
+    const used = new Map<string, number>();
     for (const st of this.app.stages) {
       await sdk.stage(st.id, async (s) => {
         await s.work(this.work(st.id, id));
-        let index = 0;
         for (const e of st.effects) {
-          index++;
-          await s.effect(providerKind(e.kind), { key: this.idem ? s.key(e.key) : undefined, index, body: { step: st.id, declared: e.kind, order: id } });
+          const kind = providerKind(e.kind);
+          const index = (used.get(kind) ?? 0) + 1;
+          used.set(kind, index);
+          await s.effect(kind, { key: this.idem ? s.key(e.key) : undefined, index, body: { step: st.id, declared: e.kind, order: id } });
         }
       });
     }
