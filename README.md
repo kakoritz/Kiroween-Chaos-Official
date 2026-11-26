@@ -38,6 +38,8 @@ In the arena: **Start tournament**, press **Next** between rounds, drag **INTENS
 
 The Streaming pack is no longer label-only: its 11-stage model stays in [`packs/`](packs/) and the Workflow Lab (labelled model-based), and `apps/haunted-stream` is the runnable 5-stage cut of it. The ticketing pack is still a model-based preview of the Ticket Desk.
 
+**Any app plugs in.** The three apps above are built in. Two more are a single `haunt.yaml` made of reusable [blocks](docs/BLOCKS.md): [`apps/haunted-playback/`](apps/haunted-playback/) (a viewer watches a title, 11 stages, see [`docs/STREAM.md`](docs/STREAM.md)) and [`examples/coffee-shop/`](examples/coffee-shop/) (4 stages). Faults land by a stage's role, not its name, so your service gets chaos with no engine edit: [`docs/MODULAR.md`](docs/MODULAR.md), [`docs/INTEGRATE.md`](docs/INTEGRATE.md). The Chain Wizard (`/chain.html`) tests each block alone, then the chain, and shows which block broke it.
+
 ## What is in the box
 
 | Feature | What it does |
@@ -50,6 +52,7 @@ The Streaming pack is no longer label-only: its 11-stage model stays in [`packs/
 | Fix specs | The miner clusters recurring problems into `.haunt/patterns.json` and writes `.kiro/specs/hardening-<run>/` ([sample](docs/proof/sample-hardening-spec/index.md)). Nothing is applied automatically |
 | Live Chaos (guarded) | `haunt monkey` injects faults through a proxy. `observe` injects nothing, `staging` is capped, `prod-guarded` needs a config with a schedule window and an allowlist, `haunt stop` is the kill switch ([`docs/PRODUCTION-MODE.md`](docs/PRODUCTION-MODE.md)) |
 | Workflow Lab and packs | Model your own workflow in the browser (`/workflow-lab.html`) and get a graded what-if. Presets: Orders, Ticket Desk, Payments, Report generator, Streaming pack. Always labelled model-based |
+| Chain Wizard and blocks | 22 reusable blocks; test one alone, chain them, read the blame table (`/chain.html`, model-based). `npm run block:add` keeps your own |
 | Reports | Graded JSON, Markdown, offline HTML, SVG badge (`haunt badge`) |
 | MCP server and Power | `haunt_define`, `haunt_sweep`, `haunt_ramp`, `haunt_report`, `haunt_specs`, `haunt_badge` ([`kiro-power/`](kiro-power/)) |
 

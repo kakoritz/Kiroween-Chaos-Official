@@ -58,3 +58,9 @@ Do not run a default `npm run haunt -- sweep`: it takes more than 5 minutes (abo
 - Not built: a live Kiro-applied fix on record, Power and Crew app installed in a Kiro window.
 - Mobile: the arena is a fixed 1280x720 canvas (about 30% on a phone). Use a desktop browser.
 - Tests run locally only; CI does not run them.
+
+## The modular engine (2 minutes)
+
+1. Open `/chain.html` (run `npm run ui:build` and `npm run live`, or use the hosted build). Add blocks `read_request`, `charge`, `notify`, press **Test chain**: a grade and a table of which block broke it.
+2. Run a config-only app: `npm run live -- --app apps/haunted-playback`, pick Haunted Playback in the app switcher, start a wave.
+3. Read [`MODULAR.md`](MODULAR.md) and [`INTEGRATE.md`](INTEGRATE.md). Questions: [`JUDGE-QA.md`](JUDGE-QA.md).

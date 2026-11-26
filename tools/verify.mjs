@@ -63,6 +63,7 @@ if (vt.ok) {
 }
 
 step('build:bots', 'npm', ['run', 'build:bots']);
+step('judge:check', 'npm', ['run', 'judge:check']);
 
 const distWasDirty = git('status', '--porcelain', '--', DIST).out.trim() !== '';
 step('ui:build', 'npm', ['run', 'ui:build']);

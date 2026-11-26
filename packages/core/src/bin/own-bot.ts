@@ -1,17 +1,28 @@
-// `npm run own-bot -- <path-or-command>`: starts the live server on 127.0.0.1:7070 with your bot on every lane and prints the arena URL.
-// Same wiring as bin/live.ts. The Stream app is selected: its stages are fetch, draft and reply (docs/OWN-BOT.md). Fixes are never applied for you.
+// `npm run own-bot -- <path-or-command> [--app <dir>]`: starts the live server on 127.0.0.1:7070 with your bot on every lane and prints the arena URL.
+// Same wiring as bin/live.ts. With no --app the Stream app is selected: its stages are fetch, draft and reply (docs/OWN-BOT.md). With `--app <dir>` your own app (a folder with a haunt.yaml, docs/INTEGRATE.md) is registered and selected, so your bot uses your own stage names. Fixes are never applied for you.
 import { join } from 'node:path';
 import { EventLog } from '../../../haunt/src/events/eventlog';
 import { LIVE_PORT, LiveServer, createLiveRuntime, makeBotCommand, readHardening, resolveOwnBot } from '../live';
 import { startProvider } from '../provider/server';
+import { registerAppFromDir } from '../../../haunt/src/config/register-dir';
 
-const args = process.argv.slice(2).filter((a) => !/^\d+$/.test(a));
+const raw = process.argv.slice(2);
+const appAt = raw.indexOf('--app');
+let appId = 'stream';
+if (appAt >= 0) {
+  const dir = raw[appAt + 1];
+  const r = dir ? registerAppFromDir(dir) : { ok: false as const, errors: ['--app needs a folder with a haunt.yaml'] };
+  if (!r.ok) { console.error(`cannot register app:\n- ${r.errors.join('\n- ')}`); process.exit(2); }
+  appId = r.app.id;
+  raw.splice(appAt, 2);
+}
+const args = raw.filter((a) => !/^\d+$/.test(a));
 const bot = resolveOwnBot(args.join(' '));
 if (!bot.ok) {
   console.error(bot.error);
   process.exit(2);
 }
-const port = Number(process.argv.slice(2).find((a) => /^\d+$/.test(a)) ?? process.env.HAUNT_PORT ?? LIVE_PORT);
+const port = Number(raw.find((a) => /^\d+$/.test(a)) ?? process.env.HAUNT_PORT ?? LIVE_PORT);
 const runDir = join(process.cwd(), '.haunt');
 const provider = await startProvider({ port: Number(process.env.HAUNT_PROVIDER_PORT) || undefined });
 const botCommand = makeBotCommand({
@@ -37,8 +48,8 @@ const server = new LiveServer({
   specsDir,
 });
 const { url } = await server.listen(port);
-const sw = await fetch(`${url}/api/app`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ app: 'stream' }) });
-if (!sw.ok) console.error(`could not select the Stream app (${sw.status}); pick Stream in the arena app switcher`);
+const sw = await fetch(`${url}/api/app`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ app: appId }) });
+if (!sw.ok) console.error(`could not select the ${appId} app (${sw.status}); pick it in the arena app switcher`);
 console.log(`own bot: ${[bot.command, ...bot.args].join(' ')}`);
 console.log(`arena: ${url}   (provider ${provider.url}, fake, local only)`);
 console.log('Start a wave in the arena. Ctrl+C stops.');

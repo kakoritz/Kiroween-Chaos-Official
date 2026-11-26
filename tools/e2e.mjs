@@ -283,6 +283,37 @@ try {
   }
   await sleep(300);
 
+  // 7. modular engine (modular-engine M7): config-only apps on the generic bots, and the chain wizard page
+  for (const [id, stageIds] of [['coffee-shop', 'read_request,pay,brew,ready'], ['playback', 'login,profile,browse,title_select,entitlement,license,start_stream,buffering,render,ads,finish']]) {
+    await post('/api/intensity', { level: 3 });
+    const r = await post('/api/app', { app: id });
+    const st = (await c.get('/api/state')).json;
+    check('modular', `${id}: app switch works and state lists its stages`, st.app === id && st.stages.map((x) => x.id).join() === stageIds, `${st.app} ${st.stages.map((x) => x.id).join()}`.slice(0, 120));
+    const apps = (await c.get('/api/apps')).json;
+    check('modular', `${id}: the app switcher lists it`, Array.isArray(apps) && apps.some((a) => a.id === id), apps.map((a) => a.id).join());
+    const { wave } = await post('/api/wave/start', { orders: 2, lanes: 2, speed: 4, seed: 5 });
+    const end = await endOf(wave);
+    const evs = waveSlice(c.events, wave);
+    check('modular', `${id}: wave ran on the generic bots and used only its own stage ids`, evs.some((e) => e.type === 'effect') && evs.filter((e) => e.stage).every((e) => st.stages.some((x) => x.id === e.stage)), `${evs.length} events`);
+    check('modular', `${id}: every order finished`, Object.values(end.detail.summary).every((l) => (l.orders.done + l.orders.cancelled + l.orders.parked + l.orders.quarantined + l.orders.abandoned) >= 2), '');
+    const log = resolve(root, `.tmp/e2e/${id}-wave.jsonl`);
+    mkdirSync(resolve(root, '.tmp/e2e'), { recursive: true });
+    const hello = c.events.find((e) => e.type === 'hello');
+    writeFileSync(log, [{ ...hello, app: id, stages: st.stages }, ...evs].map((e) => JSON.stringify(e)).join('\n') + '\n');
+    const v = await new Promise((done) => {
+      const p = spawn(process.execPath, [resolve(root, 'tools/run-ts.mjs'), resolve(root, 'tools/validate-events.ts'), log], { cwd: root, windowsHide: true });
+      let out = ''; p.stdout.on('data', (d) => { out += d; }); p.stderr.on('data', (d) => { out += d; });
+      p.on('exit', (code) => done({ code, out }));
+    });
+    check('modular', `${id}: contract validator over its wave (${evs.length} events): zero violations`, v.code === 0, v.code === 0 ? 'no violations' : v.out.split('\n').slice(0, 4).join(' | ').slice(0, 150));
+  }
+  {
+    const page = await fetch(`${base}/chain.html`);
+    const html = await page.text();
+    check('modular', 'the Chain Wizard page is served', page.status === 200 && html.includes('Chain Wizard'), `${page.status} ${html.length} bytes`);
+  }
+  await sleep(300);
+
   events = c.events.slice();
   // ordering rules: the contract validator over the whole stream
   mkdirSync(resolve(root, '.tmp/e2e'), { recursive: true });

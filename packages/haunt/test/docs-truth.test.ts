@@ -1,6 +1,7 @@
 // covers: own-bot-quickstart/R3 own-bot-quickstart/R3.1 own-bot-quickstart/R3.2 own-bot-quickstart/R4.3 OB-D2 OB-X1 docs-truth-pass/R1 docs-truth-pass/R1.1 docs-truth-pass/R1.2 docs-truth-pass/R2 docs-truth-pass/R2.1 docs-truth-pass/R3 docs-truth-pass/R3.1 docs-truth-pass/R3.2 docs-truth-pass/R3.3 docs-truth-pass/R3.4 docs-truth-pass/R4 docs-truth-pass/R4.1 docs-truth-pass/R5 docs-truth-pass/R5.1 DT-D1 DT-D2 DT-D3 DT-D4 DT-T1 haunted-house/R8.2 PK-C3 stream-pack-app/R6 stream-pack-app/R6.1 stream-pack-app/R6.2 SP-D1
 // The docs say one true thing about the Ticket Desk (11 stages) and README links the Kiro write-up.
 import { describe, expect, it } from 'vitest';
+import { blocksMarkdown } from '../src/blocks/doc';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -116,5 +117,26 @@ describe('README demo clip (readme-gif R1, R4)', () => {
     const f = join(root, 'docs/img/demo.gif');
     expect(existsSync(f)).toBe(true);
     expect(statSync(f).size).toBeLessThan(3 * 1024 * 1024);
+  });
+});
+
+describe('modular-engine docs (M7)', () => {
+  // covers: modular-engine/R9.3
+  it('docs/BLOCKS.md is the generated one', () => {
+    expect(read('docs/BLOCKS.md')).toBe(blocksMarkdown());
+  });
+  // covers: modular-engine/R9.1 modular-engine/R9.2 modular-engine/R9.4 modular-engine/R9.5
+  it('the five modular docs exist and link each other', () => {
+    for (const d of ['docs/MODULAR.md', 'docs/INTEGRATE.md', 'docs/BLOCKS.md', 'docs/STREAM.md', 'docs/JUDGE-QA.md', 'docs/JUDGE-CHECK.md']) expect(existsSync(join(root, d)), d).toBe(true);
+    expect(read('docs/MODULAR.md')).toMatch(/INTEGRATE\.md|BLOCKS\.md/);
+    expect(read('docs/INTEGRATE.md')).toContain('BLOCKS.md');
+    expect(read('README.md')).toContain('docs/MODULAR.md');
+    expect(read('docs/START-HERE.md')).toContain('INTEGRATE.md');
+  });
+  // covers: modular-engine/R9.6
+  it('no live doc says stage names are fixed or need a contract change', () => {
+    for (const d of ['README.md', 'docs/START-HERE.md', 'docs/OWN-BOT.md', 'docs/PACKS.md', 'docs/JUDGES.md', 'docs/MODULAR.md', 'docs/INTEGRATE.md']) {
+      expect(read(d), d).not.toMatch(/custom stage names need|stage names are fixed|names? (are|is) (a )?fixed list/i);
+    }
   });
 });

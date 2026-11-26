@@ -6,7 +6,7 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 270. With a PR: 29 (11%). With a test: 214 (79%).
+- Requirements: 270. With a PR: 29 (11%). With a test: 221 (82%).
 - Tasks: 158. Done: 156. With a PR: 48 (30%). With a test: 39 (25%).
 - Test files scanned: 228.
 
@@ -314,13 +314,13 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R8.1 | modular-engine | Scoring, tournament rounds, Casebook entries and fix specs work for any app. | n/a | - | - |
 | R8.2 | modular-engine | Fix specs name the app's own stage ids and effect kinds. | n/a | - | - |
 | R8.3 | modular-engine | Review labels for a new app default to generic ones (Reliability, Speed, Data... | n/a | - | - |
-| R9 | modular-engine | Documentation | n/a | - | - |
-| R9.1 | modular-engine | docs/MODULAR.md: what a block, a manifest and the registry are; how a fault f... | n/a | - | - |
-| R9.2 | modular-engine | docs/INTEGRATE.md: five steps to plug in your own service (manifest, bot, run... | n/a | - | - |
-| R9.3 | modular-engine | docs/BLOCKS.md: the block library, generated from the YAML (one source of tru... | n/a | - | - |
-| R9.4 | modular-engine | docs/STREAM.md: the Stream story, stages, creatures, curses, tiers. | n/a | - | - |
-| R9.5 | modular-engine | docs/JUDGE-QA.md: the questions a judge is likely to ask and where the answer... | n/a | - | - |
-| R9.6 | modular-engine | README, START-HERE, OWN-BOT and PACKS no longer say names are fixed; a docs-t... | n/a | - | - |
+| R9 | modular-engine | Documentation | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R9.1 | modular-engine | docs/MODULAR.md: what a block, a manifest and the registry are; how a fault f... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R9.2 | modular-engine | docs/INTEGRATE.md: five steps to plug in your own service (manifest, bot, run... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R9.3 | modular-engine | docs/BLOCKS.md: the block library, generated from the YAML (one source of tru... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R9.4 | modular-engine | docs/STREAM.md: the Stream story, stages, creatures, curses, tiers. | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R9.5 | modular-engine | docs/JUDGE-QA.md: the questions a judge is likely to ask and where the answer... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R9.6 | modular-engine | README, START-HERE, OWN-BOT and PACKS no longer say names are fixed; a docs-t... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
 | R10 | modular-engine | Self-evaluation against the judges | n/a | - | - |
 | R10.1 | modular-engine | A checklist file docs/JUDGE-CHECK.md scores the project on each Kiroween scor... | n/a | - | - |
 | R10.2 | modular-engine | A script npm run judge:check verifies every evidence link exists and every cl... | n/a | - | - |

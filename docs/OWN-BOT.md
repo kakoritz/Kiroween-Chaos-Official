@@ -62,6 +62,6 @@ Read the spec, apply the fix yourself (or have Kiro apply it), and restart `npm 
 
 ## Limits
 
-- Your bot uses the Stream app's five stage ids. Custom stage names need a catalog and contract change.
+- Your bot uses the Stream app's five stage ids by default. To use your own stage names, describe them in a `haunt.yaml` and add `--app <folder>`: `npm run own-bot -- bot.mjs --app my-app` ([`INTEGRATE.md`](INTEGRATE.md)). Contract v1.3 lets any app declare its own stages.
 - The tournament and Casebook are built around five built-in bot tiers; with your bot on every lane, the lanes differ only by chaos and seed.
 - The improve loop's rerun is a simulation of the built-in tiers, not a live rerun of your patched code.

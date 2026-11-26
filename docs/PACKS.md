@@ -52,6 +52,8 @@ example `faults[2].stage: must be a declared stage id or "any"`.
 - **Tiers** text appears next to each "add this part" suggestion, so "add idempotency" reads "one stream per account and one
   history write per play" in the streaming pack.
 
+> **Update (modular engine).** The streaming pack's 11-stage story now also runs for real as [Haunted Playback](STREAM.md): one `haunt.yaml` of library blocks, run with `npm run live -- --app apps/haunted-playback`. The pack file stays the model for the Workflow Lab. To make your own app runnable, see [`INTEGRATE.md`](INTEGRATE.md).
+
 ## The streaming example
 
 `packs/streaming/pack.yaml` (trimmed; the full file has 11 stages, 9 faults, 2 curses, 2 bosses):

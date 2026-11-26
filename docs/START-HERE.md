@@ -24,6 +24,8 @@ The tour is in [`JUDGES.md`](JUDGES.md). To run your own bot instead: [`OWN-BOT.
 
 The arena's app switcher labels them Haunted Orders, Haunted Inbox (the Ticket Desk) and Haunted Stream. All three run on one skeleton, `packages/haunt/`, with no engine change.
 
+**Any app plugs in.** Two more apps are one config file each: Haunted Playback (11 viewer stages, `apps/haunted-playback/`) and the Coffee Shop (`examples/coffee-shop/`). Yours is a `haunt.yaml` too. Start with [`MODULAR.md`](MODULAR.md) (how it works) and [`INTEGRATE.md`](INTEGRATE.md) (five steps). The Chain Wizard (`/chain.html`) tests one block alone, then chains blocks and says which one broke it. Questions you may have: [`JUDGE-QA.md`](JUDGE-QA.md); my own scoring of the project: [`JUDGE-CHECK.md`](JUDGE-CHECK.md).
+
 ## Where the Kiro parts live
 
 | What | Where |
