@@ -69,9 +69,11 @@ describe('Docs truth pass (docs-truth-pass R1 to R5)', () => {
   it('no live doc uses a stale name', () => {
     for (const d of live) expect(read(d), d).not.toMatch(/Chaos Haunt|Chaos Monkey|haunt-crew-app/i);
   });
-  it('the docs say three apps, and the apps folder has exactly three', () => {
-    const apps = readdirSync(join(root, 'apps')).filter((n) => n.startsWith('haunted-'));
-    expect(apps.sort()).toEqual(['haunted-inbox', 'haunted-orders', 'haunted-stream']);
+  it('the docs say three apps, and the apps folder has exactly three with code (config-only apps are named apart)', () => {
+    const all = readdirSync(join(root, 'apps')).filter((n) => n.startsWith('haunted-'));
+    const configOnly = all.filter((n) => !existsSync(join(root, 'apps', n, 'src')) && !existsSync(join(root, 'apps', n, 'bot')));
+    expect(configOnly.sort()).toEqual(['haunted-playback']);
+    expect(all.filter((n) => !configOnly.includes(n)).sort()).toEqual(['haunted-inbox', 'haunted-orders', 'haunted-stream']);
     for (const d of ['README.md', 'docs/JUDGES.md', 'kiro-power/README.md', 'kiro-crew-app/README.md']) {
       const t = read(d);
       expect(t, d).not.toMatch(/One engine, two apps/);

@@ -4,7 +4,10 @@ import { EventLog } from '../../../haunt/src/events/eventlog';
 import { LIVE_PORT, LiveServer, createLiveRuntime, loopFixEvents, makeBotCommand, readHardening } from '../live';
 import { startProvider } from '../provider/server';
 import { registerAppFromDir } from '../../../haunt/src/config/register-dir';
+import { registerBundledApps } from '../../../haunt/src/config/bundled-apps';
 
+// Apps that ship as config only (Haunted Playback, Coffee Shop) sit next to the three built-in apps.
+for (const r of registerBundledApps()) if (!r.ok) console.error(`bundled app skipped:\n- ${r.errors.join('\n- ')}`);
 // `--app <dir>` (repeatable): register an app from a folder with a haunt.yaml. A bad manifest stops the start with a plain message.
 process.argv.forEach((a, i, all) => {
   if (a !== '--app') return;

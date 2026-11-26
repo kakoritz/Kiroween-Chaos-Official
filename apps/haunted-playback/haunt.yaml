@@ -1,0 +1,23 @@
+# Haunted Playback: a viewer watches a title (the Streaming pack's story, packs/streaming/pack.yaml), built only from library blocks.
+# No engine code: this file is the whole app. Run it with: npm run live -- --app apps/haunted-playback
+name: playback
+label: Haunted Playback
+idPrefix: vid
+start: node dist/generic-bots/phoenix.js
+truth: http://127.0.0.1:7071
+targets:
+  recoverMs: 20000
+  repeats: 0
+  concurrency: 8
+stages:
+  - { use: create_account, id: login, label: Account or login }
+  - { use: transform, id: profile, label: Profile pick }
+  - { use: browse, label: Browse }
+  - { use: decide, id: title_select, label: Title select }
+  - { use: charge, id: entitlement, label: Entitlement check }
+  - { use: store_record, id: license, label: License or DRM }
+  - { use: dispatch_job, id: start_stream, label: Start stream }
+  - { use: buffer_wait, id: buffering, label: Buffering and bitrate }
+  - { use: render, label: Render }
+  - { use: notify, id: ads, label: Ads and pause or resume }
+  - { use: store_record, id: finish, label: Finish and history }

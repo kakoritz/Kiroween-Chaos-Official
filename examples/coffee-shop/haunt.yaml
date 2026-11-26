@@ -1,0 +1,12 @@
+# Coffee Shop: a tiny app made of config only. No engine code, no bot code: the generic bots run it.
+#   npm run live -- --app examples/coffee-shop
+name: coffee-shop
+label: Coffee Shop
+idPrefix: cof
+start: node dist/generic-bots/phoenix.js
+truth: http://127.0.0.1:7071
+stages:
+  - { use: read_request, label: Take the order }
+  - { use: charge, id: pay, label: Take payment }
+  - { id: brew, label: Brew, role: work, duration: [800, 1500] }
+  - { use: notify, id: ready, label: Call the name }

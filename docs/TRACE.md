@@ -6,9 +6,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 270. With a PR: 29 (11%). With a test: 210 (78%).
+- Requirements: 270. With a PR: 29 (11%). With a test: 214 (79%).
 - Tasks: 158. Done: 156. With a PR: 48 (30%). With a test: 39 (25%).
-- Test files scanned: 227.
+- Test files scanned: 228.
 
 ## Tasks
 
@@ -298,13 +298,13 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R5.1 | modular-engine | For any manifest, the engine can build a runnable generic bot at the five tie... | n/a | - | `apps/generic/test/generic.test.ts` |
 | R5.2 | modular-engine | The generic bot passes the contract validator with zero violations for every ... | n/a | - | `packages/haunt/test/contract-v13.test.ts` |
 | R5.3 | modular-engine | Real bots (Node, Python, own bot) keep working with no change if they use the... | n/a | - | `apps/generic/test/generic.test.ts` |
-| R6 | modular-engine | Stream, finished, on the new engine | n/a | - | - |
-| R6.1 | modular-engine | Stream is rebuilt as a composition of blocks, telling one story: a viewer wat... | n/a | - | - |
+| R6 | modular-engine | Stream, finished, on the new engine | n/a | - | `apps/generic/test/playback.test.ts` |
+| R6.1 | modular-engine | Stream is rebuilt as a composition of blocks, telling one story: a viewer wat... | n/a | - | `apps/generic/test/playback.test.ts` |
 | R6.2 | modular-engine | All nine pack creatures land on stages they belong to; each creature has a re... | n/a | - | - |
 | R6.3 | modular-engine | Two curses (catalog 404, manifest 500) work on Stream endpoints. | n/a | - | - |
-| R6.4 | modular-engine | Five tier bots plus the campaign Crew run Stream; Rookie shows a duplicate pl... | n/a | - | - |
+| R6.4 | modular-engine | Five tier bots plus the campaign Crew run Stream; Rookie shows a duplicate pl... | n/a | - | `apps/generic/test/playback.test.ts` |
 | R6.5 | modular-engine | The old 5-stage upload app is kept as a second example (haunted-upload) or re... | n/a | - | - |
-| R6.6 | modular-engine | A fourth, tiny app (examples/coffee-shop, 5 blocks, config file only, no engi... | n/a | - | - |
+| R6.6 | modular-engine | A fourth, tiny app (examples/coffee-shop, 5 blocks, config file only, no engi... | n/a | - | `apps/generic/test/playback.test.ts` |
 | R7 | modular-engine | UI and vocab follow the manifest | n/a | - | `packages/arena-ui/test/no-stage-literals.test.ts` |
 | R7.1 | modular-engine | Stage names, icons, work animations and verbs come from the manifest (with ro... | n/a | - | `packages/arena-ui/test/no-stage-literals.test.ts` |
 | R7.2 | modular-engine | App wording (unit, id prefix, review labels) comes from the manifest vocab wi... | n/a | - | `packages/arena-ui/test/no-stage-literals.test.ts` |
