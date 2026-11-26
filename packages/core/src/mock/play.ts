@@ -71,15 +71,27 @@ export class Player {
     const handle = { stop: () => { if (timer) clearTimeout(timer); this.playing = undefined; } };
     this.playing = handle;
     hub.demoRunning = params.script ?? null;
+    // A virtual clock: it advances by the real time since the last step times the speed. Every event that is due by then goes out in this step,
+    // so a slow page (a weak laptop, a busy main thread) catches up instead of playing one event per late timer. A speed change takes effect at once.
+    const base = list[0]?.ts ?? 0;
+    let virt = 0;
+    let last = Date.now();
+    const MAX_PER_STEP = 250;
     const step = (): void => {
+      const now = Date.now();
+      virt += Math.max(0, now - last) * hub.speed;
+      last = now;
+      let n = 0;
+      while (i < list.length && list[i].ts - base <= virt && n++ < MAX_PER_STEP) {
+        const src = list[i++];
+        const e: any = { ...src, wave: src.wave === undefined ? undefined : wave };
+        if (e.wave === undefined) delete e.wave;
+        if (e.type === 'wave_start') e.detail = { ...e.detail, speed: hub.speed };
+        hub.emit(e);
+      }
       if (i >= list.length) { this.playing = undefined; return; }
-      const src = list[i++];
-      const e: any = { ...src, wave: src.wave === undefined ? undefined : wave };
-      if (e.wave === undefined) delete e.wave;
-      if (e.type === 'wave_start') e.detail = { ...e.detail, speed: hub.speed };
-      hub.emit(e);
-      const gap = i < list.length ? Math.max(0, list[i].ts - src.ts) / hub.speed : 0;
-      timer = setTimeout(step, gap);
+      const wait = list[i].ts - base <= virt ? 0 : (list[i].ts - base - virt) / hub.speed;
+      timer = setTimeout(step, Math.max(0, wait));
     };
     step();
   }

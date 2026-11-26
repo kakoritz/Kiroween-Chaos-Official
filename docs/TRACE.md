@@ -8,7 +8,7 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 - Requirements: 287. With a PR: 29 (10%). With a test: 229 (80%).
 - Tasks: 158. Done: 156. With a PR: 48 (30%). With a test: 39 (25%).
-- Test files scanned: 231.
+- Test files scanned: 232.
 
 ## Tasks
 
