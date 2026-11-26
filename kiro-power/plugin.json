@@ -2,13 +2,24 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "haunt",
   "displayName": "Kiroween Chaos",
-  "version": "0.1.0",
-  "description": "Kiroween Chaos: stress-test an agent workflow with creature faults and load ramps, then get a graded report and a hardening spec.",
+  "version": "0.2.0",
+  "description": "Kiroween Chaos: stress-test an agent workflow with chaos engineering. Test one reusable block alone, chain blocks and see which block broke the chain, run a model-based what-if of any haunt.yaml, then get a graded report and a hardening spec.",
   "author": {
     "name": "kakoritz",
     "url": "https://github.com/kakoritz"
   },
-  "keywords": ["chaos", "resilience", "stress test", "fault injection", "load ramp", "haunt", "reliability"],
-  "repository": "https://github.com/kakoritz/Kiroween-Chaos",
+  "keywords": [
+    "chaos",
+    "resilience",
+    "stress test",
+    "fault injection",
+    "load ramp",
+    "haunt",
+    "reliability",
+    "blocks",
+    "chain",
+    "what-if"
+  ],
+  "repository": "https://github.com/kakoritz/Kiroween-Chaos-Official",
   "license": "MIT"
 }

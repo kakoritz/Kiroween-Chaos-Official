@@ -6,8 +6,11 @@ Packaging of the Kiroween Chaos MCP server as a Kiro Power. Format source: https
 
 Contents:
 - `plugin.json`: manifest and activation keywords.
-- `mcp.json`: stdio server `haunt` (tools `haunt_define`, `haunt_sweep`, `haunt_ramp`, `haunt_report`).
-- `skills/stress-test-my-workflow/SKILL.md`: the workflow the agent follows.
+- `mcp.json`: stdio server `haunt`. Tools: `haunt_define`, `haunt_blocks`, `haunt_chain`, `haunt_lab`, `haunt_sweep`, `haunt_ramp`, `haunt_report`, `haunt_specs`, `haunt_badge`. The read-only ones (`haunt_define`, `haunt_blocks`, `haunt_chain`, `haunt_lab`, `haunt_report`) are auto-approved; the two that start local mock servers ask first.
+- `skills/stress-test-my-workflow/SKILL.md`: grade a `haunt.yaml`, find the failing stage, hand it to a reviewer.
+- `skills/build-and-test-a-chain/SKILL.md`: pick blocks, test each alone, test the chain, read which block broke it.
+
+The model-based tools (`haunt_blocks`, `haunt_chain`, `haunt_lab`) need only this repository. For a self-contained copy that runs with no checkout, see the Crew app: https://github.com/kakoritz/kiroween-chaos-crew.
 
 Use:
 1. In a checkout of this repository, run `npm install` once.

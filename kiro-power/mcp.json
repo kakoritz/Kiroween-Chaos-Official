@@ -4,8 +4,17 @@
     "haunt": {
       "type": "stdio",
       "command": "node",
-      "args": ["tools/run-ts.mjs", "packages/core/src/bin/haunt-mcp.ts"],
-      "autoApprove": ["haunt_define", "haunt_report"]
+      "args": [
+        "tools/run-ts.mjs",
+        "packages/core/src/bin/haunt-mcp.ts"
+      ],
+      "autoApprove": [
+        "haunt_define",
+        "haunt_blocks",
+        "haunt_chain",
+        "haunt_lab",
+        "haunt_report"
+      ]
     }
   }
 }

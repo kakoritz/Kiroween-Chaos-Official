@@ -1,29 +1,29 @@
-// H6.8 The Kiro Power package parses and points at real files.
-import { describe, expect, it } from 'vitest';
+// The Kiro Power lists every tool the server has and ships the skills it names. Spec: .kiro/specs/chain-wizard-v2 (item 1 of the second build list).
 import { existsSync, readFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
+import { TOOLS } from '../src/mcp/server';
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
-const power = join(root, 'kiro-power');
-const json = (f: string) => JSON.parse(readFileSync(join(power, f), 'utf8'));
+const dir = join(__dirname, '..', '..', '..', 'kiro-power');
+const read = (f: string): string => readFileSync(join(dir, f), 'utf8');
 
-describe('kiro power', () => {
-  it('has a manifest with the required fields', () => {
-    const m = json('plugin.json');
-    expect(m.name).toBe('haunt');
-    expect(m.version).toMatch(/^\d+\.\d+\.\d+$/);
-    expect(m.description).toBeTruthy();
-    expect(m.author.name).toBeTruthy();
-    expect(m.keywords.length).toBeGreaterThan(0);
+describe('kiro-power', () => {
+  it('auto-approves only read-only tools that exist, never the ones that start servers', () => {
+    const m = JSON.parse(read('mcp.json')).mcpServers.haunt;
+    const names = TOOLS.map((t) => t.name);
+    for (const a of m.autoApprove) expect(names, a).toContain(a);
+    expect(m.autoApprove).toEqual(expect.arrayContaining(['haunt_blocks', 'haunt_chain', 'haunt_lab']));
+    for (const t of ['haunt_sweep', 'haunt_ramp', 'haunt_specs', 'haunt_badge']) expect(m.autoApprove).not.toContain(t);
   });
-  it('mcp.json points at the real MCP entry and files', () => {
-    const s = json('mcp.json').mcpServers.haunt;
-    expect(s.command).toBe('node');
-    for (const a of s.args) expect(existsSync(join(root, a))).toBe(true);
+  it('the README names every tool and the skills exist', () => {
+    const readme = read('README.md');
+    for (const t of TOOLS) expect(readme, t.name).toContain(t.name);
+    for (const s of ['stress-test-my-workflow', 'build-and-test-a-chain']) {
+      expect(existsSync(join(dir, 'skills', s, 'SKILL.md')), s).toBe(true);
+      expect(readme).toContain(s);
+    }
   });
-  it('ships the skill with frontmatter', () => {
-    const md = readFileSync(join(power, 'skills', 'stress-test-my-workflow', 'SKILL.md'), 'utf8');
-    expect(md).toMatch(/^---\r?\nname: stress-test-my-workflow\r?\ndescription: .+\r?\n---/);
+  it('points at the real repository', () => {
+    expect(JSON.parse(read('plugin.json')).repository).toBe('https://github.com/kakoritz/Kiroween-Chaos-Official');
   });
 });

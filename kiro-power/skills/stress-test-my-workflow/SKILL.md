@@ -7,8 +7,8 @@ description: Stress-test a workflow with Kiroween Chaos. Use when the user wants
 
 Goal: grade the workflow, find the failing stage, hand a hardening spec to a developer agent.
 
-1. Call `haunt_define` with the path to the workflow's `haunt.yaml` (default `apps/haunted-orders/haunt.yaml`). Confirm the stages and targets with the user in one line.
-2. Call `haunt_sweep` for one tier, minimum cells, high speed. Run at most one live sweep per session.
+1. Call `haunt_define` with the path to the workflow's `haunt.yaml`. Confirm the stages and targets with the user in one line.
+2. For a quick answer with no bot running, call `haunt_lab` with the same path: a model-based grade, the failing cells and the parts to add. For a real run, call `haunt_sweep` for one tier, minimum cells, high speed (needs `HAUNT_ROOT`, a Kiroween Chaos checkout). Run at most one live sweep per session.
 3. Call `haunt_ramp` only if the user asks about load. Read the knee and break point from the result.
 4. Call `haunt_report` to read the saved report. State the grade and the worst failing stage.
 5. Hand over to the `reviewer` agent. It writes `.haunt/runs/<run>/postmortem.md` and `.kiro/specs/hardening-<run>/`.
