@@ -2,6 +2,7 @@
 // classifies how a bot reacted to each lie and tabulates "what each lane returned when the API lied".
 import { unit } from '../shared/rng';
 import { APPS, TIERS, type AppId } from '../shared/catalog';
+import { isBuiltinApp } from '../shared/registry';
 import { tierOfLane } from './rounds';
 import type { Ev } from './rp';
 
@@ -42,8 +43,10 @@ export function stageOfCall(service: string, index?: number, app: AppId = 'order
   if (app !== 'orders') {
     // The Stream app calls the store twice (upload, then archive), told apart by index like the orders store steps.
     if (app === 'stream' && service === 'store') return index === 2 ? 'archive' : 'fetch';
-    const hit = APPS[app].stages.find((s) => s.effects.some((e) => e.service === service));
+    const hit = APPS[app].stages.find((s) => s.effects.some((e) => e.service === service || (service === 'account' && e.kind === 'account_create')));
     if (hit) return hit.id;
+    // An app registered from a haunt.yaml has no Orders stage to fall back on: use its own first effect stage, never a foreign id.
+    if (!isBuiltinApp(app)) return (APPS[app].stages.find((s) => s.effects.length > 0) ?? APPS[app].stages[0]!).id;
   }
   switch (service) {
     case 'account': return 'account';

@@ -1,5 +1,6 @@
 // Edge cases (spec 3.4): a normalised signature `stage + fault + consequence`, and the cases a lane met in a round.
 import { laneIssues } from '../runner/floor';
+import { fallbackStage } from './fallback-stage';
 import type { Ev } from './rp';
 
 export type Consequence = 'handled' | 'reported' | 'swallowed' | 'crashed' | 'absorbed' | 'recovered' | 'duplicate_effect' | 'order_lost' | 'order_parked' | 'order_quarantined' | 'lane_halted' | 'order_degraded';
@@ -92,6 +93,7 @@ export function faultOfFailure(status: number | null | undefined): string | unde
 /** The cases one lane met in a round, from the wave's events. One case per fault pressed, judged by what the order did next. */
 export function laneCases(events: readonly Ev[], lane: number, round: number): Case[] {
   const out: Case[] = [];
+  const fallback = fallbackStage(events);
   let ctx: Ctx | null = null;
   let curStage = '';
   // A fault that was pressed in an earlier order can still be in force (an outage window): an order lost with no fault of its own is blamed on it.
@@ -109,7 +111,7 @@ export function laneCases(events: readonly Ev[], lane: number, round: number): C
       });
     }
     const faults = c.faults.length === 0 && lastChaos && (end === 'order_failed' || end === 'halted' || end === 'order_quarantined')
-      ? [{ fault: lastChaos.fault, stage: curStage || 'payment', ...(lastChaos.unknown ? { unknown: true, fingerprint: lastChaos.fingerprint } : {}) }]
+      ? [{ fault: lastChaos.fault, stage: curStage || fallback, ...(lastChaos.unknown ? { unknown: true, fingerprint: lastChaos.fingerprint } : {}) }]
       : c.faults;
     // A lost order is blamed on what happened at the stage where its last call failed. A fault pressed at another stage was survived (or was the lesser cause);
     // without it every lost order is blamed on whatever was pressed first, and the loop treats the wrong stage.
@@ -144,7 +146,7 @@ export function laneCases(events: readonly Ev[], lane: number, round: number): C
       case 'stage_start': if (typeof e.stage === 'string') curStage = e.stage; break;
       case 'chaos': {
         if (!ctx) break;
-        const stage = String(d.deferredTo ?? e.stage ?? (curStage || 'payment'));
+        const stage = String(d.deferredTo ?? e.stage ?? (curStage || fallback));
         lastChaos = { fault: normaliseFault(d), ...(d.unknown ? { unknown: true, fingerprint: String(d.fingerprint ?? '') } : {}) };
         ctx.faults.push({ fault: normaliseFault(d), stage, ...(d.unknown ? { unknown: true, fingerprint: String(d.fingerprint ?? '') } : {}) });
         break;

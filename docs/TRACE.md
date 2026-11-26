@@ -6,9 +6,9 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 
 ## Coverage
 
-- Requirements: 310. With a PR: 29 (9%). With a test: 249 (80%).
+- Requirements: 362. With a PR: 29 (8%). With a test: 259 (72%).
 - Tasks: 158. Done: 156. With a PR: 48 (30%). With a test: 39 (25%).
-- Test files scanned: 235.
+- Test files scanned: 240.
 
 ## Tasks
 
@@ -219,16 +219,16 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R3.1 | chain-wizard-v2 | npm run bot:new -- <haunt.yaml> [--lang node/python] writes a runnable naive ... | n/a | - | `apps/generic/test/bot-new.test.ts` |
 | R3.2 | chain-wizard-v2 | Each effect has a HARDEN comment saying which protection fixes it. | n/a | - | `apps/generic/test/bot-new.test.ts` |
 | R3.3 | chain-wizard-v2 | The written bot passes the contract validator when run by own-bot --app. | n/a | - | `apps/generic/test/bot-new.test.ts` |
-| R4 | chain-wizard-v2 | Example chains | n/a | - | - |
-| R4.1 | chain-wizard-v2 | The wizard offers at least four example chains (checkout, sign-up, video play... | n/a | - | - |
-| R5 | chain-wizard-v2 | Save and share | n/a | - | - |
-| R5.1 | chain-wizard-v2 | A chain is saved to a link (the blocks and ids in the URL) and to a haunt.yam... | n/a | - | - |
-| R6 | chain-wizard-v2 | Your own app in the improve loop | n/a | - | - |
-| R6.1 | chain-wizard-v2 | Hardening specs and the Casebook name a registered app's own stages, effect k... | n/a | - | - |
-| R7 | chain-wizard-v2 | Block hints | n/a | - | - |
-| R7.1 | chain-wizard-v2 | Each block has a hint line (how it usually breaks, what protects it). The wiz... | n/a | - | - |
-| R8 | chain-wizard-v2 | Phone-friendly arena | n/a | - | - |
-| R8.1 | chain-wizard-v2 | On a phone-width screen the arena shows a readable lane view (not a 30% canva... | n/a | - | - |
+| R4 | chain-wizard-v2 | Example chains | n/a | - | `packages/arena-ui/test/chain-save.test.ts` |
+| R4.1 | chain-wizard-v2 | The wizard offers at least four example chains (checkout, sign-up, video play... | n/a | - | `packages/arena-ui/test/chain-save.test.ts` |
+| R5 | chain-wizard-v2 | Save and share | n/a | - | `packages/arena-ui/test/chain-save.test.ts` |
+| R5.1 | chain-wizard-v2 | A chain is saved to a link (the blocks and ids in the URL) and to a haunt.yam... | n/a | - | `packages/arena-ui/test/chain-save.test.ts` |
+| R6 | chain-wizard-v2 | Your own app in the improve loop | n/a | - | `packages/haunt/test/fixspec-registered.test.ts` |
+| R6.1 | chain-wizard-v2 | Hardening specs and the Casebook name a registered app's own stages, effect k... | n/a | - | `packages/haunt/test/fixspec-registered.test.ts` |
+| R7 | chain-wizard-v2 | Block hints | n/a | - | `packages/haunt/test/block-hints.test.ts` |
+| R7.1 | chain-wizard-v2 | Each block has a hint line (how it usually breaks, what protects it). The wiz... | n/a | - | `packages/haunt/test/block-hints.test.ts` |
+| R8 | chain-wizard-v2 | Phone-friendly arena | n/a | - | `packages/arena-ui/test/lane-cards.test.ts` |
+| R8.1 | chain-wizard-v2 | On a phone-width screen the arena shows a readable lane view (not a 30% canva... | n/a | - | `packages/arena-ui/test/lane-cards.test.ts` |
 | R1 | crew-app-bonus | Runs on its own | n/a | - | `packages/haunt/test/kiro-crew-app.test.ts` |
 | R1.1 | crew-app-bonus | kiro-crew-app/server/haunt-mcp.mjs is one bundled file built by npm run build... | n/a | - | `packages/haunt/test/kiro-crew-app.test.ts` |
 | R1.2 | crew-app-bonus | hauntdefine, hauntblocks, hauntchain and hauntlab need no repository checkout. | n/a | - | - |
@@ -260,6 +260,58 @@ Sources: requirement and task IDs from `.kiro/specs/**`, PR numbers from `git lo
 | R4.1 | docs-truth-pass | docs/START-HERE.md exists, is linked from the top of README.md, and says in o... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
 | R5 | docs-truth-pass | The truth test guards the fixes | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
 | R5.1 | docs-truth-pass | packages/haunt/test/docs-truth.test.ts fails if a linked doc file is missing,... | n/a | - | `packages/haunt/test/docs-truth.test.ts` |
+| R1 | hardening-tmwxlcs3j | pay + timeout + orderlost | n/a | - | - |
+| R2 | hardening-tmwxlcs3j | pay + curseslow + reported | n/a | - | - |
+| R3 | hardening-tmwxlcs3j | assign + wrongqueue + retrystorm | n/a | - | - |
+| R4 | hardening-tmwxlcs3j | pay + endpointfailurerate + degraded | n/a | - | - |
+| R5 | hardening-tmwxlcs3j | pay + errors + retrystorm | n/a | - | - |
+| R1 | hardening-tmwxlggpg | unknown + endpointdown + outage | n/a | - | - |
+| R2 | hardening-tmwxlggpg | unknown + slowlink + outage | n/a | - | - |
+| R3 | hardening-tmwxlggpg | pay + endpointdown + orderlost | n/a | - | - |
+| R4 | hardening-tmwxlggpg | pay + http429 + orderlost | n/a | - | - |
+| R5 | hardening-tmwxlggpg | pay + slowlink + orderlost | n/a | - | - |
+| R6 | hardening-tmwxlggpg | pay + http500 + orderlost | n/a | - | - |
+| R7 | hardening-tmwxlggpg | pay + endpointdown + retrystorm | n/a | - | - |
+| R1 | hardening-tmwxll5oj | unknown + internetoutage + outage | n/a | - | - |
+| R2 | hardening-tmwxll5oj | pay + http404 + duplicateeffect | n/a | - | - |
+| R3 | hardening-tmwxll5oj | pay + crash + duplicateeffect | n/a | - | - |
+| R4 | hardening-tmwxll5oj | ready + timeout + orderlost | n/a | - | - |
+| R5 | hardening-tmwxll5oj | ready + http404 + orderlost | n/a | - | - |
+| R6 | hardening-tmwxll5oj | ready + curseslow + crashed | n/a | - | - |
+| R7 | hardening-tmwxll5oj | pay + slowlink + retrystorm | n/a | - | - |
+| R8 | hardening-tmwxll5oj | pay + timeout + retrystorm | n/a | - | - |
+| R9 | hardening-tmwxll5oj | ready + curseslow + reported | n/a | - | - |
+| R1 | hardening-tmwxlowoz | pay + endpointdown + outage | n/a | - | - |
+| R2 | hardening-tmwxlowoz | pay + slowlink + outage | n/a | - | - |
+| R3 | hardening-tmwxlowoz | pay + internetoutage + orderlost | n/a | - | - |
+| R4 | hardening-tmwxlowoz | pay + poweroutage + orderlost | n/a | - | - |
+| R5 | hardening-tmwxlowoz | pay + http429 + retrystorm | n/a | - | - |
+| R6 | hardening-tmwxlowoz | pay + http500 + retrystorm | n/a | - | - |
+| R7 | hardening-tmwxlowoz | ready + endpointfailurerate + degraded | n/a | - | - |
+| R1 | hardening-tmwxlulnc | login + endpointdown + outage | n/a | - | - |
+| R2 | hardening-tmwxlulnc | login + slowlink + outage | n/a | - | - |
+| R3 | hardening-tmwxlulnc | login + poweroutage + orderlost | n/a | - | - |
+| R4 | hardening-tmwxlulnc | entitlement + timeout + orderlost | n/a | - | - |
+| R5 | hardening-tmwxlulnc | entitlement + curseslow + reported | n/a | - | - |
+| R6 | hardening-tmwxlulnc | login + http404 + duplicateeffect | n/a | - | - |
+| R7 | hardening-tmwxlulnc | login + http429 + orderlost | n/a | - | - |
+| R8 | hardening-tmwxlulnc | ads + endpointdown + orderlost | n/a | - | - |
+| R9 | hardening-tmwxlulnc | entitlement + http429 + orderlost | n/a | - | - |
+| R10 | hardening-tmwxlulnc | login + timeout + orderlost | n/a | - | - |
+| R11 | hardening-tmwxlulnc | login + crash + orderlost | n/a | - | - |
+| R12 | hardening-tmwxlulnc | entitlement + endpointdown + retrystorm | n/a | - | - |
+| R13 | hardening-tmwxlulnc | entitlement + endpointfailurerate + degraded | n/a | - | - |
+| R14 | hardening-tmwxlulnc | entitlement + http429 + retrystorm | n/a | - | - |
+| R15 | hardening-tmwxlulnc | entitlement + internetoutage + retrystorm | n/a | - | - |
+| R16 | hardening-tmwxlulnc | login + endpointdown + retrystorm | n/a | - | - |
+| R17 | hardening-tmwxlulnc | login + endpointfailurerate + degraded | n/a | - | - |
+| R18 | hardening-tmwxlulnc | login + http429 + retrystorm | n/a | - | - |
+| R19 | hardening-tmwxlulnc | login + poweroutage + retrystorm | n/a | - | - |
+| R1 | hardening-tmwxm1tkc | login + internetoutage + outage | n/a | - | - |
+| R2 | hardening-tmwxm1tkc | finish + endpointdown + orderlost | n/a | - | - |
+| R3 | hardening-tmwxm1tkc | login + crash + duplicateeffect | n/a | - | - |
+| R4 | hardening-tmwxm1tkc | entitlement + timeout + retrystorm | n/a | - | - |
+| R5 | hardening-tmwxm1tkc | login + timeout + retrystorm | n/a | - | - |
 | R1 | haunted-house | Rooms | n/a | - | `packages/haunt/test/core-creatures.test.ts`, `packages/haunt/test/requirement-gaps.test.ts` |
 | R1.1 | haunted-house | THE SYSTEM SHALL ship three core rooms: Cellar (missing file), Mirror Hall (d... | n/a | - | `packages/haunt/test/core-creatures.test.ts` |
 | R1.2 | haunted-house | THE SYSTEM SHALL ship two bonus rooms: Poltergeist (timeouts and 429s that cl... | n/a | - | `packages/haunt/test/requirement-gaps.test.ts` |

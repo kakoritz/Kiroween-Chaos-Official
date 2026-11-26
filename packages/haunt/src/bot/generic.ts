@@ -53,7 +53,9 @@ export class GenericPipeline {
           const kind = providerKind(e.kind);
           const index = (used.get(kind) ?? 0) + 1;
           used.set(kind, index);
-          await s.effect(kind, { key: this.idem ? s.key(e.key) : undefined, index, body: { step: st.id, declared: e.kind, order: id } });
+          // The key follows the provider's own repeat identity (order, kind, index), as the Orders bots do, so a `repeat` event reads as the effect that caused it.
+          const ledgerKind = kind === 'account' ? 'account_create' : kind;
+          await s.effect(kind, { key: this.idem ? s.key(`${ledgerKind}:${index}`) : undefined, index, body: { step: st.id, declared: e.kind, order: id } });
         }
       });
     }

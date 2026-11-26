@@ -2,6 +2,7 @@
 // Pure: it reads a wave's event list, never a clock.
 import { APPS, TIERS, type TierId } from '../shared/catalog';
 import { laneIssues } from '../runner/floor';
+import { fallbackStage } from './fallback-stage';
 
 export interface Ev { seq?: number; type?: string; lane?: unknown; order?: unknown; stage?: unknown; detail?: Record<string, any> | undefined; ts?: number }
 
@@ -134,7 +135,7 @@ export function diedAt(r: LaneRound, events: readonly Ev[]): string {
     const e = events[i]!;
     if (String(e.lane) === String(r.lane) && (e.type === 'stage_fail' || e.type === 'lane_halted') && typeof e.stage === 'string') return e.stage;
   }
-  return 'payment';
+  return fallbackStage(events);
 }
 
 const stageLabel = (id: string): string => APPS.orders.stages.find((s) => s.id === id)?.label ?? id;

@@ -1,5 +1,6 @@
 // Tournament rounds and the seeded storm every live lane meets in a round (spec 3.1: "same storm for all").
-import { TIER_ORDER, type TierId } from '../shared/catalog';
+import { APPS, TIER_ORDER, type TierId } from '../shared/catalog';
+import { isRegisteredApp } from '../shared/registry';
 import { fnv1a32, mulberry32 } from '../shared/rng';
 import { FAULTS, faultFacesStage } from '../chaos/catalog';
 import { drawOutageMs, fuzzFromRng, intensityRow, isLevel, OUTAGE_FAULTS, type FuzzFault } from '../runner/intensity';
@@ -60,8 +61,18 @@ const POINTS = ['before_effect', 'after_effect_before_journal', 'after_journal']
  * two or three), at random effect stages. One plan for the whole round: every live lane meets the same presses at the same orders and
  * stages, so ranking is fair. Seeded by (seed, round).
  */
+/** The stages a round's storm may land on: the built-in lists, or, for an app registered from a haunt.yaml, its own effect stages (every stage when it has none). */
+function planStages(app: string): readonly string[] {
+  if (app === 'stream') return STREAM_PLAN_STAGES;
+  if (app === 'inbox') return INBOX_PLAN_STAGES;
+  if (app === 'orders' || !isRegisteredApp(app)) return STAGES;
+  const own = APPS[app]!.stages;
+  const fx = own.filter((s) => s.role === 'effect').map((s) => s.id);
+  return fx.length > 0 ? fx : own.map((s) => s.id);
+}
+
 export function roundPlan(seed: string | number, round: number, cfg: RoundCfg, app: string = 'orders'): PlanPress[] {
-  const stages = app === 'stream' ? STREAM_PLAN_STAGES : app === 'inbox' ? INBOX_PLAN_STAGES : STAGES;
+  const stages = planStages(app);
   const basePool = app === 'inbox' ? INBOX_POOL : POOL;
   const rng = mulberry32(fnv1a32(`${seed}|plan|${round}`));
   const row = intensityRow(cfg.intensity);
@@ -71,7 +82,7 @@ export function roundPlan(seed: string | number, round: number, cfg: RoundCfg, a
     for (let i = 0; i < Math.min(n, row.continuous ? 4 : row.simultaneous); i++) {
       const stage = stages[Math.floor(rng() * stages.length)]!;
       const unknown = rng() < row.unknown ? fuzzFromRng(rng, stage) : null;
-      const pool = [...basePool, ...(cfg.intensity >= 6 ? HEAVY : [])].filter((id) => FAULTS.some((f) => f.id === id && faultFacesStage(f, stage)));
+      const pool = [...basePool, ...(cfg.intensity >= 6 ? HEAVY : [])].filter((id) => FAULTS.some((f) => f.id === id && faultFacesStage(f, stage, app)));
       const fault = unknown ? unknown.fault : pool[Math.floor(rng() * pool.length)]!;
       const press: PlanPress = { order, stage, fault };
       if (fault === 'crash' || fault === 'power_outage') press.point = POINTS[Math.floor(rng() * POINTS.length)]!;

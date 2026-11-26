@@ -11,7 +11,7 @@ import { IssueFloor, gremlinVariant } from './floor';
 import { CURSE_KINDS, classifyHit, drawCurse, stageOfCall, type CurseKind, type CurseRec, type OrderTrace } from '../tournament/curses';
 import { unit } from '../shared/rng';
 import { APPS, type AppId } from '../shared/catalog';
-import { creatureNameFor } from '../shared/registry';
+import { creatureNameFor, isBuiltinApp, isRegisteredApp } from '../shared/registry';
 
 /** What the provider tells the engine when a curse lied (see `CurseHit` in the provider). */
 export interface ProviderCurseHit { lane: string; service: string; order: string; index?: number; curse: CurseKind; id: string; status: number }
@@ -73,7 +73,8 @@ export class RunnerEngine {
 
   startWave = (wave: number, settings: EngineWaveSettings, record: (ev: HauntEvent) => void): void => {
     this.wave = wave;
-    this.app = settings.app === 'inbox' || settings.app === 'stream' ? settings.app : 'orders';
+    // An app registered from a haunt.yaml is its own app: the director then walks its stages, not the Orders ones.
+    this.app = settings.app === 'inbox' || settings.app === 'stream' || (isRegisteredApp(settings.app) && !isBuiltinApp(settings.app)) ? settings.app : 'orders';
     this.seed = settings.seed;
     this.appId = settings.app in APPS ? (settings.app as AppId) : 'orders';
     this.appStages = new Set((APPS[settings.app as keyof typeof APPS] ?? APPS.orders).stages.map((d) => d.id));

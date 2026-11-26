@@ -134,6 +134,14 @@ export function restartDelay(base: number, nested: number): number {
 
 /** First stage at or after `from` (wrapping into the next order) where the fault applies. `app` picks the stage list when `from` is unknown. */
 export function nextApplicableStage(f: FaultDef, from: string | null, app: string = 'orders'): { stage: string; nextOrder: boolean } {
+  // An app registered from a haunt.yaml walks its own stage list (never the Orders one).
+  const own = app !== 'orders' && !isBuiltinApp(app) && APPS[app] ? APPS[app]!.stages.map((s) => s.id) : undefined;
+  if (own) {
+    const i0 = from === null ? 0 : Math.max(0, own.indexOf(from));
+    for (let j = i0; j < own.length; j++) if (faultFacesStage(f, own[j]!, app)) return { stage: own[j]!, nextOrder: false };
+    for (let j = 0; j < own.length; j++) if (faultFacesStage(f, own[j]!, app)) return { stage: own[j]!, nextOrder: true };
+    throw new Error(`fault ${f.id} applies to no stage of ${app}`);
+  }
   const order = from !== null && STREAM_ORDER.includes(from) ? STREAM_ORDER : from !== null && INBOX_ORDER.includes(from) && !ORDERS_ORDER.includes(from) ? INBOX_ORDER : from === null && app === 'stream' ? STREAM_ORDER : from === null && app === 'inbox' ? INBOX_ORDER : ORDERS_ORDER;
   const i = from === null ? 0 : Math.max(0, order.indexOf(from));
   for (let j = i; j < order.length; j++) if (faultFacesStage(f, order[j]!, app)) return { stage: order[j]!, nextOrder: false };
