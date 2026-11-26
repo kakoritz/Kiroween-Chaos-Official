@@ -8,12 +8,21 @@ import { blockAsConfig } from './alone';
 import { BLOCKS, blockById } from './library';
 
 export type CardTier = keyof typeof PACK_TIERS;
+/** Any mix of the five protections (retry, journal, idempotency, breaker, offline_queue), for the wizard's switches. */
+export type Protections = Partial<Record<LabPart, boolean>>;
+export const PROTECTIONS: readonly LabPart[] = ['retry', 'journal', 'idempotency', 'breaker', 'offline_queue'];
+export const protectionsOf = (tier: CardTier): Protections => ({ ...PACK_TIERS[tier] });
+/** The named tier these protections equal, or `custom`. */
+export function tierOfProtections(p: Protections): CardTier | 'custom' {
+  const on = (x: Protections) => PROTECTIONS.filter((k) => x[k]).join();
+  return CARD_TIERS.find((t) => on(PACK_TIERS[t]) === on(p)) ?? 'custom';
+}
 export const CARD_TIERS: readonly CardTier[] = ['rookie', 'retrier', 'journaler', 'reconciler', 'phoenix'];
 const BAD = new Set(['fail', 'halt', 'repeat']);
 
 export interface BlockCard {
   blockId: string;
-  tier: CardTier;
+  tier: CardTier | 'custom';
   role: string;
   grade: string;
   reliability: number;
@@ -28,9 +37,16 @@ export interface BlockCard {
   modelBased: true;
 }
 
-const withTier = (m: LabModel, tier: CardTier): LabModel => ({ ...m, parts: { ...PACK_TIERS[tier] } as Partial<Record<LabPart, boolean>> });
+/**
+ * The model of a bot with these protections. The generic bot sends an idempotency key on every effect exactly when the idempotency
+ * protection is on, so in the model an effect is keyed iff that switch is on (the manifest's `idempotent: required` says a repeat is a bug, not that the bot keys it).
+ */
+const withTier = (m: LabModel, tier: CardTier | Protections): LabModel => {
+  const parts = typeof tier === 'string' ? protectionsOf(tier) : { ...tier };
+  return { ...m, parts, stages: m.stages.map((s) => (s.effects ? { ...s, effects: s.effects.map((e) => ({ ...e, keyed: parts.idempotency === true })) } : s)) };
+};
 
-function cardOf(blockId: string, tier: CardTier, role: string, rep: LabReport): BlockCard {
+function cardOf(blockId: string, tier: CardTier | 'custom', role: string, rep: LabReport): BlockCard {
   const cells = rep.cells;
   return {
     blockId, tier, role, grade: String(rep.grade), reliability: rep.reliability, tried: cells.length,
@@ -42,10 +58,10 @@ function cardOf(blockId: string, tier: CardTier, role: string, rep: LabReport): 
 }
 
 /** One block alone against every fault that fits its role, with the parts of `tier`. Null for an unknown block. */
-export async function runBlock(blockId: string, tier: CardTier, seed = 1): Promise<BlockCard | null> {
+export async function runBlock(blockId: string, tier: CardTier | Protections, seed = 1): Promise<BlockCard | null> {
   const cfg = blockAsConfig(blockId);
   if (!cfg) return null;
-  return cardOf(blockId, tier, blockById(blockId)!.role, await labRun({ ...withTier(configToLab(cfg), tier), seed }));
+  return cardOf(blockId, typeof tier === 'string' ? tier : tierOfProtections(tier), blockById(blockId)!.role, await labRun({ ...withTier(configToLab(cfg), tier), seed }));
 }
 
 /** Cards of every library block at every tier. */
@@ -56,10 +72,10 @@ export async function allBlockCards(seed = 1): Promise<BlockCard[]> {
 }
 
 export interface ChainBlame { stage: string; block?: string; tried: number; failed: number; /** Share of all failures of the chain, 0 to 1. */ share: number }
-export interface ChainReport { grade: string; reliability: number; tier: CardTier; tried: number; failed: number; blame: ChainBlame[]; modelBased: true }
+export interface ChainReport { grade: string; reliability: number; tier: CardTier | 'custom'; tried: number; failed: number; blame: ChainBlame[]; modelBased: true }
 
 /** A chain (any manifest) run as one flow; failures are split back to the stage, and its block, that produced them. */
-export async function chainReport(cfg: HauntConfig, tier: CardTier, seed = 1): Promise<ChainReport> {
+export async function chainReport(cfg: HauntConfig, tier: CardTier | Protections, seed = 1): Promise<ChainReport> {
   const rep = await labRun({ ...withTier(configToLab(cfg), tier), seed });
   const blockOf = new Map(cfg.stages.map((s) => [s.id, s.block]));
   const per = new Map<string, { tried: number; failed: number }>();
@@ -71,7 +87,7 @@ export async function chainReport(cfg: HauntConfig, tier: CardTier, seed = 1): P
   }
   const failed = [...per.values()].reduce((a, p) => a + p.failed, 0);
   const blame = cfg.stages.map((s) => { const p = per.get(s.id) ?? { tried: 0, failed: 0 }; const b = blockOf.get(s.id); return { stage: s.id, ...(b ? { block: b } : {}), tried: p.tried, failed: p.failed, share: failed === 0 ? 0 : p.failed / failed }; });
-  return { grade: String(rep.grade), reliability: rep.reliability, tier, tried: rep.cells.length, failed, blame, modelBased: true };
+  return { grade: String(rep.grade), reliability: rep.reliability, tier: typeof tier === 'string' ? tier : tierOfProtections(tier), tried: rep.cells.length, failed, blame, modelBased: true };
 }
 
 export interface ChainWarning { id: string; stage?: string; message: string }

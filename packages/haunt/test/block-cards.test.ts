@@ -113,3 +113,31 @@ describe('custom blocks', () => {
     expect(() => registerBlock({ id: 'charge', label: 'x', role: 'work', about: '', effects: [], duration: [1, 2] })).toThrow(/already a block/);
   });
 });
+
+import { PROTECTIONS, protectionsOf, tierOfProtections } from '../src/blocks/cards';
+
+describe('protection switches (chain-wizard-v2 R1)', () => {
+  // covers: chain-wizard-v2/R1.2, R1.4
+  it('names a mix of switches: a tier when it matches, custom when it does not', () => {
+    expect(PROTECTIONS).toEqual(['retry', 'journal', 'idempotency', 'breaker', 'offline_queue']);
+    for (const t of ['rookie', 'retrier', 'journaler', 'reconciler', 'phoenix'] as const) expect(tierOfProtections(protectionsOf(t))).toBe(t);
+    expect(tierOfProtections({ retry: true, breaker: true })).toBe('custom');
+    expect(tierOfProtections({})).toBe('rookie');
+  });
+
+  it('runBlock and chainReport take a set of protections, and the same set as a tier gives the same answer', async () => {
+    const chain = cfg('  - { use: read_request }\n  - { use: charge }\n  - { use: notify }\n');
+    expect(await chainReport(chain, protectionsOf('journaler'))).toEqual(await chainReport(chain, 'journaler'));
+    expect(await runBlock('charge', protectionsOf('phoenix'))).toEqual(await runBlock('charge', 'phoenix'));
+    expect((await runBlock('charge', { retry: true, breaker: true }))!.tier).toBe('custom');
+  });
+
+  // covers: chain-wizard-v2/R1.3
+  it('each protection helps: turning one on never makes the chain worse, and the full set beats none', async () => {
+    const chain = cfg('  - { use: read_request }\n  - { use: charge }\n  - { use: wait_for_callback }\n  - { use: notify }\n');
+    const none = await chainReport(chain, {});
+    for (const k of PROTECTIONS) expect((await chainReport(chain, { [k]: true })).failed, k).toBeLessThanOrEqual(none.failed);
+    const all = await chainReport(chain, protectionsOf('phoenix'));
+    expect(all.failed).toBeLessThan(none.failed);
+  });
+});

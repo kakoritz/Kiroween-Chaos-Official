@@ -40,7 +40,7 @@ Same harness. Same creatures. Two languages. Three different jobs.
 
 Kiro is how this got built, not just where we typed.
 
-- **Specs first.** Twenty-three specs live in `.kiro/specs/`, each with requirements, a design and a task list. Every feature started as a spec, then became tasks, then code. There are over 240 ticked tasks.
+- **Specs first.** Twenty-four specs live in `.kiro/specs/`, each with requirements, a design and a task list. Every feature started as a spec, then became tasks, then code. There are over 240 ticked tasks.
 - **Steering files** keep every session on the same page: tech choices, the event contract, art direction and product intent.
 - **Agent hooks** automate the boring checks: regenerating the traceability table when specs or tests change, running the crash-point property test when the SDK changes, and validating the event fixtures against the contract schema when a contract file is saved. They report on save; they do not block anything.
 - **Custom agents** do focused jobs, like the reviewer that reads a run and drafts fix specs.

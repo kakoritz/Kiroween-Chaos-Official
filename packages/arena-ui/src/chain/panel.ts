@@ -1,6 +1,7 @@
 // Chain wizard DOM (modular-engine R12.3): library on the left, the chain in the middle, warnings and the test on the right.
 // Everything runs in this page; nothing is sent anywhere.
-import { CARD_TIERS, chainChecks, chainReport, runBlock, type BlockCard, type CardTier, type ChainReport } from '../../../haunt/src/blocks/cards';
+import { CARD_TIERS, PROTECTIONS, chainChecks, chainReport, protectionsOf, runBlock, tierOfProtections, type BlockCard, type CardTier, type ChainReport, type Protections } from '../../../haunt/src/blocks/cards';
+import { PART_LABEL } from '../workflow-lab/model';
 import { addBlock, addCustom, chainProblems, emptyChain, fromConfig, libraryByRole, move, removeAt, rename, toConfig, toYaml, type ChainModel } from './model';
 import { parseHauntConfig } from '../../../haunt/src/config/haunt-config';
 
@@ -13,9 +14,12 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: 
   return e;
 }
 
-export function mountChain(root: HTMLElement): { getModel(): ChainModel; setModel(m: ChainModel): void; test(): Promise<ChainReport | null> } {
+export function mountChain(root: HTMLElement): { getModel(): ChainModel; setModel(m: ChainModel): void; test(): Promise<ChainReport | null>; setProtections(p: Protections): Promise<void> } {
   let model = emptyChain();
-  let tier: CardTier = 'rookie';
+  let prot: Protections = protectionsOf('rookie');
+  let before: { grade: string; failed: number; label: string } | null = null;
+  const protKey = (): string => PROTECTIONS.map((k) => (prot[k] ? '1' : '0')).join('');
+  const protLabel = (): string => { const t = tierOfProtections(prot); return t === 'custom' ? `custom (${PROTECTIONS.filter((k) => prot[k]).map((k) => PART_LABEL[k]).join(', ') || 'none'})` : t; };
   const cards = new Map<string, BlockCard>();
   let report: ChainReport | null = null;
   const lib = el('section', 'ch-card'); lib.setAttribute('aria-label', 'Block library');
@@ -25,21 +29,38 @@ export function mountChain(root: HTMLElement): { getModel(): ChainModel; setMode
   root.append(el('p', 'ch-honest', HONEST), grid);
 
   async function cardFor(blockId: string): Promise<BlockCard | undefined> {
-    const k = `${blockId}@${tier}`;
-    if (!cards.has(k)) { const c = await runBlock(blockId, tier); if (c) cards.set(k, c); }
+    const k = `${blockId}@${protKey()}`;
+    if (!cards.has(k)) { const c = await runBlock(blockId, prot); if (c) cards.set(k, c); }
     return cards.get(k);
   }
-  const tierSelect = (): HTMLSelectElement => {
-    const s = el('select'); s.setAttribute('aria-label', 'Tier to test with');
-    for (const t of CARD_TIERS) { const o = el('option', undefined, t); o.value = t; o.selected = t === tier; s.append(o); }
-    s.onchange = () => { tier = s.value as CardTier; report = null; void render(); };
-    return s;
+  /** Re-run the chain test when a protection changes and a result is already showing, and keep the grade before the change. */
+  async function changed(): Promise<void> {
+    if (report) before = { grade: report.grade, failed: report.failed, label: String(report.tier) };
+    const had = report !== null;
+    report = null;
+    if (had) await test(); else await render();
+  }
+  const protectionPanel = (): HTMLElement => {
+    const box = el('div', 'ch-prot'); box.setAttribute('role', 'group'); box.setAttribute('aria-label', 'Protections your bot has');
+    box.append(el('h3', undefined, 'Protections your bot has'));
+    const preset = el('select'); preset.setAttribute('aria-label', 'Preset');
+    const cur = tierOfProtections(prot);
+    for (const t of [...CARD_TIERS, 'custom' as const]) { const o = el('option', undefined, t === 'custom' ? 'custom' : t); o.value = t; o.selected = t === cur; o.disabled = t === 'custom'; preset.append(o); }
+    preset.onchange = () => { if (preset.value !== 'custom') { prot = protectionsOf(preset.value as CardTier); void changed(); } };
+    box.append(preset);
+    for (const k of PROTECTIONS) {
+      const row = el('label', 'ch-toggle');
+      const cb = el('input'); cb.type = 'checkbox'; cb.checked = !!prot[k]; cb.setAttribute('aria-label', PART_LABEL[k]);
+      cb.onchange = () => { prot = { ...prot, [k]: cb.checked }; void changed(); };
+      row.append(cb, document.createTextNode(` ${PART_LABEL[k]}`));
+      box.append(row);
+    }
+    return box;
   };
 
   async function renderLib(): Promise<void> {
     lib.replaceChildren(el('h2', undefined, '1. Pick blocks'));
-    const row = el('div', 'ch-row'); row.append(el('label', undefined, 'Tier'), tierSelect());
-    lib.append(row);
+    lib.append(el('p', 'ch-note', `Cards: each block alone with: ${protLabel()}.`));
     for (const [role, list] of Object.entries(libraryByRole())) {
       lib.append(el('h3', undefined, role));
       const ul = el('ul', 'ch-lib');
@@ -49,7 +70,7 @@ export function mountChain(root: HTMLElement): { getModel(): ChainModel; setMode
         const btn = el('button', 'ch-btn', `+ ${b.label}`); btn.type = 'button'; btn.title = b.about; btn.setAttribute('aria-label', `Add ${b.label}`);
         btn.onclick = () => { model = addBlock(model, b.id); report = null; void render(); };
         const badge = el('span', 'ch-badge', c ? `${c.survived}/${c.tried} ${c.grade}` : '');
-        badge.title = c ? `Alone at ${tier}: survived ${c.survived} of ${c.tried} attacks, grade ${c.grade}` : '';
+        badge.title = c ? `Alone with ${protLabel()}: survived ${c.survived} of ${c.tried} attacks, grade ${c.grade}` : '';
         li.append(btn, badge);
         ul.append(li);
       }
@@ -97,10 +118,11 @@ export function mountChain(root: HTMLElement): { getModel(): ChainModel; setMode
     const btn = el('button', 'ch-btn ch-btn--go', 'Test chain'); btn.type = 'button'; btn.disabled = problems.length > 0;
     btn.onclick = () => { void test(); };
     side.append(btn);
+    side.append(protectionPanel());
     for (const p of problems) side.append(el('p', 'ch-problem', p));
     const cfg = toConfig(model);
     if (cfg.ok) {
-      const warn = chainChecks(cfg.config, [...cards.values()].filter((c) => c.tier === tier));
+      const warn = chainChecks(cfg.config, [...cards.entries()].filter(([k]) => k.endsWith(`@${protKey()}`)).map(([, c]) => c));
       side.append(el('h3', undefined, `Warnings (${warn.length})`));
       if (warn.length === 0) side.append(el('p', 'ch-ok', 'No warnings.'));
       const ul = el('ul', 'ch-warn');
@@ -108,7 +130,8 @@ export function mountChain(root: HTMLElement): { getModel(): ChainModel; setMode
       side.append(ul);
     }
     if (report) {
-      side.append(el('h3', undefined, `Result at ${report.tier}: grade ${report.grade}`));
+      side.append(el('h3', undefined, `Result with ${protLabel()}: grade ${report.grade}`));
+      if (before) side.append(el('p', 'ch-delta', `Before: grade ${before.grade}, ${before.failed} failures (${before.label}). Now: grade ${report.grade}, ${report.failed} failures.`));
       side.append(el('p', undefined, `${report.failed} of ${report.tried} attacks did not end clean. Reliability ${Math.round(report.reliability * 100)}%.`));
       const t = el('table', 'ch-blame');
       t.append(Object.assign(el('tr'), { innerHTML: '<th>Stage</th><th>Block</th><th>Failed</th><th>Share</th>' }));
@@ -126,11 +149,11 @@ export function mountChain(root: HTMLElement): { getModel(): ChainModel; setMode
   async function test(): Promise<ChainReport | null> {
     const cfg = toConfig(model);
     if (!cfg.ok) return null;
-    report = await chainReport(cfg.config, tier);
+    report = await chainReport(cfg.config, prot);
     await render();
     return report;
   }
 
   void render();
-  return { getModel: () => model, setModel: (m) => { model = m; report = null; void render(); }, test };
+  return { getModel: () => model, setModel: (m) => { model = m; report = null; before = null; void render(); }, test, setProtections: (p) => { prot = { ...p }; return changed(); } };
 }
