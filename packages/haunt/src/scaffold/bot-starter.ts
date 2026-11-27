@@ -7,7 +7,7 @@ import type { HauntConfig } from '../config/haunt-config';
 
 export type BotLang = 'node' | 'python';
 
-/** Provider endpoint per effect kind (the fake provider's kinds). A kind it does not know is stored as `store`, with the declared kind in the body. */
+/** Provider endpoint per effect kind (the fake provider's kinds). Any other kind goes to `/effects/<kind>` and is recorded under that name (contract v1.4). */
 export const KIND_PATH: Readonly<Record<string, string>> = {
   account_create: '/accounts', account: '/accounts', order: '/orders', charge: '/charges', email: '/emails', store: '/store', dispatch: '/shipments',
   notify: '/notifications', ticket: '/tickets', reply: '/replies', refund: '/refunds', discount: '/discounts',
@@ -27,10 +27,10 @@ export function starterStages(config: HauntConfig): StarterStage[] {
     id: s.id,
     role: s.role,
     calls: s.effects.map((e) => {
-      const path = KIND_PATH[e.kind] ?? '/store';
+      const path = KIND_PATH[e.kind] ?? `/effects/${e.kind}`;
       const n = (used.get(path) ?? 0) + 1;
       used.set(path, n);
-      return { path, kind: e.kind, body: { index: n, ...(KIND_PATH[e.kind] ? {} : { declared: e.kind }) } };
+      return { path, kind: e.kind, body: { index: n } };
     }),
   }));
 }

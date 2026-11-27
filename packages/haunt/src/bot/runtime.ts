@@ -197,7 +197,7 @@ export async function runBot(def: BotDef): Promise<void> {
   };
   const transport: Transport = {
     async post(kind, body, o) {
-      const path = PATHS[kind];
+      const path = PATHS[kind] ?? (/^[a-z][a-z0-9_]{1,31}$/.test(kind) && kind !== 'tracking' && kind !== 'handoff' ? `/effects/${kind}` : undefined);
       if (!path) throw new Error(`unknown effect kind ${kind}`);
       const payload = kind === 'email' && body.template === undefined ? { ...body, template: 'confirmation' } : body;
       const headers: Record<string, string> = { 'content-type': 'application/json', 'x-haunt-phase': o.recovery ? 'recovery' : 'normal' };

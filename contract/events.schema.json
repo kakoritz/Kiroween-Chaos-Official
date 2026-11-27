@@ -1183,18 +1183,8 @@
               ],
               "properties": {
                 "kind": {
-                  "enum": [
-                    "account_create",
-                    "order",
-                    "charge",
-                    "email",
-                    "store",
-                    "dispatch",
-                    "notify",
-                    "ticket",
-                    "refund",
-                    "discount"
-                  ]
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]{1,31}$"
                 },
                 "key": {
                   "type": "string"
@@ -1239,16 +1229,8 @@
               ],
               "properties": {
                 "kind": {
-                  "enum": [
-                    "account_create",
-                    "order",
-                    "charge",
-                    "email",
-                    "store",
-                    "dispatch",
-                    "notify",
-                    "ticket"
-                  ]
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]{1,31}$"
                 },
                 "key": {
                   "type": "string"

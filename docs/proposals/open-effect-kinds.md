@@ -24,5 +24,5 @@ All ten current names match the pattern, so every recorded stream and fixture st
 ## Tests that prove it
 A manifest with `kind: sms`: the bot sends it, the ledger row says `sms`, a double send is flagged as a repeat, the event stream passes `validate:events`, the old fixtures still pass.
 
-## Decision needed
-Approve the contract v1.4 edit above, or keep ten kinds (documented limit).
+## Decision
+Approved by the owner on 2026-11-26. Built: `contract/V1_4.md`, `packages/haunt/test/open-effect-kinds.test.ts`. Run end to end on the live engine with a manifest effect `kind: sms`: the events, the ledger and the arena column say `sms`.

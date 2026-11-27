@@ -88,7 +88,7 @@ Use an inline stage a few times, then keep it: `npm run block:add -- path/to/hau
 
 ## Limits
 
-- Effect kinds map to the fake provider's kinds (see [`MODULAR.md`](MODULAR.md)).
+- Effect kinds are open since contract v1.4: any lowercase name (`sms`, `ledger_entry`) is recorded under that name. The ten known kinds keep their routes (see [`MODULAR.md`](MODULAR.md)). The in-browser worker engine still knows only the known kinds.
 - Hosted page: only the apps shipped in this repo (Playback, Coffee Shop) appear. Your own app runs locally.
 - The Chain Wizard scores are model-based.
 

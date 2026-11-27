@@ -8,7 +8,7 @@ import { registerAppFromDir } from '../config/register-dir';
 import { defineBot, type BotDef } from './runtime';
 
 /** The provider kind an effect is written as. The ledger kind `account_create` is posted to the `account` endpoint; a kind the fake provider does not know is stored as `store`, with the declared kind in the body. */
-export const providerKind = (kind: string): string => (kind === 'account_create' ? 'account' : PROVIDER_KINDS.includes(kind) ? kind : 'store');
+export const providerKind = (kind: string): string => (kind === 'account_create' ? 'account' : PROVIDER_KINDS.includes(kind) ? kind : /^[a-z][a-z0-9_]{1,31}$/.test(kind) && kind !== 'tracking' && kind !== 'handoff' ? kind : 'store');
 
 export const workTable = (app: AppDef): readonly StageDef[] => app.stages.map((s) => ({ id: s.id, label: s.label, min: s.min, max: s.max }));
 

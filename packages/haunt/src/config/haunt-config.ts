@@ -127,6 +127,7 @@ export function validateHauntConfig(raw: unknown): LoadResult {
           if (!isObj(e)) { errors.push(`${p}effects[${j}]: expected a mapping`); return; }
           checkUnknown(e, ['kind', 'key', 'idempotent'], ep, errors);
           if (!isNonEmptyStr(e.kind)) errors.push(`${ep}kind: required non-empty string`);
+        else if (!/^[a-z][a-z0-9_]{1,31}$/.test(e.kind) || e.kind === 'tracking' || e.kind === 'handoff') errors.push(`${ep}kind: "${e.kind}" must be lowercase letters, digits and _ (2 to 32), and not tracking or handoff`);
           if (!IDEM.includes(e.idempotent as Idempotency)) errors.push(`${ep}idempotent: required, one of ${IDEM.join(' | ')}`);
           effects.push({
             kind: String(e.kind), key: isNonEmptyStr(e.key) ? e.key : String(e.kind), idempotent: e.idempotent as Idempotency,

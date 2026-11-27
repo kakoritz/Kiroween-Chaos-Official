@@ -27,6 +27,7 @@ flowchart LR
 | Registry | The live list of apps: the three built-in ones plus any manifest registered at start | `packages/haunt/src/shared/registry.ts` |
 | Fault resolver | Decides which fault can land on which stage, by role | `faultFacesStage` in `packages/haunt/src/chaos/catalog.ts` |
 | Generic bot | A real bot for any manifest, at the five tiers, built on the same SDK | `packages/haunt/src/bot/generic.ts`, `apps/generic/` |
+| Contract v1.4 | Effect kinds are open: any lowercase name | [`contract/V1_4.md`](../contract/V1_4.md) |
 | Contract v1.3 | Stage ids and order prefixes are open; `hello.stages` carries the list | [`contract/V1_3.md`](../contract/V1_3.md) |
 
 ## How a fault finds its stage
@@ -55,7 +56,7 @@ The wizard and the Lab are model-based: they apply the same rules to the protect
 ## What is fixed, on purpose
 
 - The five roles and the five tiers.
-- The fake provider's kinds (`account_create`, `order`, `charge`, `email`, `store`, `dispatch`, `notify`, `ticket`, `refund`, `discount`). Another kind is recorded as `store`. This keeps the provider's wire format unchanged.
+- The fake provider's ten known kinds (`account_create`, `order`, `charge`, `email`, `store`, `dispatch`, `notify`, `ticket`, `refund`, `discount`) keep their routes. Any other lowercase kind, such as `sms`, is recorded under its own name through `POST /effects/<kind>` (contract v1.4).
 - Order files are `ord-0001.json`. The arena shows your app's own prefix.
 - 1 to 24 stages per app.
 

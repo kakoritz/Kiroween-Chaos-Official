@@ -3,7 +3,11 @@
 import { appendFileSync, closeSync, fsyncSync, openSync, writeFileSync } from 'node:fs';
 import { unit } from '@haunt/shared';
 
-export type Kind = 'account' | 'order' | 'charge' | 'email' | 'store' | 'dispatch' | 'notify' | 'ticket' | 'reply' | 'refund' | 'discount';
+/** A ledger kind: one of the known ones, or any name from `POST /effects/<kind>` (contract v1.4). */
+export type Kind = string;
+export const EFFECT_KIND_RE = /^[a-z][a-z0-9_]{1,31}$/;
+/** Names the provider uses for other things; they cannot be effect kinds. */
+export const RESERVED_KINDS: readonly string[] = ['tracking', 'handoff'];
 export const KINDS: readonly Kind[] = ['account', 'order', 'charge', 'email', 'store', 'dispatch', 'notify', 'ticket', 'reply', 'refund', 'discount'];
 
 export const POST_ROUTES: Readonly<Record<string, Kind>> = {
@@ -20,7 +24,7 @@ export const POST_ROUTES: Readonly<Record<string, Kind>> = {
   '/discounts': 'discount',
 };
 
-const ID_PREFIX: Record<Kind, string> = {
+const ID_PREFIX: Record<string, string> = {
   account: 'acct', order: 'or', charge: 'ch', email: 'em', store: 'st', dispatch: 'sh', notify: 'nt', ticket: 'tk', reply: 'rp', refund: 'rf', discount: 'dc',
 };
 
@@ -205,6 +209,12 @@ export class Provider {
       if (req.method === 'POST' && POST_ROUTES[req.path]) {
         return await this.effect(POST_ROUTES[req.path]!, req.body ?? {}, h);
       }
+      const ek = /^\/effects\/([^/]+)$/.exec(req.path);
+      if (req.method === 'POST' && ek) {
+        const kind = decodeURIComponent(ek[1]!);
+        if (!EFFECT_KIND_RE.test(kind) || RESERVED_KINDS.includes(kind)) return json(404, { error: `no effect kind ${kind}` });
+        return await this.effect(kind, req.body ?? {}, h);
+      }
       const t = /^\/tracking\/([^/]+)$/.exec(req.path);
       if (req.method === 'GET' && t) {
         return await this.tracking(decodeURIComponent(t[1]!), q.lane ?? '', h);
@@ -234,7 +244,7 @@ export class Provider {
         const amount = typeof k.amount === 'number' ? k.amount : null;
         this.onReplay?.({ id: String(k.id), lane, kind, order, key, amount, index: null, ts: this.clock.now() });
       } else {
-        const id = `${ID_PREFIX[kind]}_${this.next(`${lane}|${kind}`)}`;
+        const id = `${ID_PREFIX[kind] ?? 'fx'}_${this.next(`${lane}|${kind}`)}`;
         const amount = (kind === 'charge' || kind === 'refund' || kind === 'discount') && typeof body.amount === 'number' ? body.amount : null;
         // Any kind may carry an index (a generic app can take two payments in one order); Orders, Stream and the desk send one only for store and notify.
         const index = typeof body.index === 'number' ? body.index : null;

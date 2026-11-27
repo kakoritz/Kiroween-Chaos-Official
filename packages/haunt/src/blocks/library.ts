@@ -108,5 +108,5 @@ export function registerBlock(b: Block): void {
   if (errs.length > 0) throw new Error(`block "${(b as { id?: string }).id}" is not valid:\n- ${errs.join('\n- ')}`);
   BLOCKS.push({ ...b, effects: b.effects.map((e) => ({ ...e })), duration: [b.duration[0], b.duration[1]] });
 }
-/** Provider kinds the fake provider can record. A block or manifest effect kind outside this list is stored as `store`. */
+/** Provider kinds the fake provider can record. Any other well-formed kind is recorded under its own name through `POST /effects/<kind>` (contract v1.4); a malformed one is stored as `store`. */
 export const PROVIDER_KINDS: readonly string[] = ['account_create', 'order', 'charge', 'email', 'store', 'dispatch', 'notify', 'ticket', 'refund', 'discount'];

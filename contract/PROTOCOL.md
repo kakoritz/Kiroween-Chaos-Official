@@ -1,4 +1,4 @@
-> **Contract v1.3 (`contract/V1_3.md`) opens stage ids and order prefixes: apps declare their own stages in `hello.stages`.** **Contract v1.1 (additive) is in `contract/V1_1.md` and wins where it differs** (pace slow, travel gaps, laps, reviews, decisions, new faults, new endpoints, rules 40 to 47).
+> **Contract v1.4 (`contract/V1_4.md`) opens effect kinds: any name matching `^[a-z][a-z0-9_]{1,31}$`, through `POST /effects/<kind>`.** **Contract v1.3 (`contract/V1_3.md`) opens stage ids and order prefixes: apps declare their own stages in `hello.stages`.** **Contract v1.1 (additive) is in `contract/V1_1.md` and wins where it differs** (pace slow, travel gaps, laps, reviews, decisions, new faults, new endpoints, rules 40 to 47).
 
 # Protocol (contract v1, complete)
 

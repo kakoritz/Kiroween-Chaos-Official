@@ -51,4 +51,4 @@
 |---|---|---|---|---|---|
 | `confirm` | Confirm | Tell the user it is done. | none | 300 to 600 ms | Breaks when the work is done but the user is never told. An offline queue holds the message. |
 
-Effect kinds are the fake provider's kinds: `account_create`, `order`, `charge`, `email`, `store`, `dispatch`, `notify`, `ticket`, `refund`, `discount`. A kind outside that list is recorded as `store`.
+Effect kinds are the fake provider's kinds: `account_create`, `order`, `charge`, `email`, `store`, `dispatch`, `notify`, `ticket`, `refund`, `discount`. Any other lowercase name (for example `sms`) is a kind of its own: it is sent to `POST /effects/<kind>` and recorded under that name (contract v1.4).

@@ -27,6 +27,6 @@ export function blocksMarkdown(): string {
     for (const b of list) out.push(`| \`${b.id}\` | ${b.label} | ${b.about} | ${b.effects.length ? b.effects.map((e) => `\`${e.kind}\`, \`${e.key}\` (${e.idempotent})`).join('; ') : 'none'} | ${b.duration[0]} to ${b.duration[1]} ms | ${hintOf(b)} |`);
     out.push('');
   }
-  out.push('Effect kinds are the fake provider\'s kinds: `account_create`, `order`, `charge`, `email`, `store`, `dispatch`, `notify`, `ticket`, `refund`, `discount`. A kind outside that list is recorded as `store`.', '');
+  out.push('Effect kinds are the fake provider\'s kinds: `account_create`, `order`, `charge`, `email`, `store`, `dispatch`, `notify`, `ticket`, `refund`, `discount`. Any other lowercase name (for example `sms`) is a kind of its own: it is sent to `POST /effects/<kind>` and recorded under that name (contract v1.4).', '');
   return out.join('\n');
 }
