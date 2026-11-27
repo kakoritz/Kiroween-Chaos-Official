@@ -61,5 +61,5 @@ The wizard and the Lab are model-based: they apply the same rules to the protect
 
 ## Limits
 
-- A pack creature name is display only: the sprite and the rules are the engine's. An app gives names with a `creatures:` list (see [`STREAM.md`](STREAM.md)).
+- A pack creature name is display only: the sprite and the rules are the engine's. An app gives names with a `creatures:` list (see [`STREAM.md`](STREAM.md)). An `attacks:` list tunes a fault (count or window) on your stages: see [`INTEGRATE.md`](INTEGRATE.md).
 - On the hosted page, Playback and the Coffee Shop run in the browser engine (no real bot processes). Run locally for real bots.

@@ -11,7 +11,7 @@ import { IssueFloor, gremlinVariant } from './floor';
 import { CURSE_KINDS, classifyHit, drawCurse, stageOfCall, type CurseKind, type CurseRec, type OrderTrace } from '../tournament/curses';
 import { unit } from '../shared/rng';
 import { APPS, type AppId } from '../shared/catalog';
-import { creatureNameFor, isBuiltinApp, isRegisteredApp } from '../shared/registry';
+import { attackById, attackFor, creatureNameFor, isBuiltinApp, isRegisteredApp } from '../shared/registry';
 
 /** What the provider tells the engine when a curse lied (see `CurseHit` in the provider). */
 export interface ProviderCurseHit { lane: string; service: string; order: string; index?: number; curse: CurseKind; id: string; status: number }
@@ -23,7 +23,7 @@ import { OUTAGE_FAULTS, drawOutageMs, initialDial, intensityRow, isLevel, type D
 /** Transit stalls that carry an outage window and a countdown ring. */
 const TRANSIT_WINDOW: ReadonlySet<string> = new Set(['weather', 'road_hazard', 'delay', 'out_of_gas', 'not_on_truck', 'wrong_address']);
 
-export interface EngineChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string; forMs?: number; detect?: 'confirmation' | 'process' | 'transit' | 'handoff'; source?: 'user' | 'random' | 'boss' | 'fuzz' | 'gremlin' | 'demo'; fuzz?: FuzzFault; count?: number; outageMs?: number }
+export interface EngineChaosRequest { /** An own attack of the running app (its haunt.yaml `attacks:`); sets fault, count or window. */ attack?: string; lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string; forMs?: number; detect?: 'confirmation' | 'process' | 'transit' | 'handoff'; source?: 'user' | 'random' | 'boss' | 'fuzz' | 'gremlin' | 'demo'; fuzz?: FuzzFault; count?: number; outageMs?: number }
 export interface EngineChaosResult { chaosId: string; creature: string; fault: string; depth: number; deferred: boolean }
 /** A tournament round (TV3-C7): the live lanes are the survivors, lane n runs tier n, and `script` is the one storm every lane meets. */
 export interface EngineTournament { round: number; lanes: number[]; level: number; script: unknown }
@@ -254,8 +254,16 @@ export class RunnerEngine {
     }
   }
 
-  chaos = (req: EngineChaosRequest): EngineChaosResult => {
-    const lane = String(req.lane ?? this.lanes[0] ?? '1');
+  chaos = (req0: EngineChaosRequest): EngineChaosResult => {
+    // An own attack by id is its base fault with the attack's count or window. Anything the press fixes itself still wins.
+    const named = req0.attack !== undefined ? attackById(this.appId, req0.attack) : undefined;
+    if (req0.attack !== undefined && !named) throw new Error(`unknown attack "${req0.attack}" for this app`);
+    const req: EngineChaosRequest = named ? { ...req0, fault: named.base, ...(req0.count === undefined && named.count !== undefined ? { count: named.count } : {}), ...(req0.forMs === undefined && named.forMs !== undefined ? { forMs: named.forMs } : {}) } : { ...req0 };
+    const lane0 = String(req.lane ?? this.lanes[0] ?? '1');
+    // A press with no count or window of its own meets the own attack that tunes this fault on the stage in flight, if the app declared one.
+    const tuned = !named && req.count === undefined && req.forMs === undefined ? attackFor(this.appId, this.opts.laneInfo?.(lane0)?.stage ?? undefined, req.fault) : undefined;
+    if (tuned) { if (tuned.count !== undefined) req.count = tuned.count; if (tuned.forMs !== undefined) req.forMs = tuned.forMs; }
+    const lane = lane0;
     if (!this.lanes.includes(lane)) throw new Error(`lane ${lane} is not in the current wave`);
     const info = { ...(this.opts.laneInfo?.(lane) ?? { state: 'working' as const, stage: null }), app: this.app };
     const nextId = `c${this.wave}-${this.seq + 1}`;
@@ -276,7 +284,7 @@ export class RunnerEngine {
     this.seq++;
     const creature = req.creature ?? FAULTS.find((f) => f.id === req.fault)?.creature ?? req.fault;
     const gremlin = req.source === 'gremlin';
-    const creatureName = creatureNameFor(this.appId, r.detail.deferredTo ?? info.stage ?? undefined, r.detail.fault);
+    const creatureName = (named ?? attackFor(this.appId, r.detail.deferredTo ?? info.stage ?? undefined, r.detail.fault))?.label ?? creatureNameFor(this.appId, r.detail.deferredTo ?? info.stage ?? undefined, r.detail.fault);
     this.record?.({ type: 'chaos', lane, detail: { id: chaosId, creature, ...(creatureName ? { creatureName } : {}), source: req.source === undefined || (req.source as string) === 'manual' ? 'user' : req.source, ...r.detail, ...(gremlin ? { fault: 'gremlin', variant: req.fault } : {}),
       ...(fz ? { unknown: true, fingerprint: fz.fingerprint, fuzz: { fault: fz.fault, ...(fz.status !== undefined ? { status: fz.status } : {}), ...(fz.forMs !== undefined ? { forMs: fz.forMs } : {}), ...(fz.count !== undefined ? { count: fz.count } : {}), ...(fz.truncated ? { truncated: true } : {}), ...(fz.clockJumpMs !== undefined ? { clockJumpMs: fz.clockJumpMs } : {}) } } : {}) } });
     if (outageMs !== undefined) {

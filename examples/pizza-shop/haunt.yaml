@@ -3,6 +3,7 @@
 name: pizza
 label: Pizza Shop
 idPrefix: piz
+adapter: process
 start: node bot/bot.mjs
 truth: http://127.0.0.1:7071
 stages:

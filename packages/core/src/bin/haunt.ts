@@ -39,6 +39,8 @@ async function sweep(): Promise<number> {
   const orders = Number(opt('orders', '2'));
   const speed = Number(opt('speed', '4'));
   if (![seed, orders, speed].every((n) => Number.isFinite(n) && n > 0)) { console.error('seed, orders and speed must be positive numbers'); return 2; }
+  const min = (opt('min-grade') ?? '').toUpperCase();
+  if (min && !/^[ABCD]$/.test(min)) { console.error('--min-grade must be A, B, C or D'); return 2; }
   const root = process.cwd();
   const configPath = resolve(opt('config', join(root, 'apps', 'haunted-orders', 'haunt.yaml'))!);
   const bot = resolve(opt('bot', join(root, 'dist', 'bots', `${tier}.js`))!);
@@ -93,7 +95,12 @@ async function sweep(): Promise<number> {
     const file = join(outDir, `sweep-${tier}-seed${seed}.json`);
     writeFileSync(file, sweepReportJson(report));
     console.log(`report ${file}`);
-    return gate(sweepTargets(loaded.config.targets, report));
+    const code = gate(sweepTargets(loaded.config.targets, report));
+    // --min-grade A|B|C|D: the real-bot check of docs/GITHUB-ACTION.md. Exit 1 when the grade of this run is lower.
+    if (min) {
+      if ('FDCBA'.indexOf(String(report.grade).charAt(0)) < 'FDCBA'.indexOf(min)) { console.error(`grade ${report.grade} is below the minimum ${min}`); return argv.includes('--no-gate') ? code : 1; }
+    }
+    return code;
   } finally {
     await prov.close();
     rmSync(runDir, { recursive: true, force: true });
@@ -416,7 +423,7 @@ if (cmd === 'badge') {
 } else if (cmd === 'serve') {
   process.exitCode = await serveCommand(argv.slice(1), process.cwd());
 } else {
-  console.log(`usage: npm run haunt -- ramp|sweep|stack|soak|boss [--boss lich|banshee_queen|horseman] [--tier rookie|retrier|journaler|reconciler|phoenix] [--seed N] [--orders N] [--speed N] [--config path] [--bot path] [--out dir] [--no-gate]`);
+  console.log(`usage: npm run haunt -- ramp|sweep|stack|soak|boss [--boss lich|banshee_queen|horseman] [--tier rookie|retrier|journaler|reconciler|phoenix] [--seed N] [--orders N] [--speed N] [--config path] [--bot path] [--out dir] [--no-gate] [--min-grade A|B|C|D]`);
   console.log('       npm run haunt -- compare <runA> <runB> [--out file]');
   console.log('       npm run haunt -- report <run-id|report.json> [--format html|md|json] [--out file]');
   console.log('       npm run haunt -- serve [--port 7070] [--mode live|mock]  (127.0.0.1 only)');

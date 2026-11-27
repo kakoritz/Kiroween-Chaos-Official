@@ -40,6 +40,18 @@ Read the spec, apply the fix yourself (or have Kiro apply it), and restart `npm 
 | A crash redoes finished stages | Write a journal file under `HAUNT_RUN_DIR` and skip stages already done |
 | A slow call stalls the lane | Keep the 1.5 s timeout and treat it as retryable |
 
+### The helper library
+
+`npm run bot:new` writes `haunt-bot-lib.mjs` (or `haunt_bot_lib.py` with `--lang python`) next to your bot. Four helpers, no dependencies:
+
+| Helper | Use |
+|---|---|
+| `idempotencyKey(order, stage)` | a stable key, same on every retry |
+| `hardenedCall(provider, path, body, { key })` | timeout, retry with backoff on 429 and 5xx, honors `Retry-After` |
+| `journal(dir)` with `has(key)` and `mark(key)` | skip finished work after a crash |
+
+Replace the template's `callProvider(...)` with `hardenedCall(...)` and wrap each effect in `journal`. That is the first three rows of the table above.
+
 ## What the arena gives your bot
 
 | Env var | Meaning |

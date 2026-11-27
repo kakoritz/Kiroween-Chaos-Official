@@ -1,0 +1,6 @@
+{ "zap": { "title": "New signup", "steps": [
+  { "app": "Webhooks by Zapier", "action": "Catch Hook" },
+  { "app": "Auth0", "action": "Create User" },
+  { "app": "Gmail", "action": "Send Email", "title": "Welcome mail" },
+  { "app": "Slack", "action": "Send Channel Message" }
+] } }

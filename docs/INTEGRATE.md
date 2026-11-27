@@ -53,6 +53,26 @@ The arena shows the ledger, the grade and the Casebook. `.kiro/specs/hardening-<
 
 Give the engine's faults your own names in the arena: `creatures: [{ name: Till Troll, stage: pay, faults: [http_500] }]`. See [`STREAM.md`](STREAM.md).
 
+## Own attacks (optional)
+
+Tune an engine fault for one of your stages and give it your name:
+
+```yaml
+attacks:
+  - { id: card_declined, label: Card Decliner, base: http_500, stages: [pay], count: 4 }
+  - { id: rush_hour, label: Rush Hour, base: slow_link, stages: [pay, ready], forMs: 4000 }
+```
+
+- `base` is one of: `timeout`, `slow_link`, `http_404`, `http_429`, `http_500`, `endpoint_down`, `internet_outage`, `crash`, `out_of_memory`, `power_outage`.
+- `count` (1 to 10 calls) or `forMs` (100 to 15000), not both. At most 8 attacks.
+- Press one on purpose: `POST /api/chaos {"lane": 1, "attack": "card_declined"}`.
+- A normal press of `http_500` while a lane is on `pay` also meets the attack (it is tuned, and its label shows as the creature name).
+- The contract is unchanged: the event says `fault: http_500` and carries `creatureName: Card Decliner`.
+
+## Bring a flow you already have
+
+`npm run flow:import -- examples/flows/n8n-order-flow.json --out haunt.yaml` reads an n8n export (or a Zapier-style step list, see `examples/flows/zapier-signup.json`) and writes a chain of library blocks. It prints every guess and why. Check them. The Chain Wizard has the same thing under "Import an n8n or Zapier flow". It guesses by node type and name, so a custom node may be left out; it says which.
+
 ## Own your block
 
 Use an inline stage a few times, then keep it: `npm run block:add -- path/to/haunt.yaml bake`. It goes to `blocks/user.yaml`; use it as `- { use: bake }`.

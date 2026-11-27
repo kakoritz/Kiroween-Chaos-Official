@@ -11,7 +11,7 @@ import { tiersForLanes, type CrewSpec, type TierMode } from '../../../haunt/src/
 import { MAX_DEPTH } from '../../../haunt/src/chaos/catalog';
 import { parseHauntConfig } from '../../../haunt/src/config/haunt-config';
 import { registerManifestText } from '../../../haunt/src/config/embedded-register';
-import { isBuiltinApp } from '../../../haunt/src/shared/registry';
+import { attackById, isBuiltinApp } from '../../../haunt/src/shared/registry';
 import type { PartId } from '../../../haunt/src/shared/catalog';
 import { fnv1a32, mulberry32 } from '../../../haunt/src/shared/rng';
 import { loadCampaign } from '../../../haunt/src/campaign/load';
@@ -49,7 +49,7 @@ export const RETAINED_EVENTS = 5000;
 export const PING_MS = 15000;
 const SPEEDS = [0.5, 1, 2, 4];
 
-export interface ChaosRequest { lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string; detect?: 'confirmation' | 'process' | 'transit' | 'handoff' }
+export interface ChaosRequest { /** An own attack of the running app (its haunt.yaml `attacks:`). */ attack?: string; lane?: number; creature?: string; fault: string; scope?: 'inner' | 'outer'; point?: string; detect?: 'confirmation' | 'process' | 'transit' | 'handoff' }
 export interface ChaosResult { chaosId: string; creature: string; fault: string; depth: number; deferred: boolean }
 export interface WaveSettings { orders: number; seed: number; tiers: TierMode; lanes: number; speed: number; pace: 'normal' | 'show' | 'slow'; app: AppId; campaign?: CampaignRequest; tournament?: { round: number; lanes: number[]; level: number; script: unknown } }
 
@@ -671,8 +671,13 @@ export class LiveServer {
     return { ...this.intensity };
   }
 
-  private chaos(body: Record<string, any>): ChaosResult {
+  private chaos(body0: Record<string, any>): ChaosResult {
     if (!this.waves.active) fail(409, 'no_wave', 'no wave is running');
+    // `attack` is an own attack of the running app: its base fault, with the attack's count or window and its label as the creature name.
+    const attack = body0.attack !== undefined ? attackById(this.app, String(body0.attack)) : undefined;
+    if (body0.attack !== undefined && !attack) fail(400, 'bad_attack', `unknown attack ${String(body0.attack)} for the app ${this.app}`);
+    if (attack && body0.fault !== undefined && body0.fault !== attack.base) fail(400, 'bad_request', `attack ${attack.id} is ${attack.base}, not ${String(body0.fault)}`);
+    const body: Record<string, any> = attack ? { ...body0, fault: attack.base } : body0;
     const isBoss = (f: string) => f.startsWith('boss_');
     let creature = typeof body.creature === 'string' ? CREATURES.find((c) => c.id === body.creature) : undefined;
     if (body.creature !== undefined && !creature) fail(400, 'bad_creature', `unknown creature ${body.creature}`);
@@ -688,7 +693,7 @@ export class LiveServer {
       creature = creature ?? CREATURES.find((c) => c.causes.includes(fault!));
     }
     const f = fault!;
-    const req: ChaosRequest = { fault: f, creature: creature!.id, scope: body.scope, point: body.point };
+    const req: ChaosRequest = { fault: f, creature: creature!.id, scope: body.scope, point: body.point, ...(attack ? { attack: attack.id } : {}) };
     if (body.detect !== undefined) {
       if (!['confirmation', 'process', 'transit', 'handoff'].includes(body.detect as string)) fail(400, 'bad_request', 'detect must be confirmation, process, transit or handoff');
       if (f === 'order_typo') req.detect = body.detect;

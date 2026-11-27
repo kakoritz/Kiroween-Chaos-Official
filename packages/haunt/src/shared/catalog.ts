@@ -90,6 +90,8 @@ export interface AppDef {
   source?: string;
   /** Names this app gives to faults on a stage (arena display only). */
   creatureNames?: { name: string; stage?: string; faults: string[] }[];
+  /** Own attacks from the app's haunt.yaml: a named, tuned press of an existing fault on chosen stages. */
+  attacks?: { id: string; label: string; base: string; stages: string[]; count?: number; forMs?: number }[];
 }
 /** The live app table. Built-ins are here at load; `registerApp` (shared/registry.ts) adds more. Do not assign to it directly. */
 export const APPS: Record<AppId, AppDef> = {

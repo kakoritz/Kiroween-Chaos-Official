@@ -71,7 +71,7 @@ export function appFromConfig(config: HauntConfig, opts: { id?: string; label?: 
     const effects: EffectDef[] = s.effects.map((e) => ({ kind: e.kind, key: e.key, service: e.kind }));
     return { id: s.id, label: s.label, icon, workAnimation, role: s.role, min, max, effects, verb: s.label, ...(s.deny ? { deny: s.deny } : {}), ...(s.block ? { block: s.block } : {}) };
   });
-  return { id, label: opts.label ?? config.label ?? id, stages, orderPrefix: opts.idPrefix ?? config.idPrefix ?? 'job', ...(opts.source ? { source: opts.source } : {}), ...(config.creatures ? { creatureNames: config.creatures.map((c) => ({ ...c, faults: [...c.faults] })) } : {}) };
+  return { id, label: opts.label ?? config.label ?? id, stages, orderPrefix: opts.idPrefix ?? config.idPrefix ?? 'job', ...(opts.source ? { source: opts.source } : {}), ...(config.creatures ? { creatureNames: config.creatures.map((c) => ({ ...c, faults: [...c.faults] })) } : {}), ...(config.attacks ? { attacks: config.attacks.map((a) => ({ ...a, stages: [...a.stages] })) } : {}) };
 }
 
 /** The name an app gives the creature for `fault` at `stage` (the first matching entry), or undefined: the engine's own name shows. */
@@ -79,3 +79,10 @@ export function creatureNameFor(app: string | undefined, stage: string | undefin
   const defs = app !== undefined ? APPS[app]?.creatureNames : undefined;
   return defs?.find((c) => c.faults.includes(fault) && (c.stage === undefined || c.stage === stage))?.name;
 }
+
+/** An own attack of `app` by id, or undefined. */
+export const attackById = (app: string | undefined, id: string): NonNullable<AppDef['attacks']>[number] | undefined => (app !== undefined ? APPS[app]?.attacks?.find((a) => a.id === id) : undefined);
+
+/** The own attack that tunes `fault` at `stage` in `app` (the first one), or undefined: the fault keeps its default count or window and the engine's name. */
+export const attackFor = (app: string | undefined, stage: string | undefined, fault: string): NonNullable<AppDef['attacks']>[number] | undefined =>
+  app !== undefined && stage !== undefined ? APPS[app]?.attacks?.find((a) => a.base === fault && a.stages.includes(stage)) : undefined;

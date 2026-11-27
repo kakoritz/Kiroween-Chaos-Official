@@ -10,3 +10,7 @@ stages:
   - { use: charge, id: pay, label: Take payment }
   - { id: brew, label: Brew, role: work, duration: [800, 1500] }
   - { use: notify, id: ready, label: Call the name }
+# Own attacks: a named, tuned press of an engine fault on chosen stages (docs/MODULAR.md). Press one by id: POST /api/chaos {lane, attack: card_declined}
+attacks:
+  - { id: card_declined, label: Card Decliner, base: http_500, stages: [pay], count: 4 }
+  - { id: rush_hour, label: Rush Hour, base: slow_link, stages: [pay, ready], forMs: 4000 }

@@ -73,6 +73,12 @@ try {
   check('opening the share link restores the chain', (await ids()).startsWith('read_request,transcode'), await ids());
   await ev(`(()=>{const t=document.querySelector('.ch-yaml');t.value=t.value.split(String.fromCharCode(10)).filter(l=>!l.includes('use: archive')).join(String.fromCharCode(10));t.dispatchEvent(new Event('change'))})()`); await sleep(1500);
   check('editing the yaml changes the chain', !(await ids()).includes('archive'), await ids());
+  // import an n8n flow
+  await go('chain.html');
+  await ev(`(()=>{const t=document.querySelector('.ch-import-text');t.value=JSON.stringify({nodes:[{name:'Hook',type:'n8n-nodes-base.webhook'},{name:'Pay',type:'n8n-nodes-base.stripe'},{name:'Mail',type:'n8n-nodes-base.gmail'}],connections:{Hook:{main:[[{node:'Pay'}]]},Pay:{main:[[{node:'Mail'}]]}}});})()`);
+  await click('Import flow'); await sleep(1500);
+  check('Import flow builds the chain from an n8n export', (await ev(`[...document.querySelectorAll('.ch-stages input')].map(i=>i.value).join()`)) === 'read_request,charge,send_email');
+  check('and says what it guessed', /Imported 3 steps from n8n/.test(await ev(`document.querySelector('.ch-status')?.textContent ?? ''`)));
   // pin, change, compare, export
   await go('chain.html?blocks=read_request,charge,wait_for_callback,notify&run=1');
   await click('Pin this result');

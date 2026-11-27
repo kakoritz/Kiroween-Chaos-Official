@@ -24,6 +24,10 @@ export interface Targets {
   concurrency: number;
 }
 /** A creature name an app gives to faults on a stage, shown in the arena instead of the engine's name (modular-engine R6.2). */
+/** An own attack (third build list, item 3): a named, tuned press of an existing fault on chosen stages of this app. */
+export interface AttackDef { id: string; label: string; base: string; stages: string[]; count?: number; forMs?: number }
+/** Faults an own attack can build on: the provider faults and the crashes. */
+export const ATTACK_BASES: readonly string[] = ['timeout', 'slow_link', 'http_404', 'http_429', 'http_500', 'endpoint_down', 'internet_outage', 'crash', 'out_of_memory', 'power_outage'];
 export interface CreatureName { name: string; stage?: string; faults: string[] }
 export interface HauntConfig {
   name: string;
@@ -32,6 +36,7 @@ export interface HauntConfig {
   /** 2 to 6 lowercase letters used in order ids, `cof-0001` (defaults to `job`). */
   idPrefix?: string;
   creatures?: CreatureName[];
+  attacks?: AttackDef[];
   start: string;
   adapter: Adapter[];
   stages: StageDef[];
@@ -86,7 +91,7 @@ function expandUses(list: unknown[], errors: string[]): unknown[] {
 export function validateHauntConfig(raw: unknown): LoadResult {
   const errors: string[] = [];
   if (!isObj(raw)) return { ok: false, errors: ['root: expected a mapping'] };
-  checkUnknown(raw, ['name', 'label', 'idPrefix', 'creatures', 'start', 'adapter', 'stages', 'inputs', 'truth', 'targets'], '', errors);
+  checkUnknown(raw, ['name', 'label', 'idPrefix', 'creatures', 'attacks', 'start', 'adapter', 'stages', 'inputs', 'truth', 'targets'], '', errors);
 
   if (!isNonEmptyStr(raw.name)) errors.push('name: required non-empty string');
   if (!isNonEmptyStr(raw.start)) errors.push('start: required non-empty string');
@@ -163,6 +168,29 @@ export function validateHauntConfig(raw: unknown): LoadResult {
     });
   }
 
+  const attacks: AttackDef[] = [];
+  if (raw.attacks !== undefined && raw.attacks !== null) {
+    if (!Array.isArray(raw.attacks)) errors.push('attacks: expected a list');
+    else {
+      if (raw.attacks.length > 8) errors.push('attacks: at most 8');
+      raw.attacks.forEach((a, i) => {
+        const ap = `attacks[${i}].`;
+        if (!isObj(a)) { errors.push(`attacks[${i}]: expected a mapping`); return; }
+        checkUnknown(a, ['id', 'label', 'base', 'stages', 'count', 'forMs'], ap, errors);
+        if (typeof a.id !== 'string' || !/^[a-z][a-z0-9_]{1,31}$/.test(a.id)) errors.push(`${ap}id: lowercase letters, digits and _ (2 to 32)`);
+        else if (attacks.some((x) => x.id === a.id)) errors.push(`${ap}id: "${a.id}" is used twice`);
+        if (!isNonEmptyStr(a.label) || a.label.length > 40) errors.push(`${ap}label: required, at most 40 characters`);
+        if (typeof a.base !== 'string' || !ATTACK_BASES.includes(a.base)) errors.push(`${ap}base: one of ${ATTACK_BASES.join(', ')}`);
+        if (!Array.isArray(a.stages) || a.stages.length === 0 || !a.stages.every(isNonEmptyStr)) errors.push(`${ap}stages: required list of stage ids`);
+        else for (const st of a.stages) if (!stages.some((s) => s.id === st)) errors.push(`${ap}stages: "${String(st)}" is not a stage of this app`);
+        if (a.count !== undefined && (!Number.isInteger(a.count) || (a.count as number) < 1 || (a.count as number) > 10)) errors.push(`${ap}count: a whole number from 1 to 10`);
+        if (a.forMs !== undefined && (typeof a.forMs !== 'number' || a.forMs < 100 || a.forMs > 15000)) errors.push(`${ap}forMs: a number from 100 to 15000`);
+        if (a.count !== undefined && a.forMs !== undefined) errors.push(`${ap}: give count or forMs, not both`);
+        if (typeof a.id === 'string' && isNonEmptyStr(a.label) && typeof a.base === 'string' && Array.isArray(a.stages)) attacks.push({ id: a.id, label: a.label, base: a.base, stages: a.stages as string[], ...(a.count !== undefined ? { count: a.count as number } : {}), ...(a.forMs !== undefined ? { forMs: a.forMs as number } : {}) });
+      });
+    }
+  }
+
   if (raw.inputs !== undefined && raw.inputs !== null && !isNonEmptyStr(raw.inputs)) errors.push('inputs: must be a non-empty string');
   if (raw.truth !== undefined && raw.truth !== null) {
     if (!isNonEmptyStr(raw.truth)) errors.push('truth: must be a URL string');
@@ -201,6 +229,7 @@ export function validateHauntConfig(raw: unknown): LoadResult {
       ...(isNonEmptyStr(raw.label) ? { label: raw.label } : {}),
       ...(isNonEmptyStr(raw.idPrefix) ? { idPrefix: raw.idPrefix } : {}),
       ...(creatures.length > 0 ? { creatures } : {}),
+      ...(attacks.length > 0 ? { attacks } : {}),
       start: raw.start as string,
       adapter,
       stages,

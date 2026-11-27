@@ -17,3 +17,12 @@
 - [x] 6. Export a chain result: report page and badge (`packages/arena-ui/src/chain/export.ts`).
 - [x] 7. GitHub Action for your own app: `npm run chain:grade`, `docs/GITHUB-ACTION.md`, `docs/github-action/haunt-chaos.yml`.
 - [x] 8. Recorded Playback tournament on the hosted page: `tools/record-app.mjs`, `site/recorded/tournament-playback.json`, `RECORDED_TOURNAMENT_APPS` in `onboarding/recorded.ts`.
+
+## Third build list (2026-11-26)
+- [x] 1. Real-bot grade in the GitHub Action (`docs/github-action/haunt-chaos.yml` job `real-bot`, `haunt sweep --min-grade`).
+- [x] 2. Import an n8n or Zapier flow (`packages/haunt/src/import/flow-import.ts`, `npm run flow:import`, wizard "Import flow").
+- [x] 3. Own attacks in haunt.yaml (`attacks:`; `packages/haunt/src/runner/engine.ts`).
+- [ ] 4. Open effect kinds: needs a contract change. Proposal in `docs/proposals/open-effect-kinds.md`, waiting for approval.
+- [x] 5. Fixed the flaky e2e check (`tools/e2e.mjs`, 3 of 5 lanes; measured 1 run in 5 failed the old rule).
+- [x] 6. Recorded Coffee Shop tournament (`site/recorded/tournament-coffee-shop.json`).
+- [x] 7. Bot helper library (`templates/bot-lib/`, written by `npm run bot:new`).

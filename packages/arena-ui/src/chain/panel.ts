@@ -8,6 +8,7 @@ import { isMine, loadMyBlocks, saveMyBlock } from './my-blocks';
 import { mountTour } from './tour';
 import { CHAIN_EXAMPLES, exampleChain } from './examples';
 import { shareUrl, yamlFileName } from './save';
+import { importFlow, importedBlocks } from '../../../haunt/src/import/flow-import';
 import { compareChains, type Pinned } from './compare';
 import { chainBadge, chainReportHtml, exportFileName } from './export';
 import { addBlock, addCustom, chainProblems, emptyChain, fromConfig, libraryByRole, move, removeAt, rename, toConfig, toYaml, type ChainModel } from './model';
@@ -85,6 +86,20 @@ export function mountChain(root: HTMLElement): { getModel(): ChainModel; setMode
       ex.append(b);
     }
     lib.append(ex);
+    const imp = el('details', 'ch-import');
+    imp.append(el('summary', undefined, 'Import an n8n or Zapier flow'));
+    const paste = el('textarea', 'ch-import-text'); paste.placeholder = 'Paste the exported workflow JSON here'; paste.setAttribute('aria-label', 'Workflow JSON to import');
+    const go = el('button', 'ch-btn ch-btn--import', 'Import flow'); go.type = 'button';
+    go.onclick = () => {
+      const r = importFlow(paste.value);
+      if (!r.ok) { notice.textContent = r.error; return; }
+      model = importedBlocks(r).reduce(addBlock, emptyChain(r.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'imported-flow'));
+      report = null; before = null;
+      notice.textContent = `Imported ${r.steps.length} steps from ${r.source}. ${r.steps.map((x) => `${x.from} -> ${x.block}`).join('; ')}.${r.notes.length ? ' ' + r.notes.join(' ') : ''} Check each guess.`;
+      void render();
+    };
+    imp.append(paste, go);
+    lib.append(imp);
     lib.append(el('p', 'ch-note', `Cards: each block alone with: ${protLabel()}.`));
     for (const [role, list] of Object.entries(libraryByRole())) {
       lib.append(el('h3', undefined, role));

@@ -47,3 +47,6 @@ input, select { background: #100e1a; color: #e8e6f5; border: 1px solid #3a3560; 
 .ch-compare { border: 1px solid var(--ch-line, #555); border-radius: .4rem; padding: .5rem; margin-top: .6rem; }
 .ch-delta--better { color: #2e9e5b; }
 .ch-delta--worse { color: #d64545; }
+
+.ch-import { margin: .5rem 0; }
+.ch-import-text { width: 100%; min-height: 6rem; font-family: ui-monospace, monospace; font-size: .8rem; }

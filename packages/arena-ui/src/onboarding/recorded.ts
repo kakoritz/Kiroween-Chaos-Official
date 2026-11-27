@@ -16,7 +16,7 @@ interface ImproveRec { events: Ev[]; phases: { atMs: number; state: any }[]; fin
 export type Loader = (name: string) => Promise<any>;
 
 /** Apps that have their own recorded tournament (site/recorded/tournament-<app>.json, made by tools/record-app.mjs). Others replay the Orders run. */
-export const RECORDED_TOURNAMENT_APPS: readonly string[] = ['playback'];
+export const RECORDED_TOURNAMENT_APPS: readonly string[] = ['playback', 'coffee-shop'];
 
 /** Default loader: the JSON sits beside the page (./recorded/NAME.json), so it works under any base path such as /Kiroween-Chaos/. */
 export const fetchRecorded: Loader = async (name) => {

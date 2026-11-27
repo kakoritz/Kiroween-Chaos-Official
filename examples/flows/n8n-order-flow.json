@@ -1,0 +1,19 @@
+{
+  "name": "Order to receipt",
+  "nodes": [
+    { "name": "Webhook", "type": "n8n-nodes-base.webhook", "parameters": {} },
+    { "name": "Check stock", "type": "n8n-nodes-base.if", "parameters": {} },
+    { "name": "Charge card", "type": "n8n-nodes-base.stripe", "parameters": {} },
+    { "name": "Save order", "type": "n8n-nodes-base.postgres", "parameters": {} },
+    { "name": "Send receipt", "type": "n8n-nodes-base.gmail", "parameters": {} },
+    { "name": "Tell warehouse", "type": "n8n-nodes-base.slack", "parameters": {} },
+    { "name": "Reply", "type": "n8n-nodes-base.respondToWebhook", "parameters": {} }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{ "node": "Check stock" }]] },
+    "Check stock": { "main": [[{ "node": "Charge card" }]] },
+    "Charge card": { "main": [[{ "node": "Save order" }]] },
+    "Save order": { "main": [[{ "node": "Send receipt" }, { "node": "Tell warehouse" }]] },
+    "Send receipt": { "main": [[{ "node": "Reply" }]] }
+  }
+}

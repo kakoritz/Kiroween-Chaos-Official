@@ -1,5 +1,5 @@
 // `npm run bot:new -- <haunt.yaml> [--lang node|python] [--out <folder>]`: writes a runnable naive bot for your app (docs/INTEGRATE.md).
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { loadHauntConfig } from '../../../haunt/src/config/load';
 import { botStarter, type BotLang } from '../../../haunt/src/scaffold/bot-starter';
@@ -16,7 +16,10 @@ const out = resolve(flag('--out') ?? join(dirname(resolve(file)), 'bot'));
 mkdirSync(out, { recursive: true });
 const target = join(out, lang === 'node' ? 'bot.mjs' : 'bot.py');
 writeFileSync(target, botStarter(r.config, lang));
+const libName = lang === 'node' ? 'haunt-bot-lib.mjs' : 'haunt_bot_lib.py';
+copyFileSync(resolve(process.cwd(), 'templates/bot-lib', libName), join(out, libName));
 const rel = (p: string): string => relative(process.cwd(), p) || '.';
 console.log(`wrote ${rel(target)} (${r.config.stages.length} stages: ${r.config.stages.map((s) => s.id).join(', ')})`);
 console.log(`run it:  npm run own-bot -- ${rel(target)} --app ${rel(dirname(resolve(file)))}`);
+console.log(`wrote ${rel(join(out, libName))}: retry, idempotency key and journal helpers to harden it (docs/OWN-BOT.md)`);
 console.log('It is naive on purpose. Chaos will break it; the HARDEN comments say where each fix goes.');

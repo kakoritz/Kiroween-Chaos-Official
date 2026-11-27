@@ -1,6 +1,7 @@
 # Copy this file to .github/workflows/haunt-chaos.yml in YOUR repository.
 # It grades the chain in your haunt.yaml on every pull request and fails when the grade is below MIN_GRADE.
-# The grade is model-based (the same rules as the Chain Wizard). It does not run your bot; see docs/GITHUB-ACTION.md for the real-bot step.
+# Job 1 (`model`) grades the chain with the Chain Wizard's rules; it does not run your code. Job 2 (`real-bot`) runs YOUR bot against the attacks (about 90 seconds for 5 stages).
+# Job 2 needs `adapter: process` and a `start:` line in your haunt.yaml; see docs/GITHUB-ACTION.md.
 name: Chaos grade
 on:
   pull_request:
@@ -8,9 +9,11 @@ on:
 env:
   HAUNT_YAML: haunt.yaml        # path to your manifest
   TIER: rookie                  # protections your bot is claimed to have: rookie|retrier|journaler|reconciler|phoenix
-  MIN_GRADE: C                  # A, B, C or D; the job fails below this
+  MIN_GRADE: C                  # A, B, C or D; the jobs fail below this
+  REAL_TIER: rookie             # label of the real-bot run
+  BUILD_BOT: ''                 # a command that builds your bot before the real run, for example: npm ci && npm run build
 jobs:
-  chaos:
+  model:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,3 +33,26 @@ jobs:
         with:
           name: chaos-report
           path: chaos-out
+  real-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: kakoritz/Kiroween-Chaos-Official
+          path: .haunt-tool
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm ci --ignore-scripts
+        working-directory: .haunt-tool
+      - name: Build your bot
+        if: env.BUILD_BOT != ''
+        run: ${{ env.BUILD_BOT }}
+      - name: Run your bot against the attacks
+        run: node .haunt-tool/tools/run-ts.mjs .haunt-tool/packages/core/src/bin/haunt.ts sweep --config "$HAUNT_YAML" --tier "$REAL_TIER" --orders 2 --speed 8 --min-grade "$MIN_GRADE" --out chaos-real
+      - name: Keep the result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chaos-real-bot
+          path: chaos-real
