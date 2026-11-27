@@ -144,3 +144,19 @@ describe('review sub labels', () => {
     expect(def.sub[0].label).not.toBe('First response');
   });
 });
+
+import { ATTACK_PREFIX, attacksOf, chaosPick } from '../src/arena/lane-popup-model';
+describe('own attacks in the chaos picker', () => {
+  const apps = [{ id: 'orders', label: 'Orders' }, { id: 'coffee-shop', label: 'Coffee Shop', attacks: [{ id: 'card_declined', label: 'Card Decliner', base: 'http_500', stages: ['pay'] }, { id: 'bad' }] }];
+  it('lists the running app attacks, and none for an app without', () => {
+    expect(attacksOf(apps, 'coffee-shop')).toEqual([{ id: 'card_declined', label: 'Card Decliner' }]);
+    expect(attacksOf(apps, 'orders')).toEqual([]);
+    expect(attacksOf(apps, 'nope')).toEqual([]);
+    expect(attacksOf('not a list', 'orders')).toEqual([]);
+  });
+  it('the picked value says creature, attack or random', () => {
+    expect(chaosPick('')).toEqual({});
+    expect(chaosPick('zombie')).toEqual({ creature: 'zombie' });
+    expect(chaosPick(`${ATTACK_PREFIX}card_declined`)).toEqual({ attack: 'card_declined' });
+  });
+});

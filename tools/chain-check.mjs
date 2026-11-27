@@ -75,10 +75,18 @@ try {
   check('editing the yaml changes the chain', !(await ids()).includes('archive'), await ids());
   // import an n8n flow
   await go('chain.html');
-  await ev(`(()=>{const t=document.querySelector('.ch-import-text');t.value=JSON.stringify({nodes:[{name:'Hook',type:'n8n-nodes-base.webhook'},{name:'Pay',type:'n8n-nodes-base.stripe'},{name:'Mail',type:'n8n-nodes-base.gmail'}],connections:{Hook:{main:[[{node:'Pay'}]]},Pay:{main:[[{node:'Mail'}]]}}});})()`);
+  await ev(`(()=>{const d=document.querySelector('.ch-import');d.open=true;const t=document.querySelector('.ch-import-text');t.value=JSON.stringify({nodes:[{name:'Hook',type:'n8n-nodes-base.webhook'},{name:'Pay',type:'n8n-nodes-base.stripe'},{name:'Mail',type:'n8n-nodes-base.gmail'}],connections:{Hook:{main:[[{node:'Pay'}]]},Pay:{main:[[{node:'Mail'}]]}}});})()`);
   await click('Import flow'); await sleep(1500);
   check('Import flow builds the chain from an n8n export', (await ev(`[...document.querySelectorAll('.ch-stages input')].map(i=>i.value).join()`)) === 'read_request,charge,send_email');
   check('and says what it guessed', /Imported 3 steps from n8n/.test(await ev(`document.querySelector('.ch-status')?.textContent ?? ''`)));
+  // own attacks
+  await go('chain.html?blocks=read_request,charge,notify');
+  await ev(`(()=>{const d=document.querySelector('.ch-attacks');d.open=true;const n=d.querySelector('input[aria-label="Attack name"]');n.value='Card Decliner';const st=d.querySelector('select[aria-label="Attack stage"]');st.value='charge';const b=d.querySelector('select[aria-label="Attack base fault"]');b.value='http_500';const c=d.querySelector('input[aria-label="Attack calls"]');c.value='4';[...d.querySelectorAll('button')].find(b=>b.textContent==='Add attack').click()})()`);
+  await sleep(1500);
+  check('Add attack puts it in the list', /Card Decliner: http_500 on charge, 4 calls/.test(await ev(`document.querySelector('.ch-attack-list')?.innerText ?? ''`)), await ev(`document.querySelector('.ch-attack-list')?.innerText ?? ''`));
+  check('and in the haunt.yaml', /attacks:[\s\S]*card_decliner/.test(await ev(`document.querySelector('.ch-yaml').value`)));
+  await click('Copy share link'); await sleep(600); await send('Page.reload'); await sleep(3500);
+  check('and the share link brings it back', /Card Decliner/.test(await ev(`document.querySelector('.ch-attack-list')?.innerText ?? ''`)));
   // pin, change, compare, export
   await go('chain.html?blocks=read_request,charge,wait_for_callback,notify&run=1');
   await click('Pin this result');

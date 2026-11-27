@@ -11,6 +11,8 @@ import { shareUrl, yamlFileName } from './save';
 import { importFlow, importedBlocks } from '../../../haunt/src/import/flow-import';
 import { compareChains, type Pinned } from './compare';
 import { chainBadge, chainReportHtml, exportFileName } from './export';
+import { addAttack, removeAttack } from './model';
+import { ATTACK_BASES } from '../../../haunt/src/config/haunt-config';
 import { addBlock, addCustom, chainProblems, emptyChain, fromConfig, libraryByRole, move, removeAt, rename, toConfig, toYaml, type ChainModel } from './model';
 import { parseHauntConfig } from '../../../haunt/src/config/haunt-config';
 
@@ -87,8 +89,8 @@ export function mountChain(root: HTMLElement): { getModel(): ChainModel; setMode
     }
     lib.append(ex);
     const imp = el('details', 'ch-import');
-    imp.append(el('summary', undefined, 'Import an n8n or Zapier flow'));
-    const paste = el('textarea', 'ch-import-text'); paste.placeholder = 'Paste the exported workflow JSON here'; paste.setAttribute('aria-label', 'Workflow JSON to import');
+    imp.append(el('summary', undefined, 'Import a flow (n8n, Zapier, GitHub Actions, LangGraph)'));
+    const paste = el('textarea', 'ch-import-text'); paste.placeholder = 'Paste the exported workflow here (JSON, or a GitHub Actions .yml)'; paste.setAttribute('aria-label', 'Workflow JSON to import');
     const go = el('button', 'ch-btn ch-btn--import', 'Import flow'); go.type = 'button';
     go.onclick = () => {
       const r = importFlow(paste.value);
@@ -149,6 +151,31 @@ export function mountChain(root: HTMLElement): { getModel(): ChainModel; setMode
       ol.append(li);
     });
     chain.append(ol);
+    const atk = el('details', 'ch-attacks'); atk.open = (model.attacks?.length ?? 0) > 0;
+    atk.append(el('summary', undefined, `Own attacks (${model.attacks?.length ?? 0})`));
+    atk.append(el('p', 'ch-note', 'A named, tuned press of an engine fault on chosen stages. Used by the real arena; the grade above does not use it.'));
+    const al = el('ul', 'ch-attack-list');
+    for (const a of model.attacks ?? []) {
+      const li = el('li', undefined, `${a.label}: ${a.base} on ${a.stages.join(', ')}${a.count !== undefined ? `, ${a.count} calls` : ''}${a.forMs !== undefined ? `, ${a.forMs} ms` : ''} `);
+      const x = el('button', 'ch-btn', 'Remove'); x.type = 'button'; x.setAttribute('aria-label', `Remove attack ${a.label}`);
+      x.onclick = () => { model = removeAttack(model, a.id); void render(); };
+      li.append(x); al.append(li);
+    }
+    const aName = el('input'); aName.placeholder = 'Card Decliner'; aName.setAttribute('aria-label', 'Attack name');
+    const aBase = el('select'); aBase.setAttribute('aria-label', 'Attack base fault');
+    for (const b of ATTACK_BASES) { const o = el('option', undefined, b); o.value = b; aBase.append(o); }
+    const aStage = el('select'); aStage.setAttribute('aria-label', 'Attack stage');
+    for (const s of model.stages) { const o = el('option', undefined, s.id); o.value = s.id; aStage.append(o); }
+    const aNum = el('input'); aNum.type = 'number'; aNum.min = '1'; aNum.placeholder = 'calls (1-10), optional'; aNum.setAttribute('aria-label', 'Attack calls');
+    const aAdd = el('button', 'ch-btn ch-btn--attack', 'Add attack'); aAdd.type = 'button'; aAdd.disabled = model.stages.length === 0;
+    aAdd.onclick = () => {
+      const r = addAttack(model, { label: aName.value, base: aBase.value, stages: aStage.value ? [aStage.value] : [], ...(aNum.value ? { count: Number(aNum.value) } : {}) });
+      notice.textContent = r.error ?? `Added attack "${aName.value.trim()}".`;
+      if (!r.error) model = r.model;
+      void render();
+    };
+    atk.append(al, aName, aBase, aStage, aNum, aAdd);
+    chain.append(atk);
     const yaml = el('textarea', 'ch-yaml'); yaml.value = toYaml(model); yaml.setAttribute('aria-label', 'haunt.yaml of this chain');
     yaml.onchange = () => { const r = parseHauntConfig(yaml.value); if (r.ok) { model = fromConfig(r.config); report = null; void render(); } else yaml.title = r.errors.join('\n'); };
     chain.append(el('h3', undefined, 'haunt.yaml (edit it, the chain follows)'), yaml);

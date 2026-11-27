@@ -65,13 +65,14 @@ attacks:
 
 - `base` is one of: `timeout`, `slow_link`, `http_404`, `http_429`, `http_500`, `endpoint_down`, `internet_outage`, `crash`, `out_of_memory`, `power_outage`.
 - `count` (1 to 10 calls) or `forMs` (100 to 15000), not both. At most 8 attacks.
-- Press one on purpose: `POST /api/chaos {"lane": 1, "attack": "card_declined"}`.
+- Press one on purpose: `POST /api/chaos {"lane": 1, "attack": "card_declined"}`, or open a lane in the arena and pick it under "Your attacks" next to the Chaos button (live server only).
+- The Chain Wizard has an "Own attacks" form that writes the list into the haunt.yaml and the share link.
 - A normal press of `http_500` while a lane is on `pay` also meets the attack (it is tuned, and its label shows as the creature name).
 - The contract is unchanged: the event says `fault: http_500` and carries `creatureName: Card Decliner`.
 
 ## Bring a flow you already have
 
-`npm run flow:import -- examples/flows/n8n-order-flow.json --out haunt.yaml` reads an n8n export (or a Zapier-style step list, see `examples/flows/zapier-signup.json`) and writes a chain of library blocks. It prints every guess and why. Check them. The Chain Wizard has the same thing under "Import an n8n or Zapier flow". It guesses by node type and name, so a custom node may be left out; it says which.
+`npm run flow:import -- examples/flows/n8n-order-flow.json --out haunt.yaml` reads an n8n export, a Zapier-style step list (`examples/flows/zapier-signup.json`), a GitHub Actions workflow (`examples/flows/github-actions-deploy.yml`) or a node-and-edge graph such as LangGraph or React Flow (`examples/flows/langgraph-support-agent.json`) and writes a chain of library blocks. For a workflow file, setup, cache and install steps are left out and the note says how many. It prints every guess and why. Check them. The Chain Wizard has the same thing under "Import a flow". It guesses by node type and name, so a custom node may be left out; it says which.
 
 ## Own your block
 
@@ -88,7 +89,7 @@ Use an inline stage a few times, then keep it: `npm run block:add -- path/to/hau
 
 ## Limits
 
-- Effect kinds are open since contract v1.4: any lowercase name (`sms`, `ledger_entry`) is recorded under that name. The ten known kinds keep their routes (see [`MODULAR.md`](MODULAR.md)). The in-browser worker engine still knows only the known kinds.
+- Effect kinds are open since contract v1.4: any lowercase name (`sms`, `ledger_entry`) is recorded under that name. The ten known kinds keep their routes (see [`MODULAR.md`](MODULAR.md)).
 - Hosted page: only the apps shipped in this repo (Playback, Coffee Shop) appear. Your own app runs locally.
 - The Chain Wizard scores are model-based.
 

@@ -38,6 +38,7 @@
     "block:add": "node tools/run-ts.mjs packages/core/src/bin/block-add.ts",
     "chain:grade": "node tools/run-ts.mjs packages/core/src/bin/chain-grade.ts",
     "flow:import": "node tools/run-ts.mjs packages/core/src/bin/flow-import.ts",
+    "submit:check": "node tools/submit-check.mjs",
     "bot:new": "node tools/run-ts.mjs packages/core/src/bin/bot-new.ts",
     "build:crew-app": "node tools/build-crew-app.mjs",
     "blocks:doc": "node tools/run-ts.mjs packages/core/src/bin/block-doc.ts",

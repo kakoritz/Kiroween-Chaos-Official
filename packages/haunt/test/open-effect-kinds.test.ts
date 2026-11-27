@@ -58,3 +58,16 @@ describe('the provider', () => {
     } finally { await prov.close(); }
   });
 });
+
+describe('the in-browser ledger', () => {
+  it('records any lowercase kind under its name, once per key', async () => {
+    const { PageLedger } = await import('../src/browser/ledger');
+    const l = new PageLedger(() => 0);
+    const a = l.apply({ lane: '1', kind: 'sms', order: 'ord-0001', key: 'k', index: 1 });
+    const b = l.apply({ lane: '1', kind: 'sms', order: 'ord-0001', key: 'k', index: 1 });
+    expect(a.row.kind).toBe('sms');
+    expect(a.row.id).toMatch(/^fx_/);
+    expect(b.replayed).toBe(true);
+    expect(l.count('ord-0001', 'sms')).toBe(1);
+  });
+});

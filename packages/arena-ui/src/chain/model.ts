@@ -1,7 +1,7 @@
 // Chain wizard model (modular-engine R12.3, R12.6): an ordered list of blocks and custom stages. Pure, no DOM.
 // The wizard and a haunt.yaml are two views of the same flow: `toYaml` writes the manifest, `fromConfig` reads one back.
 import { BLOCKS, blockById, type Block } from '../../../haunt/src/blocks/library';
-import { parseHauntConfig, type HauntConfig, type StageRole } from '../../../haunt/src/config/haunt-config';
+import { parseHauntConfig, type AttackDef, type HauntConfig, type StageRole } from '../../../haunt/src/config/haunt-config';
 
 export interface ChainStage {
   /** Library block id; absent for a custom stage. */
@@ -12,7 +12,7 @@ export interface ChainStage {
   /** Custom stage only: the effect kind (one provider kind, for example charge). */
   effectKind?: string;
 }
-export interface ChainModel { name: string; stages: ChainStage[] }
+export interface ChainModel { name: string; stages: ChainStage[]; /** Own attacks (haunt.yaml `attacks:`): a named, tuned fault on chosen stages. */ attacks?: AttackDef[] }
 
 export const emptyChain = (name = 'my-chain'): ChainModel => ({ name, stages: [] });
 
@@ -42,12 +42,34 @@ export function move(m: ChainModel, from: number, to: number): ChainModel {
   return { ...m, stages };
 }
 
-export const removeAt = (m: ChainModel, i: number): ChainModel => ({ ...m, stages: m.stages.filter((_, k) => k !== i) });
+export const removeAt = (m: ChainModel, i: number): ChainModel => {
+  const gone = m.stages[i]?.id;
+  const attacks = (m.attacks ?? []).map((a) => ({ ...a, stages: a.stages.filter((s) => s !== gone) })).filter((a) => a.stages.length > 0);
+  return { ...m, stages: m.stages.filter((_, k) => k !== i), ...(attacks.length ? { attacks } : { attacks: undefined }) };
+};
+
+/** Add an own attack. The id comes from the label; a clash gets a number. Returns the model unchanged (and why) when it cannot be added. */
+export function addAttack(m: ChainModel, a: { label: string; base: string; stages: string[]; count?: number; forMs?: number }): { model: ChainModel; error?: string } {
+  const label = a.label.trim().slice(0, 40);
+  const id = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^[^a-z]+/, '').replace(/_+$/, '').slice(0, 28);
+  if (id.length < 2) return { model: m, error: 'Give the attack a name of at least two letters.' };
+  if (a.stages.length === 0) return { model: m, error: 'Pick at least one stage.' };
+  if ((m.attacks ?? []).length >= 8) return { model: m, error: 'At most 8 attacks.' };
+  const taken = new Set((m.attacks ?? []).map((x) => x.id));
+  let uid = id; for (let i = 2; taken.has(uid); i++) uid = `${id}_${i}`;
+  const attack: AttackDef = { id: uid, label, base: a.base, stages: a.stages, ...(a.count !== undefined ? { count: a.count } : a.forMs !== undefined ? { forMs: a.forMs } : {}) };
+  const next = { ...m, attacks: [...(m.attacks ?? []), attack] };
+  const t = parseHauntConfig(toYaml({ ...next, stages: m.stages.length ? m.stages : [{ id: 'x1', label: 'x', role: 'input' }] }));
+  if (!t.ok) return { model: m, error: t.errors.filter((e) => /attacks/.test(e)).join(' ') || t.errors[0] };
+  return { model: next };
+}
+export const removeAttack = (m: ChainModel, id: string): ChainModel => { const attacks = (m.attacks ?? []).filter((a) => a.id !== id); return { ...m, attacks: attacks.length ? attacks : undefined }; };
 
 export function rename(m: ChainModel, i: number, id: string): ChainModel {
   const clean = id.trim();
   if (!/^[a-z][a-z0-9_]{1,31}$/.test(clean) || m.stages.some((s, k) => k !== i && s.id === clean)) return m;
-  return { ...m, stages: m.stages.map((s, k) => (k === i ? { ...s, id: clean } : s)) };
+  const old = m.stages[i]!.id;
+  return { ...m, stages: m.stages.map((s, k) => (k === i ? { ...s, id: clean } : s)), ...(m.attacks ? { attacks: m.attacks.map((a) => ({ ...a, stages: a.stages.map((s) => (s === old ? clean : s)) })) } : {}) };
 }
 
 /** Problems that stop a chain from running; an empty list means it can be tested. */
@@ -67,6 +89,10 @@ export function toYaml(m: ChainModel): string {
     else if (s.role === 'effect') out.push(`  - { id: ${s.id}, label: ${JSON.stringify(s.label)}, role: effect, effects: [{ kind: ${s.effectKind ?? 'store'}, key: "${s.id}:1", idempotent: required }] }`);
     else out.push(`  - { id: ${s.id}, label: ${JSON.stringify(s.label)}, role: ${s.role} }`);
   }
+  if (m.attacks?.length) {
+    out.push('attacks:');
+    for (const a of m.attacks) out.push(`  - { id: ${a.id}, label: ${JSON.stringify(a.label)}, base: ${a.base}, stages: [${a.stages.join(', ')}]${a.count !== undefined ? `, count: ${a.count}` : ''}${a.forMs !== undefined ? `, forMs: ${a.forMs}` : ''} }`);
+  }
   return out.join('\n') + '\n';
 }
 
@@ -82,6 +108,7 @@ export function toConfig(m: ChainModel): { ok: true; config: HauntConfig } | { o
 export function fromConfig(c: HauntConfig): ChainModel {
   return {
     name: c.name,
+    ...(c.attacks?.length ? { attacks: c.attacks.map((a) => ({ ...a, stages: [...a.stages] })) } : {}),
     stages: c.stages.map((s) => ({ ...(s.block ? { use: s.block } : {}), id: s.id, label: s.label, role: s.role, ...(!s.block && s.role === 'effect' ? { effectKind: s.effects[0]?.kind ?? 'store' } : {}) })),
   };
 }

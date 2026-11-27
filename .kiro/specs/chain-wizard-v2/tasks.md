@@ -26,3 +26,11 @@
 - [x] 5. Fixed the flaky e2e check (`tools/e2e.mjs`, 3 of 5 lanes; measured 1 run in 5 failed the old rule).
 - [x] 6. Recorded Coffee Shop tournament (`site/recorded/tournament-coffee-shop.json`).
 - [x] 7. Bot helper library (`templates/bot-lib/`, written by `npm run bot:new`).
+
+## Fourth build list (2026-11-26)
+- [x] 1. Press an attack from the arena (lane popup "Your attacks"; `/api/apps` lists them).
+- [x] 2. Edit attacks in the Chain Wizard (`addAttack`, `removeAttack`, share link).
+- [x] 3. `npm run submit:check` (`tools/submit-check.mjs`).
+- [x] 4. README refresh for the modular pitch (text only).
+- [x] 5. Import GitHub Actions workflows and node-and-edge graphs.
+- [x] 6. Browser worker engine takes open effect kinds.

@@ -1,0 +1,21 @@
+{
+  "name": "Support agent",
+  "nodes": [
+    { "id": "__start__" },
+    { "id": "read_message", "type": "input", "data": { "label": "Read the customer message" } },
+    { "id": "classify", "type": "llm", "data": { "label": "Classify the request" } },
+    { "id": "refund_tool", "type": "tool", "data": { "label": "Issue refund" } },
+    { "id": "ticket_tool", "type": "tool", "data": { "label": "Open a Zendesk ticket" } },
+    { "id": "reply", "type": "tool", "data": { "label": "Send email reply" } },
+    { "id": "__end__" }
+  ],
+  "edges": [
+    { "source": "__start__", "target": "read_message" },
+    { "source": "read_message", "target": "classify" },
+    { "source": "classify", "target": "refund_tool" },
+    { "source": "classify", "target": "ticket_tool" },
+    { "source": "refund_tool", "target": "reply" },
+    { "source": "ticket_tool", "target": "reply" },
+    { "source": "reply", "target": "__end__" }
+  ]
+}

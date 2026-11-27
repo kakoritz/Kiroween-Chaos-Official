@@ -1,6 +1,8 @@
 // In-page ledger for the browser target (H6.3 / E12): the source of truth for side effects, owned by the
 // main thread so a worker kill cannot touch it. No node imports (must bundle for the browser).
-export type LedgerKind = 'account' | 'order' | 'charge' | 'email' | 'store' | 'dispatch' | 'notify' | 'ticket' | 'reply';
+/** One of the known kinds, or any lowercase name (contract v1.4). */
+export type LedgerKind = string;
+export const LEDGER_KIND_RE = /^[a-z][a-z0-9_]{1,31}$/;
 
 export interface PageLedgerRow {
   id: string;
@@ -22,7 +24,7 @@ export interface PageEffectRequest {
   amount?: number | null;
 }
 
-const PREFIX: Record<LedgerKind, string> = {
+const PREFIX: Record<string, string> = {
   account: 'acct', order: 'or', charge: 'ch', email: 'em', store: 'st', dispatch: 'sh', notify: 'nt', ticket: 'tk', reply: 'rp',
 };
 
@@ -97,7 +99,7 @@ export class PageLedger {
       if (hit) return { row: hit, replayed: true };
     }
     const row: PageLedgerRow = {
-      id: `${PREFIX[req.kind]}_${(++this.n).toString().padStart(4, '0')}`,
+      id: `${PREFIX[req.kind] ?? 'fx'}_${(++this.n).toString().padStart(4, '0')}`,
       lane: req.lane,
       kind: req.kind,
       order: req.order,

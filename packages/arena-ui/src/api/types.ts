@@ -69,7 +69,7 @@ export interface Creature {
   boss: boolean; apps: string[]; description: string;
 }
 
-export interface AppInfo { id: string; label: string; stages: StageInfo[] | string[] }
+export interface AppInfo { id: string; label: string; stages: StageInfo[] | string[]; /** Own attacks from the app's haunt.yaml (live server only). */ attacks?: { id: string; label: string; base: string; stages: string[] }[] }
 
 export interface WaveOptions {
   orders?: number; seed?: number; tiers?: 'race' | 'allPhoenix'; lanes?: number;
@@ -78,7 +78,7 @@ export interface WaveOptions {
   campaign?: { night: number; parts?: string[] };
 }
 export interface ChaosOptions {
-  lane?: number; creature?: string; fault?: string; scope?: 'inner' | 'outer'; point?: string;
+  lane?: number; creature?: string; fault?: string; scope?: 'inner' | 'outer'; point?: string; /** An own attack of the running app. */ attack?: string;
 }
 export interface ChaosModeOptions { mode: 'off' | 'manual' | 'random'; frequency?: number; seed?: number }
 export interface ChaosResult { chaosId: string; creature: string; fault: string; depth: number; deferred: boolean }

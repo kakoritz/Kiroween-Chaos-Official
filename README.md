@@ -28,7 +28,22 @@ npm run demo
 
 In the arena: **Start tournament**, press **Next** between rounds, drag **INTENSITY**, open **Patterns**, switch the app (the switcher labels read Haunted Orders, Haunted Inbox for the Ticket Desk, and Haunted Stream). Full tour: [`docs/JUDGES.md`](docs/JUDGES.md).
 
-## The three apps
+## Plug in your own app
+
+Any service plugs in with one file, `haunt.yaml`: its stages, what each one changes outside, and a start command. No engine code. Faults land by a stage's role, not its name, so your app gets chaos, scoring and a written fix.
+
+| You want to | Do this |
+|---|---|
+| Start from a flow you already have | `npm run flow:import -- examples/flows/n8n-order-flow.json --out haunt.yaml` (n8n, Zapier, GitHub Actions, LangGraph) |
+| Build a chain by clicking | Chain Wizard (`/chain.html`): blocks, protections, compare two results, report and badge, run in the arena, share link, guided tour |
+| Get a bot to test | `npm run bot:new -- haunt.yaml` writes a naive bot plus a helper library (retry, idempotency key, journal) |
+| Watch it break | `npm run own-bot -- bot/bot.mjs --app .` opens the arena on your stages |
+| Grade it in CI | [`docs/GITHUB-ACTION.md`](docs/GITHUB-ACTION.md): a model grade, and a real run of your own bot, failing below a grade |
+| Tune the attacks | `attacks:` in haunt.yaml: a named, tuned fault on your stages ([`docs/INTEGRATE.md`](docs/INTEGRATE.md)) |
+
+How it works: [`docs/MODULAR.md`](docs/MODULAR.md). How to plug in: [`docs/INTEGRATE.md`](docs/INTEGRATE.md). The blocks: [`docs/BLOCKS.md`](docs/BLOCKS.md). Worked example with real output: [`docs/ZERO-TO-GRADED.md`](docs/ZERO-TO-GRADED.md). Effect kinds are open (`sms`, `ledger_entry`, contract v1.4). Claim by claim: [`docs/JUDGE-CHECK.md`](docs/JUDGE-CHECK.md).
+
+## The built-in apps
 
 | App | Language | What it does |
 |---|---|---|
@@ -38,7 +53,7 @@ In the arena: **Start tournament**, press **Next** between rounds, drag **INTENS
 
 The Streaming pack is no longer label-only: its 11-stage model stays in [`packs/`](packs/) and the Workflow Lab (labelled model-based), and `apps/haunted-stream` is the runnable 5-stage cut of it. The ticketing pack is still a model-based preview of the Ticket Desk.
 
-**Any app plugs in.** The three apps above are built in. Two more are a single `haunt.yaml` made of reusable [blocks](docs/BLOCKS.md): [`apps/haunted-playback/`](apps/haunted-playback/) (a viewer watches a title, 11 stages, see [`docs/STREAM.md`](docs/STREAM.md)) and [`examples/coffee-shop/`](examples/coffee-shop/) (4 stages). Faults land by a stage's role, not its name, so your service gets chaos with no engine edit: [`docs/MODULAR.md`](docs/MODULAR.md), [`docs/INTEGRATE.md`](docs/INTEGRATE.md). The Chain Wizard (`/chain.html`) tests each block alone, then the chain, and shows which block broke it.
+**Also built from config only:** [`apps/haunted-playback/`](apps/haunted-playback/) (a viewer watches a title, 11 stages, see [`docs/STREAM.md`](docs/STREAM.md)), [`examples/coffee-shop/`](examples/coffee-shop/) (4 stages, with two own attacks) and [`examples/pizza-shop/`](examples/pizza-shop/) (the worked example). The hosted page replays a recorded tournament of Playback and of the Coffee Shop.
 
 ## What is in the box
 
@@ -54,7 +69,7 @@ The Streaming pack is no longer label-only: its 11-stage model stays in [`packs/
 | Workflow Lab and packs | Model your own workflow in the browser (`/workflow-lab.html`) and get a graded what-if. Presets: Orders, Ticket Desk, Payments, Report generator, Streaming pack. Always labelled model-based |
 | Chain Wizard and blocks | 22 reusable blocks; test one alone, chain them, read the blame table (`/chain.html`, model-based). `npm run block:add` keeps your own |
 | Reports | Graded JSON, Markdown, offline HTML, SVG badge (`haunt badge`) |
-| MCP server and Power | `haunt_define`, `haunt_sweep`, `haunt_ramp`, `haunt_report`, `haunt_specs`, `haunt_badge` ([`kiro-power/`](kiro-power/)) |
+| MCP server and Power | `haunt_define`, `haunt_blocks`, `haunt_chain`, `haunt_lab`, `haunt_sweep`, `haunt_ramp`, `haunt_report`, `haunt_specs`, `haunt_badge` ([`kiro-power/`](kiro-power/)). A Kiro Crew app with the same tools: [`kiro-crew-app/`](kiro-crew-app/) |
 
 ## Commands
 
@@ -69,7 +84,10 @@ The CLI is `npm run haunt -- <args>`. There is no `haunt` binary on your PATH (`
 | `npm run demo -- --check` | Starts a server on a free port, checks it answers, exits. About 6 s |
 | `npm run validate:events` | Fixtures against the event schema and ordering rules |
 | `npm run validate:live` | Plays hero, a wave, a campaign night and an inbox wave on a private server and checks every event against the contract rules. About 2.5 minutes. Expect `0 violations` |
-| `npm run verify` | typecheck, tests, bots, UI build and demo check in one command. The script is in PR #253; once that merges it works from a clean checkout |
+| `npm run verify` | typecheck, tests, bots, judge check, UI build and demo check in one command. About 90 s from a clean checkout |
+| `npm run submit:check` | The last look before submitting: git state, no personal info in files or history, links, sizes, required files, then verify. `-- --quick` skips verify, `-- --online` asks GitHub |
+| `npm run chain:grade -- haunt.yaml --min B` | Grades a chain with the block model; exit 1 below the grade. `--out dir` writes a report page and a badge |
+| `npm run haunt -- sweep --config haunt.yaml --min-grade C` | Runs your own bot (`adapter: process`) against the attacks |
 
 Everything else (`npm run live`, `mock`, `test`, `typecheck`, `e2e`) is in [`docs/DEV-SETUP.md`](docs/DEV-SETUP.md).
 
@@ -120,14 +138,15 @@ More docs: [OWN-BOT](docs/OWN-BOT.md) (point it at your own bot, 5 minutes), [DE
 
 - **Sweep is slow.** About 5 minutes with `--orders 1 --speed 16`, longer with defaults. For a quick look use `ramp`, `demo -- --check` or `validate:live`.
 - **Sim vs live.** The improve projection, the Workflow Lab, the hosted tournament and the packs are model-based or recorded. Only `npm run demo` runs real child processes against the real provider and ledger.
-- **Mobile.** The arena draws a fixed 1280x720 canvas, so a 390x844 phone shows it at about 30%. Use a desktop browser.
+- **Mobile.** The arena canvas is a fixed 1280x720, so a phone shows it small. On narrow screens, lane cards sit under it with each lane's stage and progress. A desktop browser is still best.
+- **Model-based grades.** The Chain Wizard, the Lab and `chain:grade` grade a model of your chain, not your code. `npm run haunt -- sweep` and the arena run your real bot.
 - **Ticket Desk.** The Python inbox app runs 11 stages (login to close) on the same harness, with in-process fakes for jira, asana, kace and webhook. Those fakes are not real services.
 - **Kiro Power and Crew app.** Their manifests start the same MCP server (handshake proof in [`docs/proof/installed/`](docs/proof/installed/)). They are not yet installed into a Kiro window.
 - **Tests run locally.** CI does not run them. A worker timeout under load is a known flake: rerun that file alone.
 
 ## Skeleton Crew fit
 
-The skeleton is the harness. An app is a process definition (`haunt.yaml`: stages, effects, start command, truth endpoint, targets) plus a bot. Orders and Stream are Node, the Ticket Desk is Python with a small SDK (`apps/haunted-inbox/bot/haunt_py.py`) writing the same journal format. None needed an engine change. Honest check: [`docs/FIT-CHECK.md`](docs/FIT-CHECK.md).
+The skeleton is the harness. An app is a process definition (`haunt.yaml`: stages, effects, start command, truth endpoint, targets) plus a bot. Orders and Stream are Node, the Ticket Desk is Python with a small SDK (`apps/haunted-inbox/bot/haunt_py.py`) writing the same journal format. None needed an engine change. Honest check, claim by claim: [`docs/JUDGE-CHECK.md`](docs/JUDGE-CHECK.md).
 
 ## How Kiro built this
 

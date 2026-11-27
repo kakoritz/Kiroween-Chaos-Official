@@ -91,10 +91,10 @@ export const APP_STAGES: Record<AppId, StageView[]> = new Proxy({} as Record<App
   getOwnPropertyDescriptor: (_t, id) => (typeof id === 'string' && isRegisteredApp(id) ? { enumerable: true, configurable: true, value: viewsOf(id) } : undefined),
 });
 
-export interface AppView { id: AppId; label: string; stages: StageView[] }
+export interface AppView { id: AppId; label: string; stages: StageView[]; /** Own attacks of a registered app (haunt.yaml `attacks:`). */ attacks?: { id: string; label: string; base: string; stages: string[] }[] }
 /** The app list served at /api/apps. Rebuilt in place whenever an app is registered, so holders of the array see new apps. */
 export const APPS: AppView[] = [];
-const rebuild = (): void => { APPS.length = 0; for (const a of Object.values(SHARED_APPS)) APPS.push({ id: a.id, label: a.shortLabel ?? a.label, stages: viewsOf(a.id) }); };
+const rebuild = (): void => { APPS.length = 0; for (const a of Object.values(SHARED_APPS)) APPS.push({ id: a.id, label: a.shortLabel ?? a.label, stages: viewsOf(a.id), ...(a.attacks?.length ? { attacks: a.attacks.map((x) => ({ id: x.id, label: x.label, base: x.base, stages: [...x.stages] })) } : {}) }); };
 rebuild();
 onRegistryChange(rebuild);
 

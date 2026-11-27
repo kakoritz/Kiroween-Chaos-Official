@@ -342,3 +342,18 @@ export function downtimePoints(events: readonly ArenaEvent[]): number {
 }
 
 export const secs = (ms: number): string => `${(ms / 1000).toFixed(1)} s`;
+
+/** An own attack of the running app, as the chaos picker lists it (value `attack:<id>`). */
+export interface AttackChoice { id: string; label: string }
+export const ATTACK_PREFIX = 'attack:';
+/** The attacks an app declares, from its `/api/apps` entry; none when the app has none (or the host does not say). */
+export function attacksOf(apps: unknown, appId: string | undefined): AttackChoice[] {
+  const a = Array.isArray(apps) ? (apps as { id?: unknown; attacks?: unknown }[]).find((x) => x?.id === appId) : undefined;
+  if (!a || !Array.isArray(a.attacks)) return [];
+  return (a.attacks as { id?: unknown; label?: unknown }[]).filter((x) => typeof x?.id === 'string' && typeof x?.label === 'string').map((x) => ({ id: String(x.id), label: String(x.label) }));
+}
+/** What the Chaos button sends for the picked value: a creature id, an own attack, or a random press. */
+export function chaosPick(value: string): { creature?: string; attack?: string } {
+  if (value.startsWith(ATTACK_PREFIX)) return { attack: value.slice(ATTACK_PREFIX.length) };
+  return value ? { creature: value } : {};
+}

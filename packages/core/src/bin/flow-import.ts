@@ -1,4 +1,4 @@
-// `npm run flow:import -- <workflow.json> [--out haunt.yaml]`: reads an n8n export or a Zapier-style step list and writes a haunt.yaml chain of library blocks.
+// `npm run flow:import -- <workflow> [--out haunt.yaml]`: reads an n8n export, a Zapier-style step list, a GitHub Actions workflow or a node-and-edge graph (LangGraph, React Flow) and writes a haunt.yaml chain of library blocks.
 // Every guess is printed with its reason. Check them, then grade the chain: npm run chain:grade -- haunt.yaml
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -8,7 +8,7 @@ import { addBlock, emptyChain, toYaml } from '../../../arena-ui/src/chain/model'
 const args = process.argv.slice(2);
 const file = args.find((a, i) => !a.startsWith('--') && (i === 0 || !args[i - 1]!.startsWith('--')));
 const out = args.includes('--out') ? args[args.indexOf('--out') + 1] : undefined;
-if (!file) { console.error('usage: npm run flow:import -- <workflow.json> [--out haunt.yaml]'); process.exit(2); }
+if (!file) { console.error('usage: npm run flow:import -- <workflow.json|workflow.yml> [--out haunt.yaml]'); process.exit(2); }
 let text: string;
 try { text = readFileSync(resolve(file), 'utf8'); } catch { console.error(`cannot read ${file}`); process.exit(2); }
 const r = importFlow(text);

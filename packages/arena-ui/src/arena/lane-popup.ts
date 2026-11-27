@@ -5,7 +5,7 @@ import type { ArenaEvent, Creature } from '../api/types';
 import { CHIP_WORD } from './chips';
 import {
   FILTERS, OUTCOME_ICON, OUTCOME_WORD, bestSlowest, downtimePoints, filterLog, lapOf, logEntries, offsetText, orderRows, reviewOf,
-  secs, segment, sortUnique, stageRows, starGlyphs, starText, starTone, type LogFilter, type OrderRow,
+  secs, segment, sortUnique, stageRows, starGlyphs, starText, starTone, ATTACK_PREFIX, chaosPick, type AttackChoice, type LogFilter, type OrderRow,
 } from './lane-popup-model';
 import { replayCount } from './inspector';
 import { lapRowsFromEvents, lapRowsOf, mergeLapRows } from './laps-model';
@@ -28,8 +28,10 @@ export interface LanePopupHost {
   laneInfo(lane: number): { tier: string; order: string | null; running: boolean } | null;
   /** Where the lane sits on the arena canvas (design pixels), or null when it is not drawn. */
   laneBox(lane: number): { top: number; h: number } | null;
-  chaos(lane: number, creature?: string): Promise<unknown>;
+  chaos(lane: number, creature?: string, attack?: string): Promise<unknown>;
   creatures(): Promise<Creature[]>;
+  /** The running app's own attacks (its haunt.yaml `attacks:`). Optional: the hosted page has none. */
+  attacks?(): Promise<AttackChoice[]>;
   fetchOrder(lane: number, order: string): Promise<unknown>;
   fetchLaps(lane: number): Promise<unknown>;
   /** TV3-U9: the lane's lessons, newest last. Optional: older hosts have none. */
@@ -155,7 +157,8 @@ export class LanePopup {
     this.chaosBtn = el('button', 'btn', 'Chaos'); this.chaosBtn.type = 'button';
     this.chaosBtn.addEventListener('click', () => {
       this.chaosBtn.disabled = true;
-      this.host.chaos(this.lane, this.chaosSel.value || undefined).catch((e) => this.host.onError(e)).finally(() => { this.chaosBtn.disabled = false; });
+      const pick = chaosPick(this.chaosSel.value);
+      this.host.chaos(this.lane, pick.creature, pick.attack).catch((e) => this.host.onError(e)).finally(() => { this.chaosBtn.disabled = false; });
     });
     acts.append(this.replayBtn, this.speedSel, this.chaosSel, this.chaosBtn);
     foot.append(this.summary, this.review, acts);
@@ -185,6 +188,15 @@ export class LanePopup {
   }
 
   /** Same signature as the old inspector: `stageIdx` and `stage` focus the table and log on that stage. */
+  /** Fill the picker's "Your attacks" group (rebuilt on every open, because the app may have changed). */
+  private showAttacks(list: AttackChoice[]): void {
+    this.chaosSel.querySelector('optgroup')?.remove();
+    if (list.length === 0) return;
+    const g = document.createElement('optgroup'); g.label = 'Your attacks';
+    for (const a of list) { const o = el('option', '', a.label); o.value = ATTACK_PREFIX + a.id; g.append(o); }
+    this.chaosSel.append(g);
+  }
+
   open(lane: number, _stageIdx: number | null, stage: string | null, order: string | null): void {
     this.returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     this.lane = lane;
@@ -201,6 +213,7 @@ export class LanePopup {
     this.root.classList.remove('hidden');
     this.host.fetchLaps(lane).then((d) => { if (this.openState && this.lane === lane) { this.serverLaps = d; this.sig = ''; } }).catch(() => { /* the buffer still fills it */ });
     this.fetchPicked();
+    this.host.attacks?.().then((list) => this.showAttacks(list)).catch(() => this.showAttacks([]));
     if (!this.creatureList) {
       this.host.creatures().then((c) => {
         this.creatureList = c;

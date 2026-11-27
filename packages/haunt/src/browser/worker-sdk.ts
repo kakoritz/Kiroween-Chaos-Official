@@ -7,7 +7,7 @@ import {
   Sdk, type HookPoint, type Host, type JournalStore, type OrderResult, type Part, type Transport, type TransportResponse,
 } from '../sdk/sdk';
 import type { PageToWorker, WorkerToPage } from './worker-host';
-import type { LedgerKind } from './ledger';
+import { LEDGER_KIND_RE, type LedgerKind } from './ledger';
 
 /** Subset of DedicatedWorkerGlobalScope used here. */
 export interface WorkerScopeLike {
@@ -93,7 +93,6 @@ export class PageJournalStore implements JournalStore {
   }
 }
 
-const KINDS: readonly LedgerKind[] = ['account', 'order', 'charge', 'email', 'store', 'dispatch', 'notify', 'ticket', 'reply'];
 
 /** Provider adapter: effects and reconcile lookups go to the in-page ledger instead of HTTP. */
 export class PageTransport implements Transport {
@@ -103,7 +102,7 @@ export class PageTransport implements Transport {
   ) {}
 
   async post(kind: string, body: Record<string, unknown>, o: { key: string | null; recovery?: boolean }): Promise<TransportResponse> {
-    if (!KINDS.includes(kind as LedgerKind)) throw new Error(`unknown effect kind ${kind}`);
+    if (!LEDGER_KIND_RE.test(kind) || kind === 'tracking' || kind === 'handoff') throw new Error(`unknown effect kind ${kind}`);
     const r = await this.ch.call({
       k: 'effect',
       req: {

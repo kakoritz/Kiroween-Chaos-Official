@@ -9,6 +9,7 @@ import '../src/arena/lane-cards.css';
 import { chipAt } from '../src/arena/inspector';
 import { computeFit } from '../src/arena/layout';
 import { LanePopup } from '../src/arena/lane-popup';
+import { attacksOf } from '../src/arena/lane-popup-model';
 import '../src/arena/lane-popup.css';
 import { WaveSummary } from '../src/arena/wave-summary';
 import { chipTipAt } from '../src/arena/chiptip';
@@ -201,7 +202,8 @@ const inspector = new LanePopup($('insp'), {
   app: () => vm.app,
   laneInfo: (n) => { const l = vm.lanes.find((x) => x.lane === n); return l ? { tier: l.tier, order: l.order, running: l.mode !== 'sleep' && l.mode !== 'done' && l.order !== null } : null; },
   laneBox: (n) => { const i = vm.lanes.findIndex((x) => x.lane === n); return i < 0 ? null : laneBoxes(vm.lanes.length, vm.boss.phase === 'none' ? 0 : BOSS_INSET)[i] ?? null; },
-  chaos: (lane, creature) => api.chaos(creature ? { lane, creature } : { lane }),
+  chaos: (lane, creature, attack) => api.chaos(attack ? { lane, attack } : creature ? { lane, creature } : { lane }),
+  attacks: async () => attacksOf(await api.getApps(), vm.app),
   creatures: () => api.getCreatures(),
   lessons: (lane) => casebook.lessons[lane] ?? [],
   fetchOrder: (lane, order) => api.getLaneOrder(lane, order),
